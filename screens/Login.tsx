@@ -119,7 +119,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         musicGainRef.current = null;
       }, 400);
     };
-  }, [soundEnabled]);
+  }, []);
 
   const toggleLoginMusic = () => {
     if (!soundEnabled) {
