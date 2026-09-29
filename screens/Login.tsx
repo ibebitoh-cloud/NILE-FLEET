@@ -46,18 +46,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
       const master = ctx.createGain();
       master.gain.setValueAtTime(0.0001, ctx.currentTime);
-      master.gain.linearRampToValueAtTime(0.075, ctx.currentTime + 1.2);
+      master.gain.linearRampToValueAtTime(0.22, ctx.currentTime + 0.8);
       master.connect(ctx.destination);
       musicGainRef.current = master;
 
       const bass = ctx.createOscillator();
       const bassGain = ctx.createGain();
-      bass.type = 'sine'; bass.frequency.value = 55; bassGain.gain.value = 0.32;
+      bass.type = 'sine'; bass.frequency.value = 55; bassGain.gain.value = 0.48;
       bass.connect(bassGain).connect(master); bass.start();
 
       const pad = ctx.createOscillator();
       const padGain = ctx.createGain();
-      pad.type = 'triangle'; pad.frequency.value = 110; pad.detune.value = -4; padGain.gain.value = 0.07;
+      pad.type = 'triangle'; pad.frequency.value = 110; pad.detune.value = -4; padGain.gain.value = 0.14;
       pad.connect(padGain).connect(master); pad.start();
 
       // A repeating 16-step industrial/cinematic motif.
@@ -72,7 +72,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         osc.type = 'sine';
         osc.frequency.setValueAtTime(melody[step % melody.length], t);
         gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.exponentialRampToValueAtTime(0.055, t + 0.035);
+        gain.gain.exponentialRampToValueAtTime(0.16, t + 0.035);
         gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.42);
         osc.connect(gain).connect(master);
         osc.start(t); osc.stop(t + 0.45);
@@ -89,12 +89,16 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     // it, the first click/tap/key press starts it without showing an intrusive button.
     startLoginMusic.current();
     const unlock = () => startLoginMusic.current();
-    window.addEventListener('pointerdown', unlock, { once: true });
-    window.addEventListener('keydown', unlock, { once: true });
+    // User activation is required by Chrome/Edge for audible media. Catch several
+    // real interaction types so focusing the login form immediately unlocks audio.
+    window.addEventListener('pointerdown', unlock);
+    window.addEventListener('keydown', unlock);
+    window.addEventListener('touchstart', unlock, { passive: true });
 
     return () => {
       window.removeEventListener('pointerdown', unlock);
       window.removeEventListener('keydown', unlock);
+      window.removeEventListener('touchstart', unlock);
       musicTimersRef.current.forEach(timer => window.clearInterval(timer));
       musicTimersRef.current = [];
       const ctx = audioContextRef.current;
