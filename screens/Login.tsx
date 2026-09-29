@@ -31,10 +31,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     const timers: number[] = [];
     startLoginMusic.current = () => {
       const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      if (!AudioCtx || musicGainRef.current) return;
+      if (!AudioCtx) return;
+
+      // Reuse an existing context so the first real user gesture can resume
+      // a context that autoplay policy initially suspended.
       const ctx = audioContextRef.current || new AudioCtx();
       audioContextRef.current = ctx;
       if (ctx.state === 'suspended') void ctx.resume().catch(() => {});
+
+      if (musicGainRef.current) {
+        setSoundEnabled(ctx.state !== 'closed');
+        return;
+      }
 
       const master = ctx.createGain();
       master.gain.setValueAtTime(0.0001, ctx.currentTime);
