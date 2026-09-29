@@ -1,5 +1,5 @@
 
-import React, { lazy, Suspense, useState, createContext, useContext, useEffect, useMemo, useCallback } from 'react';
+import React, { lazy, Suspense, useState, createContext, useContext, useEffect, useMemo, useCallback, useRef } from 'react';
 const Login = lazy(() => import('./screens/Login'));
 const Dashboard = lazy(() => import('./screens/Dashboard'));
 const Operations = lazy(() => import('./screens/Operations'));
@@ -79,6 +79,7 @@ export const ThemeContext = createContext<ThemeContextType>({
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const loggingInRef = useRef(false);
   
   const [theme, setTheme] = useState<ThemeMode>(() => {
     return (localStorage.getItem('theme') as ThemeMode) || 'rose';
@@ -160,6 +161,8 @@ const App: React.FC = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'INITIAL_SESSION') return;
+      // While the login screen is verifying/celebrating, don't open the app early.
+      if (loggingInRef.current && event !== 'SIGNED_OUT') return;
 
       window.setTimeout(() => {
         if (cancelled) return;
@@ -526,24 +529,41 @@ const App: React.FC = () => {
     return () => window.removeEventListener('db-undo-success', syncUser);
   }, [user?.id]);
 
-  const handleLogin = async (email: string, pass: string) => {
-    const result = await loginWithPassword(email.trim(), pass);
-    if (result.user) {
-      const u = result.user;
-      setUser(u);
-      localStorage.setItem('user', JSON.stringify(u));
-      await db.loadAll().catch(err => console.error('Failed to load data after login:', err));
-      setActiveScreen(
-        u.role === UserRole.GATE_OPERATOR
-          ? 'port-gate'
-          : u.role === UserRole.CUSTOMER
-            ? 'cust-reservations'
-            : 'dashboard'
-      );
-    } else if (result.error === 'REVOKED') {
-      alert(lang === 'ar' ? 'تم تعليق هذا الحساب من قبل الإدارة' : 'This account access has been suspended/revoked by system administrator.');
-    } else {
-      alert(lang === 'ar' ? (result.error || 'فشل المصادقة') : (result.error || 'Authentication failed'));
+  // Returns a function that enters the app once the login screen has shown "Access Granted",
+  // or null if sign-in failed. The auth listener is paused while sign-in is in progress so
+  // the app doesn't open before the success screen.
+  const handleLogin = async (email: string, pass: string): Promise<(() => void) | null> => {
+    loggingInRef.current = true;
+    try {
+      const result = await loginWithPassword(email.trim(), pass);
+      if (result.user) {
+        const u = result.user;
+        await db.loadAll().catch(err => console.error('Failed to load data after login:', err));
+        return () => {
+          loggingInRef.current = false;
+          setUser(u);
+          localStorage.setItem('user', JSON.stringify(u));
+          setActiveScreen(
+            u.role === UserRole.GATE_OPERATOR
+              ? 'port-gate'
+              : u.role === UserRole.CUSTOMER
+                ? 'cust-reservations'
+                : 'dashboard'
+          );
+        };
+      }
+      loggingInRef.current = false;
+      if (result.error === 'REVOKED') {
+        alert(lang === 'ar' ? 'تم تعليق هذا الحساب من قبل الإدارة' : 'This account access has been suspended/revoked by system administrator.');
+      } else {
+        alert(lang === 'ar' ? (result.error || 'فشل المصادقة') : (result.error || 'Authentication failed'));
+      }
+      return null;
+    } catch (err) {
+      loggingInRef.current = false;
+      console.error('Login error:', err);
+      alert(lang === 'ar' ? 'فشل المصادقة' : 'Authentication failed');
+      return null;
     }
   };
 

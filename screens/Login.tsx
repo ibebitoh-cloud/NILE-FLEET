@@ -3,7 +3,8 @@ import React, { useState, useContext, useRef, useEffect } from 'react';
 import { ThemeContext, LanguageContext } from '../App';
 import { translations } from '../translations';
 
-interface LoginProps { onLogin: (email: string, pass: string) => void; }
+// onLogin resolves to a function that enters the app on success, or null on failure.
+interface LoginProps { onLogin: (email: string, pass: string) => Promise<(() => void) | null>; }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const { theme, isDark } = useContext(ThemeContext);
@@ -13,6 +14,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [stage, setStage] = useState<'form' | 'verifying' | 'granted'>('form');
+  const [progress, setProgress] = useState(0);
+  const enterRef = useRef<(() => void) | null>(null);
   const bgRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -44,10 +48,48 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     return () => window.removeEventListener('pointermove', onMove);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin(email, password);
+    if (stage !== 'form') return;
+    setProgress(4);
+    setStage('verifying');
+    let enter: (() => void) | null = null;
+    try {
+      enter = await onLogin(email, password);
+    } catch (err) {
+      console.error('Login failed:', err);
+    }
+    if (!enter) {
+      setStage('form'); // App already showed the error message
+      return;
+    }
+    enterRef.current = enter;
+    setProgress(100);
+    await new Promise(r => setTimeout(r, 450));
+    setStage('granted');
   };
+
+  const enterApp = () => {
+    const go = enterRef.current;
+    enterRef.current = null; // make sure it only runs once
+    if (go) go();
+  };
+
+  // Progress ring: eases toward 92% while the real sign-in runs, jumps to 100% when it finishes.
+  useEffect(() => {
+    if (stage !== 'verifying') return;
+    const id = window.setInterval(() => {
+      setProgress(p => (p < 92 ? p + (92 - p) * 0.07 + 0.3 : p));
+    }, 60);
+    return () => window.clearInterval(id);
+  }, [stage]);
+
+  // "Access Granted" screen continues on its own after a moment (button skips the wait).
+  useEffect(() => {
+    if (stage !== 'granted') return;
+    const id = window.setTimeout(enterApp, 1600);
+    return () => window.clearTimeout(id);
+  }, [stage]);
 
   const AnimatedText = ({ text, colorClass = "text-white", baseDelay = 0 }: { text: string, colorClass?: string, baseDelay?: number }) => {
     return (
@@ -86,6 +128,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         .film-scanline { animation: filmScan 8s ease-in-out infinite; }
         .film-flicker { animation: filmFlicker 9s steps(1) infinite; }
         .signal-glitch { animation: signalGlitch 7s steps(1) infinite; }
+        @keyframes confettiBurst { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0.5); opacity: 0; } }
+        @keyframes popIn { 0% { transform: scale(0.4); opacity: 0; } 70% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); } }
       `}</style>
 
       <div className="login-screen-shell w-full min-h-screen lg:h-screen grid grid-cols-1 lg:grid-cols-12 overflow-hidden relative z-10">
@@ -160,6 +204,41 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[30rem] lg:text-[40rem] font-black text-slate-500/5 pointer-events-none select-none italic tracking-tighter">N</div>
           <div ref={cardRef} style={{ transform: 'perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))', transition: 'transform 120ms ease-out' }} className={`max-w-sm w-full mx-auto space-y-5 sm:space-y-6 lg:space-y-7 relative z-10 rounded-3xl px-6 py-7 sm:px-8 sm:py-8 backdrop-blur-md border shadow-2xl ${isDark ? 'bg-slate-900/35 border-white/10' : 'bg-white/35 border-white/30'}`}>
             <div className="pointer-events-none absolute inset-0 rounded-3xl" style={{ background: 'radial-gradient(260px circle at var(--cx, 50%) var(--cy, 0%), rgba(194,163,120,0.22), transparent 60%)' }}></div>
+            {stage !== 'form' ? (
+              <div className="flex flex-col items-center justify-center text-center min-h-[340px] space-y-4" role="status" aria-live="polite">
+                {stage === 'verifying' ? (
+                  <>
+                    <h3 className={`text-2xl font-black uppercase italic tracking-tighter ${isDark ? 'text-white' : 'text-[#001F3F]'}`}>{isAr ? 'جارٍ التحقق...' : 'VERIFYING...'}</h3>
+                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">{isAr ? 'نفحص بياناتك بأمان' : 'Securely checking your credentials'}</p>
+                    <div className="relative h-24 w-24 mt-3">
+                      <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
+                        <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(194,163,120,0.2)" strokeWidth="6" />
+                        <circle cx="50" cy="50" r="44" fill="none" stroke="#C2A378" strokeWidth="6" strokeLinecap="round" strokeDasharray="276.46" strokeDashoffset={276.46 * (1 - progress / 100)} style={{ transition: 'stroke-dashoffset 120ms linear' }} />
+                      </svg>
+                      <span className={`absolute inset-0 flex items-center justify-center text-lg font-black ${isDark ? 'text-white' : 'text-[#001F3F]'}`}>{Math.round(progress)}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h3 className={`text-2xl font-black uppercase italic tracking-tighter ${isDark ? 'text-white' : 'text-[#001F3F]'}`}>{isAr ? 'تم منح الوصول' : 'ACCESS GRANTED'}</h3>
+                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">{isAr ? 'مرحباً بعودتك' : 'Welcome back'}</p>
+                    <div className="relative h-24 w-24 mt-3 flex items-center justify-center">
+                      {Array.from({ length: 14 }).map((_, k) => {
+                        const a = (k / 14) * Math.PI * 2;
+                        const r = 62 + (k % 3) * 12;
+                        const colors = ['#C2A378', '#10b981', '#38bdf8', '#f472b6', '#facc15'];
+                        return <span key={k} className="absolute h-2 w-2 rounded-full" style={{ background: colors[k % colors.length], ['--dx' as any]: `${Math.cos(a) * r}px`, ['--dy' as any]: `${Math.sin(a) * r}px`, animation: 'confettiBurst 900ms ease-out forwards' }} />;
+                      })}
+                      <div className="h-16 w-16 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/40" style={{ animation: 'popIn 450ms ease-out' }}>
+                        <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+                      </div>
+                    </div>
+                    <button type="button" onClick={enterApp} className="mt-3 px-8 min-h-10 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-full uppercase tracking-[0.3em] text-[9px] transition-all active:scale-[0.97]">{isAr ? 'دخول' : 'ENTER'}</button>
+                  </>
+                )}
+              </div>
+            ) : (
+              <>
             <div className="space-y-3 text-center lg:text-start relative">
               <h3 className={`text-2xl sm:text-3xl lg:text-4xl font-black uppercase italic tracking-tighter leading-[0.95] ${isDark ? 'text-white' : 'text-[#001F3F]'}`}>
                 <>{isAr ? 'مرحباً بكم في' : 'WELCOME TO'} <br/> <span className="text-[#C2A378]">{isAr ? 'أسطول النيل' : 'NILE FLEET'}</span></>
@@ -198,6 +277,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   </div>
                </div>
             </div>
+              </>
+            )}
           </div>
         </div>
       </div>
