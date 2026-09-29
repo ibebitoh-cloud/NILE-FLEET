@@ -1,0 +1,11 @@
+{
+  "name": "Nile Fleet Command",
+  "description": "Premium Clip-On Genset Management Platform",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

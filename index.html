@@ -1,0 +1,500 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nile Fleet Command</title>
+    <meta name="description" content="Premium Clip-On Genset Management Platform">
+    <meta property="og:title" content="Nile Fleet Command">
+    <meta property="og:description" content="Premium Clip-On Genset Management Platform">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/nile-fleet-logo.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --border-primary: #e2e8f0;
+            --card-bg: #ffffff;
+            --accent: #3b82f6;
+            --input-bg: #f8fafc;
+            --app-scale: 0.85; /* Defaulting to a smaller scale */
+        }
+
+        html {
+            /* Tailwind rem values are relative to this. 
+               By scaling this, the entire app scales perfectly. */
+            font-size: calc(16px * var(--app-scale));
+        }
+
+        body { 
+            font-family: 'Inter', 'Cairo', sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            transition: background-color 0.4s ease, color 0.4s ease;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            --rail-bg: var(--bg-primary);
+            --row-bg: var(--card-bg);
+        }
+        
+        /* Dynamic table row backgrounds */
+        table tbody tr:not(.selected-row) td {
+            background-color: var(--row-bg) !important;
+            transition: background-color 0.2s ease;
+        }
+        table tbody tr:not(.selected-row):hover td {
+            filter: brightness(0.95);
+        }
+        body.theme-black table tbody tr:not(.selected-row):hover td,
+        body.theme-midnight table tbody tr:not(.selected-row):hover td,
+        body.theme-navy table tbody tr:not(.selected-row):hover td,
+        body.theme-custom table tbody tr:not(.selected-row):hover td {
+            filter: brightness(1.15);
+        }
+        
+        [dir="rtl"] { font-family: 'Cairo', sans-serif; }
+
+        /* THEME DEFINITIONS - Calibrated for High Visibility */
+        body.theme-black {
+            --bg-primary: #000000;
+            --text-primary: #ffffff;
+            --text-secondary: #cbd5e1;
+            --border-primary: #262626;
+            --card-bg: #0a0a0a;
+            --accent: #c2a378;
+            --input-bg: #171717;
+            --rail-bg: #001224;
+            --row-bg: #050505;
+        }
+        body.theme-white {
+            --bg-primary: #f8fafc;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --border-primary: #e2e8f0;
+            --card-bg: #ffffff;
+            --accent: #2563eb;
+            --input-bg: #f1f5f9;
+        }
+        body.theme-yellow {
+            --bg-primary: #facc15;
+            --text-primary: #000000;
+            --text-secondary: #422006;
+            --border-primary: #a16207;
+            --card-bg: #fde047;
+            --accent: #000000;
+            --input-bg: #fef08a;
+        }
+        body.theme-navy {
+            --bg-primary: #020617;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border-primary: #1e293b;
+            --card-bg: #0f172a;
+            --accent: #38bdf8;
+            --input-bg: #1e293b;
+        }
+        body.theme-forest {
+            --bg-primary: #022c22;
+            --text-primary: #ecfdf5;
+            --text-secondary: #6ee7b7;
+            --border-primary: #064e3b;
+            --card-bg: #022c22;
+            --accent: #10b981;
+            --input-bg: #064e3b;
+        }
+        body.theme-sahara {
+            --bg-primary: #451a03;
+            --text-primary: #fffbeb;
+            --text-secondary: #fcd34d;
+            --border-primary: #78350f;
+            --card-bg: #2d1202;
+            --accent: #fbbf24;
+            --input-bg: #451a03;
+        }
+        body.theme-cyber {
+            --bg-primary: #1a0033;
+            --text-primary: #00ffff;
+            --text-secondary: #f0abfc;
+            --border-primary: #4a044e;
+            --card-bg: #1a0033;
+            --accent: #ff00ff;
+            --input-bg: #2d004d;
+        }
+        body.theme-slate {
+            --bg-primary: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border-primary: #334155;
+            --card-bg: #1e293b;
+            --accent: #38bdf8;
+            --input-bg: #0f172a;
+        }
+        body.theme-midnight {
+            --bg-primary: #000000;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border-primary: #1e293b;
+            --card-bg: #0f172a;
+            --accent: #818cf8;
+            --input-bg: #1e293b;
+        }
+        body.theme-rose {
+            --bg-primary: #fff1f2;
+            --text-primary: #881337;
+            --text-secondary: #be123c;
+            --border-primary: #fecdd3;
+            --card-bg: #ffffff;
+            --accent: #e11d48;
+            --input-bg: #fff1f2;
+        }
+        body.theme-toxic {
+            --bg-primary: #000000;
+            --text-primary: #39ff14;
+            --text-secondary: #22c55e;
+            --border-primary: #171717;
+            --card-bg: #050505;
+            --accent: #39ff14;
+            --input-bg: #000000;
+        }
+
+        /* NEW THEMES */
+        body.theme-ocean {
+            --bg-primary: #f0f9ff;
+            --text-primary: #0c4a6e;
+            --text-secondary: #0369a1;
+            --border-primary: #bae6fd;
+            --card-bg: #ffffff;
+            --accent: #0ea5e9;
+            --input-bg: #f0f9ff;
+        }
+        body.theme-lava {
+            --bg-primary: #000000;
+            --text-primary: #ffffff;
+            --text-secondary: #fca5a5;
+            --border-primary: #450a0a;
+            --card-bg: #0a0a0a;
+            --accent: #ef4444;
+            --input-bg: #1a0000;
+        }
+        body.theme-mint {
+            --bg-primary: #f0fdf4;
+            --text-primary: #14532d;
+            --text-secondary: #166534;
+            --border-primary: #bbf7d0;
+            --card-bg: #ffffff;
+            --accent: #22c55e;
+            --input-bg: #f0fdf4;
+        }
+        body.theme-copper {
+            --bg-primary: #1c1917;
+            --text-primary: #fef3c7;
+            --text-secondary: #d97706;
+            --border-primary: #44403c;
+            --card-bg: #0c0a09;
+            --accent: #ea580c;
+            --input-bg: #292524;
+        }
+        body.theme-arctic {
+            --bg-primary: #f8fafc;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-primary: #cbd5e1;
+            --card-bg: #ffffff;
+            --accent: #0ea5e9;
+            --input-bg: #f1f5f9;
+        }
+        body.theme-emerald-vibrant {
+            --bg-primary: #f0fdf4;
+            --text-primary: #064e3b;
+            --text-secondary: #047857;
+            --border-primary: #bbf7d0;
+            --card-bg: #ffffff;
+            --accent: #10b981;
+            --input-bg: #f0fdf4;
+        }
+        body.theme-phantom {
+            --bg-primary: #121212;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --border-primary: #2d2d2d;
+            --card-bg: #1a1a1a;
+            --accent: #9b9b9b;
+            --input-bg: #252525;
+        }
+
+        /* NILE FLEET THEME PACK — high-contrast, operational palettes */
+        body.theme-nile {
+            --bg-primary: #061a16; --text-primary: #f4fbf8; --text-secondary: #9dd7c2;
+            --border-primary: #17483b; --card-bg: #0b241f; --accent: #4fd1a5; --input-bg: #102f28;
+            --rail-bg: #04120f; --row-bg: #081f1a;
+        }
+        body.theme-carbon {
+            --bg-primary: #101214; --text-primary: #f5f7fa; --text-secondary: #aab2bd;
+            --border-primary: #30363d; --card-bg: #181b1f; --accent: #60a5fa; --input-bg: #20242a;
+            --rail-bg: #0b0d0f; --row-bg: #15181c;
+        }
+        body.theme-royal {
+            --bg-primary: #11152f; --text-primary: #f8f9ff; --text-secondary: #b9c0ed;
+            --border-primary: #343b72; --card-bg: #191f42; --accent: #a78bfa; --input-bg: #222951;
+            --rail-bg: #0a0d21; --row-bg: #151a38;
+        }
+        body.theme-sandstorm {
+            --bg-primary: #f7f0e3; --text-primary: #33281d; --text-secondary: #705d49;
+            --border-primary: #ddcbb0; --card-bg: #fffaf2; --accent: #b7791f; --input-bg: #f2e7d4;
+            --rail-bg: #eadbc4; --row-bg: #fffaf2;
+        }
+        body.theme-corporate {
+            --bg-primary: #eef3f7; --text-primary: #102a43; --text-secondary: #486581;
+            --border-primary: #cbd5e1; --card-bg: #ffffff; --accent: #0077b6; --input-bg: #f8fafc;
+            --rail-bg: #e2eaf1; --row-bg: #ffffff;
+        }
+        body.theme-crimson {
+            --bg-primary: #190b10; --text-primary: #fff5f7; --text-secondary: #e6a8b5;
+            --border-primary: #55202d; --card-bg: #241018; --accent: #fb7185; --input-bg: #32131e;
+            --rail-bg: #10070b; --row-bg: #1e0d14;
+        }
+
+        /* GLOBAL SELECTORS FOR DYNAMIC COLORS */
+        main, aside, section, div, table, tr, th, td, input, select, textarea, button {
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Force visibility on cards even in dark themes */
+        body.theme-black .bg-white, body.theme-black .bg-slate-50, body.theme-black .bg-slate-100,
+        body.theme-midnight .bg-white, body.theme-midnight .bg-slate-50, body.theme-midnight .bg-slate-100,
+        body.theme-navy .bg-white, body.theme-navy .bg-slate-50, body.theme-navy .bg-slate-100,
+        body.theme-lava .bg-white, body.theme-lava .bg-slate-50, body.theme-lava .bg-slate-100,
+        body.theme-copper .bg-white, body.theme-copper .bg-slate-50, body.theme-copper .bg-slate-100,
+        body.theme-phantom .bg-white, body.theme-phantom .bg-slate-50, body.theme-phantom .bg-slate-100 { 
+            background-color: var(--card-bg) !important; 
+            color: var(--text-primary) !important; 
+        }
+
+        /* Contrast-safe border and semantic color system */
+        .border, .border-slate-100, .border-slate-200, .border-white\/5 { 
+            border-color: var(--border-primary) !important; 
+        }
+        .border-2, .border-4 { border-color: var(--border-primary) !important; }
+
+        body[class*="theme-"] {
+            --surface-0: var(--bg-primary);
+            --surface-1: var(--card-bg);
+            --surface-2: var(--input-bg);
+            --surface-3: color-mix(in srgb, var(--card-bg) 82%, var(--bg-primary));
+            --surface-border-strong: color-mix(in srgb, var(--border-primary) 72%, var(--text-secondary));
+            --status-success-bg: #dcfce7; --status-success-fg: #166534;
+            --status-warning-bg: #fef3c7; --status-warning-fg: #92400e;
+            --status-danger-bg: #fee2e2; --status-danger-fg: #991b1b;
+            --status-info-bg: #dbeafe; --status-info-fg: #1e40af;
+            --status-neutral-bg: #e2e8f0; --status-neutral-fg: #334155;
+        }
+        body.theme-black, body.theme-navy, body.theme-forest, body.theme-sahara,
+        body.theme-cyber, body.theme-slate, body.theme-midnight, body.theme-toxic,
+        body.theme-lava, body.theme-phantom, body.theme-copper, body.theme-nile,
+        body.theme-carbon, body.theme-royal, body.theme-crimson {
+            --status-success-bg: #14532d; --status-success-fg: #bbf7d0;
+            --status-warning-bg: #78350f; --status-warning-fg: #fde68a;
+            --status-danger-bg: #7f1d1d; --status-danger-fg: #fecaca;
+            --status-info-bg: #1e3a8a; --status-info-fg: #bfdbfe;
+            --status-neutral-bg: #334155; --status-neutral-fg: #e2e8f0;
+        }
+
+        /* Semantic status surfaces: same meaning, distinct hues, theme-safe contrast. */
+        body[class*="theme-"] .bg-green-50, body[class*="theme-"] .bg-green-100,
+        body[class*="theme-"] .bg-emerald-50, body[class*="theme-"] .bg-emerald-100 {
+            background-color: var(--status-success-bg) !important; color: var(--status-success-fg) !important;
+        }
+        body[class*="theme-"] .bg-amber-50, body[class*="theme-"] .bg-amber-100,
+        body[class*="theme-"] .bg-yellow-50, body[class*="theme-"] .bg-yellow-100 {
+            background-color: var(--status-warning-bg) !important; color: var(--status-warning-fg) !important;
+        }
+        body[class*="theme-"] .bg-red-50, body[class*="theme-"] .bg-red-100,
+        body[class*="theme-"] .bg-rose-50, body[class*="theme-"] .bg-rose-100 {
+            background-color: var(--status-danger-bg) !important; color: var(--status-danger-fg) !important;
+        }
+        body[class*="theme-"] .bg-blue-50, body[class*="theme-"] .bg-blue-100,
+        body[class*="theme-"] .bg-sky-50, body[class*="theme-"] .bg-sky-100 {
+            background-color: var(--status-info-bg) !important; color: var(--status-info-fg) !important;
+        }
+
+        /* Foreground normalization: prevent low-contrast text on either surface. */
+        body[class*="theme-"] .text-slate-300 { color: var(--text-secondary) !important; }
+        body[class*="theme-"] .text-slate-400 { color: var(--text-secondary) !important; }
+        body[class*="theme-"] .text-slate-500 { color: var(--text-secondary) !important; }
+        body.theme-black .text-blue-500, body.theme-black .text-blue-600,
+        body.theme-navy .text-blue-500, body.theme-navy .text-blue-600,
+        body.theme-forest .text-blue-500, body.theme-forest .text-blue-600,
+        body.theme-sahara .text-blue-500, body.theme-sahara .text-blue-600,
+        body.theme-cyber .text-blue-500, body.theme-cyber .text-blue-600,
+        body.theme-slate .text-blue-500, body.theme-slate .text-blue-600,
+        body.theme-midnight .text-blue-500, body.theme-midnight .text-blue-600,
+        body.theme-toxic .text-blue-500, body.theme-toxic .text-blue-600,
+        body.theme-lava .text-blue-500, body.theme-lava .text-blue-600,
+        body.theme-phantom .text-blue-500, body.theme-phantom .text-blue-600,
+        body.theme-copper .text-blue-500, body.theme-copper .text-blue-600,
+        body.theme-nile .text-blue-500, body.theme-nile .text-blue-600,
+        body.theme-carbon .text-blue-500, body.theme-carbon .text-blue-600,
+        body.theme-royal .text-blue-500, body.theme-royal .text-blue-600,
+        body.theme-crimson .text-blue-500, body.theme-crimson .text-blue-600 {
+            color: #93c5fd !important;
+        }
+        body.theme-black .text-rose-500, body.theme-black .text-rose-600,
+        body.theme-navy .text-rose-500, body.theme-navy .text-rose-600,
+        body.theme-forest .text-rose-500, body.theme-forest .text-rose-600,
+        body.theme-sahara .text-rose-500, body.theme-sahara .text-rose-600,
+        body.theme-cyber .text-rose-500, body.theme-cyber .text-rose-600,
+        body.theme-slate .text-rose-500, body.theme-slate .text-rose-600,
+        body.theme-midnight .text-rose-500, body.theme-midnight .text-rose-600,
+        body.theme-toxic .text-rose-500, body.theme-toxic .text-rose-600,
+        body.theme-lava .text-rose-500, body.theme-lava .text-rose-600,
+        body.theme-phantom .text-rose-500, body.theme-phantom .text-rose-600,
+        body.theme-copper .text-rose-500, body.theme-copper .text-rose-600,
+        body.theme-nile .text-rose-500, body.theme-nile .text-rose-600,
+        body.theme-carbon .text-rose-500, body.theme-carbon .text-rose-600,
+        body.theme-royal .text-rose-500, body.theme-royal .text-rose-600,
+        body.theme-crimson .text-rose-500, body.theme-crimson .text-rose-600 {
+            color: #fda4af !important;
+        }
+
+        /* Table rows always alternate enough to remain visually separate. */
+        table tbody tr:nth-child(odd):not(.selected-row) td { background-color: var(--surface-1) !important; }
+        table tbody tr:nth-child(even):not(.selected-row) td { background-color: var(--surface-3) !important; }
+        table tbody tr:hover:not(.selected-row) td { background-color: var(--surface-2) !important; filter: none !important; }
+        table tbody td { border-bottom-color: var(--surface-border-strong) !important; }
+
+        /* Inputs always sit on a separate surface from their parent card. */
+        body[class*="theme-"] input, body[class*="theme-"] select, body[class*="theme-"] textarea {
+            background-color: var(--surface-2) !important;
+            color: var(--text-primary) !important;
+            border-color: var(--surface-border-strong) !important;
+        }
+        body[class*="theme-"] input:focus, body[class*="theme-"] select:focus, body[class*="theme-"] textarea:focus {
+            background-color: var(--surface-1) !important;
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent) !important;
+        }
+        
+        /* Table Cell & Input Inversion */
+        table td, table th { 
+            border-bottom: 1px solid var(--border-primary); 
+            color: var(--text-primary); 
+        }
+        
+        input, select, textarea {
+            background-color: var(--input-bg) !important;
+            color: var(--text-primary) !important;
+            border-color: var(--border-primary) !important;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            background-color: var(--bg-primary) !important; /* Switch to main bg on focus for maximum contrast */
+            border-color: var(--accent) !important;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Ensure high contrast for inputs in specific themes if needed */
+        body.theme-rose input, body.theme-rose select, body.theme-rose textarea,
+        body.theme-emerald-vibrant input, body.theme-emerald-vibrant select, body.theme-emerald-vibrant textarea {
+            background-color: #ffffff !important; /* Force white bg for these theme inputs for better contrast */
+        }
+        
+        body.theme-yellow input, body.theme-yellow select, body.theme-yellow textarea {
+            background-color: #ffffff !important; /* Force white bg for yellow theme inputs */
+        }
+
+        input::placeholder { 
+            color: var(--text-secondary); 
+            opacity: 0.6; 
+        }
+
+        /* Global Label Visibility */
+        label { 
+            color: var(--text-secondary) !important; 
+            font-weight: 800 !important;
+        }
+
+        /* THEME SURFACE NORMALIZATION */
+        body[class*="theme-"] .bg-white,
+        body[class*="theme-"] .bg-slate-50,
+        body[class*="theme-"] .bg-slate-100 {
+            background-color: var(--card-bg) !important;
+            color: var(--text-primary);
+        }
+        body[class*="theme-"] .text-slate-900,
+        body[class*="theme-"] .text-slate-800,
+        body[class*="theme-"] .text-slate-700 {
+            color: var(--text-primary);
+        }
+        body[class*="theme-"] .text-slate-500,
+        body[class*="theme-"] .text-slate-400 {
+            color: var(--text-secondary);
+        }
+        body[class*="theme-"] .hover\\:bg-slate-50:hover,
+        body[class*="theme-"] .hover\\:bg-slate-100:hover {
+            background-color: var(--input-bg) !important;
+        }
+        body[class*="theme-"] input,
+        body[class*="theme-"] select,
+        body[class*="theme-"] textarea {
+            color-scheme: light;
+        }
+        body.theme-black input, body.theme-navy input, body.theme-forest input,
+        body.theme-sahara input, body.theme-cyber input, body.theme-slate input,
+        body.theme-midnight input, body.theme-toxic input, body.theme-lava input,
+        body.theme-copper input, body.theme-phantom input, body.theme-nile input,
+        body.theme-carbon input, body.theme-royal input, body.theme-crimson input {
+            color-scheme: dark;
+        }
+        body.theme-sandstorm input, body.theme-corporate input, body.theme-ocean input,
+        body.theme-mint input, body.theme-arctic input, body.theme-white input,
+        body.theme-rose input, body.theme-emerald-vibrant input {
+            color-scheme: light;
+        }
+
+        /* Brand utility classes are theme-aware while preserving semantic status colors. */
+        body[class*="theme-"] [class~="text-[#001F3F]"] { color: var(--text-primary) !important; }
+        body[class*="theme-"] [class~="bg-slate-50"] { background-color: var(--card-bg) !important; }
+        body[class*="theme-"] [class~="bg-slate-100"] { background-color: var(--input-bg) !important; }
+        body[class*="theme-"] [class~="border-slate-100"],
+        body[class*="theme-"] [class~="border-slate-200"] { border-color: var(--border-primary) !important; }
+
+        @media (max-width: 1023px) {
+            main { padding-bottom: 76px; }
+        }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-primary); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+        #root:empty {
+            display: flex; align-items: center; justify-content: center; height: 100vh;
+            background: #001F3F; color: #C2A378; font-weight: bold; font-size: 14px;
+            text-transform: uppercase; letter-spacing: 0.2em;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "recharts": "https://esm.sh/recharts@^3.6.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.38.0"
+  }
+}
+</script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>

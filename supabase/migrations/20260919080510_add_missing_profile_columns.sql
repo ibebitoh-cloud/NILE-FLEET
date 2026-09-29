@@ -1,0 +1,3 @@
+-- Historical migration placeholder retained for Supabase Preview migration-history alignment.
+-- The corresponding migration is already applied on the remote project.
+-- Do not add new schema changes here.

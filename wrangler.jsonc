@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nile-1-v2-fixes",
+  "compatibility_date": "2026-09-18",
+  "pages_build_output_dir": "./dist",
+  "vars": {
+    "SUPABASE_URL": "https://mlxsafyubdsssugyiarx.supabase.co"
+  },
+  "ai": {
+    "binding": "AI"
+  }
+}
