@@ -63,6 +63,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <video
             className="h-full w-full object-cover"
             src="/genmark-clip-on-gc5-genset.mp4"
+            poster="/login-poster.jpg"
             autoPlay
             muted
             loop
