@@ -1,5 +1,5 @@
 
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef, useEffect } from 'react';
 import { ThemeContext, LanguageContext } from '../App';
 import { translations } from '../translations';
 
@@ -13,6 +13,36 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const bgRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Cursor-following light + subtle 3D tilt on the login card (mouse/pen only).
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return;
+      const bg = bgRef.current;
+      if (bg) {
+        const r = bg.getBoundingClientRect();
+        bg.style.setProperty('--lx', `${e.clientX - r.left}px`);
+        bg.style.setProperty('--ly', `${e.clientY - r.top}px`);
+      }
+      const card = cardRef.current;
+      if (card) {
+        const c = card.getBoundingClientRect();
+        const px = (e.clientX - c.left) / c.width;
+        const py = (e.clientY - c.top) / c.height;
+        const near = px > -0.5 && px < 1.5 && py > -0.5 && py < 1.5;
+        const clamp = (v: number) => Math.max(0, Math.min(1, v));
+        card.style.setProperty('--rx', near ? `${(0.5 - clamp(py)) * 10}deg` : '0deg');
+        card.style.setProperty('--ry', near ? `${(clamp(px) - 0.5) * 10}deg` : '0deg');
+        card.style.setProperty('--cx', `${clamp(px) * 100}%`);
+        card.style.setProperty('--cy', `${clamp(py) * 100}%`);
+      }
+    };
+    window.addEventListener('pointermove', onMove);
+    return () => window.removeEventListener('pointermove', onMove);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +89,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       `}</style>
 
       <div className="login-screen-shell w-full min-h-screen lg:h-screen grid grid-cols-1 lg:grid-cols-12 overflow-hidden relative z-10">
-        <div className="absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+        <div ref={bgRef} className="absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
           <video
             className="h-full w-full object-cover"
             src="/genmark-clip-on-gc5-genset.mp4"
@@ -76,6 +106,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <div className="film-scanline absolute -inset-x-8 top-0 h-24 bg-gradient-to-b from-transparent via-[#C2A378]/30 to-transparent"></div>
           <div className="film-flicker absolute inset-0 bg-[#C2A378]/20 mix-blend-screen"></div>
           <div className="absolute inset-0 shadow-[inset_0_0_160px_rgba(0,0,0,0.7)]"></div>
+          {/* Cursor-following light */}
+          <div className="pointer-events-none absolute inset-0 mix-blend-screen" style={{ background: 'radial-gradient(420px circle at var(--lx, 50%) var(--ly, 40%), rgba(194,163,120,0.28), transparent 65%)' }}></div>
+          {/* Film-grain noise */}
+          <div className="pointer-events-none absolute inset-0 opacity-[0.09] mix-blend-overlay" style={{ backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")" }}></div>
         </div>
         
         {/* LEFT PANEL */}
@@ -124,7 +158,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
 
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[30rem] lg:text-[40rem] font-black text-slate-500/5 pointer-events-none select-none italic tracking-tighter">N</div>
-          <div className={`max-w-sm w-full mx-auto space-y-5 sm:space-y-6 lg:space-y-7 relative z-10 rounded-3xl px-6 py-7 sm:px-8 sm:py-8 backdrop-blur-md border shadow-2xl ${isDark ? 'bg-slate-900/35 border-white/10' : 'bg-white/35 border-white/30'}`}>
+          <div ref={cardRef} style={{ transform: 'perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))', transition: 'transform 120ms ease-out' }} className={`max-w-sm w-full mx-auto space-y-5 sm:space-y-6 lg:space-y-7 relative z-10 rounded-3xl px-6 py-7 sm:px-8 sm:py-8 backdrop-blur-md border shadow-2xl ${isDark ? 'bg-slate-900/35 border-white/10' : 'bg-white/35 border-white/30'}`}>
+            <div className="pointer-events-none absolute inset-0 rounded-3xl" style={{ background: 'radial-gradient(260px circle at var(--cx, 50%) var(--cy, 0%), rgba(194,163,120,0.22), transparent 60%)' }}></div>
             <div className="space-y-3 text-center lg:text-start relative">
               <h3 className={`text-2xl sm:text-3xl lg:text-4xl font-black uppercase italic tracking-tighter leading-[0.95] ${isDark ? 'text-white' : 'text-[#001F3F]'}`}>
                 <>{isAr ? 'مرحباً بكم في' : 'WELCOME TO'} <br/> <span className="text-[#C2A378]">{isAr ? 'أسطول النيل' : 'NILE FLEET'}</span></>
