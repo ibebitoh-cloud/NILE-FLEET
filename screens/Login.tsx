@@ -16,9 +16,123 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [stage, setStage] = useState<'form' | 'verifying' | 'granted'>('form');
   const [progress, setProgress] = useState(0);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const musicGainRef = useRef<GainNode | null>(null);
+  const musicTimersRef = useRef<number[]>([]);
   const enterRef = useRef<(() => void) | null>(null);
   const bgRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+
+  // Cinematic login soundtrack: a lightweight Web Audio score matched to the industrial visuals.
+  // It starts after the user's first interaction because browsers block unmuted autoplay.
+  const startLoginMusic = useRef<() => void>(() => {});
+  useEffect(() => {
+    startLoginMusic.current = () => {
+      if (soundEnabled) return;
+      const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = audioContextRef.current || new AudioCtx();
+      audioContextRef.current = ctx;
+      if (ctx.state === 'suspended') void ctx.resume();
+      if (musicGainRef.current) {
+        setSoundEnabled(true);
+        return;
+      }
+
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.0001, ctx.currentTime);
+      master.gain.exponentialRampToValueAtTime(0.055, ctx.currentTime + 1.8);
+      master.connect(ctx.destination);
+      musicGainRef.current = master;
+
+      const now = ctx.currentTime;
+      const notes = [55, 65.41, 73.42, 82.41, 98, 110, 130.81, 146.83];
+      const makeVoice = (frequency: number, type: OscillatorType, volume: number, detune = 0) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(frequency, now);
+        osc.detune.value = detune;
+        gain.gain.value = volume;
+        osc.connect(gain).connect(master);
+        osc.start(now);
+        return { osc, gain };
+      };
+
+      // Deep engine-like drone + restrained metallic harmonic layer.
+      const bass = makeVoice(55, 'sine', 0.42);
+      const sub = makeVoice(82.41, 'triangle', 0.13, -5);
+      const shimmer = makeVoice(220, 'sine', 0.035, 7);
+      shimmer.gain.gain.setValueAtTime(0.0001, now);
+      shimmer.gain.gain.exponentialRampToValueAtTime(0.035, now + 2.5);
+
+      const sequence = [0, 2, 4, 1, 3, 5, 2, 6, 4, 1, 5, 7];
+      sequence.forEach((index, i) => {
+        const delay = 0.6 + i * 1.35;
+        const timer = window.setTimeout(() => {
+          if (!musicGainRef.current) return;
+          const t = ctx.currentTime;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(notes[index], t);
+          gain.gain.setValueAtTime(0.0001, t);
+          gain.gain.exponentialRampToValueAtTime(0.045, t + 0.18);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.05);
+          osc.connect(gain).connect(master);
+          osc.start(t);
+          osc.stop(t + 1.1);
+        }, delay * 1000);
+        musicTimersRef.current.push(timer);
+      });
+
+      // Keep the score evolving without adding an external audio asset.
+      const pulse = window.setInterval(() => {
+        if (!musicGainRef.current) return;
+        const t = ctx.currentTime;
+        const target = 0.045 + Math.random() * 0.018;
+        master.gain.cancelScheduledValues(t);
+        master.gain.setTargetAtTime(target, t, 0.35);
+      }, 3200);
+      musicTimersRef.current.push(pulse);
+      setSoundEnabled(true);
+
+      void bass; void sub;
+    };
+
+    const unlock = () => startLoginMusic.current();
+    window.addEventListener('pointerdown', unlock, { once: true });
+    window.addEventListener('keydown', unlock, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+      musicTimersRef.current.forEach(timer => {
+        window.clearTimeout(timer);
+        window.clearInterval(timer);
+      });
+      musicTimersRef.current = [];
+      musicGainRef.current?.gain.setTargetAtTime(0.0001, audioContextRef.current?.currentTime || 0, 0.25);
+      window.setTimeout(() => {
+        audioContextRef.current?.close().catch(() => {});
+        audioContextRef.current = null;
+        musicGainRef.current = null;
+      }, 400);
+    };
+  }, [soundEnabled]);
+
+  const toggleLoginMusic = () => {
+    if (!soundEnabled) {
+      startLoginMusic.current();
+      return;
+    }
+    const gain = musicGainRef.current;
+    const ctx = audioContextRef.current;
+    if (!gain || !ctx) return;
+    if (ctx.state === 'suspended') void ctx.resume();
+    const current = gain.gain.value;
+    gain.gain.setTargetAtTime(current > 0.001 ? 0.0001 : 0.055, ctx.currentTime, 0.12);
+  };
 
   // Cursor-following light + subtle 3D tilt on the login card (mouse/pen only).
   useEffect(() => {
@@ -186,6 +300,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         {/* RIGHT PANEL */}
         <div className="col-span-full lg:col-span-5 min-h-screen flex items-center justify-center px-5 py-20 sm:px-8 sm:py-16 lg:px-12 lg:py-0 relative z-10">
           {/* Top Bar for Language Switcher */}
+          <div className="absolute top-6 left-6 lg:top-8 lg:left-8 z-20">
+            <button
+              type="button"
+              onClick={toggleLoginMusic}
+              aria-label={soundEnabled ? 'Toggle login soundtrack' : 'Enable login soundtrack'}
+              title={soundEnabled ? 'Toggle login soundtrack' : 'Enable cinematic soundtrack'}
+              className="px-3 py-2 rounded-xl border border-[#C2A378]/40 bg-[#001F3F]/65 text-[#C2A378] backdrop-blur-sm text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-[#001F3F]/85 transition-all"
+            >
+              {soundEnabled ? '♫ SOUND ON' : '♫ SOUND'}
+            </button>
+          </div>
+
           <div className="absolute top-6 right-6 lg:top-8 lg:right-8 z-20 flex items-center gap-2">
             <button
               type="button"
