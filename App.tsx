@@ -82,7 +82,7 @@ const App: React.FC = () => {
   const loggingInRef = useRef(false);
   
   const [theme, setTheme] = useState<ThemeMode>(() => {
-    return (localStorage.getItem('theme') as ThemeMode) || 'rose';
+    return (localStorage.getItem('theme') as ThemeMode) || 'phantom';
   });
 
   const [scale, setScale] = useState<number>(() => {
