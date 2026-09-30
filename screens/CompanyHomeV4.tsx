@@ -546,7 +546,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       approach: 0, approachTarget: 0, horn: 0, lastWhoosh: 0, km: 0, hudT: 0, t: 0, lastScroll: window.scrollY,
       smoke: [] as { x: number; y: number; r: number; life: number }[],
       box: { x0: 0, y0: 0, x1: 0, y1: 0 },
-      drag: false, dragX: 0, dragY: 0, dragDX: 0, dragDY: 0,
+      drag: false, dragMode: '', dragX: 0, dragY: 0, dragDX: 0, dragDY: 0,
       wrecked: false, falling: false, fallV: 0, wreckX: 0, wreckY: 0, wreckRot: 0,
       collector: false, collectorX: -420, collectorY: 0, collectorTarget: false, collectorCarry: false, collectorDone: false,
       collectorScrollReady: false, wreckParts: false, wreckTimer: 0, pickupTimer: 0, impact: false,
@@ -572,39 +572,26 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       if (sim.wrecked || sim.falling) return;
       const b = sim.box;
       if (e.clientX > b.x0 && e.clientX < b.x1 && e.clientY > b.y0 && e.clientY < b.y1) {
-        sim.drag = true;
-        sim.dragX = e.clientX;
-        sim.dragY = clamp(e.clientY, H * 0.42, H * 0.80);
-        sim.dragDX = 0;
-        sim.dragDY = 0;
-        sim.speed = 160;
-        sim.horn = 0;
-        if (wrapRef.current) wrapRef.current.style.cursor = 'grabbing';
-        try { (e.currentTarget as Window).getSelection?.()?.removeAllRanges(); } catch {}
+        const localX = e.clientX - b.x0;
+        const localY = e.clientY - b.y0;
+        sim.dragMode = (localX > 80 && localX < 470 && localY < 210) ? 'container' : 'truck';
+        sim.drag = true; sim.dragX = e.clientX; sim.dragY = clamp(e.clientY,H*.42,H*.80);
+        sim.dragDX = 0; sim.dragDY = 0; sim.speed = Math.max(sim.speed,260);
+        if (wrapRef.current) wrapRef.current.style.cursor='grabbing';
       }
     };
     const onPointerMove = (e: PointerEvent) => {
       if (!sim.drag) return;
-      sim.dragDX = e.clientX - sim.dragX;
-      sim.dragDY = e.clientY - sim.dragY;
-      sim.dragX = e.clientX;
-      sim.dragY = e.clientY;
+      sim.dragDX=e.clientX-sim.dragX; sim.dragDY=e.clientY-sim.dragY;
+      sim.dragX=e.clientX; sim.dragY=clamp(e.clientY,H*.40,H*.80);
     };
     const onUp = () => {
       if (!sim.drag) return;
-      sim.drag = false;
-      const s = clamp(Math.min(W / 1500, H / 900), 0.5, 1.15);
-      const draggedAway = Math.abs(sim.dragX - W * 0.5) > W * 0.24 || Math.abs(sim.dragY - H * 0.62) > H * 0.08;
-      if (draggedAway) {
-        sim.falling = true;
-        sim.fallV = Math.max(120, sim.dragDY * 7 + 120);
-        sim.wreckX = sim.dragX;
-        sim.wreckY = sim.dragY;
-        sim.wreckRot = 0;
-      } else {
-        sim.worldX -= sim.dragDX * 2;
-      }
-      if (wrapRef.current) wrapRef.current.style.cursor = '';
+      const mode=sim.dragMode; sim.drag=false; sim.dragMode='';
+      sim.falling=true; sim.fallV=Math.max(260,sim.dragDY*8+260);
+      sim.wreckX=sim.dragX; sim.wreckY=sim.dragY; sim.wreckRot=sim.dragDX*.02;
+      sim.wreckParts=mode==='truck'; sim.wrecked=false; sim.wreckTimer=0;
+      if (wrapRef.current) wrapRef.current.style.cursor='';
     };
     window.addEventListener('resize', resize);
     window.addEventListener('mousemove', onMove, { passive: true });
@@ -822,11 +809,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       // Interactive truck sequence: drag it anywhere, release it, let it fall,
       // then reveal a replacement truck after the visitor scrolls onward.
       if (sim.drag) {
-        sim.dragX = clamp(sim.dragX, -W * 0.15, W * 1.15);
-        sim.dragY = clamp(sim.dragY, H * 0.40, H * 0.80);
-        sim.box = { x0: sim.dragX - 405, y0: sim.dragY - 245, x1: sim.dragX + 155, y1: sim.dragY + 10 };
-        sim.worldX += 160 * dt;
-        sim.wheel += (160 * dt) / 32;
+        sim.worldX += 260 * dt; sim.wheel += (260*dt)/32;
         return;
       }
       if (sim.falling) {
@@ -846,45 +829,13 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       }
       if (sim.wrecked) {
         sim.wreckTimer += dt;
-        const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-        sim.collectorScrollReady = window.scrollY / maxScroll > 0.12;
-        // After the wreck, scrolling resets the scene: the same truck returns.
-        if (sim.collectorScrollReady && !sim.collectorDone) {
-          sim.collectorDone = true;
-          sim.collector = false;
-          sim.wrecked = false;
-          sim.falling = false;
-          sim.wreckParts = false;
-          sim.worldX = -W * 0.9;
-          sim.speed = 260;
-          sim.impulse = 0;
-          sim.wreckX = 0;
-          sim.wreckY = 0;
-          sim.drag = false;
+        if (sim.wreckTimer >= 2) {
+          sim.wrecked=false; sim.falling=false; sim.wreckParts=false;
+          sim.worldX=-W*.9; sim.speed=260; sim.wreckX=0; sim.wreckY=0; sim.wreckRot=0; sim.wreckTimer=0;
         }
+        sim.worldX += 260*dt; sim.wheel += (260*dt)/32;
         return;
       }
-      sim.smy += (sim.my - sim.smy) * Math.min(1, dt * 6);
-      sim.approach += (sim.approachTarget - sim.approach) * Math.min(1, dt * 3.5);
-      const target = 160 + Math.min(1340, sim.impulse * 18);
-      // scroll bursts trigger a whoosh
-      if (sim.impulse > 90 && sim.t - sim.lastWhoosh > 0.9) { sim.lastWhoosh = sim.t; if (soundOnRef.current) playWhoosh(); }
-      sim.speed += (target - sim.speed) * Math.min(1, dt * 3);
-      sim.impulse *= Math.pow(0.9, dt * 60);
-      sim.worldX += sim.speed * dt;
-      sim.wheel += (sim.speed * dt) / 32;
-      if (sim.horn > 0) sim.horn = Math.max(0, sim.horn - dt);
-
-      const sN = clamp((sim.speed - 160) / 1340, 0, 1);
-      // smoke
-      if (Math.random() < dt * (18 + sN * 50)) {
-        const s = clamp(Math.min(W / 1500, H / 900), 0.5, 1.15);
-        const approach = sim.approach;
-        const tx = ((sim.worldX * 0.9 + W * 0.18) % (W + 760)) - 430;
-        sim.smoke.push({ x: tx - 385 * s, y: H * (0.84 + approach * 0.045) - 92 * s, r: 4 + Math.random() * 4, life: 1 });
-      }
-      for (const p of sim.smoke) { p.x -= (sim.speed * 0.18 + 30) * dt; p.y -= (34 + sN * 30) * dt; p.r += dt * 16; p.life -= dt * 0.55; }
-      sim.smoke = sim.smoke.filter(p => p.life > 0);
 
       // audio follows speed
       const a = audioRef.current;
