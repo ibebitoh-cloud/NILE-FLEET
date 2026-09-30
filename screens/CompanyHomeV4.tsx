@@ -595,7 +595,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         sim.wrecked = false;
         sim.wreckParts = false;
         sim.wreckTimer = 0;
-        sim.worldX += 220;
+        sim.worldX += 220; sim.speed = 420;
       } else {
         // Throw the complete truck. It returns automatically after the crash sequence.
         sim.falling = true;
@@ -825,7 +825,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       // Interactive truck sequence: drag it anywhere, release it, let it fall,
       // then reveal a replacement truck after the visitor scrolls onward.
       if (sim.drag) {
-        sim.worldX += 260 * dt; sim.wheel += (260*dt)/32;
+        sim.worldX += 260 * dt;
+        sim.wheel += (260 * dt) / 32;
         return;
       }
       if (sim.falling) {
@@ -839,8 +840,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           sim.wreckTimer = 0;
           sim.impact = true;
         }
-        sim.worldX += 160 * dt;
-        sim.wheel += (160 * dt) / 32;
+        sim.worldX += 260 * dt;
+        sim.wheel += (260 * dt) / 32;
         return;
       }
       if (sim.wrecked) {
@@ -859,7 +860,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           sim.wreckTimer = 0;
           sim.impact = false;
         }
-        sim.worldX += 260*dt; sim.wheel += (260*dt)/32;
+        sim.worldX += 260 * dt;
+        sim.wheel += (260 * dt) / 32;
         return;
       }
 
