@@ -41,8 +41,8 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   const daliSessionIdRef = useRef<string>(crypto.randomUUID());
   const [daliMemory, setDaliMemory] = useState<{ role: 'user' | 'assistant'; message: string; entities?: any; created_at?: string }[]>([]);
   const [daliButtonPosition, setDaliButtonPosition] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('nile-dali-button-position') || '{"right":24,"bottom":24}'); }
-    catch { return { right: 24, bottom: 24 }; }
+    try { return JSON.parse(localStorage.getItem('nile-dali-button-position-v2') || '{"right":24,"bottom":72}'); }
+    catch { return { right: 24, bottom: 72 }; }
   });
   const daliDraggingRef = useRef(false);
   const daliDraggedRef = useRef(false);
@@ -120,7 +120,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
 
   const saveDaliButtonPosition = (next: { right: number; bottom: number }) => {
     setDaliButtonPosition(next);
-    localStorage.setItem('nile-dali-button-position', JSON.stringify(next));
+    localStorage.setItem('nile-dali-button-position-v2', JSON.stringify(next));
   };
 
   const handleDaliPointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
@@ -1480,26 +1480,58 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         </div>
       )}
 
-      {/* DALI 1.0 floating dashboard assistant — draggable */}
+      {/* DALI — glass floating assistant */}
+      <style>{`
+        @keyframes daliPeek {
+          0%, 100% { transform: translateY(16px) scale(.92); opacity: 0; }
+          18%, 72% { transform: translateY(0) scale(1); opacity: 1; }
+          86% { transform: translateY(10px) scale(.96); opacity: 0; }
+        }
+        @keyframes daliBlink {
+          0%, 42%, 48%, 100% { transform: scaleY(1); }
+          45% { transform: scaleY(.08); }
+        }
+        .dali-peek-face { animation: daliPeek 3.8s ease-in-out infinite; }
+        .dali-eye { animation: daliBlink 3.8s ease-in-out infinite; transform-origin: center; }
+        @media (prefers-reduced-motion: reduce) {
+          .dali-peek-face, .dali-eye { animation: none; }
+        }
+      `}</style>
       <div
         className="fixed z-[100] no-print"
         style={{ right: daliButtonPosition.right, bottom: daliButtonPosition.bottom }}
       >
         {isAiChatOpen && (
-          <div className={`absolute bottom-16 right-0 w-[min(92vw,420px)] h-[min(70vh,620px)] rounded-[2rem] overflow-hidden border shadow-2xl flex flex-col ${isTerminal ? 'bg-[#001224] border-white/10' : 'bg-white border-slate-200'}`}>
-            <div className="px-5 py-4 bg-gradient-to-r from-[#001F3F] to-[#073b6d] text-white flex items-center justify-between">
-              <div><p className="text-[8px] font-black tracking-[0.3em] text-[#C2A378]">DALI 1.0</p><p className="text-sm font-black">{isAr ? 'DALI 1.0' : 'DALI 1.0'}</p></div>
-              <button onClick={() => setIsAiChatOpen(false)} className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20">✕</button>
+          <div className={`absolute bottom-16 right-0 w-[min(92vw,420px)] h-[min(70vh,620px)] rounded-[2rem] overflow-hidden border shadow-2xl backdrop-blur-2xl flex flex-col ${isTerminal ? 'bg-[#071522]/75 border-white/10' : 'bg-white/65 border-white/50'}`}>
+            <div className={`px-5 py-4 flex items-center justify-between border-b backdrop-blur-xl ${isTerminal ? 'bg-white/[0.04] border-white/10 text-white' : 'bg-white/35 border-white/60 text-[#001F3F]'}`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-xl border flex items-center justify-center ${isTerminal ? 'bg-white/10 border-white/10' : 'bg-white/45 border-white/70'}`}>
+                  <span className="text-base">◉</span>
+                </div>
+                <div>
+                  <p className={`text-[8px] font-black tracking-[0.3em] ${isTerminal ? 'text-[#C2A378]' : 'text-slate-500'}`}>DALI 1.0</p>
+                  <p className="text-sm font-black">NILE FLEET ASSISTANT</p>
+                </div>
+              </div>
+              <button onClick={() => setIsAiChatOpen(false)} className={`w-8 h-8 rounded-xl border transition-all ${isTerminal ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white/40 border-white/60 text-slate-700 hover:bg-white/70'}`}>✕</button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {aiChatMessages.length === 0 && <div className={`rounded-2xl p-4 text-xs leading-6 ${isTerminal ? 'bg-white/5 text-slate-300' : 'bg-slate-50 text-slate-600'}`}>{isAr ? 'اسألني عن العمليات، المخزون، الحجوزات، الفواتير، الوقود، أو أي سؤال عام.' : 'Ask me about operations, stock, bookings, invoices, fuel, logistics, or any general question.'}</div>}
-              {aiChatMessages.map((m, i) => <div key={i} className={`rounded-2xl p-3 text-xs leading-6 whitespace-pre-wrap ${m.role === 'user' ? 'bg-blue-600 text-white ml-8' : (isTerminal ? 'bg-white/5 text-slate-200 mr-4' : 'bg-slate-100 text-slate-700 mr-4')}`}>{m.text}</div>)}
-              {aiChatLoading && <div className="text-[9px] font-black uppercase tracking-widest text-blue-500 animate-pulse">{isAr ? 'جاري التفكير...' : 'DALI 1.0 IS THINKING...'}</div>}
+            <div className="relative flex-1 overflow-y-auto p-4 space-y-3">
+              {aiChatMessages.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center p-6 pointer-events-none">
+                  <div className="text-center">
+                    <p className={`text-[10px] font-black tracking-[0.38em] uppercase ${isTerminal ? 'text-white/35' : 'text-[#001F3F]/35'}`}>WELCOME BACK</p>
+                    <p className={`mt-1 text-4xl sm:text-5xl font-black uppercase tracking-tight break-words ${isTerminal ? 'text-white/[0.13]' : 'text-[#001F3F]/[0.13]'}`}>{user.name || 'USER'}</p>
+                    <p className={`mt-4 text-[10px] font-bold tracking-wide ${isTerminal ? 'text-white/45' : 'text-slate-500/80'}`}>{isAr ? 'أنا دالي — اسألني عن النظام.' : 'I’m Dali — ask me about the system.'}</p>
+                  </div>
+                </div>
+              )}
+              {aiChatMessages.map((m, i) => <div key={i} className={`rounded-2xl p-3 text-xs leading-6 whitespace-pre-wrap border backdrop-blur-md ${m.role === 'user' ? (isTerminal ? 'bg-white/10 border-white/10 text-white ml-8' : 'bg-white/55 border-white/70 text-[#001F3F] ml-8') : (isTerminal ? 'bg-black/15 border-white/10 text-slate-200 mr-4' : 'bg-white/45 border-white/60 text-slate-700 mr-4')}`}>{m.text}</div>)}
+              {aiChatLoading && <div className={`text-[9px] font-black uppercase tracking-widest animate-pulse ${isTerminal ? 'text-[#C2A378]' : 'text-slate-500'}`}>{isAr ? 'جاري التفكير...' : 'DALI IS THINKING...'}</div>}
             </div>
-            <div className={`p-3 border-t ${isTerminal ? 'border-white/10' : 'border-slate-200'}`}>
-              <div className="flex gap-2">
-                <textarea value={aiChatInput} onChange={e => setAiChatInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askNileAi(); } }} placeholder={isAr ? 'اكتب سؤالك...' : 'Ask DALI 1.0 anything...'} className={`flex-1 resize-none rounded-xl border px-3 py-2 text-xs outline-none min-h-[44px] ${isTerminal ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`} />
-                <button data-dali-send onClick={askNileAi} disabled={aiChatLoading || !aiChatInput.trim()} className="self-end w-11 h-11 rounded-xl bg-[#001F3F] text-white disabled:opacity-40">➤</button>
+            <div className={`p-3 border-t backdrop-blur-xl ${isTerminal ? 'border-white/10 bg-black/10' : 'border-white/60 bg-white/25'}`}>
+              <div className={`flex gap-2 rounded-2xl p-1.5 border backdrop-blur-md ${isTerminal ? 'bg-white/[0.04] border-white/10' : 'bg-white/45 border-white/70'}`}>
+                <textarea value={aiChatInput} onChange={e => setAiChatInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askNileAi(); } }} placeholder={isAr ? 'اكتب سؤالك...' : 'Ask Dali anything...'} className={`flex-1 resize-none rounded-xl border-0 bg-transparent px-3 py-2 text-xs outline-none min-h-[44px] ${isTerminal ? 'text-white placeholder:text-white/35' : 'text-[#001F3F] placeholder:text-slate-500'}`} />
+                <button data-dali-send onClick={askNileAi} disabled={aiChatLoading || !aiChatInput.trim()} className={`self-end w-11 h-11 rounded-xl border transition-all disabled:opacity-35 ${isTerminal ? 'bg-white/10 border-white/10 text-white hover:bg-white/15' : 'bg-white/60 border-white/70 text-[#001F3F] hover:bg-white/80'}`}>➤</button>
               </div>
             </div>
           </div>
@@ -1511,9 +1543,19 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
           onPointerMove={handleDaliPointerMove}
           onPointerUp={handleDaliPointerUp}
           onPointerCancel={handleDaliPointerUp}
-          className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#001F3F] to-[#0a4b82] text-white shadow-2xl border border-white/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center text-2xl cursor-grab active:cursor-grabbing touch-none"
-          title={isAr ? 'مساعد دالي — اسحب لتغيير المكان' : 'DALI 1.0 — drag to move'}
-        >✦</button>
+          className={`relative w-14 h-14 rounded-2xl border shadow-2xl backdrop-blur-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-grab active:cursor-grabbing touch-none ${isTerminal ? 'bg-white/[0.08] border-white/15 text-white' : 'bg-white/55 border-white/80 text-[#001F3F]'}`}
+          title={isAr ? 'مساعد دالي — اسحب لتغيير المكان' : 'DALI — drag to move'}
+        >
+          <span className="dali-peek-face relative flex items-end justify-center w-10 h-9">
+            <span className={`absolute bottom-1 w-7 h-5 rounded-[45%] border-2 ${isTerminal ? 'bg-[#d9e6ef] border-white/70' : 'bg-white border-slate-300'}`}>
+              <span className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-1.5 rounded-full rotate-12 ${isTerminal ? 'bg-[#C2A378]' : 'bg-[#C2A378]'}`}></span>
+            </span>
+            <span className="relative z-10 flex gap-2 mb-3">
+              <span className={`dali-eye w-3.5 h-4 rounded-full border ${isTerminal ? 'bg-white border-white/80' : 'bg-white border-slate-300'}`}><span className={`block w-1.5 h-1.5 rounded-full mx-auto mt-1 ${isTerminal ? 'bg-[#001F3F]' : 'bg-[#001F3F]'}`}></span></span>
+              <span className={`dali-eye w-3.5 h-4 rounded-full border ${isTerminal ? 'bg-white border-white/80' : 'bg-white border-slate-300'}`}><span className={`block w-1.5 h-1.5 rounded-full mx-auto mt-1 ${isTerminal ? 'bg-[#001F3F]' : 'bg-[#001F3F]'}`}></span></span>
+            </span>
+          </span>
+        </button>
       </div>
 
       {/* MAIN CONTENT */}
