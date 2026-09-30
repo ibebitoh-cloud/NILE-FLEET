@@ -872,7 +872,28 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         .nf4-reveal{animation:nf4Reveal .9s cubic-bezier(.16,1,.3,1) both}
         .nf4-pulse{animation:nf4Pulse 3s ease-in-out infinite}
         @media (prefers-reduced-motion: reduce){ .nf4 *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important} }
-      `}</style>
+      `}
+/* Strong homepage visual direction - existing canvas background remains untouched */
+.nf-home .nf4-hero-inner{position:relative;z-index:2}
+.nf-home .nf4-hero-title{text-shadow:0 18px 60px rgba(0,0,0,.42)}
+.nf-home .nf4-hero-title span{display:inline-block;text-shadow:0 0 38px rgba(194,163,120,.18)}
+.nf-home .nf4-hero-actions a{min-height:44px;transition:transform .25s ease,box-shadow .25s ease}
+.nf-home .nf4-hero-actions a:hover{transform:translateY(-3px);box-shadow:0 14px 35px rgba(0,0,0,.22)}
+.nf-home .nf4-hero-stats{padding-top:3rem}
+.nf-home .nf4-stat{min-height:145px;padding:1.35rem!important;position:relative;overflow:hidden;box-shadow:0 22px 55px rgba(0,0,0,.16);transition:transform .3s ease,border-color .3s ease}
+.nf-home .nf4-stat:hover{transform:translateY(-5px);border-color:rgba(194,163,120,.65)}
+.nf-home .nf4-stat>div:first-child{font-size:clamp(2.2rem,4vw,3.2rem);letter-spacing:-.06em}
+.nf-home .nf4-stat:after{content:"";position:absolute;right:-30px;bottom:-55px;width:130px;height:130px;border-radius:999px;background:radial-gradient(circle,rgba(194,163,120,.16),transparent 68%);pointer-events:none}
+.nf-home .nf4-about-layout>div:first-child{position:sticky;top:110px;align-self:start}
+.nf-home .nf4-about-layout h2,.nf-home #why-us h2,.nf-home #network h2,.nf-home #services h2,.nf-home #proof h2,.nf-home #partners h2,.nf-home #leadership h2{text-shadow:0 14px 45px rgba(0,0,0,.22)}
+.nf-home .nf4-network-grid>div{min-height:250px;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(0,0,0,.12))}
+.nf-home .nf4-network-grid>div:first-child{border-color:rgba(194,163,120,.48)}
+.nf-home .nf4-services-grid>div{min-height:210px}
+.nf-home .nf4-services-grid>div:first-child{grid-column:span 2}
+.nf-home .nf4-leadership-grid>div{min-height:330px}
+@media(max-width:1023px){.nf-home .nf4-about-layout>div:first-child{position:static}.nf-home .nf4-services-grid>div:first-child{grid-column:span 1}}
+@media(max-width:767px){.nf-home .nf4-hero-title{font-size:clamp(3.2rem,18vw,5.2rem)}.nf-home .nf4-network-grid>div,.nf-home .nf4-services-grid>div,.nf-home .nf4-leadership-grid>div{min-height:220px}}
+</style>
 
       <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 z-0" aria-hidden="true" />
 
@@ -1025,27 +1046,27 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
 <main id="top" className="relative z-10">
         <section className="relative flex min-h-[100vh] items-start overflow-hidden">
-          <div className="mx-auto grid w-full max-w-[1500px] items-start gap-12 px-5 pt-24 lg:grid-cols-[1.25fr_.75fr] lg:px-10 lg:pt-28">
+          <div className="nf4-hero-inner mx-auto grid w-full max-w-[1500px] items-start gap-12 px-5 pt-24 lg:grid-cols-[1.25fr_.75fr] lg:px-10 lg:pt-28">
             <div className="nf4-reveal">
               <div className="mb-5 flex items-center gap-4">
                 <span className="h-px w-16 bg-[#c2a378]" />
                 <span className={`text-[9px] font-black uppercase tracking-[.48em] ${gold}`}>{tx.since}</span>
               </div>
-              <h1 className="max-w-6xl text-[clamp(2.6rem,6.4vw,6.4rem)] font-black uppercase italic leading-[.85] tracking-[-.06em]">
+              <h1 className="nf4-hero-title max-w-6xl text-[clamp(2.6rem,6.4vw,6.4rem)] font-black uppercase italic leading-[.85] tracking-[-.06em]">
                 {tx.heroTitle}
               </h1>
               <p className={`mt-6 max-w-2xl text-sm font-medium leading-7 sm:text-base ${K.soft}`}>
                 {ar ? 'نيل فليت لخدمات النقل واللوجستيات — نقل الشاحنات والحاويات وحلول لوجستية متكاملة مع رؤية تشغيلية كاملة.' : 'Nile Fleet for Transport and Logistics Service — trucking, container transportation and integrated logistics built around safe movement and operational visibility.'}
               </p>
-              <div className="mt-7 flex flex-wrap items-center gap-4">
+              <div className="nf4-hero-actions mt-7 flex flex-wrap items-center gap-4">
                 <a href="#operations" className={`nf4-pulse rounded-full border border-[#c2a378]/60 bg-[#c2a378]/10 px-7 py-3 text-[9px] font-black uppercase tracking-[.24em] ${gold}`}>{tx.explore}</a>
                               </div>
             </div>
 
-            <div className="hidden lg:block">
+            <div className="nf4-hero-stats hidden lg:block">
               <div className="grid grid-cols-2 gap-3">
                 {[['2009', tx.founded], ['17+', tx.years], ['5', tx.coverage], ['24/7', tx.ops24]].map(([v, l]) => (
-                  <div key={l} className={`rounded-2xl border p-4 backdrop-blur-md ${K.card}`}>
+                  <div key={l} className={`nf4-stat rounded-2xl border p-4 backdrop-blur-md ${K.card}`}>
                     <div className="text-2xl font-black">{v}</div>
                     <div className={`mt-1 text-[7px] font-black tracking-[.16em] ${gold}`}>{l}</div>
                     {l === tx.coverage && <div className={`mt-2 text-[7px] font-bold leading-4 ${K.faint}`}>{tx.coveragePorts.join(' · ')}</div>}
@@ -1058,7 +1079,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
         <section id="about" className={`relative border-y backdrop-blur-[2px] ${K.band}`}>
           <Reveal>
-            <div className="mx-auto grid max-w-[1500px] gap-14 px-5 py-28 lg:grid-cols-[.75fr_1.25fr] lg:px-10">
+            <div className="nf4-about-layout mx-auto grid max-w-[1500px] gap-14 px-5 py-28 lg:grid-cols-[.75fr_1.25fr] lg:px-10">
               <div>
                 <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>01 / {tx.company}</div>
                 <h2 className="mt-5 text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{tx.built}</h2>
@@ -1147,7 +1168,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                 <h2 className="text-5xl font-black uppercase italic tracking-[-.05em] sm:text-7xl">{tx.footprint}</h2>
                 <p className={`max-w-sm text-xs leading-6 ${K.muted}`}>{tx.footprintDesc}</p>
               </div>
-              <div className="mt-14 grid gap-4 md:grid-cols-3">
+              <div className="nf4-network-grid mt-14 grid gap-4 md:grid-cols-3">
                 {[
                   ['PORTS', ar ? 'الإسكندرية · دمياط · بورسعيد · الدخيلة · السخنة' : 'Alexandria · Damietta · Port Said · Dekheila · Sokhna'],
                   ['CARGO', ar ? 'حاويات · حاويات مبردة · استيراد · تصدير' : 'Containers · Reefers · Import · Export'],
@@ -1169,7 +1190,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
               <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>05 / {ar ? 'الخدمات' : 'SERVICES'}</div>
               <h2 className="mt-5 max-w-5xl text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{tx.serviceTitle}</h2>
-              <div className="mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="nf4-services-grid mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {tx.serviceItems.map((x, i) => (
                   <div key={x} className={`group relative min-h-[170px] overflow-hidden rounded-[1.5rem] border p-7 transition duration-500 hover:-translate-y-1 hover:border-[#c2a378]/60 ${K.card}`}>
                     <div className={`text-[8px] font-black tracking-[.25em] ${gold}`}>0{i + 1}</div>
@@ -1262,7 +1283,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                 <h2 className="text-5xl font-black uppercase italic tracking-[-.05em] sm:text-7xl">{tx.people}</h2>
                 <p className={`max-w-sm text-xs leading-6 ${K.muted}`}>{tx.leadDesc}</p>
               </div>
-              <div className="mt-14 grid gap-5 md:grid-cols-3" dir={ar ? 'rtl' : 'ltr'}>
+              <div className="nf4-leadership-grid mt-14 grid gap-5 md:grid-cols-3" dir={ar ? 'rtl' : 'ltr'}>
                 {[
                   ['SHERIF HEGAZY', tx.roles[0], tx.areas[0]],
                   ['SAMAR HEGAZY', tx.roles[1], tx.areas[1]],
