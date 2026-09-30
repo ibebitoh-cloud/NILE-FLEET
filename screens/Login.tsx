@@ -17,7 +17,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [welcomeStyle, setWelcomeStyle] = useState(0);
   const [progress, setProgress] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(false);
-  const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(true);
   const audioContextRef = useRef<AudioContext | null>(null);
   const musicGainRef = useRef<GainNode | null>(null);
   const musicTimersRef = useRef<number[]>([]);
@@ -175,19 +174,15 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     try {
       const root = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> };
       if (document.fullscreenElement) {
-        setShowFullscreenPrompt(false);
         return;
       }
       if (root.requestFullscreen) await root.requestFullscreen();
       else if (root.webkitRequestFullscreen) await root.webkitRequestFullscreen();
-      setShowFullscreenPrompt(false);
     } catch {
-      setShowFullscreenPrompt(false);
     }
   };
 
   useEffect(() => {
-    const onFullscreenChange = () => setShowFullscreenPrompt(!document.fullscreenElement);
     document.addEventListener('fullscreenchange', onFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
   }, []);
@@ -462,15 +457,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         .signature-shimmer { animation: signatureShimmer 2.8s ease-in-out infinite; }
       `}</style>
 
-      {showFullscreenPrompt && !document.fullscreenElement && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#00101f]/80 backdrop-blur-md p-5">
           <div className="w-full max-w-xs rounded-3xl border border-[#C2A378]/30 bg-[#061827]/95 p-6 text-center shadow-[0_20px_80px_rgba(0,0,0,.55)]">
             <div className="mx-auto mb-4 h-12 w-12 rounded-2xl border border-[#C2A378]/40 flex items-center justify-center text-[#C2A378] text-xl font-black">N</div>
             <p className="text-[#C2A378] text-[9px] font-black uppercase tracking-[0.35em]">NILE FLEET</p>
             <h2 className="mt-2 text-white text-xl font-black uppercase italic tracking-tight">{isAr ? 'افتح العرض الكامل' : 'OPEN FULL VIEW'}</h2>
-            <p className="mt-2 text-slate-400 text-[9px] leading-relaxed">{isAr ? 'لأفضل تجربة، افتح النظام بملء الشاشة.' : 'For the best experience, open the system in full screen.'}</p>
             <button type="button" onClick={requestFullscreen} className="mt-5 w-full rounded-xl bg-[#C2A378] text-[#001F3F] py-3 text-[9px] font-black uppercase tracking-[0.28em] shadow-[0_0_30px_rgba(194,163,120,.2)] active:scale-[.98]">{isAr ? 'فتح ملء الشاشة' : 'OPEN FULL VIEW'}</button>
-            <button type="button" onClick={() => setShowFullscreenPrompt(false)} className="mt-3 text-[8px] font-black uppercase tracking-[0.2em] text-slate-500 hover:text-slate-300">{isAr ? 'ليس الآن' : 'NOT NOW'}</button>
           </div>
         </div>
       )}
