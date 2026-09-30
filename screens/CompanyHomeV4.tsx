@@ -987,17 +987,12 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         .nf4-quote-button:hover{box-shadow:0 12px 34px rgba(194,163,120,.28)}
         @media(max-width:640px){.nf4-contact-bar>div{align-items:stretch}.nf4-contact-bar .nf4-quote-button{width:100%;justify-content:center}.nf4-contact-bar>div>div{width:100%;justify-content:space-between}}
         @media (prefers-reduced-motion: reduce){ .nf4 *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important} }
-        .nf4-bebito-system{position:relative;display:flex;align-items:center;justify-content:center;gap:10px;width:min(100%,430px);margin:0 auto;padding:9px 16px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(90deg,rgba(255,255,255,.025),rgba(194,163,120,.08),rgba(255,255,255,.025));overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 30px rgba(0,0,0,.18)}
-        .nf4-bebito-system:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(194,163,120,.18),transparent);transform:translateX(-100%);animation:nf4BebitoScan 3.8s linear infinite}
-        .nf4-bebito-line{position:relative;flex:1;max-width:110px;width:34px;height:1px;background:linear-gradient(90deg,transparent,#c2a378);opacity:.75}
-        .nf4-bebito-line-right{transform:scaleX(-1)}
-        .nf4-bebito-node{position:relative;width:6px;height:6px;border:1px solid #c2a378;border-radius:50%;background:#07101a;box-shadow:0 0 0 0 rgba(194,163,120,.45);animation:nf4BebitoPulse 2s ease-in-out infinite}
-        .nf4-bebito-copy{position:relative;display:flex;align-items:baseline;gap:6px;white-space:nowrap}
-        .nf4-bebito-copy small{font-size:6px;font-weight:950;letter-spacing:.2em;color:rgba(226,232,240,.55)}
-        .nf4-bebito-copy strong{font-size:11px;font-weight:950;letter-spacing:.18em;color:#fff;text-shadow:0 0 16px rgba(194,163,120,.22)}
-        @keyframes nf4BebitoScan{to{transform:translateX(100%)}}
-        @keyframes nf4BebitoPulse{50%{box-shadow:0 0 0 5px rgba(194,163,120,0);background:#c2a378}}
-        @media(max-width:640px){.nf4-bebito-system{width:100%;max-width:360px}.nf4-bebito-line{width:22px}.nf4-bebito-copy strong{font-size:10px}}
+        .nf4-bebito-signature{display:flex;align-items:baseline;justify-content:center;gap:10px;position:relative;cursor:default;white-space:nowrap}
+        .nf4-bebito-powered{font-family:Inter,system-ui,sans-serif;font-size:7px;font-weight:900;letter-spacing:.3em;color:rgba(226,232,240,.46);text-transform:uppercase}
+        .nf4-bebito-name{font-family:"Brush Script MT","Segoe Script","Lucida Handwriting",cursive;font-size:clamp(32px,4vw,48px);font-weight:900;font-style:italic;letter-spacing:-.045em;line-height:1;color:#fff;text-shadow:0 0 24px rgba(194,163,120,.18);transform-origin:center;transition:color .2s ease,text-shadow .2s ease}
+        .nf4-bebito-signature:hover .nf4-bebito-name{color:#c2a378;text-shadow:0 0 28px rgba(194,163,120,.42);animation:nf4BebitoSpin .72s cubic-bezier(.16,1,.3,1)}
+        @keyframes nf4BebitoSpin{0%{transform:rotate(0deg) scale(1)}45%{transform:rotate(360deg) scale(1.08)}100%{transform:rotate(360deg) scale(1)}}
+        @media(max-width:640px){.nf4-bebito-signature{gap:7px}.nf4-bebito-powered{font-size:6px}.nf4-bebito-name{font-size:34px}}
 
 
       /* Strong homepage visual direction - existing canvas background remains untouched */
@@ -1479,13 +1474,10 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                 <div className="mt-2 text-[#c2a378]">nilefleet@nilefleetlogistics.com · Transport 01000992858 · Genset 01212229077</div>
               </div>
             </div>
-            <div className="mt-14 flex justify-center">
-              <div className="nf4-bebito-system" aria-label="Powered by Bebito">
-                <span className="nf4-bebito-line nf4-bebito-line-left"></span>
-                <span className="nf4-bebito-node"></span>
-                <span className="nf4-bebito-copy"><small>POWERED BY</small><strong>BEBITO</strong></span>
-                <span className="nf4-bebito-node"></span>
-                <span className="nf4-bebito-line nf4-bebito-line-right"></span>
+            <div className="mt-16 flex justify-center">
+              <div className="nf4-bebito-signature" aria-label="Powered by Bebito">
+                <span className="nf4-bebito-powered">POWERED BY</span>
+                <span className="nf4-bebito-name">Bebito</span>
               </div>
             </div>
           </div>
