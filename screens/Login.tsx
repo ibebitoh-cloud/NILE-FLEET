@@ -160,10 +160,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   const enterWelcome = () => {
-    const styles = [0, 1, 2, 3, 4, 5, 6, 7];
     const previous = Number(sessionStorage.getItem('nilefleet_welcome_style') || '-1');
-    const available = styles.filter(s => s !== previous);
-    const next = available[Math.floor(Math.random() * available.length)];
+    const next = Number.isFinite(previous) && previous >= 0 ? (previous + 1) % 6 : 0;
     sessionStorage.setItem('nilefleet_welcome_style', String(next));
     setWelcomeStyle(next);
     setStage('form');
@@ -234,83 +232,44 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         @keyframes welcomeLetter3d { 0%,100% { transform:translateY(0) rotateX(0) rotateY(0); text-shadow:0 0 0 transparent; } 50% { transform:translateY(-4px) rotateX(18deg) rotateY(-12deg); text-shadow:5px 7px 0 rgba(0,31,63,.7), 0 0 18px rgba(194,163,120,.45); } }
         .welcome-letter-3d { animation: welcomeLetter3d 2.8s ease-in-out infinite; transform-style:preserve-3d; }
 
-        /* BEBITO signature — staged physical contact with individual letters. */
-        .signature-stage { position:relative; display:inline-flex; flex-direction:column; align-items:center; justify-content:flex-end; min-width:290px; min-height:100px; padding-bottom:0; overflow:visible; }
+        /* BEBITO signature — real walk / stop / reach / contact scenes. */
+        .signature-stage { position:relative; display:inline-flex; flex-direction:column; align-items:center; justify-content:flex-end; min-width:290px; min-height:92px; overflow:visible; }
         .signature-word { position:relative; z-index:6; display:inline-flex; align-items:baseline; justify-content:center; gap:.05em; }
-        .signature-letter { position:relative; display:inline-block; min-width:.62em; text-align:center; transform-origin:center 85%; will-change:transform,filter; }
-        .signature-stage::after { content:""; position:absolute; left:50%; bottom:3px; width:72%; height:8px; transform:translateX(-50%); border-bottom:1px solid rgba(194,163,120,.18); border-radius:50%; pointer-events:none; }
-        .signature-character { position:absolute; left:50%; bottom:7px; width:62px; height:72px; z-index:7; pointer-events:none; transform-box:fill-box; }
-        .signature-character .sig-line { fill:none; stroke:rgba(255,255,255,.94); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
+        .signature-letter { position:relative; display:inline-block; min-width:.62em; text-align:center; transform-origin:50% 90%; will-change:transform; }
+        .signature-stage::after { content:""; position:absolute; left:50%; bottom:2px; width:76%; height:8px; transform:translateX(-50%); border-bottom:1px solid rgba(194,163,120,.18); border-radius:50%; pointer-events:none; }
+        .signature-character { position:absolute; left:50%; bottom:4px; width:62px; height:72px; z-index:8; pointer-events:none; }
+        .signature-character .sig-line { fill:none; stroke:rgba(255,255,255,.96); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
         .signature-character .sig-accent { fill:none; stroke:#C2A378; stroke-width:1.5; stroke-linecap:round; vector-effect:non-scaling-stroke; }
         .signature-character .sig-dot { fill:#C2A378; }
-        /* The character walks to a letter, stops, reaches with its hand, touches, and reacts. */
-        @keyframes physCharacter {
-          0%,12% { transform:translateX(var(--start)); }
-          24% { transform:translateX(var(--target)); }
-          34%,48% { transform:translateX(var(--target)); }
-          54% { transform:translateX(calc(var(--target) + 5px)); }
-          61% { transform:translateX(var(--target)); }
-          76%,100% { transform:translateX(var(--start)); }
-        }
-        @keyframes physArm {
-          0%,30% { transform:rotate(0deg); }
-          40% { transform:rotate(-12deg) translate(5px,-2px); }
-          48% { transform:rotate(-25deg) translate(13px,-5px); }
-          54% { transform:rotate(-30deg) translate(17px,-4px); }
-          61% { transform:rotate(-10deg) translate(6px,-1px); }
-          72%,100% { transform:rotate(0deg); }
-        }
-        @keyframes physLetter {
-          0%,43% { transform:translate(0,0) rotate(0) scale(1); }
-          48% { transform:translate(3px,-2px) rotate(-5deg) scale(1.06); }
-          53% { transform:translate(-3px,2px) rotate(4deg) scale(1.02); }
-          58% { transform:translate(2px,0) rotate(-2deg) scale(1.01); }
-          66%,100% { transform:translate(0,0) rotate(0) scale(1); }
-        }
-        @keyframes contactPulse {
-          0%,43% { opacity:0; transform:scale(.25); }
-          48% { opacity:1; transform:scale(1); }
-          58% { opacity:0; transform:scale(1.8); }
-          100% { opacity:0; }
-        }
-        .signature-character .sig-action-arm { transform-box:fill-box; transform-origin:31px 31px; animation:physArm 4.8s cubic-bezier(.2,.8,.2,1) infinite; }
-        .signature-character .sig-contact-pulse { transform-origin:center; animation:contactPulse 4.8s ease-out infinite; }
-        .signature-character.sig-scene-0 { --start:-112px; --target:-58px; animation:physCharacter 4.8s cubic-bezier(.2,.8,.2,1) infinite; }
-        .signature-character.sig-scene-1 { --start:-112px; --target:-35px; animation:physCharacter 5s cubic-bezier(.2,.8,.2,1) infinite; }
-        .signature-character.sig-scene-2 { --start:-92px; --target:-12px; animation:physCharacter 5.2s cubic-bezier(.2,.8,.2,1) infinite; }
-        .signature-character.sig-scene-3 { --start:-70px; --target:12px; animation:physCharacter 5.1s cubic-bezier(.2,.8,.2,1) infinite; }
-        .signature-character.sig-scene-4 { --start:-42px; --target:34px; animation:physCharacter 5.3s cubic-bezier(.2,.8,.2,1) infinite; }
-        .signature-character.sig-scene-5 { --start:-15px; --target:55px; animation:physCharacter 5s cubic-bezier(.2,.8,.2,1) infinite; }
-        .signature-character.sig-scene-6 { --start:15px; --target:77px; animation:physCharacter 5.2s cubic-bezier(.2,.8,.2,1) infinite; }
-        .signature-character.sig-scene-7 { --start:42px; --target:98px; animation:physCharacter 5.1s cubic-bezier(.2,.8,.2,1) infinite; }
-        .signature-character .sig-contact-hand { display:none; }
+        .signature-character .sig-contact-pulse { transform-box:fill-box; transform-origin:center; }
+        @keyframes sigWalk { 0%,12%{transform:translateX(var(--start)) translateY(0)} 16%{transform:translateX(calc(var(--start) + 7px)) translateY(-3px)} 20%{transform:translateX(calc(var(--start) + 14px)) translateY(0)} 24%,38%{transform:translateX(var(--target)) translateY(0)} 44%{transform:translateX(var(--target)) translateY(-1px)} 50%{transform:translateX(calc(var(--target) + 2px)) translateY(0)} 62%{transform:translateX(var(--target)) translateY(0)} 72%,100%{transform:translateX(var(--start)) translateY(0)} }
+        @keyframes sigReach { 0%,37%{transform:rotate(0deg) translate(0,0)} 43%{transform:rotate(-8deg) translate(3px,-1px)} 49%{transform:rotate(-16deg) translate(7px,-3px)} 54%{transform:rotate(-20deg) translate(10px,-3px)} 61%,100%{transform:rotate(0deg) translate(0,0)} }
+        @keyframes sigContact { 0%,48%{opacity:0;transform:scale(.15)} 53%{opacity:1;transform:scale(1)} 59%{opacity:0;transform:scale(2.1)} 100%{opacity:0} }
+        @keyframes sigLetterHit { 0%,48%{transform:translate(0,0) rotate(0) scale(1)} 52%{transform:translate(2px,-2px) rotate(-7deg) scale(1.08)} 56%{transform:translate(-2px,1px) rotate(5deg) scale(1.03)} 62%,100%{transform:translate(0,0) rotate(0) scale(1)} }
+        @keyframes sigLegStep { 0%,20%,72%,100%{transform:rotate(0)} 16%{transform:rotate(13deg)} 20%{transform:rotate(-13deg)} }
+        .signature-character { animation:sigWalk 5s cubic-bezier(.2,.78,.2,1) infinite; }
+        .signature-character .sig-action-arm { transform-box:fill-box; transform-origin:31px 31px; animation:sigReach 5s cubic-bezier(.2,.8,.2,1) infinite; }
+        .signature-character .sig-step-a { transform-box:fill-box; transform-origin:31px 49px; animation:sigLegStep 5s ease-in-out infinite; }
+        .signature-character .sig-step-b { transform-box:fill-box; transform-origin:31px 49px; animation:sigLegStep 5s ease-in-out infinite reverse; }
+        .signature-character .sig-contact-pulse { animation:sigContact 5s ease-out infinite; }
+        .signature-stage.welcome-anim-0 .signature-character { --start:-105px; --target:-58px; }
+        .signature-stage.welcome-anim-1 .signature-character { --start:-105px; --target:-35px; }
+        .signature-stage.welcome-anim-2 .signature-character { --start:-82px; --target:-12px; }
+        .signature-stage.welcome-anim-3 .signature-character { --start:-55px; --target:12px; }
+        .signature-stage.welcome-anim-4 .signature-character { --start:-28px; --target:35px; }
+        .signature-stage.welcome-anim-5 .signature-character { --start:-4px; --target:58px; }
         .signature-stage.welcome-anim-0 .signature-letter:nth-child(5),
         .signature-stage.welcome-anim-1 .signature-letter:nth-child(6),
         .signature-stage.welcome-anim-2 .signature-letter:nth-child(7),
         .signature-stage.welcome-anim-3 .signature-letter:nth-child(8),
         .signature-stage.welcome-anim-4 .signature-letter:nth-child(9),
-        .signature-stage.welcome-anim-5 .signature-letter:nth-child(10),
-        .signature-stage.welcome-anim-6 .signature-letter:nth-child(9),
-        .signature-stage.welcome-anim-7 .signature-letter:nth-child(10) { animation:physLetter 4.8s cubic-bezier(.2,.8,.2,1) infinite; }
-        .signature-stage.welcome-anim-1 .signature-letter:nth-child(6) { animation-delay:.2s; }
-        .signature-stage.welcome-anim-2 .signature-letter:nth-child(7) { animation-delay:.4s; }
-        .signature-stage.welcome-anim-3 .signature-letter:nth-child(8) { animation-delay:.6s; }
-        .signature-stage.welcome-anim-4 .signature-letter:nth-child(9) { animation-delay:.8s; }
-        .signature-stage.welcome-anim-5 .signature-letter:nth-child(10) { animation-delay:1s; }
-        .signature-stage.welcome-anim-6 .signature-letter:nth-child(9) { animation-delay:1.2s; }
-        .signature-stage.welcome-anim-7 .signature-letter:nth-child(10) { animation-delay:1.4s; }
-        .welcome-anim-0 .signature-character .sig-action-arm,
-        .welcome-anim-1 .signature-character .sig-action-arm,
-        .welcome-anim-2 .signature-character .sig-action-arm,
-        .welcome-anim-3 .signature-character .sig-action-arm,
-        .welcome-anim-4 .signature-character .sig-action-arm,
-        .welcome-anim-5 .signature-character .sig-action-arm,
-        .welcome-anim-6 .signature-character .sig-action-arm,
-        .welcome-anim-7 .signature-character .sig-action-arm { display:block; }
-        @media (prefers-reduced-motion: reduce) {
-          .signature-letter,.signature-character,.signature-character * { animation:none!important; transition:none!important; }
-        }
-
+        .signature-stage.welcome-anim-5 .signature-letter:nth-child(10) { animation:sigLetterHit 5s cubic-bezier(.2,.8,.2,1) infinite; }
+        .signature-stage.welcome-anim-1 .signature-letter:nth-child(6){animation-delay:.05s}
+        .signature-stage.welcome-anim-2 .signature-letter:nth-child(7){animation-delay:.1s}
+        .signature-stage.welcome-anim-3 .signature-letter:nth-child(8){animation-delay:.15s}
+        .signature-stage.welcome-anim-4 .signature-letter:nth-child(9){animation-delay:.2s}
+        .signature-stage.welcome-anim-5 .signature-letter:nth-child(10){animation-delay:.25s}
+        @media (prefers-reduced-motion: reduce) { .signature-letter,.signature-character,.signature-character * { animation:none!important; transition:none!important; } }
         .welcome-rise { animation: welcomeRise .75s cubic-bezier(.2,.8,.2,1) both; }
         .welcome-glow { animation: welcomeGlow 2.8s ease-in-out infinite; }
         @keyframes signatureShimmer { 0%,100% { opacity:.62; letter-spacing:.34em; transform:scale(.98); } 50% { opacity:1; letter-spacing:.46em; transform:scale(1.02); } }
@@ -409,10 +368,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                               <circle className="sig-dot" cx="34" cy="17" r="1.2"/>
                               <path className="sig-line" d="M31 25 L31 49"/>
                               <path className="sig-line" d="M31 31 L18 40 L10 31"/>
-                              <g className="sig-action-arm"><path className="sig-line" d="M31 31 L44 23 L58 17"/><circle className="sig-dot" cx="58" cy="17" r="1.7"/></g>
-                              <path className="sig-line" d="M31 49 L20 62 L12 68"/>
-                              <path className="sig-line" d="M31 49 L42 62 L51 68"/>
-                              <circle className="sig-contact-pulse" cx="58" cy="17" r="4" fill="none" stroke="#C2A378" stroke-width="1.5"/>
+                              <g className="sig-action-arm"><path className="sig-line" d="M31 31 L44 28 L58 27"/><circle className="sig-dot" cx="58" cy="27" r="2.1"/></g>
+                              <g className="sig-step-a"><path className="sig-line" d="M31 49 L20 62 L12 68"/></g>
+                              <g className="sig-step-b"><path className="sig-line" d="M31 49 L42 62 L51 68"/></g>
+                              <circle className="sig-contact-pulse" cx="58" cy="27" r="5" fill="none" stroke="#C2A378" stroke-width="1.5"/>
                             </g>
                             <path className="sig-accent" d="M3 69 H59"/>
                           </svg>
