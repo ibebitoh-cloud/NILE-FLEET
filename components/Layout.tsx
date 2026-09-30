@@ -1049,8 +1049,42 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
           const billed = invoices.reduce((n,i) => n + (Number(i.amount) || 0), 0);
           const paid = invoices.filter(i => String(i.status || '').toUpperCase() === 'PAID').reduce((n,i) => n + (Number(i.amount) || 0), 0);
           answer = responseIsAr ? 'إجمالي الفواتير: ' + billed.toLocaleString() + '\nالمدفوع: ' + paid.toLocaleString() + '\nالمتبقي: ' + (billed-paid).toLocaleString() : 'Total invoiced: ' + billed.toLocaleString() + '\nPaid: ' + paid.toLocaleString() + '\nOutstanding: ' + (billed-paid).toLocaleString();
+        } else if (/^(hi|hello|hey|hello dali|hi dali|hey dali|اهلا|أهلا|مرحبا|سلام|السلام عليكم|صباح الخير|مساء الخير)\\s*(dali|دالي)?[!?.،]*$/i.test(cleanQ)) {
+          answer = responseIsAr
+            ? 'أهلاً 👋 أنا دالي. أقدر أساعدك في بيانات الأسطول والتشغيل والصيانة والموانئ والحجوزات والحاويات والعملاء والفواتير، وأقدر أكمل معاك من سياق كلامنا السابق.'
+            : 'Hello 👋 I’m Dali. I can help with fleet, operations, maintenance, ports, bookings, containers, customers and invoices — and I can keep the conversation context.';
+        } else if (/^(what do you know|what can you do|who are you|what is dali|tell me about yourself|ايه اللي تعرفه|ماذا تعرف|ماذا تستطيع|مين انت|ما هو دالي|بتعرف ايه)$/i.test(cleanQ)) {
+          const active = gensets.filter(g => String(g.status || '').toUpperCase() === 'CLIPPED_ON').length;
+          const inStockNow = gensets.filter(g => String(g.status || '').toUpperCase() === 'IN_STOCK').length;
+          const maintenanceNow = gensets.filter(g => String(g.status || '').toUpperCase() === 'MAINTENANCE').length;
+          const retiredNow = gensets.filter(g => String(g.status || '').toUpperCase() === 'RETIRED').length;
+          answer = responseIsAr
+            ? `أنا دالي، مساعد نيل فليت داخل النظام. حالياً أقدر أتعامل مع بيانات حقيقية من النظام مثل:
+• المولدات: ${gensets.length} وحدة
+• تشغيل فعلي: ${active}
+• بالمخزون: ${inStockNow}
+• صيانة: ${maintenanceNow}
+• متقاعد: ${retiredNow}
+• العمليات: ${operations.length}
+• الفواتير: ${invoices.length}
+• سجلات الصيانة: ${maintenance.length}
+
+وأفهم العلاقة بين المولد والحجز والحاوية والعميل والميناء والصيانة والفاتورة، وأقدر أتابع أسئلة مثل: "فين المولد 125؟" ثم "وماذا عن صيانته؟" من نفس السياق.`
+            : `I’m Dali, Nile Fleet’s in-system assistant. I currently work with live system data such as:
+• Gensets: ${gensets.length}
+• Currently operating: ${active}
+• In stock: ${inStockNow}
+• Maintenance: ${maintenanceNow}
+• Retired: ${retiredNow}
+• Operations: ${operations.length}
+• Invoices: ${invoices.length}
+• Maintenance records: ${maintenance.length}
+
+I understand the relationships between gensets, bookings, containers, customers, ports, maintenance and invoices. I can also keep context across follow-ups — for example, “Where is genset 125?” followed by “What about its maintenance?”.`;
         } else {
-          answer = responseIsAr ? 'لم أتمكن من تشغيل محرك DALI الآن. أستطيع البحث في المولدات والعمليات والحجوزات والحاويات والفواتير والعملاء والصيانة عند عودة الاتصال.' : 'DALI AI is temporarily unavailable. I can still search gensets, operations, bookings, containers, invoices, customers, and maintenance when the AI connection is restored.';
+          answer = responseIsAr
+            ? 'أنا دالي. حتى لو خدمة الذكاء الاصطناعي غير متاحة الآن، أقدر أجاوب مباشرة من بيانات النظام على أسئلة المولدات والمخزون والموانئ والعمليات والفواتير. لو سؤالك يحتاج فهم لغة مفتوحة أو موضوع عام، سأحتاج عودة محرك الذكاء الاصطناعي.'
+            : 'I’m Dali. Even if the AI service is temporarily unavailable, I can still answer directly from live system data about gensets, stock, ports, operations and invoices. Open-ended language and general questions need the AI model to be online.'; 
         }
       }
       const finalAnswer = answer || (isAr ? 'لم يصل رد من DALI 1.0.' : 'No response from DALI 1.0.');
