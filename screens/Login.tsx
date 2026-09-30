@@ -18,6 +18,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [welcomeStyle, setWelcomeStyle] = useState(0);
   const [progress, setProgress] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(true);
   const audioContextRef = useRef<AudioContext | null>(null);
   const musicGainRef = useRef<GainNode | null>(null);
   const musicTimersRef = useRef<number[]>([]);
@@ -191,6 +192,28 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setStage('welcome');
   };
 
+  const requestFullscreen = async () => {
+    try {
+      const root = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> };
+      if (document.fullscreenElement) {
+        setShowFullscreenPrompt(false);
+        return;
+      }
+      if (root.requestFullscreen) await root.requestFullscreen();
+      else if (root.webkitRequestFullscreen) await root.webkitRequestFullscreen();
+      setShowFullscreenPrompt(false);
+    } catch {
+      // Fullscreen requires a user gesture and may be unavailable in embedded browsers.
+      setShowFullscreenPrompt(false);
+    }
+  };
+
+  useEffect(() => {
+    const onFullscreenChange = () => setShowFullscreenPrompt(!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
+
   const enterApp = () => {
     const go = enterRef.current;
     enterRef.current = null; // make sure it only runs once
@@ -271,6 +294,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         .node-float { animation: nodeFloat 2.4s ease-in-out infinite; }
         .data-sweep { animation: dataSweep 3.2s ease-in-out infinite; }
         .signature-shimmer { animation: signatureShimmer 2.8s ease-in-out infinite; }
+        @keyframes welcomeLetter3d { 0%,100% { transform:translateY(0) rotateX(0) rotateY(0); text-shadow:0 0 0 transparent; } 50% { transform:translateY(-4px) rotateX(18deg) rotateY(-12deg); text-shadow:5px 7px 0 rgba(0,31,63,.7), 0 0 18px rgba(194,163,120,.45); } }
+        .welcome-letter-3d { animation: welcomeLetter3d 2.8s ease-in-out infinite; transform-style:preserve-3d; }
         .welcome-rise { animation: welcomeRise .75s cubic-bezier(.2,.8,.2,1) both; }
         .welcome-glow { animation: welcomeGlow 2.8s ease-in-out infinite; }
         .footer-sweep { animation: footerSweep 3.8s ease-in-out infinite; }
@@ -278,6 +303,19 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         .footer-glitch { animation: footerGlitch 4.5s steps(1) infinite; }
         .footer-orbit { animation: footerOrbit 4s linear infinite; }
       `}</style>
+
+      {showFullscreenPrompt && !document.fullscreenElement && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#00101f]/80 backdrop-blur-md p-5">
+          <div className="w-full max-w-xs rounded-3xl border border-[#C2A378]/30 bg-[#061827]/95 p-6 text-center shadow-[0_20px_80px_rgba(0,0,0,.55)]">
+            <div className="mx-auto mb-4 h-12 w-12 rounded-2xl border border-[#C2A378]/40 flex items-center justify-center text-[#C2A378] text-xl font-black">N</div>
+            <p className="text-[#C2A378] text-[9px] font-black uppercase tracking-[0.35em]">NILE FLEET</p>
+            <h2 className="mt-2 text-white text-xl font-black uppercase italic tracking-tight">{isAr ? 'افتح العرض الكامل' : 'OPEN FULL VIEW'}</h2>
+            <p className="mt-2 text-slate-400 text-[9px] leading-relaxed">{isAr ? 'لأفضل تجربة، افتح النظام بملء الشاشة.' : 'For the best experience, open the system in full screen.'}</p>
+            <button type="button" onClick={requestFullscreen} className="mt-5 w-full rounded-xl bg-[#C2A378] text-[#001F3F] py-3 text-[9px] font-black uppercase tracking-[0.28em] shadow-[0_0_30px_rgba(194,163,120,.2)] active:scale-[.98]">{isAr ? 'فتح ملء الشاشة' : 'OPEN FULL VIEW'}</button>
+            <button type="button" onClick={() => setShowFullscreenPrompt(false)} className="mt-3 text-[8px] font-black uppercase tracking-[0.2em] text-slate-500 hover:text-slate-300">{isAr ? 'ليس الآن' : 'NOT NOW'}</button>
+          </div>
+        </div>
+      )}
 
       <div className="login-screen-shell w-full min-h-screen lg:h-screen grid grid-cols-1 lg:grid-cols-12 overflow-hidden relative z-10">
         <div ref={bgRef} className="absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
@@ -389,23 +427,20 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   <div className="w-full min-h-[340px] flex flex-col items-center justify-center text-center relative overflow-hidden">
                     <div className="welcome-glow absolute h-48 w-48 rounded-full bg-[#C2A378]/10 blur-3xl"></div>
                     <div className="relative z-10 space-y-4">
-                      <p className="welcome-rise text-[#C2A378] text-[9px] font-black uppercase tracking-[0.55em]" style={{animationDelay:'0ms'}}>{isAr ? 'نايل فليت' : 'NILE FLEET'}</p>
-                      <h3 className="welcome-rise text-white text-3xl sm:text-4xl font-black uppercase italic tracking-tighter" style={{animationDelay:'100ms'}}>WELCOME BACK</h3>
-                      <div className="welcome-rise text-[#C2A378] text-xl sm:text-2xl font-black uppercase tracking-[0.16em]" style={{animationDelay:'220ms'}}>BEBITO</div>
-                      <p className="welcome-rise max-w-xs mx-auto text-slate-300 text-[10px] sm:text-xs font-bold leading-relaxed tracking-wide" style={{animationDelay:'360ms'}}>{welcomeQuote}</p>
-                      <div className="welcome-rise relative h-24 sm:h-28 w-52 sm:w-60 mx-auto mt-1" style={{animationDelay:'430ms'}}>
-                        <div className="absolute inset-0 [perspective:700px]">
-                          <div className="absolute left-1/2 top-1/2 h-16 w-16 sm:h-20 sm:w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#C2A378]/35 bg-[#001F3F]/70 shadow-[0_0_35px_rgba(194,163,120,.16)] [transform-style:preserve-3d] core-spin"></div>
-                          <div className="absolute left-1/2 top-1/2 h-11 w-11 sm:h-14 sm:w-14 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#C2A378]/60 [transform-style:preserve-3d] core-spin-reverse"></div>
-                          <div className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#C2A378] shadow-[0_0_24px_rgba(194,163,120,.75)] node-float"></div>
-                          <span className="absolute left-[20%] top-[25%] h-1.5 w-1.5 rounded-full bg-[#C2A378] node-float"></span>
-                          <span className="absolute right-[18%] top-[38%] h-1.5 w-1.5 rounded-full bg-sky-300 node-float" style={{animationDelay:'.35s'}}></span>
-                          <span className="absolute left-[30%] bottom-[18%] h-1.5 w-1.5 rounded-full bg-emerald-300 node-float" style={{animationDelay:'.7s'}}></span>
-                          <div className="data-sweep absolute left-1/2 top-1/2 h-px w-40 sm:w-48 -translate-x-1/2 bg-gradient-to-r from-transparent via-[#C2A378]/70 to-transparent"></div>
+                      <div className="welcome-rise relative mx-auto w-full max-w-sm" style={{animationDelay:'0ms'}}>
+                        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-20 [perspective:900px] pointer-events-none">
+                          <div className="absolute left-1/2 top-1/2 h-14 w-[86%] -translate-x-1/2 -translate-y-1/2 rounded-[50%] border border-[#C2A378]/25 [transform:rotateX(62deg)] core-spin"></div>
+                          <div className="absolute left-1/2 top-1/2 h-8 w-[62%] -translate-x-1/2 -translate-y-1/2 rounded-[50%] border border-[#C2A378]/45 [transform:rotateX(62deg)] core-spin-reverse"></div>
                         </div>
+                        <p className="relative z-10 text-[#C2A378] text-[9px] sm:text-[10px] font-black uppercase tracking-[0.5em] leading-none">{isAr ? 'نايل فليت' : 'NILE FLEET'}</p>
+                        <h3 className="relative z-10 mt-3 text-white text-[2rem] sm:text-4xl font-black uppercase italic tracking-[-0.045em] leading-none">WELCOME <span className="welcome-letter-3d inline-block text-[#C2A378]">BACK</span></h3>
+                        <div className="relative z-10 mt-3 inline-flex items-center gap-2 text-xl sm:text-2xl font-black uppercase tracking-[0.18em] text-white">
+                          <span className="welcome-letter-3d text-[#C2A378]">B</span><span>E</span><span className="welcome-letter-3d">B</span><span>I</span><span className="welcome-letter-3d text-[#C2A378]">T</span><span>O</span>
+                        </div>
+                        <p className="relative z-10 max-w-xs mx-auto mt-4 text-slate-300 text-[10px] sm:text-xs font-bold leading-relaxed tracking-wide">{welcomeQuote}</p>
                       </div>
-                      <button type="button" onClick={enterApp} className="welcome-rise mt-0 px-9 py-3 bg-[#001F3F] hover:bg-[#002b57] border border-[#C2A378]/40 text-white font-black rounded-full uppercase tracking-[0.3em] text-[9px] transition-all active:scale-[0.97] shadow-[0_0_30px_rgba(194,163,120,.12)]" style={{animationDelay:'520ms'}}>{isAr ? 'دخول إلى النظام' : 'ENTER SYSTEM'}</button>
-                      <div className="welcome-rise mt-3 relative" style={{animationDelay:'640ms'}}>
+                      <button type="button" onClick={enterApp} className="welcome-rise mt-5 px-9 py-3 bg-[#001F3F] hover:bg-[#002b57] border border-[#C2A378]/40 text-white font-black rounded-full uppercase tracking-[0.3em] text-[9px] transition-all active:scale-[0.97] shadow-[0_0_30px_rgba(194,163,120,.12)]" style={{animationDelay:'180ms'}}>{isAr ? 'دخول إلى النظام' : 'ENTER SYSTEM'}</button>
+                      <div className="welcome-rise mt-3 relative" style={{animationDelay:'280ms'}}>
                         <div className="mx-auto h-px w-20 bg-gradient-to-r from-transparent via-[#C2A378]/60 to-transparent"></div>
                         <p className="signature-shimmer mt-2 text-[#C2A378] text-[7px] sm:text-[8px] font-black uppercase tracking-[0.34em]">POWERED BY <span className="text-white">BEBITO</span></p>
                       </div>
