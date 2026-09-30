@@ -48,19 +48,19 @@ const CompanyHomeV2: React.FC<Props> = ({ onGenset }) => {
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/85"/>
     </div>
 
-    <header className="sticky top-0 z-30 border-b border-white/10 bg-black/65 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-white/10 bg-black/45 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
         <div className="flex items-center gap-3"><img src="/nile-fleet-logo.png" className="h-10 w-10 object-contain" alt="Nile Fleet"/><div><div className="text-lg font-black">NILE <span className="text-[#C2A378]">FLEET</span></div><div className="text-[8px] font-bold uppercase tracking-[.3em] text-slate-400">Transport & Logistics Service</div></div></div>
         <div className="flex items-center gap-5">
-          <nav className="hidden gap-7 text-[10px] font-black uppercase tracking-[.2em] text-slate-300 md:flex"><a href="#about">About</a><a href="#services">Services</a><a href="#leadership">Leadership</a></nav>
+          <nav className="hidden gap-7 text-[10px] font-black uppercase tracking-[.2em] text-slate-300 md:flex"><a href="#about">About</a><a href="#operations">Operations</a><a href="#leadership">Leadership</a><a href="#contact">Contact</a></nav>
           <button onClick={()=>setLang(ar?'en':'ar')} className="rounded-lg border border-[#C2A378]/30 px-3 py-2 text-[9px] font-black uppercase text-[#C2A378]">{ar?'EN':'العربية'}</button>
         </div>
       </div>
     </header>
 
     <main className="relative z-10">
-      <section className="relative min-h-[82vh] overflow-hidden border-b border-white/10">
-        <div className="mx-auto grid min-h-[82vh] max-w-7xl items-center px-5 py-20 lg:px-8">
+      <section className="relative min-h-[90vh" overflow-hidden border-b border-white/10">
+        <div className="mx-auto grid min-h-[90vh] max-w-7xl items-center px-5 py-20 lg:px-8">
           <div className="max-w-4xl">
             <p className="mb-5 text-[10px] font-black uppercase tracking-[.45em] text-[#C2A378]">Since 2009 · Egypt</p>
             <h1 className="text-5xl font-black uppercase italic leading-[.9] tracking-[-.06em] sm:text-7xl lg:text-[7rem]">Moving cargo.<br/><span className="text-[#C2A378]">Moving business.</span></h1>
@@ -79,7 +79,11 @@ const CompanyHomeV2: React.FC<Props> = ({ onGenset }) => {
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{[['2009','Founded'],['17+','Years Experience'],['Egypt','Nationwide Operations'],['24/7','Operational Focus']].map(([v,l])=><div key={l} className="rounded-2xl border border-white/10 bg-white/[.025] p-6"><div className="text-3xl font-black text-[#C2A378]">{v}</div><div className="mt-2 text-[9px] font-black uppercase tracking-[.2em] text-slate-400">{l}</div></div>)}</div>
       </section>
 
-      <section id="services" className="border-y border-white/10 bg-black/40">
+
+      <section className="border-y border-white/10 bg-white/[.025]"><div className="mx-auto max-w-7xl px-5 py-28 lg:px-8"><div className="grid gap-6 md:grid-cols-3">{[['OUR MISSION','To deliver safe, efficient, and innovative transportation and logistics solutions while maintaining high standards of quality, reliability, and professionalism.'],['OUR VISION','To build more connected, visible, and responsive logistics operations that help customers move cargo and manage supply chains with confidence.'],['OUR VALUES','Safety · Integrity · Reliability · Excellence · Innovation · Teamwork · Customer Success']].map(([t,b])=><article key={t} className="min-h-52 rounded-3xl border border-white/10 bg-black/25 p-8 backdrop-blur-sm"><div className="mb-8 h-1 w-12 bg-[#C2A378]"/><h3 className="text-2xl font-black uppercase italic">{t}</h3><p className="mt-4 text-sm leading-7 text-slate-400">{b}</p></article>)}</div></div></section>
+
+      <section className="mx-auto max-w-7xl px-5 py-28 lg:px-8"><div className="grid gap-12 lg:grid-cols-[1fr_.9fr]"><div><p className="text-[9px] font-black uppercase tracking-[.4em] text-[#C2A378]">Network</p><h2 className="mt-3 text-4xl font-black uppercase italic">A Nationwide Operating Network</h2><p className="mt-6 max-w-2xl text-sm leading-8 text-slate-300">Our operations connect roads, ports, customers, and supply-chain partners with a continuous focus on safety, on-time execution, operational visibility, and efficiency.</p></div><div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{['PORT SAID','ALEXANDRIA','DAMietta','SOKHNA','DEKHEILA','EGYPT'].map((x,i)=><div key={x} className="rounded-2xl border border-white/10 bg-white/[.03] p-5 backdrop-blur-sm"><div className="text-[9px] font-black tracking-[.2em] text-slate-500">0{i+1}</div><div className="mt-8 text-xs font-black uppercase">{x}</div></div>)}</div></div></section>
+      <section id="operations" className="border-y border-white/10 bg-black/40">
         <div className="mx-auto max-w-7xl px-5 py-24 lg:px-8">
           <p className="text-[9px] font-black uppercase tracking-[.4em] text-[#C2A378]">Our Operations</p><h2 className="mt-3 text-4xl font-black uppercase italic">Transport & Logistics</h2>
           <div className="mt-10 grid gap-5 md:grid-cols-2">
@@ -91,7 +95,7 @@ const CompanyHomeV2: React.FC<Props> = ({ onGenset }) => {
 
       <section id="leadership" className="mx-auto max-w-7xl px-5 py-24 lg:px-8"><p className="text-[9px] font-black uppercase tracking-[.4em] text-[#C2A378]">Leadership</p><h2 className="mt-3 text-4xl font-black uppercase italic">People behind the operation</h2><div className="mt-10 grid gap-5 md:grid-cols-3">{[['SHERIF HEGAZY','CEO'],['SAMAR HEGAZY','HEAD OF TRANSPORT DEPARTMENT'],['YASMINE HEGAZY','HEAD OF GENSET DEPARTMENT']].map(([n,r])=><div key={n} className="rounded-3xl border border-white/10 bg-white/[.025] p-7"><div className="mb-12 h-1 w-10 bg-[#C2A378]"/><div className="text-xl font-black uppercase">{n}</div><div className="mt-2 text-[9px] font-black uppercase tracking-[.2em] text-[#C2A378]">{r}</div></div>)}</div></section>
 
-      <footer className="border-t border-white/10 bg-[#001F3F]"><div className="mx-auto max-w-7xl px-5 py-12 lg:px-8"><div className="grid gap-8 md:grid-cols-2"><div><div className="text-xl font-black">NILE <span className="text-[#C2A378]">FLEET</span></div><p className="mt-2 text-xs text-slate-300">Safe. Reliable. Visible. Connected.</p></div><div className="md:text-right"><div className="text-[9px] font-black uppercase tracking-[.2em] text-[#C2A378]">Head Office</div><div className="mt-2 text-sm text-slate-300">23 July St. · Abo Elkheer Building · 2nd Floor · Port Said, Egypt</div><div className="mt-2 text-xs text-slate-400">mohamedalaa@nilefleetlogistics.com · +20 114 647 5759</div></div></div></div></footer>
+      <section id="contact" className="border-t border-white/10 bg-white/[.025]"><div className="mx-auto max-w-7xl px-5 py-24 lg:px-8"><div className="grid gap-10 md:grid-cols-2"><div><p className="text-[9px] font-black uppercase tracking-[.4em] text-[#C2A378]">Head Office</p><h2 className="mt-3 text-4xl font-black uppercase italic">Nile Fleet</h2></div><div className="text-sm leading-8 text-slate-300">23 July St. · Abo Elkheer Building · 2nd Floor · Port Said, Egypt<br/><span className="text-slate-400">mohamedalaa@nilefleetlogistics.com · +20 114 647 5759</span></div></div></div></section>\n\n      <footer className="border-t border-white/10 bg-[#001F3F]"><div className="mx-auto max-w-7xl px-5 py-12 lg:px-8"><div className="grid gap-8 md:grid-cols-2"><div><div className="text-xl font-black">NILE <span className="text-[#C2A378]">FLEET</span></div><p className="mt-2 text-xs text-slate-300">Safe. Reliable. Visible. Connected.</p></div><div className="md:text-right"><div className="text-[9px] font-black uppercase tracking-[.2em] text-[#C2A378]">Head Office</div><div className="mt-2 text-sm text-slate-300">23 July St. · Abo Elkheer Building · 2nd Floor · Port Said, Egypt</div><div className="mt-2 text-xs text-slate-400">mohamedalaa@nilefleetlogistics.com · +20 114 647 5759</div></div></div></div></footer>
     </main>
   </div>;
 };
