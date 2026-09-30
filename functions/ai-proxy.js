@@ -1,9 +1,7 @@
 // Cloudflare Pages Function: runs all AI features on Cloudflare Workers AI.
-// DALI uses Gemma 4 for interactive text, GLM-4.7-Flash as fallback, and Qwen3.8 for OCR.
-
-// Use the faster multilingual model for interactive chat. Keep Qwen as a
-// resilience fallback for transient model failures.
-const TEXT_MODEL = '@cf/google/gemma-4-26b-a4b-it';
+// DALI uses DeepSeek V4 Flash for interactive text, with GLM-4.7-Flash as a resilience fallback.
+// OCR remains on the dedicated vision models below.
+const TEXT_MODEL = '@cf/deepseek-ai/deepseek-v4-flash-0731';
 const VISION_MODEL = '@cf/qwen/qwen3.8-27b';
 const VISION_FALLBACK_MODEL = '@cf/meta/llama-3.2-11b-vision-instruct';
 const TEXT_FALLBACK_MODEL = '@cf/zai-org/glm-4.7-flash';
@@ -52,7 +50,7 @@ export async function onRequestPost(context) {
   if (request.method === 'GET') {
     return json({
       ok: !!env.AI,
-      service: 'DALI 1.0',
+      service: 'DALI 2.0',
       textModel: TEXT_MODEL,
       visionModel: VISION_MODEL,
       message: env.AI ? 'Workers AI binding is connected.' : 'Workers AI binding is missing.'
@@ -180,6 +178,8 @@ async function runTextModel(env, options) {
     ...options,
     chat_template_kwargs: {
       ...(options.chat_template_kwargs || {}),
+      // Dali gets a concise operational answer by default. DeepSeek V4 Flash
+      // supports reasoning, but we keep the user-facing response focused.
       enable_thinking: false,
     },
   };
@@ -198,7 +198,7 @@ async function runTextModel(env, options) {
     throw new Error('Workers AI fallback returned an empty text response.');
   } catch (fallbackError) {
     throw new Error(
-      `Qwen3 returned no usable text; fallback model failed: ${fallbackError?.message || fallbackError}`
+      `DeepSeek V4 Flash returned no usable text; fallback model failed: ${fallbackError?.message || fallbackError}`
     );
   }
 }
