@@ -583,7 +583,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     const onPointerMove = (e: PointerEvent) => {
       if (!sim.drag) return;
       sim.dragDX=e.clientX-sim.dragX; sim.dragDY=e.clientY-sim.dragY;
-      sim.dragX=e.clientX; sim.dragY=clamp(e.clientY,H*.40,H*.80);
+      sim.dragX=e.clientX; sim.dragY=clamp(e.clientY,H*.28,H*.62);
     };
     const onUp = () => {
       if (!sim.drag) return;
