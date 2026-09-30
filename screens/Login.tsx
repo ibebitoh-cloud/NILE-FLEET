@@ -393,7 +393,22 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       <h3 className="welcome-rise text-white text-3xl sm:text-4xl font-black uppercase italic tracking-tighter" style={{animationDelay:'100ms'}}>WELCOME BACK</h3>
                       <div className="welcome-rise text-[#C2A378] text-xl sm:text-2xl font-black uppercase tracking-[0.16em]" style={{animationDelay:'220ms'}}>BEBITO</div>
                       <p className="welcome-rise max-w-xs mx-auto text-slate-300 text-[10px] sm:text-xs font-bold leading-relaxed tracking-wide" style={{animationDelay:'360ms'}}>{welcomeQuote}</p>
-                      <button type="button" onClick={enterApp} className="welcome-rise mt-3 px-9 py-3 bg-[#001F3F] hover:bg-[#002b57] border border-[#C2A378]/40 text-white font-black rounded-full uppercase tracking-[0.3em] text-[9px] transition-all active:scale-[0.97] shadow-[0_0_30px_rgba(194,163,120,.12)]" style={{animationDelay:'520ms'}}>{isAr ? 'دخول إلى النظام' : 'ENTER SYSTEM'}</button>
+                      <div className="welcome-rise relative h-24 sm:h-28 w-52 sm:w-60 mx-auto mt-1" style={{animationDelay:'430ms'}}>
+                        <div className="absolute inset-0 [perspective:700px]">
+                          <div className="absolute left-1/2 top-1/2 h-16 w-16 sm:h-20 sm:w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#C2A378]/35 bg-[#001F3F]/70 shadow-[0_0_35px_rgba(194,163,120,.16)] [transform-style:preserve-3d] core-spin"></div>
+                          <div className="absolute left-1/2 top-1/2 h-11 w-11 sm:h-14 sm:w-14 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#C2A378]/60 [transform-style:preserve-3d] core-spin-reverse"></div>
+                          <div className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#C2A378] shadow-[0_0_24px_rgba(194,163,120,.75)] node-float"></div>
+                          <span className="absolute left-[20%] top-[25%] h-1.5 w-1.5 rounded-full bg-[#C2A378] node-float"></span>
+                          <span className="absolute right-[18%] top-[38%] h-1.5 w-1.5 rounded-full bg-sky-300 node-float" style={{animationDelay:'.35s'}}></span>
+                          <span className="absolute left-[30%] bottom-[18%] h-1.5 w-1.5 rounded-full bg-emerald-300 node-float" style={{animationDelay:'.7s'}}></span>
+                          <div className="data-sweep absolute left-1/2 top-1/2 h-px w-40 sm:w-48 -translate-x-1/2 bg-gradient-to-r from-transparent via-[#C2A378]/70 to-transparent"></div>
+                        </div>
+                      </div>
+                      <button type="button" onClick={enterApp} className="welcome-rise mt-0 px-9 py-3 bg-[#001F3F] hover:bg-[#002b57] border border-[#C2A378]/40 text-white font-black rounded-full uppercase tracking-[0.3em] text-[9px] transition-all active:scale-[0.97] shadow-[0_0_30px_rgba(194,163,120,.12)]" style={{animationDelay:'520ms'}}>{isAr ? 'دخول إلى النظام' : 'ENTER SYSTEM'}</button>
+                      <div className="welcome-rise mt-3 relative" style={{animationDelay:'640ms'}}>
+                        <div className="mx-auto h-px w-20 bg-gradient-to-r from-transparent via-[#C2A378]/60 to-transparent"></div>
+                        <p className="signature-shimmer mt-2 text-[#C2A378] text-[7px] sm:text-[8px] font-black uppercase tracking-[0.34em]">POWERED BY <span className="text-white">BEBITO</span></p>
+                      </div>
                     </div>
                   </div>
                 )}
