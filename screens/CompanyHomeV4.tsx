@@ -877,26 +877,28 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         @media(max-width:640px){.nf4-contact-bar>div{align-items:stretch}.nf4-contact-bar .nf4-quote-button{width:100%;justify-content:center}.nf4-contact-bar>div>div{width:100%;justify-content:space-between}}
         @media (prefers-reduced-motion: reduce){ .nf4 *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important} }
       `}
-/* Strong homepage visual direction - existing canvas background remains untouched */
-.nf-home .nf4-hero-inner{position:relative;z-index:2}
-.nf-home .nf4-hero-title{text-shadow:0 18px 60px rgba(0,0,0,.42)}
-.nf-home .nf4-hero-title span{display:inline-block;text-shadow:0 0 38px rgba(194,163,120,.18)}
-.nf-home .nf4-hero-actions a{min-height:44px;transition:transform .25s ease,box-shadow .25s ease}
-.nf-home .nf4-hero-actions a:hover{transform:translateY(-3px);box-shadow:0 14px 35px rgba(0,0,0,.22)}
-.nf-home .nf4-hero-stats{padding-top:3rem}
-.nf-home .nf4-stat{min-height:145px;padding:1.35rem!important;position:relative;overflow:hidden;box-shadow:0 22px 55px rgba(0,0,0,.16);transition:transform .3s ease,border-color .3s ease}
-.nf-home .nf4-stat:hover{transform:translateY(-5px);border-color:rgba(194,163,120,.65)}
-.nf-home .nf4-stat>div:first-child{font-size:clamp(2.2rem,4vw,3.2rem);letter-spacing:-.06em}
-.nf-home .nf4-stat:after{content:"";position:absolute;right:-30px;bottom:-55px;width:130px;height:130px;border-radius:999px;background:radial-gradient(circle,rgba(194,163,120,.16),transparent 68%);pointer-events:none}
-.nf-home .nf4-about-layout>div:first-child{position:sticky;top:110px;align-self:start}
-.nf-home .nf4-about-layout h2,.nf-home #why-us h2,.nf-home #network h2,.nf-home #services h2,.nf-home #proof h2,.nf-home #partners h2,.nf-home #leadership h2{text-shadow:0 14px 45px rgba(0,0,0,.22)}
-.nf-home .nf4-network-grid>div{min-height:250px;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(0,0,0,.12))}
-.nf-home .nf4-network-grid>div:first-child{border-color:rgba(194,163,120,.48)}
-.nf-home .nf4-services-grid>div{min-height:210px}
-.nf-home .nf4-services-grid>div:first-child{grid-column:span 2}
-.nf-home .nf4-leadership-grid>div{min-height:330px}
-@media(max-width:1023px){.nf-home .nf4-about-layout>div:first-child{position:static}.nf-home .nf4-services-grid>div:first-child{grid-column:span 1}}
-@media(max-width:767px){.nf-home .nf4-hero-title{font-size:clamp(3.2rem,18vw,5.2rem)}.nf-home .nf4-network-grid>div,.nf-home .nf4-services-grid>div,.nf-home .nf4-leadership-grid>div{min-height:220px}}
+      /* Strong homepage visual direction - existing canvas background remains untouched */
+      .nf-home .nf4-hero-inner{position:relative;z-index:2}
+      .nf-home .nf4-hero-title{text-shadow:0 18px 60px rgba(0,0,0,.42)}
+      .nf-home .nf4-hero-title span{display:inline-block;text-shadow:0 0 38px rgba(194,163,120,.18)}
+      .nf-home .nf4-hero-actions a{min-height:44px;transition:transform .25s ease,box-shadow .25s ease}
+      .nf-home .nf4-hero-actions a:hover{transform:translateY(-3px);box-shadow:0 14px 35px rgba(0,0,0,.22)}
+      .nf-home .nf4-hero-stats{padding-top:3rem}
+      .nf-home .nf4-stat{min-height:145px;padding:1.35rem!important;position:relative;overflow:hidden;box-shadow:0 22px 55px rgba(0,0,0,.16);transition:transform .3s ease,border-color .3s ease}
+      .nf-home .nf4-stat:hover{transform:translateY(-5px);border-color:rgba(194,163,120,.65)}
+      .nf-home .nf4-stat>div:first-child{font-size:clamp(2.2rem,4vw,3.2rem);letter-spacing:-.06em}
+      .nf-home .nf4-stat:after{content:"";position:absolute;right:-30px;bottom:-55px;width:130px;height:130px;border-radius:999px;background:radial-gradient(circle,rgba(194,163,120,.16),transparent 68%);pointer-events:none}
+      .nf-home .nf4-about-layout>div:first-child{position:sticky;top:110px;align-self:start}
+      .nf-home .nf4-about-layout h2,.nf-home #why-us h2,.nf-home #network h2,.nf-home #services h2,.nf-home #proof h2,.nf-home #partners h2,.nf-home #leadership h2{text-shadow:0 14px 45px rgba(0,0,0,.22)}
+      .nf-home .nf4-network-grid>div{min-height:250px;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(0,0,0,.12))}
+      .nf-home .nf4-network-grid>div:first-child{border-color:rgba(194,163,120,.48)}
+      .nf-home .nf4-services-grid>div{min-height:210px}
+      .nf-home .nf4-services-grid>div:first-child{grid-column:span 2}
+      .nf-home .nf4-leadership-grid>div{min-height:330px}
+      @media(max-width:1023px){.nf-home .nf4-about-layout>div:first-child{position:static}.nf-home .nf4-services-grid>div:first-child{grid-column:span 1}}
+      @media(max-width:767px){.nf-home .nf4-hero-title{font-size:clamp(3.2rem,18vw,5.2rem)}.nf-home .nf4-network-grid>div,.nf-home .nf4-services-grid>div,.nf-home .nf4-leadership-grid>div{min-height:220px}}
+      
+      `}
 </style>
 
       <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 z-0" aria-hidden="true" />
