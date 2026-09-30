@@ -1059,7 +1059,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   const forceBanners = notifications.filter(n => n.forceBanner);
 
   return (
-    <div className={`flex flex-col lg:flex-row h-screen overflow-hidden ${lang === 'ar' ? 'rtl' : 'ltr'} transition-colors duration-500 ${isPseudoFullscreen ? 'fixed inset-0 w-screen h-screen z-[99999]' : ''}`} style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+    <div className={`nile-command-layout flex flex-col lg:flex-row h-screen overflow-hidden ${lang === 'ar' ? 'rtl' : 'ltr'} transition-colors duration-500 ${isPseudoFullscreen ? 'fixed inset-0 w-screen h-screen z-[99999]' : ''}`} style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
       
       {/* FORCE NOTIFICATION BANNERS */}
       {forceBanners.length > 0 && !isMuted && (
@@ -1411,30 +1411,34 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         </div>
       </main>
 
-      {/* MOBILE NAV (Bottom Bar) */}
-      <nav className={`lg:hidden fixed bottom-0 left-0 right-0 border-t px-2 py-2 z-40 flex justify-around items-center transition-all ${isTerminal ? 'bg-[#001224] border-white/5' : 'bg-white border-slate-200'} backdrop-blur-xl pb-6 no-print`}>
-        <button onClick={() => setActiveScreen(dashboardId)} className="flex flex-col items-center gap-1">
-          <span className="text-base">🏠</span>
-          <span className={`text-[7px] font-black uppercase ${activeScreen === dashboardId ? 'text-blue-500' : textSecondary}`}>HOME</span>
-        </button>
-        <button onClick={() => {
-          if (isGate) {
-            handlePortGateTabClick(activePortGateTab);
-          } else {
-            setActiveScreen('port-gate');
-          }
-        }} className="flex flex-col items-center gap-1">
-          <span className="text-base">🚧</span>
-          <span className={`text-[7px] font-black uppercase ${activeScreen === 'port-gate' ? 'text-blue-500' : textSecondary}`}>GATE</span>
-        </button>
-        {/* Added Settings to Bottom Nav */}
-        <button onClick={() => setActiveScreen('user-settings')} className="flex flex-col items-center gap-1">
-          <span className="text-base">⚙️</span>
-          <span className={`text-[7px] font-black uppercase ${activeScreen === 'user-settings' ? 'text-blue-500' : textSecondary}`}>ACCOUNT</span>
-        </button>
-        <button onClick={() => setIsMobileMenuOpen(true)} className="flex flex-col items-center gap-1">
-          <span className="text-base">☰</span>
-          <span className={`text-[7px] font-black uppercase ${isMobileMenuOpen ? 'text-blue-500' : textSecondary}`}>MORE</span>
+      {/* MOBILE NAV: primary Genset screens */}
+      <nav className={`lg:hidden fixed bottom-0 left-0 right-0 border-t px-1.5 py-1.5 z-40 grid grid-cols-5 gap-1 items-center transition-all ${isTerminal ? 'bg-[#001224] border-white/5' : 'bg-white border-slate-200'} backdrop-blur-xl pb-5 no-print`}>
+        {[
+          { id: dashboardId, label: isAr ? 'الرئيسية' : 'DASHBOARD', icon: '📊' },
+          { id: 'port-gate', label: isAr ? 'البوابة' : 'GATE', icon: '🚧' },
+          { id: 'financials', label: isAr ? 'المالية' : 'FINANCE', icon: '💰' },
+          { id: 'master-view', label: isAr ? 'الرئيسية الموحدة' : 'MASTER', icon: '📑' },
+        ].map(item => {
+          const available = item.id === dashboardId || menu.some(m => m.id === item.id);
+          const active = activeScreen === item.id;
+          return (
+            <button
+              key={item.id}
+              disabled={!available}
+              onClick={() => {
+                if (item.id === 'port-gate') handlePortGateTabClick(activePortGateTab);
+                else setActiveScreen(item.id);
+              }}
+              className={`min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all ${active ? 'bg-[#C2A378] text-[#001F3F]' : available ? (isTerminal ? 'text-[#C2A378cc] hover:bg-white/5' : 'text-slate-600 hover:bg-slate-100') : 'opacity-25 cursor-not-allowed'}`}
+            >
+              <span className="text-base leading-none">{item.icon}</span>
+              <span className="max-w-full truncate text-[6.5px] font-black uppercase tracking-[.08em]">{item.label}</span>
+            </button>
+          );
+        })}
+        <button onClick={() => setIsMobileMenuOpen(true)} className={`min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all ${isMobileMenuOpen ? 'bg-[#C2A378] text-[#001F3F]' : isTerminal ? 'text-[#C2A378cc] hover:bg-white/5' : 'text-slate-600 hover:bg-slate-100'}`}>
+          <span className="text-base leading-none">☰</span>
+          <span className="text-[6.5px] font-black uppercase tracking-[.08em]">MORE</span>
         </button>
       </nav>
     </div>
