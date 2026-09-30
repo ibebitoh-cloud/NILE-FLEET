@@ -907,7 +907,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         @keyframes nf4Reveal { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
         @keyframes nf4Pulse { 0%,100%{box-shadow:0 0 0 rgba(194,163,120,0)} 50%{box-shadow:0 0 42px rgba(194,163,120,.28)} }
         @keyframes nf4Partners { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-        .nf4-logo-viewport{position:relative;border:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;border-radius:0!important;overflow:hidden!important}
+        .nf4-logo-viewport{position:relative;border:0!important;background:linear-gradient(90deg,rgba(255,255,255,.018),rgba(194,163,120,.045),rgba(255,255,255,.018))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.045),inset 0 -1px 0 rgba(0,0,0,.14)!important;padding:8px 0!important;border-radius:14px!important;overflow:hidden!important}
         .nf4-logo-track{animation:nf4Partners 75s linear infinite}
         .nf4-logo-track a{height:68px!important;min-width:175px!important;border-radius:12px!important;padding:0 16px!important}
         .nf4-logo-track a>div>div:first-child{width:34px!important;height:34px!important;border-radius:8px!important}
@@ -1421,7 +1421,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           </Reveal>
         </section>
 
-        <section id="partners" className={`relative overflow-hidden border-y ${isDark ? 'bg-[#050b12] text-white border-white/10' : 'bg-white text-[#0b1a2b] border-black/10'}`}>
+        <section id="partners" className={`relative overflow-hidden border-y backdrop-blur-[2px] ${K.band}`}>
           <Reveal>
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
               <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>07 / {ar ? 'شبكة الشحن والنقل' : 'SHIPPING & TRUCKING NETWORK'}</div>
