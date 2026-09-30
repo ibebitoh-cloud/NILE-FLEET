@@ -402,7 +402,8 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBackToHome }) => {
                       <div className="mt-5 text-[9px] font-black uppercase tracking-[0.35em] text-[#C2A378]">POWERED BY <span className="text-white">BEBITO</span></div>
 
                   </div>
-                )}
+                                   </div>
+)}
               </div>
             ) : (
               <>
