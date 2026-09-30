@@ -1336,8 +1336,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                       <p className={`mt-5 text-[11px] leading-6 ${K.muted}`}>{x.desc}</p>
                     </div>
                   ))}
+                  </div>
                 </div>
-              </div>
             </div>
           </Reveal>
         </section>
@@ -1434,7 +1434,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
               </div>
               <div className="mt-10">
                 <div className="nf4-logo-viewport">
-                  {[...PARTNER_LOGOS, ...PARTNER_LOGOS].map((p, i) => (
+                  <div className="nf4-logo-track">
+                    {[...PARTNER_LOGOS, ...PARTNER_LOGOS].map((p, i) => (
                     <a key={`${p.name}-${i}`} href={p.url} target="_blank" rel="noreferrer" className={`group flex h-[76px] min-w-[190px] items-center justify-center rounded-xl border px-4 text-center transition duration-500 hover:-translate-y-0.5 hover:border-[#c2a378]/70 ${isDark ? 'border-white/[.09] bg-white/[.025] hover:bg-white/[.055]' : 'border-black/[.07] bg-white/75 hover:bg-white shadow-sm'}`}>
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white p-1.5 shadow-[0_4px_18px_rgba(15,23,42,.08)]">
