@@ -232,34 +232,84 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         @keyframes welcomeLetter3d { 0%,100% { transform:translateY(0) rotateX(0) rotateY(0); text-shadow:0 0 0 transparent; } 50% { transform:translateY(-4px) rotateX(18deg) rotateY(-12deg); text-shadow:5px 7px 0 rgba(0,31,63,.7), 0 0 18px rgba(194,163,120,.45); } }
         .welcome-letter-3d { animation: welcomeLetter3d 2.8s ease-in-out infinite; transform-style:preserve-3d; }
 
-        /* BEBITO signature — visible walk, stop, reach, touch, walk-away. */
-        .signature-stage{position:relative;display:inline-flex;flex-direction:column;align-items:center;justify-content:flex-end;min-width:290px;min-height:96px;overflow:visible}
-        .signature-word{position:relative;z-index:5;display:inline-flex;align-items:baseline;justify-content:center;gap:.05em}
-        .signature-letter{position:relative;display:inline-block;min-width:.62em;text-align:center;transform-origin:50% 90%;will-change:transform}
-        .signature-stage::after{content:"";position:absolute;left:50%;bottom:2px;width:76%;height:8px;transform:translateX(-50%);border-bottom:1px solid rgba(194,163,120,.18);border-radius:50%}
-        .signature-character{position:absolute;left:50%;bottom:5px;width:62px;height:72px;z-index:8;pointer-events:none}
-        .signature-character .sig-line{fill:none;stroke:rgba(255,255,255,.96);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
-        .signature-character .sig-accent{fill:none;stroke:#C2A378;stroke-width:1.5;stroke-linecap:round}
-        .signature-character .sig-dot{fill:#C2A378}
-        @keyframes stickWalk{0%{transform:translateX(var(--start))}8%{transform:translateX(calc(var(--start) + 8px))}16%{transform:translateX(calc(var(--start) + 16px))}24%{transform:translateX(var(--target))}42%{transform:translateX(var(--target))}55%{transform:translateX(calc(var(--target) + 3px))}68%{transform:translateX(var(--target))}78%{transform:translateX(calc(var(--target) + 15px))}90%{transform:translateX(var(--target))}100%{transform:translateX(var(--start))}}
-        @keyframes stickArm{0%,28%{transform:rotate(0)}34%{transform:rotate(-12deg)}40%{transform:rotate(-24deg)}47%{transform:rotate(-32deg)}58%{transform:rotate(-18deg)}68%,100%{transform:rotate(0)}}
-        @keyframes stickLegA{0%,8%,16%,24%,68%,78%,90%,100%{transform:rotate(0)}4%{transform:rotate(18deg)}12%{transform:rotate(-18deg)}20%{transform:rotate(15deg)}76%{transform:rotate(18deg)}84%{transform:rotate(-18deg)}}
-        @keyframes stickLegB{0%,8%,16%,24%,68%,78%,90%,100%{transform:rotate(0)}4%{transform:rotate(-18deg)}12%{transform:rotate(18deg)}20%{transform:rotate(-15deg)}76%{transform:rotate(-18deg)}84%{transform:rotate(18deg)}}
-        @keyframes touchPulse{0%,43%{opacity:0;transform:scale(.15)}48%{opacity:1;transform:scale(1)}58%{opacity:0;transform:scale(2.2)}100%{opacity:0}}
-        @keyframes letterTouch{0%,43%{transform:translate(0,0) rotate(0) scale(1)}48%{transform:translate(3px,-2px) rotate(-8deg) scale(1.1)}54%{transform:translate(-3px,2px) rotate(6deg) scale(1.03)}63%,100%{transform:translate(0,0) rotate(0) scale(1)}}
-        .signature-character{animation:stickWalk 5s linear infinite}
-        .signature-character .sig-action-arm{transform-box:fill-box;transform-origin:31px 31px;animation:stickArm 5s ease-in-out infinite}
-        .signature-character .sig-step-a{transform-box:fill-box;transform-origin:31px 49px;animation:stickLegA 5s ease-in-out infinite}
-        .signature-character .sig-step-b{transform-box:fill-box;transform-origin:31px 49px;animation:stickLegB 5s ease-in-out infinite}
-        .signature-character .sig-contact-pulse{transform-box:fill-box;transform-origin:center;animation:touchPulse 5s ease-out infinite}
-        .signature-stage.welcome-anim-0 .signature-character{--start:-108px;--target:-60px}
-        .signature-stage.welcome-anim-1 .signature-character{--start:-108px;--target:-36px}
-        .signature-stage.welcome-anim-2 .signature-character{--start:-90px;--target:-12px}
-        .signature-stage.welcome-anim-3 .signature-character{--start:-65px;--target:12px}
-        .signature-stage.welcome-anim-4 .signature-character{--start:-38px;--target:36px}
-        .signature-stage.welcome-anim-5 .signature-character{--start:-12px;--target:59px}
-        .signature-stage.welcome-anim-0 .signature-letter:nth-child(5),.signature-stage.welcome-anim-1 .signature-letter:nth-child(6),.signature-stage.welcome-anim-2 .signature-letter:nth-child(7),.signature-stage.welcome-anim-3 .signature-letter:nth-child(8),.signature-stage.welcome-anim-4 .signature-letter:nth-child(9),.signature-stage.welcome-anim-5 .signature-letter:nth-child(10){animation:letterTouch 5s ease-in-out infinite}
-        @media (prefers-reduced-motion:reduce){.signature-letter,.signature-character,.signature-character *{animation:none!important}}
+        /* BEBITO signature — one SVG coordinate system: exact letter targets + physical worker interaction. */
+        .signature-stage{position:relative;width:min(100%,520px);height:122px;margin:0 auto;overflow:visible}
+        .signature-svg{display:block;width:100%;height:122px;overflow:visible}
+        .signature-svg text{font-family:Arial,Helvetica,sans-serif;font-weight:900;letter-spacing:1px}
+        .signature-letter{transform-box:fill-box;transform-origin:50% 88%;will-change:transform}
+        .sig-worker{transform-box:fill-box;transform-origin:0 0;will-change:transform}
+        .sig-worker *{vector-effect:non-scaling-stroke}
+        .sig-line{fill:none;stroke:rgba(255,255,255,.96);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+        .sig-gold{fill:none;stroke:#C2A378;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+        .sig-dot{fill:#C2A378}
+        .sig-ground{fill:none;stroke:rgba(194,163,120,.2);stroke-width:1}
+        @keyframes sigWalkExact{
+          0%{transform:translate(var(--sx),8px)}
+          8%{transform:translate(calc(var(--sx) + 14px),2px)}
+          16%{transform:translate(calc(var(--sx) + 28px),8px)}
+          24%{transform:translate(var(--tx),0)}
+          38%,43%{transform:translate(var(--tx),0)}
+          48%{transform:translate(calc(var(--tx) + 2px),1px)}
+          54%,61%{transform:translate(var(--tx),0)}
+          70%{transform:translate(calc(var(--tx) + 42px),0)}
+          82%{transform:translate(calc(var(--tx) + 76px),2px)}
+          100%{transform:translate(var(--sx),8px)}
+        }
+        @keyframes sigArmReachExact{
+          0%,36%{transform:rotate(0deg)}
+          43%{transform:rotate(-9deg)}
+          49%{transform:rotate(-18deg)}
+          54%{transform:rotate(-23deg)}
+          62%,100%{transform:rotate(0deg)}
+        }
+        @keyframes sigLegWalkA{
+          0%,8%,16%,24%,62%,70%,82%,100%{transform:rotate(0deg)}
+          4%{transform:rotate(18deg)} 12%{transform:rotate(-18deg)}
+          68%{transform:rotate(18deg)} 76%{transform:rotate(-18deg)}
+        }
+        @keyframes sigLegWalkB{
+          0%,8%,16%,24%,62%,70%,82%,100%{transform:rotate(0deg)}
+          4%{transform:rotate(-18deg)} 12%{transform:rotate(18deg)}
+          68%{transform:rotate(-18deg)} 76%{transform:rotate(18deg)}
+        }
+        @keyframes sigPush{
+          0%,43%{transform:translate(0,0) rotate(0) scale(1)}
+          49%{transform:translate(3px,-2px) rotate(-7deg) scale(1.08)}
+          54%{transform:translate(-2px,1px) rotate(5deg) scale(1.03)}
+          62%,100%{transform:translate(0,0) rotate(0) scale(1)}
+        }
+        @keyframes sigImpact{
+          0%,46%{opacity:0;transform:scale(.2)}
+          50%{opacity:1;transform:scale(1)}
+          60%{opacity:0;transform:scale(2.4)}
+          100%{opacity:0}
+        }
+        .sig-worker{animation:sigWalkExact 5.6s cubic-bezier(.22,.78,.22,1) infinite}
+        .sig-worker .sig-action-arm{transform-box:fill-box;transform-origin:31px 31px;animation:sigArmReachExact 5.6s ease-in-out infinite}
+        .sig-worker .sig-step-a{transform-box:fill-box;transform-origin:31px 49px;animation:sigLegWalkA 5.6s ease-in-out infinite}
+        .sig-worker .sig-step-b{transform-box:fill-box;transform-origin:31px 49px;animation:sigLegWalkB 5.6s ease-in-out infinite}
+        .signature-stage .sig-target-letter{animation:sigPush 5.6s ease-in-out infinite}
+        .signature-stage .sig-impact{transform-box:fill-box;transform-origin:center;animation:sigImpact 5.6s ease-out infinite}
+        /* Exact SVG target: worker's hand is aligned to each letter's left edge. */
+        .signature-stage.welcome-anim-0{--tx:55px;--sx:-130px}
+        .signature-stage.welcome-anim-1{--tx:95px;--sx:-110px}
+        .signature-stage.welcome-anim-2{--tx:135px;--sx:-90px}
+        .signature-stage.welcome-anim-3{--tx:175px;--sx:-70px}
+        .signature-stage.welcome-anim-4{--tx:215px;--sx:-50px}
+        .signature-stage.welcome-anim-5{--tx:255px;--sx:-30px}
+        .signature-stage.welcome-anim-0 .sig-target-letter:nth-of-type(1),
+        .signature-stage.welcome-anim-1 .sig-target-letter:nth-of-type(2),
+        .signature-stage.welcome-anim-2 .sig-target-letter:nth-of-type(3),
+        .signature-stage.welcome-anim-3 .sig-target-letter:nth-of-type(4),
+        .signature-stage.welcome-anim-4 .sig-target-letter:nth-of-type(5),
+        .signature-stage.welcome-anim-5 .sig-target-letter:nth-of-type(6){animation:sigPush 5.6s ease-in-out infinite}
+        .signature-stage.welcome-anim-0 .sig-impact:nth-of-type(1),
+        .signature-stage.welcome-anim-1 .sig-impact:nth-of-type(2),
+        .signature-stage.welcome-anim-2 .sig-impact:nth-of-type(3),
+        .signature-stage.welcome-anim-3 .sig-impact:nth-of-type(4),
+        .signature-stage.welcome-anim-4 .sig-impact:nth-of-type(5),
+        .signature-stage.welcome-anim-5 .sig-impact:nth-of-type(6){animation:sigImpact 5.6s ease-out infinite}
+        @media (prefers-reduced-motion:reduce){.sig-worker,.signature-stage .sig-target-letter,.sig-worker *,.signature-stage .sig-impact{animation:none!important}}
         .welcome-rise { animation: welcomeRise .75s cubic-bezier(.2,.8,.2,1) both; }
         .welcome-glow { animation: welcomeGlow 2.8s ease-in-out infinite; }
         @keyframes signatureShimmer { 0%,100% { opacity:.62; letter-spacing:.34em; transform:scale(.98); } 50% { opacity:1; letter-spacing:.46em; transform:scale(1.02); } }
@@ -346,26 +396,51 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         <p className="relative z-10 max-w-xs mx-auto mt-4 text-slate-300 text-[10px] sm:text-xs font-bold leading-relaxed tracking-wide">{welcomeQuote}</p>
                       </div>
                       <button type="button" onClick={enterApp} className="mt-5 px-9 py-3 bg-[#001F3F] hover:bg-[#002b57] border border-[#C2A378]/40 text-white font-black rounded-full uppercase tracking-[0.3em] text-[9px] transition-all active:scale-[0.97] shadow-[0_0_30px_rgba(194,163,120,.12)]">{isAr ? 'دخول إلى النظام' : 'ENTER SYSTEM'}</button>
-                      <div className={`mt-3 relative signature-stage welcome-anim-${welcomeStyle}`}>
-                        <div className="relative z-10 signature-word text-[9px] sm:text-[10px] font-black uppercase tracking-[0.22em] text-[#C2A378] whitespace-nowrap" aria-label="Powered by Bebito">
-                          <span>POWERED</span><span className="signature-letter-space" aria-hidden="true"></span><span className="text-white">BY</span><span className="signature-letter-space" aria-hidden="true"></span>
-                          <span className="signature-letter text-[#C2A378]">B</span><span className="signature-letter text-white">E</span><span className="signature-letter text-[#C2A378]">B</span><span className="signature-letter text-white">I</span><span className="signature-letter text-[#C2A378]">T</span><span className="signature-letter text-white">O</span>
-                        </div>
-                        <div className={`signature-character sig-scene-${welcomeStyle}`} aria-hidden="true">
-                          <svg viewBox="0 0 62 72" role="presentation">
-                            <g className="sig-body">
-                              <circle className="sig-line" cx="31" cy="18" r="7"/>
-                              <circle className="sig-dot" cx="34" cy="17" r="1.2"/>
-                              <path className="sig-line" d="M31 25 L31 49"/>
-                              <path className="sig-line" d="M31 31 L18 40 L10 31"/>
-                              <g className="sig-action-arm"><path className="sig-line" d="M31 31 L44 28 L58 27"/><circle className="sig-dot" cx="58" cy="27" r="2.1"/></g>
-                              <g className="sig-step-a"><path className="sig-line" d="M31 49 L20 62 L12 68"/></g>
-                              <g className="sig-step-b"><path className="sig-line" d="M31 49 L42 62 L51 68"/></g>
-                              <circle className="sig-contact-pulse" cx="58" cy="27" r="5" fill="none" stroke="#C2A378" stroke-width="1.5"/>
+                      <div className={`mt-3 signature-stage welcome-anim-${welcomeStyle}`} aria-label="Powered by Bebito">
+                        <svg className="signature-svg" viewBox="0 0 520 122" role="img" aria-labelledby="bebito-signature-title">
+                          <title id="bebito-signature-title">Powered by Bebito</title>
+                          <text x="8" y="27" fontSize="12" fill="#C2A378">POWERED</text>
+                          <text x="112" y="27" fontSize="12" fill="#FFFFFF">BY</text>
+                          <g aria-hidden="true">
+                            <text className="sig-target-letter" x="158" y="78" fontSize="48" fill="#C2A378">B</text>
+                            <text className="sig-target-letter" x="215" y="78" fontSize="48" fill="#FFFFFF">E</text>
+                            <text className="sig-target-letter" x="272" y="78" fontSize="48" fill="#C2A378">B</text>
+                            <text className="sig-target-letter" x="329" y="78" fontSize="48" fill="#FFFFFF">I</text>
+                            <text className="sig-target-letter" x="372" y="78" fontSize="48" fill="#C2A378">T</text>
+                            <text className="sig-target-letter" x="429" y="78" fontSize="48" fill="#FFFFFF">O</text>
+                          </g>
+                          <path className="sig-ground" d="M145 92 H490"/>
+                          <g className="sig-worker" aria-hidden="true">
+                            <circle className="sig-line" cx="31" cy="18" r="7"/>
+                            <circle className="sig-dot" cx="34" cy="17" r="1.2"/>
+                            <path className="sig-line" d="M31 25 L31 49"/>
+                            <path className="sig-line" d="M31 31 L18 40 L10 31"/>
+                            <g className="sig-action-arm">
+                              <path className="sig-line" d="M31 31 L44 28 L58 27"/>
+                              <circle className="sig-dot" cx="58" cy="27" r="2.2"/>
                             </g>
-                            <path className="sig-accent" d="M3 69 H59"/>
-                          </svg>
-                        </div>
+                            <g className="sig-step-a"><path className="sig-line" d="M31 49 L20 62 L12 68"/></g>
+                            <g className="sig-step-b"><path className="sig-line" d="M31 49 L42 62 L51 68"/></g>
+                          </g>
+                          <g className="sig-impact" aria-hidden="true">
+                            <circle className="sig-gold" cx="158" cy="55" r="6"/>
+                          </g>
+                          <g className="sig-impact" aria-hidden="true">
+                            <circle className="sig-gold" cx="215" cy="55" r="6"/>
+                          </g>
+                          <g className="sig-impact" aria-hidden="true">
+                            <circle className="sig-gold" cx="272" cy="55" r="6"/>
+                          </g>
+                          <g className="sig-impact" aria-hidden="true">
+                            <circle className="sig-gold" cx="329" cy="55" r="6"/>
+                          </g>
+                          <g className="sig-impact" aria-hidden="true">
+                            <circle className="sig-gold" cx="372" cy="55" r="6"/>
+                          </g>
+                          <g className="sig-impact" aria-hidden="true">
+                            <circle className="sig-gold" cx="429" cy="55" r="6"/>
+                          </g>
+                        </svg>
                       </div>
                         
                     </div>
