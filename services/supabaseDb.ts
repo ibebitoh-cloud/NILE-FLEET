@@ -336,6 +336,30 @@ class SupabaseDB {
       maintenance: maintenanceRows.filter(m => matches(m.gensetNumber))
     };
   }
+  /** Fresh, read-only lookup for DALI command search. It searches exact booking/container identifiers in Supabase without exposing arbitrary SQL. */
+  async searchOperationRecords(value: string): Promise<Operation[]> {
+    const raw = String(value || '').trim();
+    if (!raw) return [];
+    const normalized = raw.toUpperCase();
+    const [bookingResult, containerResult] = await Promise.all([
+      supabase.from('operations').select('*').ilike('booking_number', normalized).limit(25),
+      supabase.from('operations').select('*').ilike('container_number', normalized).limit(25)
+    ]);
+    const error = bookingResult.error || containerResult.error;
+    if (error) {
+      _lastDbError = 'operations: ' + error.message;
+      console.error('[supabaseDb] DALI operation search:', error.message);
+      throw new Error(_lastDbError);
+    }
+    const rows = [...(bookingResult.data || []), ...(containerResult.data || [])];
+    const seen = new Set<string>();
+    return rows.map(snakeToCamel).filter((row: any) => {
+      const id = String(row?.id || `${row?.bookingNumber || ''}:${row?.containerNumber || ''}:${row?.operationDate || ''}`);
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    }) as Operation[];
+  }
   getReservations(): Reservation[] { return _reservations; }
   getOperations(): Operation[] { return _operations; }
 
