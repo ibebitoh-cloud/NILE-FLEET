@@ -255,56 +255,41 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         @keyframes welcomeLetter3d { 0%,100% { transform:translateY(0) rotateX(0) rotateY(0); text-shadow:0 0 0 transparent; } 50% { transform:translateY(-4px) rotateX(18deg) rotateY(-12deg); text-shadow:5px 7px 0 rgba(0,31,63,.7), 0 0 18px rgba(194,163,120,.45); } }
         .welcome-letter-3d { animation: welcomeLetter3d 2.8s ease-in-out infinite; transform-style:preserve-3d; }
 
-        /* Random industrial line-art animation: only the BEBITO signature area moves. */
-        @keyframes lineDraw { 0% { stroke-dashoffset: 900; opacity: 0; } 20% { opacity: 1; } 52% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 1; } }
-        @keyframes lineMove0 { 0% { transform:translateX(-150px); opacity:0; } 18% { opacity:1; } 48% { transform:translateX(18px); } 72% { transform:translateX(100px); opacity:1; } 100% { transform:translateX(150px); opacity:0; } }
-        @keyframes lineMove1 { 0% { transform:translate(150px,20px) rotate(8deg); opacity:0; } 18% { opacity:1; } 52% { transform:translate(-12px,-4px) rotate(-2deg); } 78% { transform:translate(-105px,-12px) rotate(-8deg); opacity:1; } 100% { transform:translate(-150px,-18px) rotate(-10deg); opacity:0; } }
-        @keyframes lineMove2 { 0% { transform:translateY(70px); opacity:0; } 18% { opacity:1; } 50% { transform:translateY(-5px); } 78% { transform:translateY(-62px); opacity:1; } 100% { transform:translateY(-90px); opacity:0; } }
-        @keyframes lineMove3 { 0% { transform:translateX(-120px) rotateY(0); opacity:0; } 20% { opacity:1; } 50% { transform:translateX(0) rotateY(180deg); } 80% { transform:translateX(110px) rotateY(360deg); opacity:1; } 100% { transform:translateX(150px) rotateY(450deg); opacity:0; } }
-        @keyframes lineMove4 { 0% { transform:translate(-90px,55px) rotate(-15deg); opacity:0; } 20% { opacity:1; } 50% { transform:translate(0,0) rotate(0); } 75% { transform:translate(90px,-55px) rotate(15deg); opacity:1; } 100% { transform:translate(135px,-80px) rotate(20deg); opacity:0; } }
-        @keyframes lineMove5 { 0% { transform:translate(0,-75px) scaleX(.5); opacity:0; } 20% { opacity:1; } 50% { transform:translate(0,0) scaleX(1); } 80% { transform:translate(0,70px) scaleX(1.2); opacity:1; } 100% { transform:translate(0,100px) scaleX(1.3); opacity:0; } }
-        .signature-scene { position:absolute; left:50%; top:50%; width:280px; height:76px; transform:translate(-50%,-50%); pointer-events:none; overflow:visible; }
+        /* BEBITO signature: one hand-drawn stick man, with a different story on each login session. */
+        @keyframes stickWalk { 0% { transform:translateX(-92px); opacity:0; } 12% { opacity:1; } 48% { transform:translateX(0); } 82% { transform:translateX(82px); opacity:1; } 100% { transform:translateX(105px); opacity:0; } }
+        @keyframes stickWalkBack { 0% { transform:translateX(105px); opacity:0; } 12% { opacity:1; } 48% { transform:translateX(0); } 82% { transform:translateX(-82px); opacity:1; } 100% { transform:translateX(-105px); opacity:0; } }
+        @keyframes stickThink { 0%,18% { transform:translate(0,18px); opacity:0; } 30% { opacity:1; } 42% { transform:translate(0,0); } 58% { transform:translate(-2px,-2px); } 72% { transform:translate(2px,0); } 100% { transform:translate(0,18px); opacity:0; } }
+        @keyframes stickArmThink { 0%,25% { transform:rotate(25deg); } 45% { transform:rotate(-18deg); } 58% { transform:rotate(-30deg); } 72% { transform:rotate(-12deg); } 100% { transform:rotate(25deg); } }
+        @keyframes stickBuild { 0% { transform:translateX(-75px); opacity:0; } 18% { opacity:1; } 40% { transform:translateX(0); } 55% { transform:translateX(5px); } 70% { transform:translateX(-2px); } 88% { transform:translateX(65px); opacity:1; } 100% { transform:translateX(85px); opacity:0; } }
+        @keyframes stickHammer { 0%,35% { transform:rotate(-18deg); } 48% { transform:rotate(32deg); } 60% { transform:rotate(-25deg); } 72% { transform:rotate(30deg); } 100% { transform:rotate(-18deg); } }
+        @keyframes stickDraw { 0% { transform:translateX(-70px); opacity:0; } 15% { opacity:1; } 35% { transform:translateX(0); } 55% { transform:translateX(20px); } 78% { transform:translateX(62px); } 100% { transform:translateX(90px); opacity:0; } }
+        @keyframes penDraw { 0%,30% { transform:rotate(-35deg); } 45% { transform:rotate(10deg); } 60% { transform:rotate(-20deg); } 75% { transform:rotate(8deg); } 100% { transform:rotate(-35deg); } }
+        @keyframes stickPull { 0% { transform:translateX(-70px); opacity:0; } 15% { opacity:1; } 35% { transform:translateX(0); } 55% { transform:translateX(12px); } 78% { transform:translateX(55px); } 100% { transform:translateX(78px); opacity:0; } }
+        @keyframes ropePull { 0%,32% { transform:scaleX(.55); transform-origin:left center; } 52% { transform:scaleX(1); } 72% { transform:scaleX(.7); } 100% { transform:scaleX(.55); } }
+        @keyframes boxSlide { 0% { transform:translateX(65px); } 45% { transform:translateX(0); } 100% { transform:translateX(-28px); } }
+        @keyframes stickPush { 0% { transform:translateX(-58px); opacity:0; } 15% { opacity:1; } 42% { transform:translateX(0); } 68% { transform:translateX(34px); } 100% { transform:translateX(72px); opacity:0; } }
+        @keyframes wheelSpin { to { transform:rotate(360deg); } }
+        @keyframes stickWave { 0%,20% { transform:rotate(12deg); } 35% { transform:rotate(-28deg); } 50% { transform:rotate(18deg); } 65% { transform:rotate(-25deg); } 80%,100% { transform:rotate(12deg); } }
+        .signature-scene { position:absolute; left:50%; top:50%; width:290px; height:88px; transform:translate(-50%,-50%); pointer-events:none; overflow:visible; }
         .signature-scene svg { width:100%; height:100%; overflow:visible; }
-        .scene-line { fill:none; stroke:#C2A378; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:900; animation:lineDraw 5.6s ease-in-out alternate infinite; }
-        .scene-solid { fill:#C2A378; opacity:.9; }
-        .scene-soft { fill:none; stroke:rgba(255,255,255,.65); stroke-width:1.2; stroke-linecap:round; stroke-linejoin:round; }
-        .scene-object { transform-box:fill-box; transform-origin:center; opacity:0; }
-        .welcome-anim-0 .scene-object { animation:lineMove0 5.6s cubic-bezier(.2,.8,.2,1) alternate infinite; }
-        .welcome-anim-1 .scene-object { animation:lineMove1 5.6s cubic-bezier(.2,.8,.2,1) alternate infinite; }
-        .welcome-anim-2 .scene-object { animation:lineMove2 5.6s cubic-bezier(.2,.8,.2,1) alternate infinite; }
-        .welcome-anim-3 .scene-object { animation:lineMove3 5.6s cubic-bezier(.2,.8,.2,1) alternate infinite; }
-        .welcome-anim-4 .scene-object { animation:lineMove4 5.6s cubic-bezier(.2,.8,.2,1) alternate infinite; }
-        .welcome-anim-5 .scene-object { animation:lineMove5 5.6s cubic-bezier(.2,.8,.2,1) alternate infinite; }
-        .welcome-anim-0 .scene-line { animation-duration:4.8s; }
-        .welcome-anim-1 .scene-line { animation-duration:7.2s; }
-        .welcome-anim-2 .scene-line { animation-duration:9.5s; }
-        .welcome-anim-3 .scene-line { animation-duration:6.6s; }
-        .welcome-anim-4 .scene-line { animation-duration:11s; }
-        .welcome-anim-5 .scene-line { animation-duration:8.4s; }
-        .welcome-anim-0 .scene-object { animation-duration:4.8s; }
-        .welcome-anim-1 .scene-object { animation-duration:7.2s; }
-        .welcome-anim-2 .scene-object { animation-duration:9.5s; }
-        .welcome-anim-3 .scene-object { animation-duration:6.6s; }
-        .welcome-anim-4 .scene-object { animation-duration:11s; }
-        .welcome-anim-5 .scene-object { animation-duration:8.4s; }
-        .welcome-anim-0 .scene-object:nth-child(2),
-        .welcome-anim-1 .scene-object:nth-child(2),
-        .welcome-anim-2 .scene-object:nth-child(2),
-        .welcome-anim-3 .scene-object:nth-child(2),
-        .welcome-anim-4 .scene-object:nth-child(2),
-        .welcome-anim-5 .scene-object:nth-child(2) { animation-delay:.18s; }
-        .welcome-anim-0 .scene-object:nth-child(3),
-        .welcome-anim-1 .scene-object:nth-child(3),
-        .welcome-anim-2 .scene-object:nth-child(3),
-        .welcome-anim-3 .scene-object:nth-child(3),
-        .welcome-anim-4 .scene-object:nth-child(3),
-        .welcome-anim-5 .scene-object:nth-child(3) { animation-delay:.36s; }
-        .welcome-anim-0 .scene-object:nth-child(4),
-        .welcome-anim-1 .scene-object:nth-child(4),
-        .welcome-anim-2 .scene-object:nth-child(4),
-        .welcome-anim-3 .scene-object:nth-child(4),
-        .welcome-anim-4 .scene-object:nth-child(4),
-        .welcome-anim-5 .scene-object:nth-child(4) { animation-delay:.54s; }
+        .stick-line { fill:none; stroke:#C2A378; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+        .stick-white { fill:none; stroke:rgba(255,255,255,.7); stroke-width:1.25; stroke-linecap:round; stroke-linejoin:round; }
+        .stick-fill { fill:#C2A378; opacity:.95; }
+        .stick-scene { display:none; transform-box:fill-box; transform-origin:center; }
+        .welcome-anim-0 .stick-think { display:block; animation:stickThink 6.5s ease-in-out infinite alternate; }
+        .welcome-anim-1 .stick-build { display:block; animation:stickBuild 8s ease-in-out infinite alternate; }
+        .welcome-anim-2 .stick-draw { display:block; animation:stickDraw 7.5s ease-in-out infinite alternate; }
+        .welcome-anim-3 .stick-pull { display:block; animation:stickPull 9s ease-in-out infinite alternate; }
+        .welcome-anim-4 .stick-push { display:block; animation:stickPush 6.8s ease-in-out infinite alternate; }
+        .welcome-anim-5 .stick-wave { display:block; animation:stickWalk 8.5s ease-in-out infinite alternate; }
+        .stick-arm-think { transform-box:fill-box; transform-origin:bottom left; animation:stickArmThink 4.5s ease-in-out infinite alternate; }
+        .stick-hammer { transform-box:fill-box; transform-origin:bottom left; animation:stickHammer 1.15s ease-in-out infinite; }
+        .stick-pen { transform-box:fill-box; transform-origin:bottom left; animation:penDraw 2.2s ease-in-out infinite; }
+        .stick-rope { transform-box:fill-box; transform-origin:left center; animation:ropePull 2.4s ease-in-out infinite alternate; }
+        .stick-box { animation:boxSlide 2.8s ease-in-out infinite alternate; }
+        .stick-wheel { transform-box:fill-box; transform-origin:center; animation:wheelSpin 1.8s linear infinite; }
+        .stick-hand-wave { transform-box:fill-box; transform-origin:bottom left; animation:stickWave 1.4s ease-in-out infinite; }
+        .signature-scene .signature-guide { stroke-dasharray:5 5; opacity:.35; }
         .signature-stage { position:relative; display:inline-flex; align-items:center; justify-content:center; min-width:210px; min-height:76px; }
 
         .welcome-rise { animation: welcomeRise .75s cubic-bezier(.2,.8,.2,1) both; }
@@ -407,26 +392,59 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       <button type="button" onClick={enterApp} className="mt-5 px-9 py-3 bg-[#001F3F] hover:bg-[#002b57] border border-[#C2A378]/40 text-white font-black rounded-full uppercase tracking-[0.3em] text-[9px] transition-all active:scale-[0.97] shadow-[0_0_30px_rgba(194,163,120,.12)]">{isAr ? 'دخول إلى النظام' : 'ENTER SYSTEM'}</button>
                       <div className="mt-3 relative signature-stage">
                         <div className={`signature-scene welcome-anim-${welcomeStyle}`} aria-hidden="true">
-                          <svg viewBox="0 0 280 76" role="presentation">
-                            <path className="scene-line" d="M8 58 H272" />
-                            <g className="scene-object">
-                              <path className="scene-line" d="M18 50 h42 v-18 h-28 l-14 18 m14-18 v18 M25 50 a5 5 0 1 0 10 0 M50 50 a5 5 0 1 0 10 0" />
-                              <path className="scene-soft" d="M68 42 H104 M78 38 l8 -8 l8 8 M86 30 v-10" />
+                          <svg viewBox="0 0 290 88" role="presentation">
+                            <path className="stick-white signature-guide" d="M12 72 H278" />
+
+                            <g className="stick-scene stick-think">
+                              <circle className="stick-line" cx="82" cy="25" r="7" />
+                              <path className="stick-line" d="M82 32 L82 53 M82 38 L70 45 M82 39 L91 29 M82 53 L73 68 M82 53 L91 68" />
+                              <g className="stick-arm-think"><path className="stick-line" d="M91 29 L86 18" /><circle className="stick-fill" cx="86" cy="17" r="1.7" /></g>
+                              <path className="stick-line" d="M101 16 q8 -8 16 0 q-8 7 -16 0 M105 16 h8" />
+                              <path className="stick-white" d="M65 68 H101 M70 72 H95" />
                             </g>
-                            <g className="scene-object">
-                              <path className="scene-line" d="M110 48 h28 v-22 h20 l12 12 v10 h8 M118 48 a5 5 0 1 0 10 0 M166 48 a5 5 0 1 0 10 0" />
-                              <path className="scene-soft" d="M142 28 h14 l7 9 h-21z M176 34 h18 M187 29 l7 5 l-7 5" />
+
+                            <g className="stick-scene stick-build">
+                              <circle className="stick-line" cx="66" cy="27" r="7" />
+                              <path className="stick-line" d="M66 34 L66 55 M66 39 L55 48 M66 40 L78 48 M66 55 L57 70 M66 55 L75 70" />
+                              <g className="stick-hammer"><path className="stick-line" d="M78 48 L91 35" /><path className="stick-line" d="M88 31 L96 39" /><path className="stick-line" d="M87 30 L95 38" /></g>
+                              <path className="stick-line" d="M105 69 h38 v-28 h-38z M105 55 h38 M124 41 v28" />
+                              <path className="stick-white" d="M151 69 l10 -8 v8 l-10 8z M151 41 l10 -8 v28" />
                             </g>
-                            <g className="scene-object">
-                              <path className="scene-line" d="M204 48 v-26 h24 v26 M204 30 h24 M216 22 v26 M216 36 h12" />
-                              <path className="scene-soft" d="M238 48 h30 M244 42 l-6 6 l6 6 M254 42 l-6 6 l6 6" />
+
+                            <g className="stick-scene stick-draw">
+                              <circle className="stick-line" cx="68" cy="28" r="7" />
+                              <path className="stick-line" d="M68 35 L68 55 M68 40 L58 50 M68 41 L80 47 M68 55 L59 70 M68 55 L78 69" />
+                              <g className="stick-pen"><path className="stick-line" d="M80 47 L94 57" /><path className="stick-line" d="M92 55 l5 3 l-4 5" /></g>
+                              <path className="stick-line" d="M105 67 q20 -25 42 0 q20 -24 42 0" />
+                              <path className="stick-white" d="M105 73 H190 M112 61 l8 6 M142 61 l8 6 M172 61 l8 6" />
                             </g>
-                            <g className="scene-object">
-                              <path className="scene-line" d="M24 18 H256" />
-                              <path className="scene-soft" d="M45 12 v12 M70 12 v12 M95 12 v12 M120 12 v12 M145 12 v12 M170 12 v12 M195 12 v12 M220 12 v12" />
+
+                            <g className="stick-scene stick-pull">
+                              <circle className="stick-line" cx="48" cy="28" r="7" />
+                              <path className="stick-line" d="M48 35 L48 56 M48 40 L36 51 M48 41 L63 50 M48 56 L38 70 M48 56 L58 70" />
+                              <path className="stick-line" d="M63 50 H104" />
+                              <path className="stick-line stick-rope" d="M63 50 H104" />
+                              <g className="stick-box"><path className="stick-line" d="M104 36 h42 v34 h-42z M104 36 l13 -9 h42 l-13 9 M159 27 v34" /><path className="stick-white" d="M117 43 h29 M117 50 h29 M117 57 h29" /></g>
+                              <path className="stick-white" d="M24 73 h136" />
+                            </g>
+
+                            <g className="stick-scene stick-push">
+                              <g className="stick-box"><path className="stick-line" d="M125 39 h45 v31 h-45z M125 39 l12 -8 h45 l-12 8 M182 31 v31" /><path className="stick-white" d="M138 47 h31 M138 55 h31 M138 63 h31" /></g>
+                              <circle className="stick-line" cx="72" cy="28" r="7" />
+                              <path className="stick-line" d="M72 35 L72 56 M72 41 L61 49 M72 41 L88 44 M72 56 L62 70 M72 56 L82 70" />
+                              <path className="stick-line" d="M88 44 L125 47" />
+                              <circle className="stick-white stick-wheel" cx="140" cy="72" r="5" /><circle className="stick-white stick-wheel" cx="169" cy="72" r="5" />
+                            </g>
+
+                            <g className="stick-scene stick-wave">
+                              <circle className="stick-line" cx="72" cy="28" r="7" />
+                              <path className="stick-line" d="M72 35 L72 56 M72 41 L61 50 M72 42 L83 48 M72 56 L63 70 M72 56 L82 70" />
+                              <g className="stick-hand-wave"><path className="stick-line" d="M83 48 L92 36" /><path className="stick-line" d="M92 36 l5 -5 M92 36 l7 0 M92 36 l2 6" /></g>
+                              <path className="stick-line" d="M112 68 h46 v-29 h22 l13 13 v16 h8 M122 68 a5 5 0 1 0 10 0 M177 68 a5 5 0 1 0 10 0" />
+                              <path className="stick-white" d="M160 39 h20 l10 13 h-30z" />
                             </g>
                           </svg>
-                        </div>
+                        </div></div>
                         <p className="relative z-10 text-[#C2A378] text-[7px] sm:text-[8px] font-black uppercase tracking-[0.3em] whitespace-nowrap">POWERED BY <span className="text-white">BEBITO</span></p>
                       </div>
                     </div>
