@@ -907,9 +907,12 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         @keyframes nf4Reveal { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
         @keyframes nf4Pulse { 0%,100%{box-shadow:0 0 0 rgba(194,163,120,0)} 50%{box-shadow:0 0 42px rgba(194,163,120,.28)} }
         @keyframes nf4Partners { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-        .nf4-logo-viewport{position:relative;border:0!important;background:linear-gradient(90deg,rgba(255,255,255,.018),rgba(194,163,120,.045),rgba(255,255,255,.018))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.045),inset 0 -1px 0 rgba(0,0,0,.14)!important;padding:8px 0!important;border-radius:14px!important;overflow:hidden!important}
+        .nf4-logo-viewport{position:relative;width:fit-content;max-width:100%;margin:0 auto;border:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;border-radius:0!important;overflow:hidden!important}
+        .nf4-logo-track{display:flex;width:max-content;align-items:center;gap:8px;padding:3px 0!important}
+        .nf4-logo-track:before{content:"";width:28px;height:1px;background:rgba(194,163,120,.5);flex:0 0 auto}
+        .nf4-logo-track:after{content:"";width:28px;height:1px;background:rgba(194,163,120,.5);flex:0 0 auto}
         .nf4-logo-track{animation:nf4Partners 75s linear infinite}
-        .nf4-logo-track a{height:68px!important;min-width:175px!important;border-radius:12px!important;padding:0 16px!important}
+        .nf4-logo-track a{height:58px!important;min-width:145px!important;border-radius:10px!important;padding:0 12px!important}
         .nf4-logo-track a>div>div:first-child{width:34px!important;height:34px!important;border-radius:8px!important}
         .nf4-logo-track a>div{gap:10px!important}
         .nf4-logo-track a .text-left>div:first-child{font-size:7px!important}
@@ -1429,8 +1432,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                 <h2 className="text-5xl font-black italic leading-[.9] tracking-[-.05em] sm:text-7xl">{ar ? <>شركاء <span className={gold}>النجاح.</span></> : <>Partners in <span className={gold}>success.</span></>}</h2>
                 <p className={`max-w-sm text-xs leading-6 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{tx.partnersDesc}</p>
               </div>
-              <div className="nf4-logo-viewport mt-12 overflow-hidden">
-                <div className="nf4-logo-track flex w-max items-center gap-3">
+              <div className="mt-10">
+                <div className="nf4-logo-viewport">
                   {[...PARTNER_LOGOS, ...PARTNER_LOGOS].map((p, i) => (
                     <a key={`${p.name}-${i}`} href={p.url} target="_blank" rel="noreferrer" className={`group flex h-[76px] min-w-[190px] items-center justify-center rounded-xl border px-4 text-center transition duration-500 hover:-translate-y-0.5 hover:border-[#c2a378]/70 ${isDark ? 'border-white/[.09] bg-white/[.025] hover:bg-white/[.055]' : 'border-black/[.07] bg-white/75 hover:bg-white shadow-sm'}`}>
                       <div className="flex items-center gap-3">
