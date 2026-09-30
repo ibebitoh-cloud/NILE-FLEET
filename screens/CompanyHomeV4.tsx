@@ -1420,24 +1420,24 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           </Reveal>
         </section>
 
-        <section id="partners" className="relative overflow-hidden border-y bg-[#050b12] text-white">
+        <section id="partners" className={`relative overflow-hidden border-y ${isDark ? 'bg-[#050b12] text-white border-white/10' : 'bg-white text-[#0b1a2b] border-black/10'}`}>
           <Reveal>
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
-              <div className="text-[9px] font-black uppercase tracking-[.42em] text-[#c2a378]">07 / {ar ? 'شبكة الشحن والنقل' : 'SHIPPING & TRUCKING NETWORK'}</div>
+              <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>07 / {ar ? 'شبكة الشحن والنقل' : 'SHIPPING & TRUCKING NETWORK'}</div>
               <div className="mt-5 flex flex-col justify-between gap-6 md:flex-row md:items-end">
                 <h2 className="text-5xl font-black italic leading-[.9] tracking-[-.05em] sm:text-7xl">{ar ? <>شركاء <span className={gold}>النجاح.</span></> : <>Partners in <span className={gold}>success.</span></>}</h2>
-                <p className="max-w-sm text-xs leading-6 text-slate-400">{tx.partnersDesc}</p>
+                <p className={`max-w-sm text-xs leading-6 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{tx.partnersDesc}</p>
               </div>
-              <div className="nf4-logo-viewport mt-14 overflow-hidden rounded-[2rem] border border-white/10 bg-black/30 py-8">
+              <div className={`nf4-logo-viewport mt-14 overflow-hidden rounded-[2rem] border py-8 ${isDark ? 'border-white/10 bg-black/30' : 'border-black/10 bg-slate-50/90'}`}>
                 <div className="nf4-logo-track flex w-max items-center gap-4 px-4">
                   {[...PARTNER_LOGOS, ...PARTNER_LOGOS].map((p, i) => (
-                    <a key={`${p.name}-${i}`} href={p.url} target="_blank" rel="noreferrer" className="group flex h-28 min-w-[230px] items-center justify-center rounded-2xl border border-white/10 bg-white/[.035] px-7 text-center transition duration-500 hover:-translate-y-1 hover:border-[#c2a378]/60 hover:bg-white/[.06]">
+                    <a key={`${p.name}-${i}`} href={p.url} target="_blank" rel="noreferrer" className={`group flex h-28 min-w-[230px] items-center justify-center rounded-2xl border px-7 text-center transition duration-500 hover:-translate-y-1 hover:border-[#c2a378]/60 ${isDark ? 'border-white/10 bg-white/[.035] hover:bg-white/[.06]' : 'border-black/10 bg-white hover:bg-slate-50 shadow-sm'}`}>
                       <div className="flex items-center gap-4">
                         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white p-2 shadow-[0_0_30px_rgba(255,255,255,.08)]">
                           <img src={p.logo} alt={`${p.name} logo`} className="h-full w-full object-contain" loading="lazy" />
                         </div>
                         <div className="text-left">
-                          <div className="text-[9px] font-black tracking-[.12em] text-white">{p.name}</div>
+                          <div className={`text-[9px] font-black tracking-[.12em] ${isDark ? 'text-white' : 'text-[#0b1a2b]'}`}>{p.name}</div>
                           <div className="mt-1 text-[7px] font-bold tracking-[.16em] text-[#c2a378]">{p.type}</div>
                         </div>
                       </div>
