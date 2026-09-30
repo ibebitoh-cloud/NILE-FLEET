@@ -759,7 +759,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           <a href="#top" className="group flex items-center gap-3">
             <img src="/nile-fleet-logo.png" className="h-10 w-10 object-contain transition-transform duration-500 group-hover:rotate-6" alt="Nile Fleet" />
             <div>
-              <div className="text-[17px] font-black tracking-tight">NILE <span className={gold}>FLEET</span></div>
+              <div className="flex items-baseline gap-2 text-[17px] font-black tracking-tight">NILE <span className={gold}>FLEET</span><span className="text-[7px] font-black uppercase tracking-[.18em] text-[#c2a378] whitespace-nowrap">POWERED BY <span className="text-white">BEBITO</span></span></div>
               <div className={`text-[7px] font-black uppercase tracking-[.34em] ${K.faint}`}>Transport · Logistics · Egypt</div>
             </div>
           </a>
