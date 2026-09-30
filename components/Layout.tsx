@@ -246,7 +246,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       // Normalized query used by the deterministic fallback.
       // Keep this independent from the customer/entity helpers declared later in this function.
       // Calling a later const initializer here causes a Temporal Dead Zone runtime error.
-      const cleanQ = question
+      const normalizedQuestion = question
         .toLowerCase()
         .replace(/[أإآٱ]/g, 'ا')
         .replace(/[ةه]/g, 'ه')
@@ -1026,9 +1026,9 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
 
         // DETERMINISTIC OPERATIONAL ANSWERS
         // These questions must never depend on the LLM. The database/cache is the source of truth.
-        const asksMaintenanceList = /which gensets|what gensets|list.*gensets|gensets.*maintenance|maintenance.*gensets|في الصيانة|بالصيانة|مولدات.*صيانة|المولدات.*صيانة/.test(cleanQ);
-        const asksPortStock = /stock in each port|stock.*each port|each port.*stock|stock by port|port stock|المخزون.*كل.*ميناء|كل.*ميناء.*المخزون|رصيد.*ميناء|مخزون.*ميناء/.test(cleanQ);
-        const asksPortSaid = /how many gensets.*port said|gensets.*port said|port said.*gensets|مولدات.*بورسعيد|مولدات.*بورسعيد|كم.*مولد.*بورسعيد/.test(cleanQ);
+        const asksMaintenanceList = /which gensets|what gensets|list.*gensets|gensets.*maintenance|maintenance.*gensets|في الصيانة|بالصيانة|مولدات.*صيانة|المولدات.*صيانة/.test(normalizedQuestion);
+        const asksPortStock = /stock in each port|stock.*each port|each port.*stock|stock by port|port stock|المخزون.*كل.*ميناء|كل.*ميناء.*المخزون|رصيد.*ميناء|مخزون.*ميناء/.test(normalizedQuestion);
+        const asksPortSaid = /how many gensets.*port said|gensets.*port said|port said.*gensets|مولدات.*بورسعيد|مولدات.*بورسعيد|كم.*مولد.*بورسعيد/.test(normalizedQuestion);
 
         if (asksMaintenanceList) {
           const maintenanceUnits = gensets
@@ -1055,7 +1055,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
           answer = responseIsAr
             ? 'المخزون حسب الموقع:\n' + portRows + (workshop ? '\n\nWORKSHOP: ' + workshop.total + ' (منها ' + workshop.maintenance + ' صيانة و' + (workshop.total - workshop.maintenance) + ' متقاعد)' : '')
             : 'Stock by port/location:\n' + portRows + (workshop ? '\n\nWORKSHOP: ' + workshop.total + ' (' + workshop.maintenance + ' maintenance, ' + (workshop.total - workshop.maintenance) + ' retired)' : '');
-        } else if (/stock|genset|generator|مولد|مولدات|مخزون|ميناء|port/.test(cleanQ)) {
+        } else if (/stock|genset|generator|مولد|مولدات|مخزون|ميناء|port/.test(normalizedQuestion)) {
           const total = gensets.length;
           const maintenanceCount = gensets.filter(g => String(g.status || '').toUpperCase() === 'MAINTENANCE').length;
           const inStock = gensets.filter(g => String(g.status || '').toUpperCase() === 'IN_STOCK').length;
@@ -1064,19 +1064,19 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
           answer = responseIsAr
             ? 'إجمالي المولدات: ' + total + '\nفي المخزون: ' + inStock + '\nمركبة: ' + clipped + '\nفي الصيانة: ' + maintenanceCount + '\nأكبر مخزون: ' + (topPort?.port || '—') + ' (' + (topPort?.total || 0) + ')'
             : 'Total gensets: ' + total + '\nIn stock: ' + inStock + '\nClipped on: ' + clipped + '\nMaintenance: ' + maintenanceCount + '\nLargest port stock: ' + (topPort?.port || '—') + ' (' + (topPort?.total || 0) + ')';
-        } else if (/operation|booking|container|عملية|حجز|حاوية|حاويه/.test(cleanQ)) {
+        } else if (/operation|booking|container|عملية|حجز|حاوية|حاويه/.test(normalizedQuestion)) {
           const active = operations.filter(o => String(o.status || '').toUpperCase() === 'IN PROGRESS').length;
           const done = operations.filter(o => String(o.status || '').toUpperCase() === 'DONE').length;
           answer = responseIsAr ? 'إجمالي العمليات المسجلة: ' + operations.length + '\nمكتملة: ' + done + '\nتحت التشغيل: ' + active : 'Total recorded operations: ' + operations.length + '\nDone: ' + done + '\nIn progress: ' + active;
-        } else if (/invoice|financial|money|paid|فاتور|مالي|مدفوع|مستحق/.test(cleanQ)) {
+        } else if (/invoice|financial|money|paid|فاتور|مالي|مدفوع|مستحق/.test(normalizedQuestion)) {
           const billed = invoices.reduce((n,i) => n + (Number(i.amount) || 0), 0);
           const paid = invoices.filter(i => String(i.status || '').toUpperCase() === 'PAID').reduce((n,i) => n + (Number(i.amount) || 0), 0);
           answer = responseIsAr ? 'إجمالي الفواتير: ' + billed.toLocaleString() + '\nالمدفوع: ' + paid.toLocaleString() + '\nالمتبقي: ' + (billed-paid).toLocaleString() : 'Total invoiced: ' + billed.toLocaleString() + '\nPaid: ' + paid.toLocaleString() + '\nOutstanding: ' + (billed-paid).toLocaleString();
-        } else if (/^(hi|hello|hey|hello dali|hi dali|hey dali|اهلا|أهلا|مرحبا|سلام|السلام عليكم|صباح الخير|مساء الخير)\\s*(dali|دالي)?[!?.،]*$/i.test(cleanQ)) {
+        } else if (/^(hi|hello|hey|hello dali|hi dali|hey dali|اهلا|أهلا|مرحبا|سلام|السلام عليكم|صباح الخير|مساء الخير)\\s*(dali|دالي)?[!?.،]*$/i.test(normalizedQuestion)) {
           answer = responseIsAr
             ? 'أهلاً 👋 أنا دالي. أقدر أساعدك في بيانات الأسطول والتشغيل والصيانة والموانئ والحجوزات والحاويات والعملاء والفواتير، وأقدر أكمل معاك من سياق كلامنا السابق.'
             : 'Hello 👋 I’m Dali. I can help with fleet, operations, maintenance, ports, bookings, containers, customers and invoices — and I can keep the conversation context.';
-        } else if (/^(what do you know|what can you do|who are you|what is dali|tell me about yourself|ايه اللي تعرفه|ماذا تعرف|ماذا تستطيع|مين انت|ما هو دالي|بتعرف ايه)$/i.test(cleanQ)) {
+        } else if (/^(what do you know|what can you do|who are you|what is dali|tell me about yourself|ايه اللي تعرفه|ماذا تعرف|ماذا تستطيع|مين انت|ما هو دالي|بتعرف ايه)$/i.test(normalizedQuestion)) {
           const active = gensets.filter(g => String(g.status || '').toUpperCase() === 'CLIPPED_ON').length;
           const inStockNow = gensets.filter(g => String(g.status || '').toUpperCase() === 'IN_STOCK').length;
           const maintenanceNow = gensets.filter(g => String(g.status || '').toUpperCase() === 'MAINTENANCE').length;
