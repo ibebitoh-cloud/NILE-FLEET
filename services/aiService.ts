@@ -54,7 +54,7 @@ export const runThinkingAudit = async (prompt: string, budget: number = 1200) =>
     const { text, error, detail } = await callAi('runThinkingAudit', {
       prompt,
       model: OPEN_SOURCE_MODEL,
-      maxTokens: Math.min(Math.max(budget, 120), 700),
+      maxTokens: Math.min(Math.max(budget, 200), 3000),
     });
     if (error) throw new Error(detail || error);
     return text || '';
