@@ -901,7 +901,129 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         </div>
       </header>
 
-      <main id="top" className="relative z-10">
+      
+<style>{`
+/* NILE FLEET HOMEPAGE — VISUAL REFINEMENT ONLY
+   Existing canvas/background and all application behavior remain untouched. */
+.nf-home main section {
+  scroll-margin-top: 88px;
+}
+.nf-home main section > div > div {
+  position: relative;
+}
+.nf-home #about,
+.nf-home #operations,
+.nf-home #why-us,
+.nf-home #network,
+.nf-home #services,
+.nf-home #proof,
+.nf-home #leadership {
+  background-image: linear-gradient(180deg, rgba(3,8,13,.08), rgba(3,8,13,.22));
+}
+.nf-home #about > div,
+.nf-home #operations > div,
+.nf-home #why-us > div,
+.nf-home #network > div,
+.nf-home #services > div,
+.nf-home #proof > div,
+.nf-home #partners > div,
+.nf-home #leadership > div {
+  padding-top: clamp(5.5rem, 9vw, 8rem);
+  padding-bottom: clamp(5.5rem, 9vw, 8rem);
+}
+.nf-home #about h2,
+.nf-home #operations h2,
+.nf-home #why-us h2,
+.nf-home #network h2,
+.nf-home #services h2,
+.nf-home #proof h2,
+.nf-home #partners h2,
+.nf-home #leadership h2 {
+  text-wrap: balance;
+}
+.nf-home #about .rounded-full,
+.nf-home #why-us .rounded-\[1\.5rem\],
+.nf-home #services .rounded-\[1\.5rem\] {
+  transition: transform .35s ease, border-color .35s ease, background-color .35s ease, box-shadow .35s ease;
+}
+.nf-home #about .rounded-full:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(0,0,0,.14);
+}
+.nf-home #operations button,
+.nf-home #operations .rounded-\[2rem\] {
+  box-shadow: 0 24px 70px rgba(0,0,0,.18);
+}
+.nf-home #operations button::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255,255,255,.08), transparent 32%, transparent 70%, rgba(194,163,120,.08));
+}
+.nf-home #why-us .grid > div {
+  min-height: 190px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.nf-home #network .grid > div {
+  min-height: 210px;
+  transition: transform .4s ease, border-color .4s ease, box-shadow .4s ease;
+}
+.nf-home #network .grid > div:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 22px 55px rgba(0,0,0,.16);
+}
+.nf-home #services .grid > div {
+  min-height: 190px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.nf-home #services .grid > div:hover {
+  box-shadow: 0 20px 50px rgba(0,0,0,.14);
+}
+.nf-home #proof .nf4-experience-card {
+  box-shadow: 0 28px 80px rgba(0,0,0,.2);
+}
+.nf-home #partners {
+  background:
+    radial-gradient(circle at 15% 10%, rgba(194,163,120,.08), transparent 28%),
+    #050b12;
+}
+.nf-home #partners .nf4-logo-viewport {
+  box-shadow: inset 0 0 60px rgba(0,0,0,.35), 0 24px 70px rgba(0,0,0,.18);
+}
+.nf-home #leadership .grid > div {
+  min-height: 300px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.13);
+}
+.nf-home #leadership .grid > div:hover {
+  box-shadow: 0 28px 75px rgba(0,0,0,.22);
+}
+@media (max-width: 767px) {
+  .nf-home #about > div,
+  .nf-home #operations > div,
+  .nf-home #why-us > div,
+  .nf-home #network > div,
+  .nf-home #services > div,
+  .nf-home #proof > div,
+  .nf-home #partners > div,
+  .nf-home #leadership > div {
+    padding-top: 4.75rem;
+    padding-bottom: 4.75rem;
+  }
+  .nf-home #why-us .grid > div,
+  .nf-home #services .grid > div,
+  .nf-home #leadership .grid > div {
+    min-height: 240px;
+  }
+}
+`}</style>
+
+<main id="top" className="relative z-10">
         <section className="relative flex min-h-[100vh] items-start overflow-hidden">
           <div className="mx-auto grid w-full max-w-[1500px] items-start gap-12 px-5 pt-24 lg:grid-cols-[1.25fr_.75fr] lg:px-10 lg:pt-28">
             <div className="nf4-reveal">
