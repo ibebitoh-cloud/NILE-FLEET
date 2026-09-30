@@ -1098,7 +1098,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           </Reveal>
         </section>
 
-        <section id="partners"/> className="relative overflow-hidden border-y bg-[#050b12] text-white">
+        <section id="partners" className="relative overflow-hidden border-y bg-[#050b12] text-white">
           <Reveal>
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
               <div className="text-[9px] font-black uppercase tracking-[.42em] text-[#c2a378]">07 / {ar ? 'شبكة الشحن والنقل' : 'SHIPPING & TRUCKING NETWORK'}</div>
