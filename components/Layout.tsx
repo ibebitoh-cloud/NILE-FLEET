@@ -885,16 +885,46 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       // Only genuine analysis/reasoning reaches DALI. Keep the model payload tiny.
       const statusCounts = operations.reduce((m: Record<string, number>, o) => { m[o.status] = (m[o.status] || 0) + 1; return m; }, {});
       const portCounts = operations.reduce((m: Record<string, number>, o) => { const p = o.clipOnPort || '—'; m[p] = (m[p] || 0) + 1; return m; }, {});
+      // Build a question-aware evidence set instead of giving DALI only the last
+      // 40 operations. New questions often refer to older records, ports, customers,
+      // gensets, or date ranges, so first retrieve records whose fields actually match
+      // the user's words. This stays read-only and keeps the model context bounded.
+      const stopWords = new Set(['what','which','where','when','who','show','find','give','tell','how','many','much','about','with','from','for','the','and','this','that','are','was','were','have','has','current','currently','today','month','week','year','all','each','any','our','me','please','can','you','does','do','is','in','of','to','a','an','on','by','or','vs','compare','how','many','كم','كام','ايه','اي','فين','اين','أين','امتى','متى','من','عن','في','الى','إلى','و','هل','عايز','محتاج','هات','وريني','اعرض','كل','جميع','هذا','هذه','ال','مولد','مولدات','جهاز','وحدة','عملية','عمليات','حجز','حجوزات','حاوية','حاويات','كشف','حساب','عميل','العميل','شركة','شركه']);
+      const queryTokens = normalizeEntityText(question).split(' ').filter(t => t.length >= 2 && !stopWords.has(t));
+      const recordText = (record: any) => normalizeEntityText([
+        record?.bookingNumber, record?.containerNumber, record?.gensetNumber, record?.unitNumber,
+        record?.customerName, record?.beneficiaryName, record?.trucker, record?.clipOnPort,
+        record?.clipOffPort, record?.location, record?.status, record?.operationDate,
+        record?.dateReceived, record?.serviceDate, record?.serviceType, record?.maintenanceType
+      ].filter(Boolean).join(' '));
+      const relevance = (record: any) => {
+        const haystack = recordText(record);
+        if (!haystack || !queryTokens.length) return 0;
+        return queryTokens.reduce((score, token) => score + (haystack.includes(token) ? (token.length >= 5 ? 3 : 1) : 0), 0);
+      };
+      const matchedOperations = operations.map(o => ({ row:o, score:relevance(o) })).filter(x => x.score > 0).sort((a,b) => b.score-a.score).slice(0, 80).map(x => x.row);
+      const matchedGensets = gensets.map(g => ({ row:g, score:relevance(g) })).filter(x => x.score > 0).sort((a,b) => b.score-a.score).slice(0, 60).map(x => x.row);
+      const matchedMaintenance = maintenance.map(m => ({ row:m, score:relevance(m) })).filter(x => x.score > 0).sort((a,b) => b.score-a.score).slice(0, 60).map(x => x.row);
+      const matchedInvoices = invoices.map(i => ({ row:i, score:relevance(i) })).filter(x => x.score > 0).sort((a,b) => b.score-a.score).slice(0, 50).map(x => x.row);
+      const allPorts = Array.from(new Set(gensets.map(g => String(g.location || '').trim()).filter(Boolean)));
+      const stockByPort = allPorts.map(port => ({
+        port,
+        total: gensets.filter(g => String(g.location || '').trim().toUpperCase() === port.toUpperCase()).length,
+        inStock: gensets.filter(g => String(g.location || '').trim().toUpperCase() === port.toUpperCase() && String(g.status || '').toUpperCase() === 'IN_STOCK').length,
+        clippedOn: gensets.filter(g => String(g.location || '').trim().toUpperCase() === port.toUpperCase() && String(g.status || '').toUpperCase() === 'CLIPPED_ON').length,
+        maintenance: gensets.filter(g => String(g.location || '').trim().toUpperCase() === port.toUpperCase() && String(g.status || '').toUpperCase() === 'MAINTENANCE').length,
+      }));
       const context = {
         question,
-        recentConversation: aiChatMessages.slice(-6).map(message => ({
-          role: message.role === 'ai' ? 'assistant' : 'user',
-          text: message.text.slice(0, 1200),
-        })),
+        recentConversation: aiChatMessages.slice(-6).map(message => ({ role: message.role === 'ai' ? 'assistant' : 'user', text: message.text.slice(0, 1200) })),
         totals: { operations: operations.length, invoices: invoices.length, gensets: gensets.length, maintenance: maintenance.length },
         statusCounts,
         portCounts,
-        recentOperations: operations.slice(0, 40).map(o => ({ bookingNumber:o.bookingNumber, containerNumber:o.containerNumber, gensetNumber:o.gensetNumber, customerName:o.customerName, status:o.status, clipOnPort:o.clipOnPort, clipOffPort:o.clipOffPort, operationDate:o.operationDate, rate:o.rate, vat:o.vat })),
+        stockByPort,
+        relevantOperations: (matchedOperations.length ? matchedOperations : operations.slice(0, 20)).map(o => ({ bookingNumber:o.bookingNumber, containerNumber:o.containerNumber, gensetNumber:o.gensetNumber, customerName:o.customerName, status:o.status, clipOnPort:o.clipOnPort, clipOffPort:o.clipOffPort, operationDate:o.operationDate, rate:o.rate, vat:o.vat })),
+        relevantGensets: (matchedGensets.length ? matchedGensets : gensets.slice(0, 30)).map(g => ({ unitNumber:g.unitNumber, gensetNumber:g.gensetNumber, location:g.location, status:g.status, model:g.model })),
+        relevantMaintenance: matchedMaintenance.map(m => ({ gensetNumber:m.gensetNumber || m.unitNumber, location:m.location, status:m.status, serviceDate:m.serviceDate, serviceType:m.serviceType, maintenanceType:m.maintenanceType, completedDate:m.completedDate })),
+        relevantInvoices: matchedInvoices.map(i => ({ invoiceNumber:i.invoiceNumber, customerName:i.customerName, amount:i.amount, status:i.status, date:i.date })),
         invoiceTotals: invoices.reduce((m: any, i: any) => { const amount=Number(i.amount)||0; m.billed+=amount; if(i.status==='PAID') m.paid+=amount; return m; }, { billed:0, paid:0 }),
         gensetStatusCounts: gensets.reduce((m: Record<string, number>, g) => { m[g.status] = (m[g.status] || 0) + 1; return m; }, {}),
         maintenanceCount: maintenance.length,
