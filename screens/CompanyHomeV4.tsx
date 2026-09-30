@@ -393,6 +393,12 @@ const PARTNER_LOGOS = [
   { name: '2M Transportation', type: 'TRANSPORT SERVICES', url: 'https://www.2mtransportation.com/', logo: 'https://www.google.com/s2/favicons?domain=2mtransportation.com&sz=128' },
   { name: 'Freight & Logistics Egypt', type: 'FREIGHT TRANSPORT', url: 'https://www.fle.com.eg/', logo: 'https://www.google.com/s2/favicons?domain=fle.com.eg&sz=128' },
 ];
+const PARTNER_GROUPS = [
+  { title: 'Shipping Lines', types: ['SHIPPING LINE','SHIPPING & LOGISTICS','CONTAINER SHIPPING'] },
+  { title: 'Logistics & Freight', types: ['LOGISTICS','LOGISTICS & TRANSPORT','LOGISTICS SERVICES','LOGISTICS INTERNATIONAL','LOGISTICS & FREIGHT','INTERNATIONAL TRANSPORT','FREIGHT & LOGISTICS','FREIGHT SERVICES','FREIGHT FORWARDING','CARGO & LOGISTICS','EXPRESS & LOGISTICS'] },
+  { title: 'Shipping Agencies', types: ['SHIPPING AGENCY','SHIPPING SERVICES','SHIPPING & LOGISTICS'] },
+  { title: 'Transport & Trucking', types: ['TRANSPORT & LOGISTICS','ROAD FREIGHT','TRUCKING & FREIGHT','TRUCK TRANSPORTATION','TRANSPORT SERVICES','FREIGHT TRANSPORT'] },
+];
 
 const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
   const { lang, setLang } = useContext(LanguageContext);
@@ -1436,18 +1442,25 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                   ))}
                 </div>
               </div>
-              <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                {PARTNER_LOGOS.map((p) => (
-                  <a key={p.name} href={p.url} target="_blank" rel="noreferrer" className={`group flex min-h-[92px] items-center gap-3 rounded-2xl border px-4 py-3 transition duration-300 hover:-translate-y-1 hover:border-[#c2a378]/60 ${isDark ? 'border-white/10 bg-white/[.025] hover:bg-white/[.06]' : 'border-black/10 bg-white hover:bg-slate-50 shadow-sm'}`}>
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white p-1.5 shadow-[0_0_20px_rgba(255,255,255,.07)]">
-                      <img src={p.logo} alt={`${p.name} logo`} className="h-full w-full object-contain" loading="lazy" />
+              <div className="mt-8 space-y-7">
+                {PARTNER_GROUPS.map((group) => {
+                  const members = PARTNER_LOGOS.filter(p => group.types.includes(p.type));
+                  return members.length ? (
+                    <div key={group.title}>
+                      <div className={`mb-3 text-[8px] font-black uppercase tracking-[.24em] ${gold}`}>{group.title}</div>
+                      <div className="flex flex-wrap gap-2">
+                        {members.map((p) => (
+                          <a key={p.name} href={p.url} target="_blank" rel="noreferrer" className={`group flex items-center gap-2 rounded-xl border px-3 py-2 transition duration-300 hover:border-[#c2a378]/60 ${isDark ? 'border-white/10 bg-white/[.025] hover:bg-white/[.06]' : 'border-black/10 bg-white hover:bg-slate-50 shadow-sm'}`}>
+                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white p-1">
+                              <img src={p.logo} alt={`${p.name} logo`} className="h-full w-full object-contain" loading="lazy" />
+                            </div>
+                            <span className={`text-[8px] font-black tracking-[.04em] ${isDark ? 'text-white' : 'text-[#0b1a2b]'}`}>{p.name}</span>
+                          </a>
+                        ))}
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <div className={`truncate text-[8px] font-black tracking-[.08em] ${isDark ? 'text-white' : 'text-[#0b1a2b]'}`}>{p.name}</div>
-                      <div className="mt-1 truncate text-[6px] font-bold tracking-[.12em] text-[#c2a378]">{p.type}</div>
-                    </div>
-                  </a>
-                ))}
+                  ) : null;
+                })}
               </div>
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
                 <div className="text-[8px] font-black uppercase tracking-[.18em] text-slate-600">{ar ? 'خطوط ملاحية · وكلاء شحن · لوجستيات · نقل بري · شركات شاحنات' : 'Shipping lines · freight forwarders · logistics operators · road transport · trucking'}</div>
