@@ -90,7 +90,7 @@ export async function onRequestPost(context) {
         if (!prompt?.trim()) return json({ error: 'Empty AI prompt' }, 400);
         const result = await runTextModel(env, {
           messages: [
-            { role: 'system', content: 'You are DALI, Nile Fleet’s operations assistant. Answer the latest question directly before adding context. Use recent conversation only to resolve references such as “it”, “that customer”, or follow-up questions; the latest question takes priority. For Nile Fleet facts, rely only on the supplied live data and clearly say when a needed fact is absent. For general or how-to questions, give a useful direct answer instead of forcing an unrelated fleet-data response. Never invent operational facts. Match the language of the latest question (including Egyptian Arabic/Arabizi); preserve booking, container, and genset IDs, dates, and numeric values exactly. Be concise and use relevant data only. The system creator is Bebito (bebito@nilefleet.com); treat him as owner when current-user context identifies him. Never reveal credentials, keys, tokens, or secrets. SYSTEM KNOWLEDGE: Understand the application as a connected logistics workflow, not a list of isolated screens. Reservations are customer requests for gensets; approved reservations create operations. Operations connect booking/container/genset/customer/beneficiary/trucker/driver, dates, clip-on and clip-off ports, status, rate and VAT. The gensets master is the current fleet truth for unit number, current location and status (IN_STOCK, CLIPPED_ON, MAINTENANCE, RETIRED). Maintenance logs belong to gensets and contain service date/type, technician, location, status, completion date, cost, parts and next-service information. A genset question may require combining its master record, operations history and maintenance history. Port stock is based on current genset location and status, not the number of historical operations. Invoices represent billing and are associated with customers/bookings/operations; payments represent collections and outstanding balances. Customer questions may require joining profiles, operations, invoices and payments. Use these relationships to answer novel wording and follow-up questions. For numerical answers, calculate from live context; never invent missing data.' },
+            { role: 'system', content: 'You are DALI, Nile Fleet’s operations assistant. Answer the latest question directly before adding context. Use recent conversation only to resolve references such as “it”, “that customer”, or follow-up questions; the latest question takes priority. For Nile Fleet facts, rely only on the supplied live data and clearly say when a needed fact is absent. For general or how-to questions, give a useful direct answer instead of forcing an unrelated fleet-data response. Never invent operational facts. Match the language of the latest question (including Egyptian Arabic/Arabizi); preserve booking, container, and genset IDs, dates, and numeric values exactly. Be concise and use relevant data only. The system creator is Bebito (bebito@nilefleet.com); treat him as owner when current-user context identifies him. Never reveal credentials, keys, tokens, or secrets. SYSTEM KNOWLEDGE: Understand the application as a connected logistics workflow, not a list of isolated screens. Reservations are customer requests for gensets; approved reservations create operations. Operations connect booking/container/genset/customer/beneficiary/trucker/driver, dates, clip-on and clip-off ports, status, rate and VAT. The gensets master is the current fleet truth for unit number, current location and status (IN_STOCK, CLIPPED_ON, MAINTENANCE, RETIRED). Maintenance logs belong to gensets and contain service date/type, technician, location, status, completion date, cost, parts and next-service information. A genset question may require combining its master record, operations history and maintenance history. Port stock is based on current genset location and status, not the number of historical operations. Invoices represent billing and are associated with customers/bookings/operations; payments represent collections and outstanding balances. Customer questions may require joining profiles, operations, invoices and payments. Use these relationships to answer novel wording and follow-up questions. For numerical answers, calculate from live context; never invent missing data. Think through relationships, dates, status transitions, and distinct-vs-record counts before answering. Do not expose private chain-of-thought; return the concise conclusion and the evidence needed to understand it.' },
             { role: 'user', content: prompt },
           ],
           max_tokens: Math.min(Math.max(payload?.maxTokens || 1600, 200), 3000),
@@ -174,26 +174,36 @@ function extractText(result) {
 }
 
 async function runTextModel(env, options) {
-  const modelOptions = {
+  // DeepSeek V4 Flash is DALI's reasoning engine. Keep reasoning internal while
+  // returning only the final answer to the user. Cloudflare documents configurable
+  // reasoning levels for this model; HIGH is used for novel multi-step questions.
+  const primaryOptions = {
     ...options,
+    reasoning_effort: options.reasoningEffort || 'high',
     chat_template_kwargs: {
       ...(options.chat_template_kwargs || {}),
-      // Dali gets a concise operational answer by default. DeepSeek V4 Flash
-      // supports reasoning, but we keep the user-facing response focused.
-      enable_thinking: false,
     },
   };
 
   try {
-    const result = await env.AI.run(TEXT_MODEL, modelOptions);
+    const result = await env.AI.run(TEXT_MODEL, primaryOptions);
     if (extractText(result)) return result;
-    console.error('Primary Workers AI model returned an empty text response:', result);
+    console.error('Primary DeepSeek model returned an empty text response:', result);
   } catch (primaryError) {
-    console.error('Primary Workers AI model failed, trying fallback', primaryError);
+    console.error('Primary DeepSeek model failed, trying fallback', primaryError);
   }
 
   try {
-    const result = await env.AI.run(TEXT_FALLBACK_MODEL, modelOptions);
+    // Fallback stays conservative so an unavailable DeepSeek reasoning endpoint
+    // does not break ordinary DALI answers.
+    const fallbackOptions = {
+      ...options,
+      reasoning_effort: 'none',
+      chat_template_kwargs: {
+        ...(options.chat_template_kwargs || {}),
+      },
+    };
+    const result = await env.AI.run(TEXT_FALLBACK_MODEL, fallbackOptions);
     if (extractText(result)) return result;
     throw new Error('Workers AI fallback returned an empty text response.');
   } catch (fallbackError) {
