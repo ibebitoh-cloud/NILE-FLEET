@@ -1,7 +1,7 @@
 import { supabase } from './supabaseClient';
 
 const AI_ENDPOINT = '/ai-proxy';
-const OPEN_SOURCE_MODEL = '@cf/qwen/qwen3-30b-a3b-fp8';
+const OPEN_SOURCE_MODEL = '@cf/deepseek-ai/deepseek-v4-flash-0731';
 
 async function callAi(action: string, payload: any) {
   const { data: sessionData } = await supabase.auth.getSession();
@@ -59,7 +59,7 @@ export const runThinkingAudit = async (prompt: string, budget: number = 1200) =>
     if (error) throw new Error(detail || error);
     return text || '';
   } catch (e) {
-    console.error('DALI 1.0 failed', e);
+    console.error('DALI 2.0 failed', e);
     throw e;
   }
 };
