@@ -546,6 +546,10 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       approach: 0, approachTarget: 0, horn: 0, lastWhoosh: 0, km: 0, hudT: 0, t: 0, lastScroll: window.scrollY,
       smoke: [] as { x: number; y: number; r: number; life: number }[],
       box: { x0: 0, y0: 0, x1: 0, y1: 0 },
+      drag: false, dragX: 0, dragY: 0, dragDX: 0, dragDY: 0,
+      wrecked: false, falling: false, fallV: 0, wreckX: 0, wreckY: 0, wreckRot: 0,
+      collector: false, collectorX: -420, collectorY: 0, collectorTarget: false, collectorCarry: false, collectorDone: false,
+      collectorScrollReady: false, wreckParts: false, wreckTimer: 0, pickupTimer: 0, impact: false,
     };
 
     const onMove = (e: MouseEvent) => {
@@ -565,16 +569,50 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     };
     const onDown = (e: PointerEvent) => {
       if ((e.target as HTMLElement).closest('button,a,input')) return;
+      if (sim.wrecked || sim.falling) return;
       const b = sim.box;
       if (e.clientX > b.x0 && e.clientX < b.x1 && e.clientY > b.y0 && e.clientY < b.y1) {
-        sim.horn = 0.7;
-        if (soundOnRef.current) playHorn();
+        sim.drag = true;
+        sim.dragX = e.clientX;
+        sim.dragY = e.clientY;
+        sim.dragDX = 0;
+        sim.dragDY = 0;
+        sim.speed = 160;
+        sim.horn = 0;
+        if (wrapRef.current) wrapRef.current.style.cursor = 'grabbing';
+        try { (e.currentTarget as Window).getSelection?.()?.removeAllRanges(); } catch {}
       }
+    };
+    const onPointerMove = (e: PointerEvent) => {
+      if (!sim.drag) return;
+      sim.dragDX = e.clientX - sim.dragX;
+      sim.dragDY = e.clientY - sim.dragY;
+      sim.dragX = e.clientX;
+      sim.dragY = e.clientY;
+    };
+    const onUp = () => {
+      if (!sim.drag) return;
+      sim.drag = false;
+      const s = clamp(Math.min(W / 1500, H / 900), 0.5, 1.15);
+      const draggedAway = Math.abs(sim.dragX - W * 0.5) > W * 0.28 || Math.abs(sim.dragY - (H * 0.84)) > H * 0.12;
+      if (draggedAway) {
+        sim.falling = true;
+        sim.fallV = Math.max(120, sim.dragDY * 7 + 120);
+        sim.wreckX = sim.dragX;
+        sim.wreckY = sim.dragY;
+        sim.wreckRot = 0;
+      } else {
+        sim.worldX -= sim.dragDX * 2;
+      }
+      if (wrapRef.current) wrapRef.current.style.cursor = '';
     };
     window.addEventListener('resize', resize);
     window.addEventListener('mousemove', onMove, { passive: true });
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('pointerdown', onDown);
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
     onScroll();
 
     const render = () => {
@@ -695,8 +733,47 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       const tilt = -accel * 0.000022;
       const lightScreenY = gy - 100 * s;
       const headA = 0.05 + clamp((sim.smy * H - lightScreenY) / (H * 0.9), -0.28, 0.28);
-      drawTruck(ctx, { s, tx, gy, dark, wheel: sim.wheel, bob, tilt, headA, horn: sim.horn });
-      sim.box = { x0: tx - 405 * s, y0: gy - 245 * s, x1: tx + 155 * s, y1: gy + 10 * s };
+      if (!sim.wrecked && !sim.falling && !sim.drag) {
+        drawTruck(ctx, { s, tx, gy, dark, wheel: sim.wheel, bob, tilt, headA, horn: sim.horn });
+        sim.box = { x0: tx - 405 * s, y0: gy - 245 * s, x1: tx + 155 * s, y1: gy + 10 * s };
+      } else if (sim.drag) {
+        drawTruck(ctx, { s: Math.min(0.82, s), tx: sim.dragX, gy: sim.dragY + 220, dark, wheel: sim.wheel, bob: 0, tilt: 0, headA: 0.05, horn: 0 });
+      } else if (sim.falling) {
+        ctx.save();
+        ctx.translate(sim.wreckX, sim.wreckY);
+        ctx.rotate(sim.wreckRot);
+        drawTruck(ctx, { s: Math.min(0.72, s), tx: 0, gy: 220, dark, wheel: sim.wheel, bob: 0, tilt: 0.15, headA: 0.05, horn: 0 });
+        ctx.restore();
+      } else if (sim.wreckParts) {
+        const px = sim.wreckX, py = Math.min(H * 0.89, sim.wreckY);
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.fillStyle = dark ? 'rgba(8,12,16,.95)' : 'rgba(40,48,58,.9)';
+        ctx.fillRect(-125, -22, 250, 20);
+        ctx.fillStyle = '#c2a378';
+        ctx.fillRect(-90, -8, 40, 9); ctx.fillRect(25, -10, 58, 8);
+        for (const [dx,dy,r] of [[-100,-35,12],[ -38,-4,8],[8,-32,14],[76,-2,10]] as const) {
+          ctx.beginPath(); ctx.arc(dx,dy,r,0,Math.PI*2); ctx.fill();
+        }
+        ctx.restore();
+        ctx.fillStyle = dark ? 'rgba(255,80,55,.85)' : 'rgba(160,55,35,.8)';
+        ctx.font = '900 11px system-ui,Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('WRECK / PARTS', px, py - 52);
+      }
+      if (sim.collector) {
+        const cx = sim.collectorX, cy = sim.collectorY;
+        drawTruck(ctx, { s: Math.min(0.58, s), tx: cx, gy: cy + 120, dark, wheel: sim.wheel, bob: 0, tilt: 0, headA: 0.05, horn: 0 });
+        if (sim.collectorCarry) {
+          ctx.save();
+          ctx.translate(cx - 35, cy - 5);
+          ctx.fillStyle = dark ? '#c2a378' : '#8a6a35';
+          ctx.fillRect(-55, -12, 90, 12);
+          ctx.fillStyle = dark ? 'rgba(194,163,120,.65)' : 'rgba(138,106,53,.65)';
+          ctx.fillRect(-25, -2, 40, 7);
+          ctx.restore();
+        }
+      }
 
       // exhaust smoke
       for (const p of sim.smoke) {
@@ -737,6 +814,54 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     const step = (dt: number) => {
       sim.t += dt;
       sim.smx += (sim.mx - sim.smx) * Math.min(1, dt * 6);
+
+      // Interactive truck sequence: drag it anywhere, release it, let it fall,
+      // then reveal a replacement truck after the visitor scrolls onward.
+      if (sim.drag) {
+        sim.dragX = clamp(sim.dragX, -W * 0.35, W * 1.35);
+        sim.dragY = clamp(sim.dragY, 40, H * 1.15);
+        sim.box = { x0: sim.dragX - 405, y0: sim.dragY - 245, x1: sim.dragX + 155, y1: sim.dragY + 10 };
+        return;
+      }
+      if (sim.falling) {
+        sim.wreckY += sim.fallV * dt;
+        sim.fallV += 980 * dt;
+        sim.wreckRot += 1.8 * dt;
+        if (sim.wreckY > H * 0.88) {
+          sim.falling = false;
+          sim.wrecked = true;
+          sim.wreckParts = true;
+          sim.wreckTimer = 0;
+          sim.impact = true;
+        }
+        return;
+      }
+      if (sim.wrecked) {
+        sim.wreckTimer += dt;
+        const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+        sim.collectorScrollReady = window.scrollY / maxScroll > 0.12;
+        if (sim.collectorScrollReady && !sim.collector && !sim.collectorDone) {
+          sim.collector = true;
+          sim.collectorX = -420;
+          sim.collectorY = H * 0.86;
+          sim.collectorTarget = true;
+        }
+        if (sim.collector) {
+          if (sim.collectorTarget && !sim.collectorCarry) {
+            sim.collectorX += (sim.wreckX - 230 - sim.collectorX) * Math.min(1, dt * 1.4);
+            sim.collectorY += (sim.wreckY + 40 - sim.collectorY) * Math.min(1, dt * 1.4);
+            if (Math.abs(sim.collectorX - (sim.wreckX - 230)) < 18) {
+              sim.collectorCarry = true;
+              sim.pickupTimer = 0;
+            }
+          } else if (sim.collectorCarry) {
+            sim.pickupTimer += dt;
+            sim.collectorX += 150 * dt;
+            if (sim.pickupTimer > 1.1) sim.collectorDone = true;
+          }
+        }
+        return;
+      }
       sim.smy += (sim.my - sim.smy) * Math.min(1, dt * 6);
       sim.approach += (sim.approachTarget - sim.approach) * Math.min(1, dt * 3.5);
       const target = 160 + Math.min(1340, sim.impulse * 18);
@@ -794,6 +919,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
     };
   }, []);
 
@@ -1048,6 +1176,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 </style>
 
       <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 z-0" aria-hidden="true" />
+      <div className="pointer-events-none fixed bottom-5 left-1/2 z-20 -translate-x-1/2 rounded-full border border-[#c2a378]/30 bg-black/45 px-4 py-2 text-[8px] font-black uppercase tracking-[.22em] text-white/70 backdrop-blur-md">
+        CLICK & DRAG THE TRUCK · DROP IT · SCROLL TO SEND ANOTHER
+      </div>
 
       {/* route progress (scroll) */}
       <div className="fixed left-0 right-0 top-0 z-50 h-[3px] bg-black/10"><div ref={barRef} className="h-full w-0 bg-[#c2a378] shadow-[0_0_12px_#c2a378]" /></div>
