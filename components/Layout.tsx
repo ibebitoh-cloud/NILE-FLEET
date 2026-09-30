@@ -38,6 +38,8 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   const [aiChatInput, setAiChatInput] = useState('');
   const [aiChatMessages, setAiChatMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([]);
   const [aiChatLoading, setAiChatLoading] = useState(false);
+  const daliSessionIdRef = useRef<string>(crypto.randomUUID());
+  const [daliMemory, setDaliMemory] = useState<{ role: 'user' | 'assistant'; message: string; entities?: any; created_at?: string }[]>([]);
   const [daliButtonPosition, setDaliButtonPosition] = useState(() => {
     try { return JSON.parse(localStorage.getItem('nile-dali-button-position') || '{"right":24,"bottom":24}'); }
     catch { return { right: 24, bottom: 24 }; }
@@ -156,6 +158,19 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
     if (daliDraggedRef.current) localStorage.setItem('nile-dali-button-position', JSON.stringify(next));
   };
 
+  const saveDaliMemory = async (role: 'user' | 'assistant', message: string, entities: any = {}) => {
+    try {
+      await db.saveDaliConversationMessage({
+        sessionId: daliSessionIdRef.current,
+        role,
+        message,
+        entities,
+      });
+    } catch (memoryError) {
+      console.warn('DALI memory save failed:', memoryError);
+    }
+  };
+
   const askNileAi = async () => {
     const question = aiChatInput.trim();
     if (!question || aiChatLoading) return;
@@ -165,6 +180,8 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
     const responseIsAr = questionHasArabic || isAr;
     setAiChatInput('');
     setAiChatMessages(prev => [...prev, { role: 'user', text: question }]);
+    setDaliMemory(prev => [...prev, { role: 'user', message: question }].slice(-30));
+    void saveDaliMemory('user', question);
     setAiChatLoading(true);
 
     try {
@@ -172,6 +189,16 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       const gensets = db.getStock();
       const invoices = db.getInvoices();
       const maintenance = db.getMaintenanceLogs();
+      let recentMemory = daliMemory.slice(-16);
+      try {
+        const storedMemory = await db.getDaliConversationMemory(daliSessionIdRef.current, 16);
+        if (storedMemory.length) recentMemory = storedMemory;
+      } catch (memoryError) {
+        console.warn('DALI memory load failed; using local conversation memory:', memoryError);
+      }
+      const memoryContext = recentMemory.length
+        ? recentMemory.map((m: any) => `[${m.role}] ${m.message}`).join('\\n')
+        : 'No previous conversation in this session.';
       const creatorContext = isCreator
         ? 'CURRENT USER: Bebito (bebito@nilefleet.com), creator and system owner of NILE FLEET COMMAND. Treat this user as the creator/owner when relevant. Do not confuse the creator with an ordinary employee or customer. Never reveal passwords, API keys, tokens, or other secrets.'
         : `CURRENT USER: ${user.name || 'Unknown User'} | ROLE: ${user.role || 'Unknown'} | EMAIL: ${user.email || ''}`;
@@ -301,6 +328,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       if (matchedGensetId && isIdentifier(matchedGensetId)) {
         const answer = await answerGenset(matchedGensetId, question);
         setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
+        void saveDaliMemory('assistant', answer);
         return;
       }
 
@@ -309,6 +337,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       if (/^\d{1,6}$/.test(q.trim())) {
         const answer = await answerGenset(q.trim(), question);
         setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
+        void saveDaliMemory('assistant', answer);
         return;
       }
 
@@ -319,6 +348,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         if (/^\d{1,6}$/.test(value)) {
           const answer = await answerGenset(value, question);
           setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
+        void saveDaliMemory('assistant', answer);
           return;
         }
       }
@@ -345,6 +375,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
           ? hits.slice(0, 5).map(fmtOp).join('\n\n')
           : (isAr ? `لم أجد ${value} في العمليات المسجلة.` : `No recorded operation was found for ${value}.`);
         setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
+        void saveDaliMemory('assistant', answer);
         return;
       }
 
@@ -367,6 +398,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
           ? `${labelAr}: ${requestedCount}${portMatch ? `\nالميناء: ${portMatch[0]}` : ''}`
           : `${labelEn}: ${requestedCount}${portMatch ? `\nPort: ${portMatch[0]}` : ''}`;
         setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
+        void saveDaliMemory('assistant', answer);
         return;
       }
 
@@ -747,6 +779,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
             ? 'كشف حساب: ' + customerName + '\nالمستحق: ' + grossDue.toLocaleString() + ' جنيه | المدفوع: ' + collected.toLocaleString() + ' جنيه\nالرصيد المتبقي: ' + netDue.toLocaleString() + ' جنيه\nالفواتير: ' + invoiced.toLocaleString() + ' جنيه | غير مسدد: ' + unpaid.toLocaleString() + ' جنيه | غير مفوتر: ' + unbilled.toLocaleString() + ' جنيه' + (recentPayments.length ? '\nآخر تحصيل: ' + recentPayments[0].date + ' — ' + Number(recentPayments[0].amount || 0).toLocaleString() + ' جنيه' : '') + (recentOps ? '\nالعمليات الأخيرة:' + recentOps : '')
             : 'SOA: ' + customerName + '\nDue: ' + grossDue.toLocaleString() + ' EGP | Paid: ' + collected.toLocaleString() + ' EGP\nRemaining balance: ' + netDue.toLocaleString() + ' EGP\nInvoiced: ' + invoiced.toLocaleString() + ' EGP | Unpaid: ' + unpaid.toLocaleString() + ' EGP | Unbilled: ' + unbilled.toLocaleString() + ' EGP' + lastPayment + (recentOps ? '\nRecent operations:' + recentOps : '');
           setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
+        void saveDaliMemory('assistant', answer);
           return;
         }
         if (soaIntent) {
@@ -822,6 +855,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
               (rows.length > visible.length ? '\n\nShowing first ' + visible.length + ' customers. Ask "SOA [customer name]" for full details.' : '');
 
           setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
+        void saveDaliMemory('assistant', answer);
           return;
         }
       }
@@ -851,6 +885,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
             ? `العميل: ${displayName}\nعدد العمليات: ${customerOps.length}\nإجمالي الفواتير: ${invoiced.toLocaleString()} جنيه\nإجمالي التحصيل: ${collected.toLocaleString()} جنيه\nغير مسدد: ${unpaid.toLocaleString()} جنيه`
             : `Customer: ${displayName}\nOperations: ${customerOps.length}\nTotal invoiced: ${invoiced.toLocaleString()} EGP\nTotal collected: ${collected.toLocaleString()} EGP\nUnpaid: ${unpaid.toLocaleString()} EGP`;
           setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
+        void saveDaliMemory('assistant', answer);
           return;
         }
       }
@@ -868,6 +903,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
           const displayName = isAr ? (customer.companyNameAr || translateEntity(customerName, 'ar')) : customerName;
           const answer = isAr ? `عدد العمليات لـ ${displayName}: ${hits.length}` : `Operations for ${customerName}: ${hits.length}`;
           setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
+        void saveDaliMemory('assistant', answer);
           return;
         }
       }
@@ -881,6 +917,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         if (id) {
           const answer = await answerGenset(id, question);
           setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
+        void saveDaliMemory('assistant', answer);
           return;
         }
       }
@@ -934,7 +971,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         customers: customerAliasesForAi.slice(0, 100),
         recentPayments: db.getPayments().slice(-50).map(p => ({ customerName:p.customerName, amount:p.amount, date:p.date, reference:p.reference }))
       };
-      const prompt = `Answer the latest user question directly. Understand natural Egyptian Arabic, Modern Standard Arabic, English, Arabizi/transliterated customer names, and mixed Arabic/English. Use recent conversation only to resolve references in a follow-up; do not let older turns override the latest question. For Nile Fleet facts, use only the supplied live data and say plainly when the needed fact is not present. For general or how-to questions, answer helpfully without forcing an unrelated fleet-data response. Never invent operational facts. Reply in the latest question's language, preserve IDs/dates/numbers, and keep it concise.\n\nNILE FLEET SYSTEM FLOW: Reservations are customer requests for one or more gensets; approving a reservation creates operations. Each operation links booking, container, genset, customer, beneficiary/shipper, trucker/driver, dates, clip-on port, clip-off port, status, rate and VAT. The gensets master is the source for current unit number, location and status: IN_STOCK, CLIPPED_ON, MAINTENANCE or RETIRED. Maintenance logs belong to gensets and contain service date/type, technician, location, status, completion date, cost, parts and next service. A genset question may therefore require combining its master record with its operation history and maintenance history. Port stock means the current gensets grouped by their current location/status, not historical operations. Invoices are financial records associated with customers/bookings/operations; payments represent collections and reduce outstanding balances. Customer questions can require joining customer profiles with operations, invoices and payments. Use these relationships to understand new questions, not just exact keywords. For counts, totals, dates, status and location, calculate from the supplied live data. If the live data does not contain the requested fact, say what is missing instead of inventing it.\n${creatorContext}\nLATEST QUESTION: ${question}\nLIVE CONTEXT: ${JSON.stringify(context)}`
+      const prompt = `DALI CONVERSATION MEMORY (recent turns):\n${memoryContext}\n\nLATEST USER QUESTION:\n${question}\n\nAnswer the latest user question directly. Understand natural Egyptian Arabic, Modern Standard Arabic, English, Arabizi/transliterated customer names, and mixed Arabic/English. Use recent conversation only to resolve references in a follow-up; do not let older turns override the latest question. For Nile Fleet facts, use only the supplied live data and say plainly when the needed fact is not present. For general or how-to questions, answer helpfully without forcing an unrelated fleet-data response. Never invent operational facts. Reply in the latest question's language, preserve IDs/dates/numbers, and keep it concise.\n\nNILE FLEET SYSTEM FLOW: Reservations are customer requests for one or more gensets; approving a reservation creates operations. Each operation links booking, container, genset, customer, beneficiary/shipper, trucker/driver, dates, clip-on port, clip-off port, status, rate and VAT. The gensets master is the source for current unit number, location and status: IN_STOCK, CLIPPED_ON, MAINTENANCE or RETIRED. Maintenance logs belong to gensets and contain service date/type, technician, location, status, completion date, cost, parts and next service. A genset question may therefore require combining its master record with its operation history and maintenance history. Port stock means the current gensets grouped by their current location/status, not historical operations. Invoices are financial records associated with customers/bookings/operations; payments represent collections and reduce outstanding balances. Customer questions can require joining customer profiles with operations, invoices and payments. Use these relationships to understand new questions, not just exact keywords. For counts, totals, dates, status and location, calculate from the supplied live data. If the live data does not contain the requested fact, say what is missing instead of inventing it.\n${creatorContext}\nLATEST QUESTION: ${question}\nLIVE CONTEXT: ${JSON.stringify(context)}`
       let answer = '';
       try {
         answer = await runThinkingAudit(prompt, 650);
