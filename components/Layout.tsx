@@ -171,6 +171,33 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
     }
   };
 
+  // Restore the user's recent DALI conversation across page reloads/new sessions.
+  // RLS on dali_conversations guarantees this can only return the signed-in user's rows.
+  useEffect(() => {
+    let cancelled = false;
+    const loadDaliHistory = async () => {
+      try {
+        const stored = await db.getDaliRecentMemory(30);
+        if (cancelled || !stored.length) return;
+        const memoryRows = stored.map((m: any) => ({
+          role: m.role === 'assistant' ? 'ai' as const : 'user' as const,
+          text: String(m.message || ''),
+        }));
+        setAiChatMessages(memoryRows);
+        setDaliMemory(stored.map((m: any) => ({
+          role: m.role,
+          message: String(m.message || ''),
+          entities: m.entities,
+          created_at: m.created_at,
+        })).slice(-30));
+      } catch (memoryError) {
+        console.warn('DALI history restore failed:', memoryError);
+      }
+    };
+    void loadDaliHistory();
+    return () => { cancelled = true; };
+  }, [user.id]);
+
   const askNileAi = async () => {
     const question = aiChatInput.trim();
     if (!question || aiChatLoading) return;
@@ -191,8 +218,14 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       const maintenance = db.getMaintenanceLogs();
       let recentMemory = daliMemory.slice(-16);
       try {
-        const storedMemory = await db.getDaliConversationMemory(daliSessionIdRef.current, 16);
+        // Use cross-session memory first so DALI can continue a conversation after
+        // a reload, logout/login, or a new browser session.
+        const storedMemory = await db.getDaliRecentMemory(24);
         if (storedMemory.length) recentMemory = storedMemory;
+        else {
+          const sessionMemory = await db.getDaliConversationMemory(daliSessionIdRef.current, 16);
+          if (sessionMemory.length) recentMemory = sessionMemory;
+        }
       } catch (memoryError) {
         console.warn('DALI memory load failed; using local conversation memory:', memoryError);
       }
