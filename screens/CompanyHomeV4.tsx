@@ -902,7 +902,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         @keyframes nf4Pulse { 0%,100%{box-shadow:0 0 0 rgba(194,163,120,0)} 50%{box-shadow:0 0 42px rgba(194,163,120,.28)} }
         @keyframes nf4Partners { from{transform:translateX(0)} to{transform:translateX(-50%)} }
         .nf4-logo-viewport{position:relative}
-        .nf4-logo-track{animation:nf4Partners 34s linear infinite}
+        .nf4-logo-track{animation:nf4Partners 75s linear infinite}
         .nf4-logo-track:hover{animation-play-state:paused}
         .nf4-logo-viewport:before,.nf4-logo-viewport:after{content:"";position:absolute;top:0;bottom:0;width:90px;z-index:2;pointer-events:none}
         .nf4-logo-viewport:before{left:0;background:linear-gradient(90deg,#050b12,transparent)}
@@ -1435,6 +1435,19 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                     </a>
                   ))}
                 </div>
+              </div>
+              <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                {PARTNER_LOGOS.map((p) => (
+                  <a key={p.name} href={p.url} target="_blank" rel="noreferrer" className={`group flex min-h-[92px] items-center gap-3 rounded-2xl border px-4 py-3 transition duration-300 hover:-translate-y-1 hover:border-[#c2a378]/60 ${isDark ? 'border-white/10 bg-white/[.025] hover:bg-white/[.06]' : 'border-black/10 bg-white hover:bg-slate-50 shadow-sm'}`}>
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white p-1.5 shadow-[0_0_20px_rgba(255,255,255,.07)]">
+                      <img src={p.logo} alt={`${p.name} logo`} className="h-full w-full object-contain" loading="lazy" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className={`truncate text-[8px] font-black tracking-[.08em] ${isDark ? 'text-white' : 'text-[#0b1a2b]'}`}>{p.name}</div>
+                      <div className="mt-1 truncate text-[6px] font-bold tracking-[.12em] text-[#c2a378]">{p.type}</div>
+                    </div>
+                  </a>
+                ))}
               </div>
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
                 <div className="text-[8px] font-black uppercase tracking-[.18em] text-slate-600">{ar ? 'خطوط ملاحية · وكلاء شحن · لوجستيات · نقل بري · شركات شاحنات' : 'Shipping lines · freight forwarders · logistics operators · road transport · trucking'}</div>
