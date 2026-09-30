@@ -931,13 +931,12 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         customers: customerAliasesForAi.slice(0, 100),
         recentPayments: db.getPayments().slice(-50).map(p => ({ customerName:p.customerName, amount:p.amount, date:p.date, reference:p.reference }))
       };
-      const prompt = `Answer the latest user question directly. Understand natural Egyptian Arabic, Modern Standard Arabic, English, Arabizi/transliterated customer names, and mixed Arabic/English. Use recent conversation only to resolve references in a follow-up; do not let older turns override the latest question. For Nile Fleet facts, use only the supplied live data and say plainly when the needed fact is not present. For general or how-to questions, answer helpfully without forcing an unrelated fleet-data answer. Never invent operational facts. Reply in the latest question's language, preserve IDs/dates/numbers, and keep it concise.\n${creatorContext}\nLATEST QUESTION: ${question}\nLIVE CONTEXT: ${JSON.stringify(context)}`;
+      const prompt = `Answer the latest user question directly. Understand natural Egyptian Arabic, Modern Standard Arabic, English, Arabizi/transliterated customer names, and mixed Arabic/English. Use recent conversation only to resolve references in a follow-up; do not let older turns override the latest question. For Nile Fleet facts, use only the supplied live data and say plainly when the needed fact is not present. For general or how-to questions, answer helpfully without forcing an unrelated fleet-data response. Never invent operational facts. Reply in the latest question's language, preserve IDs/dates/numbers, and keep it concise.\n\nNILE FLEET SYSTEM FLOW: Reservations are customer requests for one or more gensets; approving a reservation creates operations. Each operation links booking, container, genset, customer, beneficiary/shipper, trucker/driver, dates, clip-on port, clip-off port, status, rate and VAT. The gensets master is the source for current unit number, location and status: IN_STOCK, CLIPPED_ON, MAINTENANCE or RETIRED. Maintenance logs belong to gensets and contain service date/type, technician, location, status, completion date, cost, parts and next service. A genset question may therefore require combining its master record with its operation history and maintenance history. Port stock means the current gensets grouped by their current location/status, not historical operations. Invoices are financial records associated with customers/bookings/operations; payments represent collections and reduce outstanding balances. Customer questions can require joining customer profiles with operations, invoices and payments. Use these relationships to understand new questions, not just exact keywords. For counts, totals, dates, status and location, calculate from the supplied live data. If the live data does not contain the requested fact, say what is missing instead of inventing it.\n${creatorContext}\nLATEST QUESTION: ${question}\nLIVE CONTEXT: ${JSON.stringify(context)}`
       let answer = '';
       try {
         answer = await runThinkingAudit(prompt, 650);
       } catch (aiError) {
         console.error('DALI general AI route failed; using deterministic fallback', aiError);
-        const cleanQ = q.toLowerCase();
 
         // DETERMINISTIC OPERATIONAL ANSWERS
         // These questions must never depend on the LLM. The database/cache is the source of truth.
@@ -979,11 +978,11 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
           answer = responseIsAr
             ? 'إجمالي المولدات: ' + total + '\nفي المخزون: ' + inStock + '\nمركبة: ' + clipped + '\nفي الصيانة: ' + maintenanceCount + '\nأكبر مخزون: ' + (topPort?.port || '—') + ' (' + (topPort?.total || 0) + ')'
             : 'Total gensets: ' + total + '\nIn stock: ' + inStock + '\nClipped on: ' + clipped + '\nMaintenance: ' + maintenanceCount + '\nLargest port stock: ' + (topPort?.port || '—') + ' (' + (topPort?.total || 0) + ')';
-        } else if (/operation|booking|container|عملية|حجز|حاوية|حاويه/.test(lower)) {
+        } else if (/operation|booking|container|عملية|حجز|حاوية|حاويه/.test(cleanQ)) {
           const active = operations.filter(o => String(o.status || '').toUpperCase() === 'IN PROGRESS').length;
           const done = operations.filter(o => String(o.status || '').toUpperCase() === 'DONE').length;
           answer = responseIsAr ? 'إجمالي العمليات المسجلة: ' + operations.length + '\nمكتملة: ' + done + '\nتحت التشغيل: ' + active : 'Total recorded operations: ' + operations.length + '\nDone: ' + done + '\nIn progress: ' + active;
-        } else if (/invoice|financial|money|paid|فاتور|مالي|مدفوع|مستحق/.test(lower)) {
+        } else if (/invoice|financial|money|paid|فاتور|مالي|مدفوع|مستحق/.test(cleanQ)) {
           const billed = invoices.reduce((n,i) => n + (Number(i.amount) || 0), 0);
           const paid = invoices.filter(i => String(i.status || '').toUpperCase() === 'PAID').reduce((n,i) => n + (Number(i.amount) || 0), 0);
           answer = responseIsAr ? 'إجمالي الفواتير: ' + billed.toLocaleString() + '\nالمدفوع: ' + paid.toLocaleString() + '\nالمتبقي: ' + (billed-paid).toLocaleString() : 'Total invoiced: ' + billed.toLocaleString() + '\nPaid: ' + paid.toLocaleString() + '\nOutstanding: ' + (billed-paid).toLocaleString();
