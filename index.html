@@ -468,6 +468,65 @@
         @media (max-width: 1023px) {
             main { padding-bottom: 76px; }
         }
+        /* Mobile Genset readability: prevent compressed labels and stacked text */
+        @media (max-width: 767px) {
+            .nile-command-layout main {
+                width: 100%;
+                min-width: 0;
+                overflow-x: hidden;
+            }
+            .nile-command-layout main > * {
+                min-width: 0;
+                max-width: 100%;
+            }
+            .nile-command-layout main .grid > *,
+            .nile-command-layout main .flex > * {
+                min-width: 0;
+            }
+            .nile-command-layout main h1,
+            .nile-command-layout main h2,
+            .nile-command-layout main h3,
+            .nile-command-layout main h4,
+            .nile-command-layout main h5,
+            .nile-command-layout main h6,
+            .nile-command-layout main p,
+            .nile-command-layout main label {
+                max-width: 100%;
+                overflow-wrap: anywhere;
+                word-break: normal;
+                line-height: 1.28;
+            }
+            .nile-command-layout main button {
+                min-width: 0;
+                max-width: 100%;
+            }
+            .nile-command-layout main button span,
+            .nile-command-layout main button p {
+                min-width: 0;
+                max-width: 100%;
+                overflow-wrap: anywhere;
+                line-height: 1.25;
+            }
+            .nile-command-layout main input,
+            .nile-command-layout main select,
+            .nile-command-layout main textarea {
+                min-width: 0;
+                max-width: 100%;
+            }
+            .nile-command-layout main table {
+                white-space: nowrap;
+            }
+            .nile-command-layout main .overflow-x-auto {
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .nile-command-layout main .flex.items-center.justify-between,
+            .nile-command-layout main .flex.items-end.justify-between {
+                flex-wrap: wrap;
+                row-gap: .65rem;
+            }
+        }
 
         /* Scrollbars */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
