@@ -829,11 +829,39 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     safe: ar ? 'آمن. موثوق. واضح. متصل.' : 'Safe. Reliable. Visible. Connected.',
     whyTitle: ar ? <>لماذا <span className={gold}>نيل فليت؟</span></> : <>Why <span className={gold}>Nile Fleet?</span></>,
     whyDesc: ar ? 'خبرة تشغيلية، استجابة سريعة، إدارة أسطول ورؤية واضحة للحركة — مصممة لخدمة الأعمال التي لا تتوقف.' : 'Operational experience, fast response, fleet control and clear visibility — built for businesses that cannot afford to stop.',
-    standards: ar ? ['الجودة أولاً', 'التسليم في الموعد', 'السلامة في كل رحلة', 'رؤية تشغيلية كاملة', 'استجابة سريعة', 'فريق تشغيل متخصص'] : ['QUALITY FIRST', 'ON-TIME DELIVERY', 'SAFETY ON EVERY MOVE', 'FULL OPERATIONAL VISIBILITY', 'FAST RESPONSE', 'SPECIALIZED OPERATIONS'],
+    standards: ar ? [
+      { title: 'الجودة أولاً', desc: 'نراجع تفاصيل التشغيل قبل الحركة، ونركز على تنفيذ الخدمة بمستوى ثابت وواضح.' },
+      { title: 'التسليم في الموعد', desc: 'تنسيق مسبق بين السائقين والموانئ والعميل لتقليل الانتظار والحفاظ على المواعيد.' },
+      { title: 'السلامة في كل رحلة', desc: 'إجراءات تشغيل ومتابعة مستمرة لحماية السائق والمركبة والحاوية طوال الرحلة.' },
+      { title: 'رؤية تشغيلية كاملة', desc: 'متابعة أوضح لحالة الرحلة والحركة والميناء حتى تعرف أين تقف العملية.' },
+      { title: 'استجابة سريعة', desc: 'فريق تشغيل جاهز للتعامل مع التغييرات والمشكلات والطلبات العاجلة أثناء الحركة.' },
+      { title: 'فريق تشغيل متخصص', desc: 'خبرة عملية في النقل والحاويات والموانئ تساعد على تنسيق التفاصيل من البداية للنهاية.' },
+    ] : [
+      { title: 'QUALITY FIRST', desc: 'We review operational details before movement and focus on delivering consistent, controlled service.' },
+      { title: 'ON-TIME DELIVERY', desc: 'Advance coordination between drivers, ports and customers helps reduce waiting and protect schedules.' },
+      { title: 'SAFETY ON EVERY MOVE', desc: 'Continuous operating procedures and follow-up help protect the driver, vehicle and container throughout the journey.' },
+      { title: 'FULL OPERATIONAL VISIBILITY', desc: 'Clearer tracking of movement, journey status and port activity keeps you informed throughout the operation.' },
+      { title: 'FAST RESPONSE', desc: 'An operations team ready to handle changes, issues and urgent requests while cargo is moving.' },
+      { title: 'SPECIALIZED OPERATIONS', desc: 'Practical experience across trucking, containers and ports helps coordinate the details from start to finish.' },
+    ],
     footprint: ar ? <>حركة <span className={gold}>تمتد عبر مصر.</span></> : <>A footprint that <span className={gold}>moves across Egypt.</span></>,
     footprintDesc: ar ? 'من الموانئ والمناطق الصناعية إلى وجهة العميل، نربط عمليات النقل بالحركة الفعلية على الأرض.' : 'From ports and industrial zones to the customer destination, we connect transport planning with movement on the ground.',
     serviceTitle: ar ? <>حلول نقل <span className={gold}>مصممة للعمل.</span></> : <>Transport solutions <span className={gold}>built for business.</span></>,
-    serviceItems: ar ? ['نقل الحاويات', 'نقل الحاويات المبردة', 'النقل الداخلي', 'إدارة الأسطول', 'عمليات الموانئ', 'دعم سلاسل الإمداد'] : ['CONTAINER TRANSPORT', 'REEFER TRANSPORT', 'INLAND TRUCKING', 'FLEET MANAGEMENT', 'PORT OPERATIONS', 'SUPPLY CHAIN SUPPORT'],
+    serviceItems: ar ? [
+      { title: 'نقل الحاويات', desc: 'نقل حاويات من وإلى الموانئ والمناطق الصناعية مع تنسيق الرحلة والتسليم.' },
+      { title: 'نقل الحاويات المبردة', desc: 'تشغيل ونقل الحاويات المبردة مع اهتمام خاص بمتطلبات الرحلة واستمرارية الخدمة.' },
+      { title: 'النقل الداخلي', desc: 'رحلات برية داخل مصر تربط الموانئ ومواقع التخزين والمصانع ووجهات العملاء.' },
+      { title: 'إدارة الأسطول', desc: 'تنظيم حركة المركبات والسائقين والرحلات لتحسين المتابعة والاستفادة من الأسطول.' },
+      { title: 'عمليات الموانئ', desc: 'تنسيق الحركة والخدمات المرتبطة بالموانئ لتقليل التأخير ودعم التشغيل اليومي.' },
+      { title: 'دعم سلاسل الإمداد', desc: 'دعم الحركة بين المورد والميناء والعميل ضمن رؤية تشغيلية مترابطة.' },
+    ] : [
+      { title: 'CONTAINER TRANSPORT', desc: 'Move containers to and from ports and industrial zones with coordinated trips and delivery.' },
+      { title: 'REEFER TRANSPORT', desc: 'Transport refrigerated containers with close attention to trip requirements and service continuity.' },
+      { title: 'INLAND TRUCKING', desc: 'Road movements across Egypt connecting ports, storage locations, factories and customer destinations.' },
+      { title: 'FLEET MANAGEMENT', desc: 'Coordinate vehicles, drivers and trips to improve follow-up and fleet utilization.' },
+      { title: 'PORT OPERATIONS', desc: 'Coordinate port-related movements and services to reduce delays and support daily operations.' },
+      { title: 'SUPPLY CHAIN SUPPORT', desc: 'Connect supplier, port and customer movements through a more coordinated operational view.' },
+    ],
     proofTitle: ar ? <>ما نقدمه لعملائنا <span className={gold}>كل يوم.</span></> : <>What we deliver to customers <span className={gold}>every day.</span></>,
     proofDesc: ar ? 'لا نعرض تقييمات أو شعارات عملاء إلا عندما تكون معتمدة وقابلة للنشر. الجودة تُقاس بما يحدث على أرض الواقع.' : 'We only publish customer reviews and partner logos when they are approved and verifiable. Quality is measured by what happens on the ground.',
     reviewPending: ar ? 'تجربة الخدمة اليومية' : 'Daily service experience',
@@ -959,9 +987,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         .nf4-quote-button:hover{box-shadow:0 12px 34px rgba(194,163,120,.28)}
         @media(max-width:640px){.nf4-contact-bar>div{align-items:stretch}.nf4-contact-bar .nf4-quote-button{width:100%;justify-content:center}.nf4-contact-bar>div>div{width:100%;justify-content:space-between}}
         @media (prefers-reduced-motion: reduce){ .nf4 *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important} }
-        .nf4-bebito-system{position:relative;display:flex;align-items:center;justify-content:center;gap:10px;width:max-content;margin:0 auto;padding:8px 14px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:linear-gradient(90deg,rgba(255,255,255,.025),rgba(194,163,120,.07),rgba(255,255,255,.025));overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 30px rgba(0,0,0,.18)}
+        .nf4-bebito-system{position:relative;display:flex;align-items:center;justify-content:center;gap:10px;width:min(100%,430px);margin:0 auto;padding:9px 16px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(90deg,rgba(255,255,255,.025),rgba(194,163,120,.08),rgba(255,255,255,.025));overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 30px rgba(0,0,0,.18)}
         .nf4-bebito-system:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(194,163,120,.18),transparent);transform:translateX(-100%);animation:nf4BebitoScan 3.8s linear infinite}
-        .nf4-bebito-line{position:relative;width:34px;height:1px;background:linear-gradient(90deg,transparent,#c2a378);opacity:.75}
+        .nf4-bebito-line{position:relative;flex:1;max-width:110px;width:34px;height:1px;background:linear-gradient(90deg,transparent,#c2a378);opacity:.75}
         .nf4-bebito-line-right{transform:scaleX(-1)}
         .nf4-bebito-node{position:relative;width:6px;height:6px;border:1px solid #c2a378;border-radius:50%;background:#07101a;box-shadow:0 0 0 0 rgba(194,163,120,.45);animation:nf4BebitoPulse 2s ease-in-out infinite}
         .nf4-bebito-copy{position:relative;display:flex;align-items:baseline;gap:6px;white-space:nowrap}
@@ -969,7 +997,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         .nf4-bebito-copy strong{font-size:11px;font-weight:950;letter-spacing:.18em;color:#fff;text-shadow:0 0 16px rgba(194,163,120,.22)}
         @keyframes nf4BebitoScan{to{transform:translateX(100%)}}
         @keyframes nf4BebitoPulse{50%{box-shadow:0 0 0 5px rgba(194,163,120,0);background:#c2a378}}
-        @media(max-width:640px){.nf4-bebito-system{margin-left:0;margin-right:0}.nf4-bebito-line{width:22px}.nf4-bebito-copy strong{font-size:10px}}
+        @media(max-width:640px){.nf4-bebito-system{width:100%;max-width:360px}.nf4-bebito-line{width:22px}.nf4-bebito-copy strong{font-size:10px}}
 
 
       /* Strong homepage visual direction - existing canvas background remains untouched */
@@ -1276,10 +1304,11 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {tx.standards.map((x, i) => (
-                    <div key={x} className={`group rounded-[1.5rem] border p-6 backdrop-blur-md transition duration-500 hover:-translate-y-1 hover:border-[#c2a378]/60 ${K.card}`}>
+                    <div key={x.title} className={`group min-h-[220px] rounded-[1.5rem] border p-6 backdrop-blur-md transition duration-500 hover:-translate-y-1 hover:border-[#c2a378]/60 ${K.card}`}>
                       <div className={`text-[8px] font-black tracking-[.22em] ${gold}`}>{String(i + 1).padStart(2, '0')}</div>
-                      <div className="mt-10 text-sm font-black uppercase leading-5">{x}</div>
+                      <div className="mt-8 text-sm font-black uppercase leading-5">{x.title}</div>
                       <div className="mt-5 h-px w-8 bg-[#c2a378] transition-all duration-500 group-hover:w-16" />
+                      <p className={`mt-5 text-[11px] leading-6 ${K.muted}`}>{x.desc}</p>
                     </div>
                   ))}
                 </div>
@@ -1320,11 +1349,12 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
               <h2 className="mt-5 max-w-5xl text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{tx.serviceTitle}</h2>
               <div className="nf4-services-grid mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {tx.serviceItems.map((x, i) => (
-                  <div key={x} className={`group relative min-h-[170px] overflow-hidden rounded-[1.5rem] border p-7 transition duration-500 hover:-translate-y-1 hover:border-[#c2a378]/60 ${K.card}`}>
+                  <div key={x.title} className={`group relative min-h-[250px] overflow-hidden rounded-[1.5rem] border p-7 transition duration-500 hover:-translate-y-1 hover:border-[#c2a378]/60 ${K.card}`}>
                     <div className={`text-[8px] font-black tracking-[.25em] ${gold}`}>0{i + 1}</div>
                     <div className="absolute right-7 top-7 text-5xl font-black opacity-10">{String(i + 1).padStart(2, '0')}</div>
                     <div className="absolute bottom-0 left-0 h-1 w-0 bg-[#c2a378] transition-all duration-700 group-hover:w-full" />
-                    <div className="mt-14 max-w-[220px] text-sm font-black uppercase leading-5">{x}</div>
+                    <div className="mt-12 max-w-[250px] text-sm font-black uppercase leading-5">{x.title}</div>
+                    <p className={`mt-5 max-w-[280px] text-[11px] leading-6 ${K.muted}`}>{x.desc}</p>
                   </div>
                 ))}
               </div>
@@ -1437,23 +1467,25 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         </section>
 
         <section className={`relative overflow-hidden backdrop-blur-md ${K.foot}`}>
-          <div className="mx-auto max-w-[1500px] px-5 pb-32 pt-20 lg:px-10">
+          <div className="mx-auto max-w-[1500px] px-5 pb-24 pt-20 lg:px-10">
             <div className="flex flex-col justify-between gap-8 md:flex-row md:items-center">
               <div>
                 <div className="text-[9px] font-black uppercase tracking-[.42em] text-[#c2a378]">Nile Fleet</div>
                 <div className="mt-3 text-3xl font-black uppercase italic">{tx.safe}</div>
-                <div className="nf4-bebito-system" aria-label="Powered by Bebito">
-                  <span className="nf4-bebito-line nf4-bebito-line-left"></span>
-                  <span className="nf4-bebito-node"></span>
-                  <span className="nf4-bebito-copy"><small>POWERED BY</small><strong>BEBITO</strong></span>
-                  <span className="nf4-bebito-node"></span>
-                  <span className="nf4-bebito-line nf4-bebito-line-right"></span>
-                </div>
               </div>
               <div className="text-xs leading-6 text-slate-300 md:text-right">
                 <div>23 July St. · Abo Elkheer Building · 2nd Floor</div>
                 <div>Port Said, Egypt</div>
                 <div className="mt-2 text-[#c2a378]">nilefleet@nilefleetlogistics.com · Transport 01000992858 · Genset 01212229077</div>
+              </div>
+            </div>
+            <div className="mt-14 flex justify-center">
+              <div className="nf4-bebito-system" aria-label="Powered by Bebito">
+                <span className="nf4-bebito-line nf4-bebito-line-left"></span>
+                <span className="nf4-bebito-node"></span>
+                <span className="nf4-bebito-copy"><small>POWERED BY</small><strong>BEBITO</strong></span>
+                <span className="nf4-bebito-node"></span>
+                <span className="nf4-bebito-line nf4-bebito-line-right"></span>
               </div>
             </div>
           </div>
