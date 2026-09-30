@@ -745,34 +745,42 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         drawTruck(ctx, { s: Math.min(0.72, s), tx: 0, gy: 220, dark, wheel: sim.wheel, bob: 0, tilt: 0.15, headA: 0.05, horn: 0 });
         ctx.restore();
       } else if (sim.wreckParts) {
+        // Lots of scattered wreckage: chassis, cab, wheels, panels, glass, lights and metal debris.
         const px = sim.wreckX, py = Math.min(H * 0.89, sim.wreckY);
         ctx.save();
         ctx.translate(px, py);
-        ctx.fillStyle = dark ? 'rgba(8,12,16,.95)' : 'rgba(40,48,58,.9)';
-        ctx.fillRect(-125, -22, 250, 20);
-        ctx.fillStyle = '#c2a378';
-        ctx.fillRect(-90, -8, 40, 9); ctx.fillRect(25, -10, 58, 8);
-        for (const [dx,dy,r] of [[-100,-35,12],[ -38,-4,8],[8,-32,14],[76,-2,10]] as const) {
-          ctx.beginPath(); ctx.arc(dx,dy,r,0,Math.PI*2); ctx.fill();
-        }
-        ctx.restore();
-        ctx.fillStyle = dark ? 'rgba(255,80,55,.85)' : 'rgba(160,55,35,.8)';
-        ctx.font = '900 11px system-ui,Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('WRECK / PARTS', px, py - 52);
-      }
-      if (sim.collector) {
-        const cx = sim.collectorX, cy = sim.collectorY;
-        drawTruck(ctx, { s: Math.min(0.58, s), tx: cx, gy: cy + 120, dark, wheel: sim.wheel, bob: 0, tilt: 0, headA: 0.05, horn: 0 });
-        if (sim.collectorCarry) {
-          ctx.save();
-          ctx.translate(cx - 35, cy - 5);
-          ctx.fillStyle = dark ? '#c2a378' : '#8a6a35';
-          ctx.fillRect(-55, -12, 90, 12);
-          ctx.fillStyle = dark ? 'rgba(194,163,120,.65)' : 'rgba(138,106,53,.65)';
-          ctx.fillRect(-25, -2, 40, 7);
+        ctx.fillStyle = dark ? 'rgba(8,12,16,.98)' : 'rgba(40,48,58,.94)';
+        ctx.fillRect(-145, -18, 290, 15);
+        const parts = [
+          [-128,-42,34,9,-.18],[-92,-4,22,8,.35],[-55,-35,48,10,-.3],[-18,-8,28,7,.5],
+          [18,-46,38,9,.18],[52,-5,25,8,-.25],[88,-36,42,10,.3],[120,-2,18,7,-.45],
+          [-118,-72,16,16,.5],[-78,-65,12,12,-.2],[-35,-78,18,10,.35],[10,-68,14,14,-.45],
+          [48,-76,20,11,.2],[92,-65,13,13,.5],
+          [-105,18,16,16,0],[-48,15,13,13,0],[12,18,17,17,0],[72,17,14,14,0],
+          [-135,-12,12,12,.2],[135,-14,11,11,-.2]
+        ] as const;
+        for (const [x,y,w,h,a] of parts) {
+          ctx.save(); ctx.translate(x,y); ctx.rotate(a);
+          ctx.fillStyle = Math.abs(x+y)%3===0 ? '#c2a378' : (dark ? '#26323d' : '#596775');
+          ctx.fillRect(-w/2,-h/2,w,h);
+          ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.lineWidth = 1; ctx.strokeRect(-w/2,-h/2,w,h);
           ctx.restore();
         }
+        for (const [x,y,r] of [[-92,6,18],[0,2,20],[86,8,17]] as const) {
+          ctx.fillStyle = '#07090c'; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle = '#59636e'; ctx.lineWidth = 4; ctx.stroke();
+          ctx.fillStyle = '#b8bfca'; ctx.beginPath(); ctx.arc(x,y,r*.42,0,Math.PI*2); ctx.fill();
+        }
+        // glass shards
+        ctx.fillStyle = 'rgba(145,205,235,.72)';
+        for (const [x,y] of [[-70,-58],[-20,-88],[35,-62],[70,-80],[-5,-30]] as const) {
+          ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+14,y-5); ctx.lineTo(x+5,y+11); ctx.closePath(); ctx.fill();
+        }
+        ctx.restore();
+        ctx.fillStyle = dark ? 'rgba(255,80,55,.9)' : 'rgba(160,55,35,.85)';
+        ctx.font = '900 11px system-ui,Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('WRECK / PARTS', px, py - 105);
       }
 
       // exhaust smoke
@@ -840,25 +848,19 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         sim.wreckTimer += dt;
         const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
         sim.collectorScrollReady = window.scrollY / maxScroll > 0.12;
-        if (sim.collectorScrollReady && !sim.collector && !sim.collectorDone) {
-          sim.collector = true;
-          sim.collectorX = -420;
-          sim.collectorY = H * 0.86;
-          sim.collectorTarget = true;
-        }
-        if (sim.collector) {
-          if (sim.collectorTarget && !sim.collectorCarry) {
-            sim.collectorX += (sim.wreckX - 230 - sim.collectorX) * Math.min(1, dt * 1.4);
-            sim.collectorY += (sim.wreckY + 40 - sim.collectorY) * Math.min(1, dt * 1.4);
-            if (Math.abs(sim.collectorX - (sim.wreckX - 230)) < 18) {
-              sim.collectorCarry = true;
-              sim.pickupTimer = 0;
-            }
-          } else if (sim.collectorCarry) {
-            sim.pickupTimer += dt;
-            sim.collectorX += 150 * dt;
-            if (sim.pickupTimer > 1.1) sim.collectorDone = true;
-          }
+        // After the wreck, scrolling resets the scene: the same truck returns.
+        if (sim.collectorScrollReady && !sim.collectorDone) {
+          sim.collectorDone = true;
+          sim.collector = false;
+          sim.wrecked = false;
+          sim.falling = false;
+          sim.wreckParts = false;
+          sim.worldX = -W * 0.9;
+          sim.speed = 260;
+          sim.impulse = 0;
+          sim.wreckX = 0;
+          sim.wreckY = 0;
+          sim.drag = false;
         }
         return;
       }
@@ -1177,7 +1179,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
       <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 z-0" aria-hidden="true" />
       <div className="pointer-events-none fixed bottom-5 left-1/2 z-20 -translate-x-1/2 rounded-full border border-[#c2a378]/30 bg-black/45 px-4 py-2 text-[8px] font-black uppercase tracking-[.22em] text-white/70 backdrop-blur-md">
-        CLICK & DRAG THE TRUCK · DROP IT · SCROLL TO SEND ANOTHER
+        CLICK & DRAG THE TRUCK · DROP IT · SCROLL TO RESTART THE ROUTE
       </div>
 
       {/* route progress (scroll) */}
