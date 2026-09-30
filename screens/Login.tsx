@@ -467,9 +467,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                           <div className="absolute left-1/2 top-1/2 h-8 w-[62%] -translate-x-1/2 -translate-y-1/2 rounded-[50%] border border-[#C2A378]/45 [transform:rotateX(62deg)] core-spin-reverse"></div>
                         </div>
                         <p className="relative z-10 text-[#C2A378] text-[9px] sm:text-[10px] font-black uppercase tracking-[0.5em] leading-none">NILE FLEET</p>
-                        <h3 className="relative z-10 mt-3 text-white text-[2rem] sm:text-4xl font-black uppercase italic tracking-[-0.045em] leading-none">WELCOME <span className="welcome-letter-3d inline-block text-[#C2A378]">BACK</span></h3>
+                        <h3 className="relative z-10 mt-3 text-white text-[2rem] sm:text-4xl font-black uppercase italic tracking-[-0.045em] leading-none">WELCOME <span className="inline-block text-[#C2A378]">BACK</span></h3>
                         <div className="relative z-10 mt-3 inline-flex items-center gap-2 text-xl sm:text-2xl font-black uppercase tracking-[0.18em] text-white">
-                          <span className="welcome-letter-3d text-[#C2A378]">B</span><span>E</span><span className="welcome-letter-3d">B</span><span>I</span><span className="welcome-letter-3d text-[#C2A378]">T</span><span>O</span>
+                          <span className="text-[#C2A378]">B</span><span>E</span><span className="text-[#C2A378]">B</span><span>I</span><span className="text-[#C2A378]">T</span><span>O</span>
                         </div>
                         <p className="relative z-10 max-w-xs mx-auto mt-4 text-slate-300 text-[10px] sm:text-xs font-bold leading-relaxed tracking-wide">{welcomeQuote}</p>
                       </div>
