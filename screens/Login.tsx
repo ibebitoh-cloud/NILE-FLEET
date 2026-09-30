@@ -229,23 +229,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     );
   };
 
-  const welcomeName = (email.split('@')[0] || 'TEAM MEMBER').replace(/[._-]+/g, ' ').trim().toUpperCase();
-  const welcomeMessages = isAr
-    ? [
-        'كل تفصيلة صحيحة اليوم تجعل تشغيل الغد أسهل.',
-        'التركيز على التفاصيل هو ما يجعل كل عملية تسير بالشكل الصحيح.',
-        'شغلك اليوم يحافظ على استمرار حركة الأسطول.',
-        'خطوة دقيقة اليوم تصنع عملية أقوى غداً.',
-        'معاً نحافظ على التشغيل منظماً، سريعاً وموثوقاً.'
-      ]
-    : [
-        'Every detail done right today makes tomorrow’s operation easier.',
-        'Sharp details keep every operation moving in the right direction.',
-        'Your work today keeps the fleet moving.',
-        'One precise step today builds a stronger operation tomorrow.',
-        'Together, we keep the operation organized, fast and reliable.'
-      ];
-  const welcomeQuote = welcomeMessages[Math.floor((welcomeStyle * 7 + welcomeName.length) % welcomeMessages.length)];
+  const welcomeQuote = 'Sharp details keep every operation moving in the right direction.';
+
 
   return (
     <div className={`min-h-screen flex items-center justify-center p-0 m-0 relative overflow-hidden font-sans transition-colors duration-1000 ${isDark ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'} ${isAr ? 'rtl font-cairo' : 'ltr'}`}>
@@ -394,9 +379,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   <div className="w-full min-h-[340px] flex flex-col items-center justify-center text-center relative overflow-hidden">
                     <div className="welcome-glow absolute h-48 w-48 rounded-full bg-[#C2A378]/10 blur-3xl"></div>
                     <div className="relative z-10 space-y-4">
-                      <p className="welcome-rise text-[#C2A378] text-[9px] font-black uppercase tracking-[0.55em]" style={{animationDelay:'0ms'}}>{isAr ? 'شركة المولدات' : 'GENSET COMPANY'}</p>
+                      <p className="welcome-rise text-[#C2A378] text-[9px] font-black uppercase tracking-[0.55em]" style={{animationDelay:'0ms'}}>{isAr ? 'نايل فليت' : 'NILE FLEET'}</p>
                       <h3 className="welcome-rise text-white text-3xl sm:text-4xl font-black uppercase italic tracking-tighter" style={{animationDelay:'100ms'}}>WELCOME BACK</h3>
-                      <div className="welcome-rise text-[#C2A378] text-xl sm:text-2xl font-black uppercase tracking-[0.16em]" style={{animationDelay:'220ms'}}>{welcomeName}</div>
+                      <div className="welcome-rise text-[#C2A378] text-xl sm:text-2xl font-black uppercase tracking-[0.16em]" style={{animationDelay:'220ms'}}>BEBITO</div>
                       <p className="welcome-rise max-w-xs mx-auto text-slate-300 text-[10px] sm:text-xs font-bold leading-relaxed tracking-wide" style={{animationDelay:'360ms'}}>{welcomeQuote}</p>
                       <button type="button" onClick={enterApp} className="welcome-rise mt-3 px-9 py-3 bg-[#001F3F] hover:bg-[#002b57] border border-[#C2A378]/40 text-white font-black rounded-full uppercase tracking-[0.3em] text-[9px] transition-all active:scale-[0.97] shadow-[0_0_30px_rgba(194,163,120,.12)]" style={{animationDelay:'520ms'}}>{isAr ? 'دخول إلى النظام' : 'ENTER SYSTEM'}</button>
                     </div>
