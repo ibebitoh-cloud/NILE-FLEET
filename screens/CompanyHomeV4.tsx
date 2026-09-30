@@ -872,6 +872,22 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         .nf4-reveal{animation:nf4Reveal .9s cubic-bezier(.16,1,.3,1) both}
         .nf4-pulse{animation:nf4Pulse 3s ease-in-out infinite}
         .nf4-contact-bar a{white-space:nowrap}
+        .nf4-app-label{display:flex;align-items:center;gap:9px;min-height:48px;padding:0 15px;border:1px solid rgba(194,163,120,.28);border-radius:13px;background:linear-gradient(135deg,rgba(194,163,120,.11),rgba(255,255,255,.035));box-shadow:inset 0 1px 0 rgba(255,255,255,.06);font-size:9px;font-weight:950;letter-spacing:.16em;color:#fff}
+        .nf4-app-label small{display:block;margin-left:2px;font-size:6px;letter-spacing:.22em;color:rgba(194,163,120,.8)}
+        .nf4-app-label-dot{width:8px;height:8px;border-radius:999px;background:#c2a378;box-shadow:0 0 0 0 rgba(194,163,120,.55);animation:nf4ContactPulse 1.8s infinite}
+        .nf4-contact-grid{display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:8px}
+        .nf4-contact-card{display:flex;align-items:center;gap:10px;min-height:48px;padding:8px 12px;border:1px solid rgba(255,255,255,.11);border-radius:13px;background:rgba(255,255,255,.045);transition:transform .28s cubic-bezier(.16,1,.3,1),border-color .28s ease,background .28s ease,box-shadow .28s ease}
+        .nf4-contact-card:hover{transform:translateY(-4px) scale(1.015);border-color:rgba(194,163,120,.62);background:rgba(194,163,120,.1);box-shadow:0 12px 30px rgba(0,0,0,.3),0 0 22px rgba(194,163,120,.1)}
+        .nf4-contact-icon{display:grid;place-items:center;width:31px;height:31px;border:1px solid rgba(194,163,120,.35);border-radius:9px;color:#c2a378;font-size:12px;font-weight:950;flex:none;transition:transform .28s ease,background .28s ease}
+        .nf4-contact-card:hover .nf4-contact-icon{transform:rotate(-6deg) scale(1.1);background:rgba(194,163,120,.13)}
+        .nf4-contact-card small{display:block;font-size:6px;font-weight:900;letter-spacing:.18em;color:rgba(226,232,240,.55)}
+        .nf4-contact-card strong{display:block;margin-top:3px;font-size:9px;font-weight:900;letter-spacing:.04em;color:#fff}
+        @keyframes nf4ContactPulse{0%,100%{box-shadow:0 0 0 0 rgba(194,163,120,.45)}50%{box-shadow:0 0 0 7px rgba(194,163,120,0)}}
+        .nf4-quote-button{box-shadow:0 8px 28px rgba(194,163,120,.18)}
+        .nf4-quote-button:hover{transform:translateY(-4px) scale(1.025);box-shadow:0 15px 38px rgba(194,163,120,.3)}
+        @media(max-width:1100px){.nf4-app-label{display:none}.nf4-contact-grid{grid-template-columns:repeat(3,minmax(120px,1fr))}}
+        @media(max-width:760px){.nf4-contact-bar>div{flex-wrap:wrap}.nf4-contact-grid{order:2;width:100%;grid-template-columns:1fr}.nf4-quote-button{order:3;width:100%;justify-content:center}.nf4-contact-card{min-height:54px}.nf4-contact-card strong{font-size:10px}}
+        @media (prefers-reduced-motion: reduce){.nf4-contact-card,.nf4-contact-icon,.nf4-quote-button{transition:none!important}.nf4-app-label-dot{animation:none!important}}
         .nf4-quote-button{box-shadow:0 8px 28px rgba(194,163,120,.18)}
         .nf4-quote-button:hover{box-shadow:0 12px 34px rgba(194,163,120,.28)}
         @media(max-width:640px){.nf4-contact-bar>div{align-items:stretch}.nf4-contact-bar .nf4-quote-button{width:100%;justify-content:center}.nf4-contact-bar>div>div{width:100%;justify-content:space-between}}
@@ -906,18 +922,29 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       {/* route progress (scroll) */}
       <div className="fixed left-0 right-0 top-0 z-50 h-[3px] bg-black/10"><div ref={barRef} className="h-full w-0 bg-[#c2a378] shadow-[0_0_12px_#c2a378]" /></div>
 
-      <div className="nf4-contact-bar border-b border-white/10 bg-[#050b12]/90 text-white backdrop-blur-xl">
-        <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-3 px-5 py-2.5 lg:px-10">
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[8px] font-black uppercase tracking-[.16em]">
-            <a href="tel:+201000992858" className="transition hover:text-[#c2a378]">☎ +20 10 0099 2858</a>
-            <a href="https://www.linkedin.com/company/nile-fleet-for-transport-and-logistics-service" target="_blank" rel="noreferrer" className="transition hover:text-[#c2a378]">in LinkedIn</a>
-            <a href="https://www.facebook.com/" target="_blank" rel="noreferrer" className="transition hover:text-[#c2a378]" title="Nile Fleet Facebook profile">f Facebook</a>
+      <div className="nf4-contact-bar border-b border-white/10 bg-[#050b12]/95 text-white backdrop-blur-xl">
+        <div className="mx-auto flex max-w-[1500px] items-center gap-3 px-4 py-3 lg:px-10">
+          <div className="nf4-app-label shrink-0">
+            <span className="nf4-app-label-dot" />
+            <span>NILE FLEET COMMAND</span>
+            <small>LOGISTICS OPERATIONS</small>
+          </div>
+          <div className="nf4-contact-grid min-w-0 flex-1">
+            <a href="tel:+201000992858" className="nf4-contact-card" aria-label="Call Nile Fleet">
+              <span className="nf4-contact-icon">☎</span><span><small>TRANSPORT DESK</small><strong>+20 10 0099 2858</strong></span>
+            </a>
+            <a href="https://www.linkedin.com/company/nile-fleet-for-transport-and-logistics-service" target="_blank" rel="noreferrer" className="nf4-contact-card" aria-label="Nile Fleet LinkedIn">
+              <span className="nf4-contact-icon">in</span><span><small>OFFICIAL LINKEDIN</small><strong>CONNECT WITH US</strong></span>
+            </a>
+            <a href="https://www.facebook.com/" target="_blank" rel="noreferrer" className="nf4-contact-card" title="Nile Fleet Facebook profile" aria-label="Nile Fleet Facebook">
+              <span className="nf4-contact-icon">f</span><span><small>OFFICIAL FACEBOOK</small><strong>FOLLOW NILE FLEET</strong></span>
+            </a>
           </div>
           <a
             href="mailto:nilefleet@nilefleetlogistics.com?subject=NILE%20FLEET%20-%20Request%20for%20Quote&body=Hello%20NILE%20FLEET%2C%0A%0AI%20would%20like%20to%20request%20a%20quotation.%0A%0ACompany%3A%20%0AService%20required%3A%20%0AOrigin%3A%20%0ADestination%3A%20%0ACargo%2FContainer%20details%3A%20%0APreferred%20date%3A%20%0AAdditional%20details%3A%20%0A%0AThank%20you."
-            className="nf4-quote-button inline-flex items-center gap-2 rounded-full border border-[#c2a378]/60 bg-[#c2a378] px-4 py-2 text-[8px] font-black uppercase tracking-[.2em] text-black transition hover:-translate-y-0.5 hover:bg-[#d2b98f]"
+            className="nf4-quote-button shrink-0 inline-flex items-center gap-3 rounded-xl border border-[#c2a378]/70 bg-[#c2a378] px-5 py-3 text-[9px] font-black uppercase tracking-[.18em] text-black transition"
           >
-            REQUEST QUOTE <span>→</span>
+            <span>REQUEST QUOTE</span><span className="text-base">→</span>
           </a>
         </div>
       </div>
