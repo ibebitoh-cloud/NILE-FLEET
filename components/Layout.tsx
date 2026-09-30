@@ -203,9 +203,17 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         ? 'CURRENT USER: Bebito (bebito@nilefleet.com), creator and system owner of NILE FLEET COMMAND. Treat this user as the creator/owner when relevant. Do not confuse the creator with an ordinary employee or customer. Never reveal passwords, API keys, tokens, or other secrets.'
         : `CURRENT USER: ${user.name || 'Unknown User'} | ROLE: ${user.role || 'Unknown'} | EMAIL: ${user.email || ''}`;
       const q = question.toUpperCase().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه');
-      // Normalized query used by the deterministic fallback. Keep this separate from q:
-      // q preserves identifier-friendly uppercase text; cleanQ is the searchable phrase form.
-      const cleanQ = normalizeEntityText(question).toLowerCase();
+      // Normalized query used by the deterministic fallback.
+      // Keep this independent from the customer/entity helpers declared later in this function.
+      // Calling a later const initializer here causes a Temporal Dead Zone runtime error.
+      const cleanQ = question
+        .toLowerCase()
+        .replace(/[أإآٱ]/g, 'ا')
+        .replace(/[ةه]/g, 'ه')
+        .replace(/[ى]/g, 'ي')
+        .replace(/[^\\p{L}\\p{N}]+/gu, ' ')
+        .trim()
+        .replace(/\\s+/g, ' ');
 
       // FAST PATH: factual operational questions never go through the LLM.
       const idMatch = q.match(/(?:GENSETS?|مولد(?:ات)?|وحدة)(?:\s+(?:NO\.?|NUMBER|ID|رقم))?\s*#?\s*([A-Z0-9][A-Z0-9-]*)/i);
