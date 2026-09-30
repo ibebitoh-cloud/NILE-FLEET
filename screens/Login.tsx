@@ -444,7 +444,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                               <path className="stick-white" d="M160 39 h20 l10 13 h-30z" />
                             </g>
                           </svg>
-                        </div></div>
+                        </div>
                         <p className="relative z-10 text-[#C2A378] text-[7px] sm:text-[8px] font-black uppercase tracking-[0.3em] whitespace-nowrap">POWERED BY <span className="text-white">BEBITO</span></p>
                       </div>
                     </div>
