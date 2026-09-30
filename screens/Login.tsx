@@ -14,7 +14,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [stage, setStage] = useState<'form' | 'verifying' | 'granted'>('form');
+  const [stage, setStage] = useState<'form' | 'verifying' | 'granted' | 'welcome'>('form');
+  const [welcomeStyle, setWelcomeStyle] = useState(0);
   const [progress, setProgress] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -177,7 +178,17 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     enterRef.current = enter;
     setProgress(100);
     await new Promise(r => setTimeout(r, 450));
-    setStage('granted');
+    enterWelcome();
+  };
+
+  const enterWelcome = () => {
+    const styles = [0, 1, 2, 3, 4, 5, 6];
+    const previous = Number(sessionStorage.getItem('nilefleet_welcome_style') || '-1');
+    const available = styles.filter(s => s !== previous);
+    const next = available[Math.floor(Math.random() * available.length)];
+    sessionStorage.setItem('nilefleet_welcome_style', String(next));
+    setWelcomeStyle(next);
+    setStage('welcome');
   };
 
   const enterApp = () => {
@@ -198,7 +209,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   // "Access Granted" screen continues on its own after a moment (button skips the wait).
   useEffect(() => {
     if (stage !== 'granted') return;
-    const id = window.setTimeout(enterApp, 1600);
+    const id = window.setTimeout(enterWelcome, 900);
     return () => window.clearTimeout(id);
   }, [stage]);
 
@@ -217,6 +228,24 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       </span>
     );
   };
+
+  const welcomeName = (email.split('@')[0] || 'TEAM MEMBER').replace(/[._-]+/g, ' ').trim().toUpperCase();
+  const welcomeMessages = isAr
+    ? [
+        'كل تفصيلة صحيحة اليوم تجعل تشغيل الغد أسهل.',
+        'التركيز على التفاصيل هو ما يجعل كل عملية تسير بالشكل الصحيح.',
+        'شغلك اليوم يحافظ على استمرار حركة الأسطول.',
+        'خطوة دقيقة اليوم تصنع عملية أقوى غداً.',
+        'معاً نحافظ على التشغيل منظماً، سريعاً وموثوقاً.'
+      ]
+    : [
+        'Every detail done right today makes tomorrow’s operation easier.',
+        'Sharp details keep every operation moving in the right direction.',
+        'Your work today keeps the fleet moving.',
+        'One precise step today builds a stronger operation tomorrow.',
+        'Together, we keep the operation organized, fast and reliable.'
+      ];
+  const welcomeQuote = welcomeMessages[Math.floor((welcomeStyle * 7 + welcomeName.length) % welcomeMessages.length)];
 
   return (
     <div className={`min-h-screen flex items-center justify-center p-0 m-0 relative overflow-hidden font-sans transition-colors duration-1000 ${isDark ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'} ${isAr ? 'rtl font-cairo' : 'ltr'}`}>
@@ -241,6 +270,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         .signal-glitch { animation: signalGlitch 7s steps(1) infinite; }
         @keyframes confettiBurst { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0.5); opacity: 0; } }
         @keyframes popIn { 0% { transform: scale(0.4); opacity: 0; } 70% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); } }
+        @keyframes welcomeRise { 0% { opacity: 0; transform: translateY(22px); filter: blur(8px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } }
+        @keyframes welcomeGlow { 0%,100% { opacity: .35; transform: scale(.96); } 50% { opacity: .9; transform: scale(1.04); } }
+        @keyframes footerSweep { 0% { transform: translateX(-130%); } 45%,100% { transform: translateX(130%); } }
+        @keyframes footerPulse { 0%,100% { opacity:.55; letter-spacing:.35em; } 50% { opacity:1; letter-spacing:.48em; } }
+        @keyframes footerGlitch { 0%,88%,100% { transform:translateX(0); opacity:.7; } 90% { transform:translateX(3px); opacity:1; } 92% { transform:translateX(-2px); opacity:.8; } }
+        @keyframes footerOrbit { from { transform:rotate(0deg) translateX(42px) rotate(0deg); } to { transform:rotate(360deg) translateX(42px) rotate(-360deg); } }
+        .welcome-rise { animation: welcomeRise .75s cubic-bezier(.2,.8,.2,1) both; }
+        .welcome-glow { animation: welcomeGlow 2.8s ease-in-out infinite; }
+        .footer-sweep { animation: footerSweep 3.8s ease-in-out infinite; }
+        .footer-pulse { animation: footerPulse 2.6s ease-in-out infinite; }
+        .footer-glitch { animation: footerGlitch 4.5s steps(1) infinite; }
+        .footer-orbit { animation: footerOrbit 4s linear infinite; }
       `}</style>
 
       <div className="login-screen-shell w-full min-h-screen lg:h-screen grid grid-cols-1 lg:grid-cols-12 overflow-hidden relative z-10">
@@ -332,7 +373,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       <span className={`absolute inset-0 flex items-center justify-center text-lg font-black ${isDark ? 'text-white' : 'text-[#001F3F]'}`}>{Math.round(progress)}</span>
                     </div>
                   </>
-                ) : (
+                ) : stage === 'granted' ? (
                   <>
                     <h3 className={`text-2xl font-black uppercase italic tracking-tighter ${isDark ? 'text-white' : 'text-[#001F3F]'}`}>{isAr ? 'تم منح الوصول' : 'ACCESS GRANTED'}</h3>
                     <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">{isAr ? 'مرحباً بعودتك' : 'Welcome back'}</p>
@@ -347,8 +388,19 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
                       </div>
                     </div>
-                    <button type="button" onClick={enterApp} className="mt-3 px-8 min-h-10 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-full uppercase tracking-[0.3em] text-[9px] transition-all active:scale-[0.97]">{isAr ? 'دخول' : 'ENTER'}</button>
+                    <button type="button" onClick={enterWelcome} className="mt-3 px-8 min-h-10 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-full uppercase tracking-[0.3em] text-[9px] transition-all active:scale-[0.97]">{isAr ? 'متابعة' : 'CONTINUE'}</button>
                   </>
+                ) : (
+                  <div className="w-full min-h-[340px] flex flex-col items-center justify-center text-center relative overflow-hidden">
+                    <div className="welcome-glow absolute h-48 w-48 rounded-full bg-[#C2A378]/10 blur-3xl"></div>
+                    <div className="relative z-10 space-y-4">
+                      <p className="welcome-rise text-[#C2A378] text-[9px] font-black uppercase tracking-[0.55em]" style={{animationDelay:'0ms'}}>{isAr ? 'شركة المولدات' : 'GENSET COMPANY'}</p>
+                      <h3 className="welcome-rise text-white text-3xl sm:text-4xl font-black uppercase italic tracking-tighter" style={{animationDelay:'100ms'}}>WELCOME BACK</h3>
+                      <div className="welcome-rise text-[#C2A378] text-xl sm:text-2xl font-black uppercase tracking-[0.16em]" style={{animationDelay:'220ms'}}>{welcomeName}</div>
+                      <p className="welcome-rise max-w-xs mx-auto text-slate-300 text-[10px] sm:text-xs font-bold leading-relaxed tracking-wide" style={{animationDelay:'360ms'}}>{welcomeQuote}</p>
+                      <button type="button" onClick={enterApp} className="welcome-rise mt-3 px-9 py-3 bg-[#001F3F] hover:bg-[#002b57] border border-[#C2A378]/40 text-white font-black rounded-full uppercase tracking-[0.3em] text-[9px] transition-all active:scale-[0.97] shadow-[0_0_30px_rgba(194,163,120,.12)]" style={{animationDelay:'520ms'}}>{isAr ? 'دخول إلى النظام' : 'ENTER SYSTEM'}</button>
+                    </div>
+                  </div>
                 )}
               </div>
             ) : (
@@ -373,7 +425,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               </div>
 
               <button type="submit" className="w-full min-h-12 sm:min-h-12 bg-[#001F3F] hover:bg-[#002b57] text-white font-black py-3 sm:py-4 rounded-xl transition-all uppercase tracking-[0.28em] sm:tracking-[0.4em] text-[9px] sm:text-[10px] shadow-2xl active:scale-[0.98] mt-3 relative overflow-hidden group/btn border border-white/5">
-                <span className="relative z-10">{t.initializeCommand}</span>
+                <span className="relative z-10">{isAr ? 'دخول إلى النظام' : 'ENTER SYSTEM'}</span>
                 <div className="absolute inset-0 bg-[#C2A378] translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500 opacity-20"></div>
               </button>
             </form>
@@ -385,9 +437,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <div className="relative pt-3 sm:pt-5 border-t border-slate-100 dark:border-white/5">
                <div className="flex flex-col items-center gap-1 select-none transition-all mx-auto w-fit text-center font-sans">
                   <div className="bg-slate-50/85 dark:bg-slate-800/50 px-5 sm:px-8 py-2.5 rounded-full border border-slate-100 dark:border-white/10 shadow-sm">
-                     <p className="text-[8px] font-black uppercase tracking-[0.35em] sm:tracking-[0.6em] text-slate-400 py-1 leading-none">
-                       POWERED BY BEBITO
+                     <div className="relative overflow-hidden rounded-full px-5 sm:px-8 py-2.5 bg-slate-50/85 dark:bg-slate-800/50 border border-slate-100 dark:border-white/10 shadow-sm">
+                     <span className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-[#C2A378]/60 to-transparent footer-sweep"></span>
+                     <p className={`relative text-[8px] font-black uppercase text-slate-400 py-1 leading-none ${welcomeStyle % 3 === 0 ? 'footer-pulse' : welcomeStyle % 3 === 1 ? 'footer-glitch' : 'tracking-[0.42em]'}`}>
+                       POWERED BY <span className="text-[#C2A378]">BEBITO</span>
                      </p>
+                     {welcomeStyle === 4 && <span className="footer-orbit absolute left-1/2 top-1/2 h-1.5 w-1.5 rounded-full bg-[#C2A378] shadow-[0_0_12px_#C2A378]"></span>}
+                  </div>
                   </div>
                </div>
             </div>
