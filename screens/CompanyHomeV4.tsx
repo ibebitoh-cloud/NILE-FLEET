@@ -1424,17 +1424,17 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                 <h2 className="text-5xl font-black italic leading-[.9] tracking-[-.05em] sm:text-7xl">{ar ? <>شركاء <span className={gold}>النجاح.</span></> : <>Partners in <span className={gold}>success.</span></>}</h2>
                 <p className={`max-w-sm text-xs leading-6 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{tx.partnersDesc}</p>
               </div>
-              <div className={`nf4-logo-viewport mt-14 overflow-hidden rounded-[2rem] border py-8 ${isDark ? 'border-white/10 bg-black/30' : 'border-black/10 bg-slate-50/90'}`}>
-                <div className="nf4-logo-track flex w-max items-center gap-4 px-4">
+              <div className={`nf4-logo-viewport mt-12 overflow-hidden rounded-[1.4rem] border p-2 shadow-[0_18px_50px_rgba(15,23,42,.08)] ${isDark ? 'border-white/10 bg-black/20' : 'border-black/[.08] bg-white/45'}`}>
+                <div className="nf4-logo-track flex w-max items-center gap-3 px-1 py-1">
                   {[...PARTNER_LOGOS, ...PARTNER_LOGOS].map((p, i) => (
-                    <a key={`${p.name}-${i}`} href={p.url} target="_blank" rel="noreferrer" className={`group flex h-28 min-w-[230px] items-center justify-center rounded-2xl border px-7 text-center transition duration-500 hover:-translate-y-1 hover:border-[#c2a378]/60 ${isDark ? 'border-white/10 bg-white/[.035] hover:bg-white/[.06]' : 'border-black/10 bg-white hover:bg-slate-50 shadow-sm'}`}>
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white p-2 shadow-[0_0_30px_rgba(255,255,255,.08)]">
+                    <a key={`${p.name}-${i}`} href={p.url} target="_blank" rel="noreferrer" className={`group flex h-[76px] min-w-[190px] items-center justify-center rounded-xl border px-4 text-center transition duration-500 hover:-translate-y-0.5 hover:border-[#c2a378]/70 ${isDark ? 'border-white/[.09] bg-white/[.025] hover:bg-white/[.055]' : 'border-black/[.07] bg-white/75 hover:bg-white shadow-sm'}`}>
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white p-1.5 shadow-[0_4px_18px_rgba(15,23,42,.08)]">
                           <img src={p.logo} alt={`${p.name} logo`} className="h-full w-full object-contain" loading="lazy" />
                         </div>
                         <div className="text-left">
-                          <div className={`text-[9px] font-black tracking-[.12em] ${isDark ? 'text-white' : 'text-[#0b1a2b]'}`}>{p.name}</div>
-                          <div className="mt-1 text-[7px] font-bold tracking-[.16em] text-[#c2a378]">{p.type}</div>
+                          <div className={`text-[8px] font-black tracking-[.1em] ${isDark ? 'text-white' : 'text-[#0b1a2b]'}`}>{p.name}</div>
+                          <div className="mt-1 text-[6px] font-bold tracking-[.13em] text-[#c2a378]">{p.type}</div>
                         </div>
                       </div>
                     </a>
