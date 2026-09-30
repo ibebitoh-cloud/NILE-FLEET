@@ -311,6 +311,23 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         .signature-stage.welcome-anim-0 .signature-letter:nth-of-type(4),
         .signature-stage.welcome-anim-0 .signature-letter:nth-of-type(5),
         .signature-stage.welcome-anim-0 .signature-letter:nth-of-type(6) { animation:sigLetterReact 2.9s ease-in-out infinite; }
+        @keyframes sigContactHand { 0%,18%{transform:rotate(24deg) translate(0,0)} 32%{transform:rotate(-8deg) translate(3px,-1px)} 42%{transform:rotate(-35deg) translate(12px,-4px)} 48%{transform:rotate(-48deg) translate(20px,-3px)} 54%{transform:rotate(-25deg) translate(10px,0)} 70%,100%{transform:rotate(24deg) translate(0,0)} }
+        @keyframes sigContactHead { 0%,28%{transform:translate(0,0) rotate(0)} 40%{transform:translate(7px,2px) rotate(9deg)} 48%{transform:translate(14px,3px) rotate(14deg)} 56%{transform:translate(6px,1px) rotate(6deg)} 72%,100%{transform:translate(0,0) rotate(0)} }
+        @keyframes sigContactFoot { 0%,30%{transform:rotate(18deg)} 42%{transform:rotate(-8deg)} 52%{transform:rotate(-30deg)} 60%{transform:rotate(-5deg)} 76%,100%{transform:rotate(18deg)} }
+        @keyframes sigLetterTouch { 0%,38%,100%{transform:translate(0,0) rotate(0)} 44%{transform:translate(2px,-1px) rotate(-2deg)} 49%{transform:translate(6px,0) rotate(4deg)} 54%{transform:translate(2px,1px) rotate(-2deg)} 64%{transform:translate(0,0) rotate(0)} }
+        @keyframes sigContactPulse { 0%,42%,100%{opacity:0;transform:scale(.4)} 47%{opacity:1;transform:scale(1.15)} 55%{opacity:0;transform:scale(1.6)} }
+        .signature-character .sig-contact-hand { transform-origin:31px 35px; animation:sigContactHand 3s ease-in-out infinite; }
+        .signature-character .sig-contact-head { transform-origin:31px 20px; animation:sigContactHead 3s ease-in-out infinite; }
+        .signature-character .sig-contact-foot { transform-origin:31px 51px; animation:sigContactFoot 3s ease-in-out infinite; }
+        .signature-character .sig-contact-pulse { transform-origin:center; animation:sigContactPulse 3s ease-out infinite; }
+        .signature-stage.welcome-anim-0 .signature-letter,
+        .signature-stage.welcome-anim-1 .signature-letter,
+        .signature-stage.welcome-anim-2 .signature-letter,
+        .signature-stage.welcome-anim-3 .signature-letter,
+        .signature-stage.welcome-anim-4 .signature-letter,
+        .signature-stage.welcome-anim-5 .signature-letter,
+        .signature-stage.welcome-anim-6 .signature-letter,
+        .signature-stage.welcome-anim-7 .signature-letter { animation:sigLetterTouch 3s ease-in-out infinite; }
         /* Physical BEBITO interaction stories — letters are the objects the stickman manipulates. */
         .signature-stage { position:relative; min-height:82px; width:100%; overflow:visible; }
         .signature-word { position:relative; z-index:6; gap:.05em; }
@@ -545,13 +562,14 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         <div className={`signature-character sig-scene-${welcomeStyle}`} aria-hidden="true">
                           <svg viewBox="0 0 62 72" role="presentation">
                             <g className="sig-body">
-                              <g className="sig-head-action"><circle className="sig-line" cx="31" cy="20" r="7"/><circle className="sig-dot" cx="33.5" cy="19" r="1.2"/></g>
+                              <g className="sig-contact-head"><circle className="sig-line" cx="31" cy="20" r="7"/><circle className="sig-dot" cx="33.5" cy="19" r="1.2"/></g>
                               <path className="sig-line" d="M31 27 L31 51"/>
-                              <g className="sig-arm-a"><path className="sig-line" d="M31 35 L17 43 L8 35"/></g>
-                              <g className="sig-arm-b"><path className="sig-line" d="M31 35 L45 40 L54 32"/></g>
-                              <g className="sig-leg-a"><path className="sig-line" d="M31 51 L20 64 L12 69"/></g>
-                              <g className="sig-leg-b"><path className="sig-line" d="M31 51 L42 63 L51 68"/></g>
-                              <circle className="sig-dot" cx="54" cy="32" r="1.8"/>
+                              <g className="sig-contact-hand"><path className="sig-line" d="M31 35 L17 43 L8 35 L3 27"/></g>
+                              <path className="sig-line" d="M31 35 L45 40 L54 32"/>
+                              <g className="sig-contact-foot"><path className="sig-line" d="M31 51 L20 64 L12 69"/></g>
+                              <path className="sig-line" d="M31 51 L42 63 L51 68"/>
+                              <circle className="sig-dot" cx="3" cy="27" r="1.8"/>
+                              <circle className="sig-contact-pulse" cx="3" cy="27" r="4" fill="none" stroke="#C2A378" stroke-width="1.5"/>
                             </g>
                             <path className="sig-accent" d="M3 69 H59"/>
                             <circle className="sig-dot" cx="57" cy="69" r="1.3"/>
