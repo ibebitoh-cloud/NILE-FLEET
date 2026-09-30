@@ -161,7 +161,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   const enterWelcome = () => {
-    const styles = [0, 1, 2, 3, 4, 5];
+    const styles = [0, 1, 2, 3, 4, 5, 6, 7];
     const previous = Number(sessionStorage.getItem('nilefleet_welcome_style') || '-1');
     const available = styles.filter(s => s !== previous);
     const next = available[Math.floor(Math.random() * available.length)];
@@ -281,6 +281,59 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         .signature-word { position:relative; z-index:3; display:inline-flex; align-items:baseline; justify-content:center; gap:.08em; }
         .signature-letter { display:inline-block; transform-origin:center bottom; will-change:transform,opacity,text-shadow; }
         .signature-letter-space { width:.28em; }
+
+        /* Physical BEBITO interaction stories — letters are the objects the stickman manipulates. */
+        .signature-stage { position:relative; min-height:82px; width:100%; overflow:visible; }
+        .signature-word { position:relative; z-index:6; gap:.05em; }
+        .signature-letter { position:relative; display:inline-block; min-width:.62em; text-align:center; transform-origin:center 80%; will-change:transform,opacity,filter; }
+        .signature-stage::after { content:""; position:absolute; left:50%; bottom:5px; width:72%; height:8px; transform:translateX(-50%); border-bottom:1px solid rgba(194,163,120,.18); border-radius:50%; pointer-events:none; }
+        @keyframes physShuffleB { 0%,12%{transform:translate(0,0) rotate(0)} 24%{transform:translate(-12px,-10px) rotate(-12deg)} 38%{transform:translate(28px,7px) rotate(15deg)} 52%{transform:translate(8px,-7px) rotate(-7deg)} 68%,100%{transform:translate(0,0) rotate(0)} }
+        @keyframes physShuffleE { 0%,18%{transform:translate(0,0)} 32%{transform:translate(18px,9px) rotate(10deg)} 46%{transform:translate(-22px,-6px) rotate(-12deg)} 64%,100%{transform:translate(0,0)} }
+        @keyframes physBuild { 0%{transform:translate(var(--sx),-18px) scale(.72);opacity:.15} 28%{opacity:1} 58%,100%{transform:translate(0,0) scale(1);opacity:1} }
+        @keyframes physThrow { 0%,22%{transform:translate(0,0) rotate(0) scale(1)} 42%{transform:translate(58px,-28px) rotate(120deg) scale(1.06)} 60%{transform:translate(0,0) rotate(360deg) scale(1)} 72%,100%{transform:translate(0,0) rotate(360deg)} }
+        @keyframes physPull { 0%,25%{transform:translate(0,0) rotate(0)} 45%{transform:translate(24px,0) rotate(4deg)} 62%{transform:translate(9px,0) rotate(-2deg)} 78%,100%{transform:translate(0,0)} }
+        @keyframes physCrane { 0%,18%{transform:translateY(-25px) rotate(-8deg);opacity:.25} 40%{opacity:1} 58%{transform:translateY(2px) rotate(3deg)} 72%{transform:translateY(0) rotate(0)} 100%{transform:translateY(0) rotate(0)} }
+        @keyframes physConveyor { 0%,15%{transform:translateX(-34px);opacity:.25} 38%{opacity:1} 58%{transform:translateX(8px) rotate(4deg)} 76%,100%{transform:translateX(0) rotate(0);opacity:1} }
+        @keyframes physInspect { 0%,28%{transform:translate(0,0) rotate(0)} 44%{transform:translateY(-6px) rotate(-4deg)} 56%{transform:translateY(2px) rotate(3deg)} 70%,100%{transform:translate(0,0) rotate(0)} }
+        @keyframes physAssemble { 0%{transform:translateY(22px) scale(.82);opacity:.15} 18%{opacity:1} 48%{transform:translateY(-3px) scale(1.05)} 62%,100%{transform:translateY(0) scale(1);opacity:1} }
+        @keyframes stickInteraction { 0%,100%{transform:translateX(0)} 45%{transform:translateX(7px)} 60%{transform:translateX(2px)} }
+        @keyframes stickInteractionBack { 0%,100%{transform:translateX(0)} 45%{transform:translateX(-7px)} 60%{transform:translateX(-2px)} }
+        .welcome-anim-0 .signature-letter:nth-child(5){animation:physShuffleB 4.8s ease-in-out infinite;}
+        .welcome-anim-0 .signature-letter:nth-child(6){animation:physShuffleE 4.8s ease-in-out infinite .12s;}
+        .welcome-anim-0 .signature-letter:nth-child(7){animation:physShuffleB 4.8s ease-in-out infinite .24s;}
+        .welcome-anim-1 .signature-letter:nth-child(5){--sx:-54px;animation:physBuild 5.4s cubic-bezier(.2,.8,.2,1) infinite;}
+        .welcome-anim-1 .signature-letter:nth-child(6){--sx:36px;animation:physBuild 5.4s cubic-bezier(.2,.8,.2,1) infinite .55s;}
+        .welcome-anim-1 .signature-letter:nth-child(7){--sx:-28px;animation:physBuild 5.4s cubic-bezier(.2,.8,.2,1) infinite 1.1s;}
+        .welcome-anim-2 .signature-letter:nth-child(10){animation:physThrow 5s cubic-bezier(.2,.75,.2,1) infinite;}
+        .welcome-anim-2 .signature-letter:nth-child(8){animation:physThrow 5s cubic-bezier(.2,.75,.2,1) infinite 1s;}
+        .welcome-anim-2 .signature-letter:nth-child(6){animation:physThrow 5s cubic-bezier(.2,.75,.2,1) infinite 2s;}
+        .welcome-anim-3 .signature-letter:nth-child(7){animation:physPull 4.8s ease-in-out infinite;}
+        .welcome-anim-3 .signature-letter:nth-child(8){animation:physPull 4.8s ease-in-out infinite .35s;}
+        .welcome-anim-4 .signature-letter:nth-child(5){animation:physCrane 5.2s ease-in-out infinite;}
+        .welcome-anim-4 .signature-letter:nth-child(9){animation:physCrane 5.2s ease-in-out infinite .9s;}
+        .welcome-anim-5 .signature-letter:nth-child(6){animation:physConveyor 4.9s cubic-bezier(.25,.7,.25,1) infinite;}
+        .welcome-anim-5 .signature-letter:nth-child(8){animation:physConveyor 4.9s cubic-bezier(.25,.7,.25,1) infinite .8s;}
+        .welcome-anim-6 .signature-letter:nth-child(5){animation:physInspect 4.7s ease-in-out infinite;}
+        .welcome-anim-6 .signature-letter:nth-child(10){animation:physInspect 4.7s ease-in-out infinite .8s;}
+        .welcome-anim-7 .signature-letter{animation:physAssemble 4.6s cubic-bezier(.2,.8,.2,1) infinite;}
+        .welcome-anim-7 .signature-letter:nth-child(6){animation-delay:.12s}
+        .welcome-anim-7 .signature-letter:nth-child(7){animation-delay:.24s}
+        .welcome-anim-7 .signature-letter:nth-child(8){animation-delay:.36s}
+        .welcome-anim-7 .signature-letter:nth-child(9){animation-delay:.48s}
+        .welcome-anim-7 .signature-letter:nth-child(10){animation-delay:.60s}
+        .welcome-anim-0 .stick-think,.welcome-anim-1 .stick-build,.welcome-anim-2 .stick-draw,.welcome-anim-3 .stick-pull,.welcome-anim-4 .stick-push,.welcome-anim-5 .stick-wave{animation-duration:5.4s;animation-timing-function:ease-in-out;}
+        .welcome-anim-0 .stick-think,.welcome-anim-6 .stick-think{animation:stickInteraction 4.8s ease-in-out infinite;}
+        .welcome-anim-1 .stick-build,.welcome-anim-7 .stick-build{animation:stickInteraction 5.2s ease-in-out infinite;}
+        .welcome-anim-2 .stick-draw{animation:stickInteraction 5s ease-in-out infinite;}
+        .welcome-anim-3 .stick-pull{animation:stickInteractionBack 4.8s ease-in-out infinite;}
+        .welcome-anim-4 .stick-push{animation:stickInteraction 5.2s ease-in-out infinite;}
+        .welcome-anim-5 .stick-wave{animation:stickInteraction 4.9s ease-in-out infinite;}
+        .welcome-anim-6 .stick-think .stick-arm-think{animation:stickArmThink 4.7s ease-in-out infinite;}
+        .welcome-anim-7 .stick-build .stick-hammer{animation:stickHammer 4.8s ease-in-out infinite;}
+        @media (prefers-reduced-motion: reduce) {
+          .signature-letter,.stick-scene,.signature-scene *{animation:none!important;transition:none!important;}
+        }
+
         .welcome-anim-0 .signature-letter:nth-child(1) { animation:sigLetterThink 2.4s ease-in-out infinite; }
         .welcome-anim-1 .signature-letter:nth-child(3) { animation:sigLetterBuild 2.1s ease-in-out infinite .12s; }
         .welcome-anim-1 .signature-letter:nth-child(5) { animation:sigLetterBuild 2.1s ease-in-out infinite .3s; }
@@ -426,6 +479,51 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                           <span>POWERED</span><span className="signature-letter-space" aria-hidden="true"></span><span className="text-white">BY</span><span className="signature-letter-space" aria-hidden="true"></span>
                           <span className="signature-letter text-[#C2A378]">B</span><span className="signature-letter text-white">E</span><span className="signature-letter text-[#C2A378]">B</span><span className="signature-letter text-white">I</span><span className="signature-letter text-[#C2A378]">T</span><span className="signature-letter text-white">O</span>
                         </div>
+                        <div className="signature-scene" aria-hidden="true">
+                          <svg viewBox="0 0 290 88" role="presentation">
+                            <path className="stick-white signature-guide" d="M12 72 H278" />
+                            <g className="stick-scene stick-think">
+                              <circle className="stick-line" cx="82" cy="25" r="7" />
+                              <path className="stick-line" d="M82 32 L82 53 M82 38 L70 45 M82 39 L91 29 M82 53 L73 68 M82 53 L91 68" />
+                              <g className="stick-arm-think"><path className="stick-line" d="M91 29 L86 18" /><circle className="stick-fill" cx="86" cy="17" r="1.7" /></g>
+                              <path className="stick-line" d="M101 16 q8 -8 16 0 q-8 7 -16 0 M105 16 h8" />
+                              <path className="stick-white" d="M65 68 H101 M70 72 H95" />
+                            </g>
+                            <g className="stick-scene stick-build">
+                              <circle className="stick-line" cx="66" cy="27" r="7" />
+                              <path className="stick-line" d="M66 34 L66 55 M66 39 L55 48 M66 40 L78 48 M66 55 L57 70 M66 55 L75 70" />
+                              <g className="stick-hammer"><path className="stick-line" d="M78 48 L91 35" /><path className="stick-line" d="M88 31 L96 39" /></g>
+                              <path className="stick-line" d="M105 69 h38 v-28 h-38z M105 55 h38 M124 41 v28" />
+                              <path className="stick-white" d="M151 69 l10 -8 v8 l-10 8z M151 41 l10 -8 v28" />
+                            </g>
+                            <g className="stick-scene stick-draw">
+                              <circle className="stick-line" cx="68" cy="28" r="7" />
+                              <path className="stick-line" d="M68 35 L68 55 M68 40 L58 50 M68 41 L80 47 M68 55 L59 70 M68 55 L78 69" />
+                              <g className="stick-pen"><path className="stick-line" d="M80 47 L94 57" /><path className="stick-line" d="M92 55 l5 3 l-4 5" /></g>
+                              <path className="stick-line" d="M105 67 q20 -25 42 0 q20 -24 42 0" />
+                              <path className="stick-white" d="M105 73 H190 M112 61 l8 6 M142 61 l8 6 M172 61 l8 6" />
+                            </g>
+                            <g className="stick-scene stick-pull">
+                              <circle className="stick-line" cx="48" cy="28" r="7" />
+                              <path className="stick-line" d="M48 35 L48 56 M48 40 L36 51 M48 41 L63 50 M48 56 L38 70 M48 56 L58 70" />
+                              <path className="stick-line stick-rope" d="M63 50 H104" />
+                              <g className="stick-box"><path className="stick-line" d="M104 36 h42 v34 h-42z M104 36 l13 -9 h42 l-13 9 M159 27 v34" /><path className="stick-white" d="M117 43 h29 M117 50 h29 M117 57 h29" /></g>
+                            </g>
+                            <g className="stick-scene stick-push">
+                              <g className="stick-box"><path className="stick-line" d="M125 39 h45 v31 h-45z M125 39 l12 -8 h45 l-12 8 M182 31 v31" /><path className="stick-white" d="M138 47 h31 M138 55 h31 M138 63 h31" /></g>
+                              <circle className="stick-line" cx="72" cy="28" r="7" />
+                              <path className="stick-line" d="M72 35 L72 56 M72 41 L61 49 M72 41 L88 44 M72 56 L62 70 M72 56 L82 70 M88 44 L125 47" />
+                              <circle className="stick-white stick-wheel" cx="140" cy="72" r="5" /><circle className="stick-white stick-wheel" cx="169" cy="72" r="5" />
+                            </g>
+                            <g className="stick-scene stick-wave">
+                              <circle className="stick-line" cx="72" cy="28" r="7" />
+                              <path className="stick-line" d="M72 35 L72 56 M72 41 L61 50 M72 42 L83 48 M72 56 L63 70 M72 56 L82 70" />
+                              <g className="stick-hand-wave"><path className="stick-line" d="M83 48 L92 36" /><path className="stick-line" d="M92 36 l5 -5 M92 36 l7 0 M92 36 l2 6" /></g>
+                              <path className="stick-line" d="M112 68 h46 v-29 h22 l13 13 v16 h8 M122 68 a5 5 0 1 0 10 0 M177 68 a5 5 0 1 0 10 0" />
+                            </g>
+                          </svg>
+                        </div>
+                      </div>
                         <div className="signature-scene" aria-hidden="true">
                           <svg viewBox="0 0 290 88" role="presentation">
                             <path className="stick-white signature-guide" d="M12 72 H278" />
