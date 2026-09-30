@@ -892,6 +892,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
               <div>
                 <div className="text-[9px] font-black uppercase tracking-[.42em] text-[#c2a378]">Nile Fleet</div>
                 <div className="mt-3 text-3xl font-black uppercase italic">Safe. Reliable. Visible. Connected.</div>
+                <div className="mt-5 text-[9px] font-black uppercase tracking-[.34em] text-[#c2a378]">POWERED BY <span className="text-white">BEBITO</span></div>
               </div>
               <div className="text-xs leading-6 text-slate-300 md:text-right">
                 <div>23 July St. · Abo Elkheer Building · 2nd Floor</div>
