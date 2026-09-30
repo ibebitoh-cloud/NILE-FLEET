@@ -598,7 +598,6 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
       const layerBase = (p: number, k: number) => -((sim.worldX * p) % TILE) - ox * p * 90 + k * TILE;
       const tiles = Math.ceil(W / TILE) + 1;
-
       // far port skyline
       const gFar = H * 0.7;
       for (let k = 0; k < tiles; k++) {
@@ -837,8 +836,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     serviceItems: ar ? ['نقل الحاويات', 'نقل الحاويات المبردة', 'النقل الداخلي', 'إدارة الأسطول', 'عمليات الموانئ', 'دعم سلاسل الإمداد'] : ['CONTAINER TRANSPORT', 'REEFER TRANSPORT', 'INLAND TRUCKING', 'FLEET MANAGEMENT', 'PORT OPERATIONS', 'SUPPLY CHAIN SUPPORT'],
     proofTitle: ar ? <>ما نقدمه لعملائنا <span className={gold}>كل يوم.</span></> : <>What we deliver to customers <span className={gold}>every day.</span></>,
     proofDesc: ar ? 'لا نعرض تقييمات أو شعارات عملاء إلا عندما تكون معتمدة وقابلة للنشر. الجودة تُقاس بما يحدث على أرض الواقع.' : 'We only publish customer reviews and partner logos when they are approved and verifiable. Quality is measured by what happens on the ground.',
-    reviewPending: ar ? 'ملخصات تجربة الخدمة بالذكاء الاصطناعي' : 'AI service experience summaries',
-    reviewAiNote: ar ? 'ملخصات تم إنشاؤها بالذكاء الاصطناعي من الخدمات التي نقدمها يومياً — وليست شهادات عملاء حقيقية.' : 'AI-generated summaries of the service experience we aim to deliver every day — not real customer testimonials.',
+    reviewPending: ar ? 'تجربة الخدمة اليومية' : 'Daily service experience',
+    reviewAiNote: ar ? 'ملخصات توضح مستوى الخدمة الذي نهدف إلى تقديمه يومياً — وليست شهادات عملاء حقيقية.' : 'Illustrative summaries of the service experience we aim to deliver every day — not real customer testimonials.',
     partnersTitle: ar ? <>شركاء <span className={gold}>النجاح.</span></> : <>Partners in <span className={gold}>success.</span></>,
     partnersDesc: ar ? 'قسم مخصص للشركاء والعملاء المعتمدين — مع شعارات رسمية بعد الحصول على الموافقة.' : 'A dedicated space for approved customers and partners — with official logos added only after authorization.',
     globalTitle: ar ? 'منظومة لوجستية عالمية' : 'GLOBAL LOGISTICS ECOSYSTEM',
@@ -859,6 +858,17 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         .nf4-logo-viewport:before,.nf4-logo-viewport:after{content:"";position:absolute;top:0;bottom:0;width:90px;z-index:2;pointer-events:none}
         .nf4-logo-viewport:before{left:0;background:linear-gradient(90deg,#050b12,transparent)}
         .nf4-logo-viewport:after{right:0;background:linear-gradient(-90deg,#050b12,transparent)}
+        .nf4-experience-card{background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));border-color:rgba(194,163,120,.24);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 24px 80px rgba(0,0,0,.18)}
+        .nf4-experience-card:before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(194,163,120,.08),transparent 42%,rgba(255,255,255,.025));pointer-events:none}
+        .nf4-live-orb{position:absolute;right:-70px;top:-70px;width:190px;height:190px;border-radius:999px;background:radial-gradient(circle,rgba(194,163,120,.22) 0,rgba(194,163,120,.08) 30%,transparent 68%);filter:blur(2px);animation:nf4LiveGlow 3.2s ease-in-out infinite}
+        .nf4-live-badge{display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(194,163,120,.35);background:rgba(194,163,120,.08);border-radius:999px;padding:6px 10px;font-size:7px;font-weight:900;letter-spacing:.18em;color:#c2a378;backdrop-filter:blur(10px)}
+        .nf4-live-dot{width:6px;height:6px;border-radius:999px;background:#c2a378;box-shadow:0 0 0 0 rgba(194,163,120,.45);animation:nf4LiveDot 1.8s ease-out infinite}
+        .nf4-experience-cell{position:relative;display:flex;align-items:center;gap:12px;min-height:48px;overflow:hidden;border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:12px 14px;background:linear-gradient(90deg,rgba(255,255,255,.055),rgba(255,255,255,.018));color:rgba(226,232,240,.92);font-size:9px;font-weight:800;letter-spacing:.02em;backdrop-filter:blur(12px);transition:transform .35s ease,border-color .35s ease,background .35s ease,box-shadow .35s ease}
+        .nf4-experience-cell:hover{transform:translateX(5px);border-color:rgba(194,163,120,.5);background:linear-gradient(90deg,rgba(194,163,120,.12),rgba(255,255,255,.035));box-shadow:0 10px 30px rgba(0,0,0,.18)}
+        .nf4-cell-index{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border:1px solid rgba(194,163,120,.35);border-radius:8px;color:#c2a378;font-size:7px;font-weight:900;letter-spacing:.1em;flex:none;background:rgba(194,163,120,.06)}
+        .nf4-cell-pulse{margin-left:auto;width:5px;height:5px;border-radius:999px;background:#c2a378;box-shadow:0 0 10px rgba(194,163,120,.65);animation:nf4LiveDot 2.1s ease-in-out infinite;flex:none}
+        @keyframes nf4LiveGlow{0%,100%{opacity:.55;transform:scale(.94)}50%{opacity:1;transform:scale(1.04)}}
+        @keyframes nf4LiveDot{0%{box-shadow:0 0 0 0 rgba(194,163,120,.55)}70%{box-shadow:0 0 0 8px rgba(194,163,120,0)}100%{box-shadow:0 0 0 0 rgba(194,163,120,0)}}
         .nf4-reveal{animation:nf4Reveal .9s cubic-bezier(.16,1,.3,1) both}
         .nf4-pulse{animation:nf4Pulse 3s ease-in-out infinite}
         @media (prefers-reduced-motion: reduce){ .nf4 *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important} }
@@ -1065,14 +1075,21 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                     ))}
                   </div>
                 </div>
-                <div className={`relative overflow-hidden rounded-[2rem] border p-8 ${K.card}`}>
-                  <div className="absolute -right-12 -top-12 text-[9rem] font-black opacity-5">AI</div>
-                  <div className={`text-[9px] font-black tracking-[.28em] ${gold}`}>AI / SERVICE EXPERIENCE</div>
-                  <div className="mt-6 text-2xl font-black leading-tight">{tx.reviewPending}</div>
-                  <div className={`mt-4 text-xs leading-6 ${K.muted}`}>{tx.reviewAiNote}</div>
-                  <div className="mt-8 space-y-3">
-                    {(ar ? ['استجابة تشغيلية سريعة وواضحة', 'متابعة دقيقة لحركة النقل', 'تنسيق مستمر مع عمليات الموانئ'] : ['Fast, clear operational response', 'Accurate transport movement follow-up', 'Continuous coordination with port operations']).map(x => (
-                      <div key={x} className={`rounded-xl border px-4 py-3 text-[9px] font-bold ${K.chip}`}>“{x}”</div>
+                <div className={`nf4-experience-card group relative overflow-hidden rounded-[2rem] border p-8 ${K.card}`}>
+                  <div className="nf4-live-orb" aria-hidden="true" />
+                  <div className="relative z-10 flex items-center justify-between gap-4">
+                    <div className={`text-[9px] font-black tracking-[.28em] ${gold}`}>{ar ? 'تجربة الخدمة' : 'SERVICE EXPERIENCE'}</div>
+                    <span className="nf4-live-badge"><span className="nf4-live-dot" />{ar ? 'مباشر' : 'LIVE'}</span>
+                  </div>
+                  <div className="relative z-10 mt-6 text-2xl font-black leading-tight">{tx.reviewPending}</div>
+                  <div className={`relative z-10 mt-4 text-xs leading-6 ${K.muted}`}>{tx.reviewAiNote}</div>
+                  <div className="relative z-10 mt-8 grid gap-3">
+                    {(ar ? ['استجابة تشغيلية سريعة وواضحة', 'متابعة دقيقة لحركة النقل', 'تنسيق مستمر مع عمليات الموانئ'] : ['Fast, clear operational response', 'Accurate transport movement follow-up', 'Continuous coordination with port operations']).map((x, i) => (
+                      <div key={x} className="nf4-experience-cell">
+                        <span className="nf4-cell-index">0{i + 1}</span>
+                        <span>{x}</span>
+                        <span className="nf4-cell-pulse" aria-hidden="true" />
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -1081,7 +1098,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           </Reveal>
         </section>
 
-        <section id="partners" className="relative overflow-hidden border-y bg-[#050b12] text-white">
+        <section id="partners"/> className="relative overflow-hidden border-y bg-[#050b12] text-white">
           <Reveal>
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
               <div className="text-[9px] font-black uppercase tracking-[.42em] text-[#c2a378]">07 / {ar ? 'شبكة الشحن والنقل' : 'SHIPPING & TRUCKING NETWORK'}</div>
