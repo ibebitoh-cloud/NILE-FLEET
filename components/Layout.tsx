@@ -324,10 +324,20 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       const matchedContainerId = containerMatch?.[1];
       if (isIdentifier(matchedBookingId) || isIdentifier(matchedContainerId)) {
         const value = (matchedBookingId || matchedContainerId || '').toUpperCase();
-        const hits = operations.filter(o =>
+        let hits = operations.filter(o =>
           String(o.bookingNumber || '').toUpperCase() === value ||
           String(o.containerNumber || '').toUpperCase() === value
         );
+        // The in-memory cache is fast, but DALI must not report "not found"
+        // just because the current session cache is stale. Use the same
+        // controlled, read-only Supabase fallback used by genset search.
+        if (!hits.length) {
+          try {
+            hits = await db.searchOperationRecords(value);
+          } catch (searchError) {
+            console.error('DALI live operation search failed:', searchError);
+          }
+        }
         const answer = hits.length
           ? hits.slice(0, 5).map(fmtOp).join('\n\n')
           : (isAr ? `لم أجد ${value} في العمليات المسجلة.` : `No recorded operation was found for ${value}.`);
