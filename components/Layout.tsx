@@ -1529,17 +1529,17 @@ I understand the relationships between gensets, bookings, containers, customers,
       `}</style>
       <div
         className="fixed z-[100] no-print"
-        style={{ right: daliButtonPosition.right, bottom: daliButtonPosition.bottom }}
+        style={{ right: window.innerWidth < 640 ? 8 : daliButtonPosition.right, bottom: Math.max(8, daliButtonPosition.bottom) }}
       >
         {isAiChatOpen && (
-          <div className={`absolute bottom-16 right-0 w-[min(92vw,420px)] h-[min(70vh,620px)] rounded-[2rem] overflow-hidden border shadow-2xl backdrop-blur-2xl flex flex-col ${isTerminal ? 'bg-[#071522]/75 border-white/10' : 'bg-white/65 border-white/50'}`}>
-            <div className={`px-5 py-4 flex items-center justify-between border-b backdrop-blur-xl ${isTerminal ? 'bg-white/[0.04] border-white/10 text-white' : 'bg-white/35 border-white/60 text-[#001F3F]'}`}>
+          <div className={`absolute bottom-16 right-0 w-[calc(100vw-16px)] sm:w-[min(92vw,420px)] h-[min(76vh,620px)] sm:h-[min(70vh,620px)] max-h-[calc(100dvh-96px)] rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border shadow-2xl backdrop-blur-2xl flex flex-col ${isTerminal ? 'bg-[#071522]/90 border-white/10' : 'bg-white/90 border-white/50'}`}>
+            <div className={`px-4 sm:px-5 py-3 sm:py-4 flex items-center justify-between border-b backdrop-blur-xl ${isTerminal ? 'bg-white/[0.04] border-white/10 text-white' : 'bg-white/35 border-white/60 text-[#001F3F]'}`}>
               <div className="flex items-center gap-3">
                 <div className={`w-9 h-9 rounded-xl border flex items-center justify-center ${isTerminal ? 'bg-white/10 border-white/10' : 'bg-white/45 border-white/70'}`}>
                   <span className="text-base">◉</span>
                 </div>
                 <div>
-                  <p className={`text-[8px] font-black tracking-[0.3em] ${isTerminal ? 'text-[#C2A378]' : 'text-slate-500'}`}>DALI 1.0</p>
+                  <p className={`text-[8px] font-black tracking-[0.3em] ${isTerminal ? 'text-[#C2A378]' : 'text-slate-500'}`}>DALI AI • DEEPSEEK</p>
                   <p className="text-sm font-black">NILE FLEET ASSISTANT</p>
                 </div>
               </div>
@@ -1553,7 +1553,7 @@ I understand the relationships between gensets, bookings, containers, customers,
                 <button onClick={() => setIsAiChatOpen(false)} className={`w-8 h-8 rounded-xl border transition-all ${isTerminal ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white/40 border-white/60 text-slate-700 hover:bg-white/70'}`}>✕</button>
               </div>
             </div>
-            <div className={`relative flex-1 overflow-y-auto p-4 space-y-3 dali-chat-surface ${isTerminal ? 'dali-chat-surface-dark' : 'dali-chat-surface-light'}`}>
+            <div className={`relative flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-4 space-y-3 dali-chat-surface ${isTerminal ? 'dali-chat-surface-dark' : 'dali-chat-surface-light'}`}>
               {aiChatMessages.length === 0 && (
                 <div className="absolute inset-0 flex items-center justify-center p-6 pointer-events-none">
                   <div className="text-center">
@@ -1563,13 +1563,13 @@ I understand the relationships between gensets, bookings, containers, customers,
                   </div>
                 </div>
               )}
-              {aiChatMessages.map((m, i) => <div key={i} className={`rounded-2xl p-3 text-xs leading-6 whitespace-pre-wrap border backdrop-blur-md ${m.role === 'user' ? (isTerminal ? 'bg-white/10 border-white/10 text-white ml-8' : 'bg-white/55 border-white/70 text-[#001F3F] ml-8') : (isTerminal ? 'bg-black/15 border-white/10 text-slate-200 mr-4' : 'bg-white/45 border-white/60 text-slate-700 mr-4')}`}>{m.text}</div>)}
+              {aiChatMessages.map((m, i) => <div key={i} className={`max-w-[88%] rounded-2xl p-3 text-[13px] sm:text-xs leading-6 whitespace-pre-wrap break-words overflow-wrap-anywhere border backdrop-blur-md ${m.role === 'user' ? (isTerminal ? 'bg-white/10 border-white/10 text-white ml-auto' : 'bg-white/55 border-white/70 text-[#001F3F] ml-auto') : (isTerminal ? 'bg-black/15 border-white/10 text-slate-200 mr-auto' : 'bg-white/45 border-white/60 text-slate-700 mr-auto')}`}>{m.text}</div>)}
               {aiChatLoading && <div className={`text-[9px] font-black uppercase tracking-widest animate-pulse ${isTerminal ? 'text-[#C2A378]' : 'text-slate-500'}`}>{isAr ? 'جاري التفكير...' : 'DALI IS THINKING...'}</div>}
             </div>
             <div className={`p-3 border-t backdrop-blur-xl ${isTerminal ? 'border-white/10 bg-black/10' : 'border-white/60 bg-white/25'}`}>
               <div className={`flex gap-2 rounded-2xl p-1.5 border backdrop-blur-md ${isTerminal ? 'bg-white/[0.04] border-white/10' : 'bg-white/45 border-white/70'}`}>
-                <textarea value={aiChatInput} onChange={e => setAiChatInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askNileAi(); } }} placeholder={isAr ? 'اكتب سؤالك...' : 'Ask Dali anything...'} className={`flex-1 resize-none rounded-xl border-0 bg-transparent px-3 py-2 text-xs outline-none min-h-[44px] ${isTerminal ? 'text-white placeholder:text-white/35' : 'text-[#001F3F] placeholder:text-slate-500'}`} />
-                <button data-dali-send onClick={askNileAi} disabled={aiChatLoading || !aiChatInput.trim()} className={`self-end w-11 h-11 rounded-xl border transition-all disabled:opacity-35 ${isTerminal ? 'bg-white/10 border-white/10 text-white hover:bg-white/15' : 'bg-white/60 border-white/70 text-[#001F3F] hover:bg-white/80'}`}>➤</button>
+                <textarea value={aiChatInput} onChange={e => setAiChatInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askNileAi(); } }} placeholder={isAr ? 'اكتب سؤالك...' : 'Ask Dali anything...'} className={`flex-1 resize-none rounded-xl border-0 bg-transparent px-3 py-2 text-[16px] sm:text-xs leading-5 outline-none min-h-[46px] max-h-28 overflow-y-auto ${isTerminal ? 'text-white placeholder:text-white/35' : 'text-[#001F3F] placeholder:text-slate-500'}`} />
+                <button data-dali-send onClick={askNileAi} disabled={aiChatLoading || !aiChatInput.trim()} className={`self-end shrink-0 w-12 h-12 rounded-xl border transition-all disabled:opacity-35 active:scale-95 ${isTerminal ? 'bg-white/10 border-white/10 text-white hover:bg-white/15' : 'bg-white/60 border-white/70 text-[#001F3F] hover:bg-white/80'}`}>➤</button>
               </div>
             </div>
           </div>
