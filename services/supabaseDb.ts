@@ -425,6 +425,25 @@ class SupabaseDB {
   getSupportContacts(): SupportContact[] { return _supportContacts; }
   getFAQs(): FAQItem[] { return _faqs; }
   getPortsInfo(): PortInfo[] { return _portsInfo; }
+  /** Recent DALI memory for the authenticated user across all sessions. */
+  async getDaliRecentMemory(limit = 24): Promise<{ role: 'user' | 'assistant'; message: string; entities?: any; created_at?: string; session_id?: string }[]> {
+    const safeLimit = Math.max(1, Math.min(Number(limit) || 24, 60));
+    const { data: authData } = await supabase.auth.getUser();
+    const userId = authData.user?.id;
+    if (!userId) return [];
+    const { data, error } = await supabase
+      .from('dali_conversations')
+      .select('role,message,entities,created_at,session_id')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(safeLimit);
+    if (error) {
+      console.error('[supabaseDb] DALI recent memory read:', error.message);
+      throw new Error(error.message);
+    }
+    return (data || []).reverse() as any[];
+  }
+
   async getDaliConversationMemory(sessionId: string, limit = 16): Promise<{ role: 'user' | 'assistant'; message: string; entities?: any; created_at?: string }[]> {
     const safeLimit = Math.max(1, Math.min(Number(limit) || 16, 50));
     const { data, error } = await supabase
