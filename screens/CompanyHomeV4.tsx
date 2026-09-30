@@ -845,6 +845,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         sim.wheel += (260 * dt) / 32;
         return;
       }
+      sim.worldX += Math.max(220, sim.speed) * dt;
+      sim.wheel += (Math.max(220, sim.speed) * dt) / 32;
+
       if (sim.wrecked) {
         sim.wreckTimer += dt;
         if (sim.wreckTimer >= 2) {
