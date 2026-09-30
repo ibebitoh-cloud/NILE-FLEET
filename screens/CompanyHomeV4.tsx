@@ -886,7 +886,6 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         .nf4-route-stop{position:relative;z-index:1;padding:0 5px;background:#07101a;font-size:6px;font-weight:950;letter-spacing:.12em;color:#9aa8b7}
         .nf4-route-stop:first-child{color:#fff}
         .nf4-route-stop:last-of-type{color:#fca5a5}
-        .nf4-route-truck{position:absolute;z-index:3;left:0;top:-5px;width:45px;height:22px;animation:nf4TruckRun 7s cubic-bezier(.55,.05,.45,.95) infinite}
         .nf4-route-truck-body{position:absolute;left:0;top:5px;width:28px;height:11px;border:1px solid #dce6ef;background:#172b3d;box-shadow:0 0 10px rgba(255,255,255,.16)}
         .nf4-route-truck-cab{position:absolute;right:0;top:8px;width:15px;height:8px;border:1px solid #fff;background:#c62828;clip-path:polygon(0 0,65% 0,100% 100%,0 100%)}
         .nf4-route-truck i{position:absolute;bottom:0;width:7px;height:7px;border-radius:50%;background:#05070a;border:1px solid #93a4b4;box-shadow:0 0 5px rgba(255,255,255,.25)}
@@ -905,12 +904,11 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         .nf4-route-quote span{color:#ef4444;font-size:13px;transition:transform .28s ease}
         .nf4-route-quote:hover{transform:translateY(-3px);border-color:#ef4444;background:rgba(198,40,40,.1);box-shadow:0 10px 28px rgba(198,40,40,.18)}
         .nf4-route-quote:hover span{transform:translate(2px,-2px)}
-        @keyframes nf4TruckRun{0%{left:0;transform:translateX(-4px)}45%{left:55%;transform:translateX(-50%)}100%{left:100%;transform:translateX(-40px)}}
         @keyframes nf4RouteLive{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.6)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
         @keyframes nf4RouteSweep{0%{transform:translateX(-30vw)}100%{transform:translateX(330vw)}}
         @media(max-width:1120px){.nf4-route-line{grid-template-columns:auto 1fr;gap:14px}.nf4-route-actions{grid-column:2;justify-content:flex-end;margin-top:-2px}.nf4-route-welcome{min-width:155px}}
         @media(max-width:760px){.nf4-route-line{grid-template-columns:1fr;gap:9px;padding-top:10px;padding-bottom:10px}.nf4-route-brand{min-width:0}.nf4-route-actions{grid-column:auto;justify-content:flex-start;flex-wrap:wrap}.nf4-route-phone{margin-right:auto}.nf4-route-meta{display:none}.nf4-route-stop{font-size:5px}.nf4-route-welcome strong{font-size:13px}}
-        @media(prefers-reduced-motion:reduce){.nf4-route-truck,.nf4-route-live,.nf4-contact-bar:after{animation:none!important}}
+        @media(prefers-reduced-motion:reduce){.nf4-route-live,.nf4-contact-bar:after{animation:none!important}}
         .nf4-contact-bar a{white-space:nowrap}
         .nf4-app-label{display:grid;place-items:center;width:68px;height:58px;padding:7px;border:1px solid rgba(255,255,255,.72);border-radius:15px;background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.035));box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 24px rgba(255,255,255,.07);transition:transform .3s ease,border-color .3s ease,box-shadow .3s ease}
         .nf4-app-label:hover{transform:translateY(-3px) scale(1.04);border-color:#c2a378;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 12px 32px rgba(0,0,0,.3),0 0 28px rgba(194,163,120,.2)}
@@ -919,6 +917,23 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         .nf4-contact-bar{position:relative;border-color:rgba(255,255,255,.34)!important;background:linear-gradient(90deg,rgba(4,8,14,.98),rgba(20,25,32,.97),rgba(4,8,14,.98))!important}
         .nf4-contact-bar:before{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,#fff 18%,#c2a378 42%,#d9b66f 50%,#c62828 62%,#fff 82%,transparent);opacity:1}
         .nf4-contact-bar:after{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),rgba(194,163,120,.9),rgba(198,40,40,.8),transparent);opacity:.75}
+        .nf4-route-light{background:linear-gradient(90deg,rgba(248,250,252,.98),rgba(255,255,255,.97),rgba(241,245,249,.98))!important;box-shadow:0 10px 35px rgba(15,23,42,.12);border-color:rgba(15,23,42,.12)!important}
+        .nf4-route-light:before{background:linear-gradient(90deg,transparent,#0f172a 18%,#8a6a35 42%,#b08a4b 50%,#c62828 62%,#0f172a 82%,transparent)!important}
+        .nf4-route-light:after{background:linear-gradient(90deg,transparent,rgba(15,23,42,.45),rgba(138,106,53,.8),rgba(198,40,40,.65),transparent)!important}
+        .nf4-route-light .nf4-route-welcome span,.nf4-route-light .nf4-route-label{color:rgba(15,23,42,.58)}
+        .nf4-route-light .nf4-route-welcome strong,.nf4-route-light .nf4-route-phone strong{color:#0b1a2b}
+        .nf4-route-light .nf4-route-rail{border-color:rgba(15,23,42,.16)}
+        .nf4-route-light .nf4-route-rail:before{background:repeating-linear-gradient(90deg,rgba(15,23,42,.24) 0 18px,transparent 18px 31px)}
+        .nf4-route-light .nf4-route-stop{background:#f8fafc;color:#64748b}
+        .nf4-route-light .nf4-route-stop:first-child{color:#0b1a2b}
+        .nf4-route-light .nf4-route-stop:last-of-type{color:#b91c1c}
+        .nf4-route-light .nf4-route-meta{color:rgba(15,23,42,.5)}
+        .nf4-route-light .nf4-route-phone>span,.nf4-route-light .nf4-route-social{border-color:rgba(15,23,42,.18);color:#334155;background:rgba(15,23,42,.035)}
+        .nf4-route-light .nf4-route-phone small{color:#64748b}
+        .nf4-route-light .nf4-route-social:hover{border-color:#0f172a;background:rgba(15,23,42,.07);color:#0b1a2b}
+        .nf4-route-light .nf4-route-quote{border-color:rgba(15,23,42,.25);background:linear-gradient(135deg,rgba(15,23,42,.05),rgba(15,23,42,.015));color:#0b1a2b}
+        .nf4-route-light .nf4-route-quote:hover{border-color:#c62828;background:rgba(198,40,40,.07)}
+        .nf4-route-dark{background:linear-gradient(90deg,rgba(4,8,14,.98),rgba(20,25,32,.97),rgba(4,8,14,.98))!important}
         .nf4-contact-card{background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.02));border-color:rgba(255,255,255,.2)}
         .nf4-contact-card:hover{border-color:rgba(194,163,120,.8);background:linear-gradient(145deg,rgba(255,255,255,.13),rgba(194,163,120,.08));box-shadow:0 12px 30px rgba(0,0,0,.3),0 0 24px rgba(194,163,120,.15)}
         .nf4-contact-icon{border-color:rgba(255,255,255,.45);color:#fff}
@@ -974,7 +989,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       {/* route progress (scroll) */}
       <div className="fixed left-0 right-0 top-0 z-50 h-[3px] bg-black/10"><div ref={barRef} className="h-full w-0 bg-[#c2a378] shadow-[0_0_12px_#c2a378]" /></div>
 
-      <div className="nf4-contact-bar border-b border-white/10 text-white">
+      <div className={`nf4-contact-bar border-b ${isDark ? "nf4-route-dark text-white" : "nf4-route-light text-[#0b1a2b]"}`}>
         <div className="nf4-route-line mx-auto max-w-[1500px] px-4 lg:px-10">
           <div className="nf4-route-welcome">
             <span>WELCOME TO</span><strong>NILE FLEET</strong>
