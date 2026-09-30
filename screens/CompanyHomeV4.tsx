@@ -173,6 +173,159 @@ const drawTruck = (ctx: CanvasRenderingContext2D, o: TruckOpts) => {
   ctx.restore();
 };
 
+
+/* Front-facing truck: the cab is aimed directly at the viewer and scales with scroll,
+   creating a "driving toward you" effect instead of a side-on truck. */
+const drawFrontTruck = (ctx: CanvasRenderingContext2D, o: {
+  s: number; tx: number; gy: number; dark: boolean; wheel: number; bob: number; tilt: number; headA: number; horn: number;
+}) => {
+  const { s, tx, gy, dark, wheel, bob, tilt, horn } = o;
+  ctx.save();
+  ctx.translate(tx, gy);
+  ctx.translate(0, bob);
+  ctx.rotate(tilt);
+  ctx.scale(s, s);
+
+  // Road shadow / contact
+  ctx.fillStyle = dark ? 'rgba(0,0,0,.72)' : 'rgba(0,0,0,.25)';
+  ctx.beginPath();
+  ctx.ellipse(0, 8, 190, 18, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Rear trailer silhouette visible behind the cab
+  const trailer = ctx.createLinearGradient(-125, -250, 125, -250);
+  trailer.addColorStop(0, '#172331'); trailer.addColorStop(.5, '#304354'); trailer.addColorStop(1, '#111a24');
+  ctx.fillStyle = trailer;
+  ctx.beginPath();
+  ctx.roundRect(-125, -390, 250, 180, 12);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(194,163,120,.45)'; ctx.lineWidth = 3;
+  ctx.strokeRect(-112, -375, 224, 150);
+  ctx.fillStyle = '#c2a378';
+  ctx.font = '900 19px system-ui,Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('NILE FLEET', 0, -300);
+  ctx.font = '700 8px system-ui,Arial';
+  ctx.fillText('TRANSPORT · LOGISTICS · EGYPT', 0, -281);
+
+  // Cab main shell — wide, tapered, forward-facing
+  const body = ctx.createLinearGradient(-155, -250, 155, -40);
+  body.addColorStop(0, dark ? '#071827' : '#173f68');
+  body.addColorStop(.45, dark ? '#16446c' : '#2d6090');
+  body.addColorStop(1, dark ? '#06111b' : '#102f50');
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.moveTo(-150, -65);
+  ctx.lineTo(-140, -210);
+  ctx.quadraticCurveTo(-132, -255, -90, -275);
+  ctx.lineTo(90, -275);
+  ctx.quadraticCurveTo(132, -255, 140, -210);
+  ctx.lineTo(150, -65);
+  ctx.quadraticCurveTo(105, -42, 0, -38);
+  ctx.quadraticCurveTo(-105, -42, -150, -65);
+  ctx.closePath();
+  ctx.fill();
+
+  // Roof highlight and windshield surround
+  ctx.strokeStyle = 'rgba(255,255,255,.24)'; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(-88,-268); ctx.quadraticCurveTo(0,-292,88,-268); ctx.stroke();
+  ctx.fillStyle = dark ? '#06101a' : '#a8d4f2';
+  ctx.beginPath();
+  ctx.moveTo(-105, -245); ctx.quadraticCurveTo(0, -264, 105, -245);
+  ctx.lineTo(94, -145); ctx.quadraticCurveTo(0, -158, -94, -145);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = dark ? '#31495d' : '#6f8ca5'; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(0,-260); ctx.lineTo(0,-153); ctx.stroke();
+
+  // Windshield reflections
+  const rg = ctx.createLinearGradient(-95,-245,75,-160);
+  rg.addColorStop(0,'rgba(255,255,255,.24)'); rg.addColorStop(.35,'rgba(255,255,255,.04)'); rg.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle = rg;
+  ctx.beginPath(); ctx.moveTo(-96,-240); ctx.lineTo(-12,-255); ctx.lineTo(-12,-155); ctx.lineTo(-90,-147); ctx.closePath(); ctx.fill();
+
+  // Side mirrors
+  for (const side of [-1, 1]) {
+    ctx.strokeStyle = '#1c2732'; ctx.lineWidth = 7;
+    ctx.beginPath(); ctx.moveTo(side * 112, -178); ctx.lineTo(side * 155, -195); ctx.stroke();
+    ctx.fillStyle = '#050a0f';
+    ctx.beginPath(); ctx.roundRect(side * 165 - (side > 0 ? 0 : 18), -213, 20, 32, 5); ctx.fill();
+    ctx.fillStyle = '#657383';
+    ctx.fillRect(side * 164 - (side > 0 ? 0 : 14), -207, 12, 17);
+  }
+
+  // Front fascia / grille
+  ctx.fillStyle = dark ? '#080d12' : '#17212b';
+  ctx.beginPath();
+  ctx.roundRect(-116, -135, 232, 95, 18);
+  ctx.fill();
+  ctx.fillStyle = '#0b1219';
+  ctx.beginPath();
+  ctx.roundRect(-88, -116, 176, 62, 12);
+  ctx.fill();
+
+  // Grille slats
+  ctx.strokeStyle = dark ? '#465463' : '#68737f'; ctx.lineWidth = 2;
+  for (let y = -108; y <= -60; y += 9) {
+    ctx.beginPath(); ctx.moveTo(-74, y); ctx.lineTo(74, y); ctx.stroke();
+  }
+  for (let x = -70; x <= 70; x += 20) {
+    ctx.beginPath(); ctx.moveTo(x, -110); ctx.lineTo(x, -58); ctx.stroke();
+  }
+
+  // Headlamp housings + animated beams
+  const beam = ctx.createRadialGradient(-88, -145, 2, -88, -145, 65);
+  beam.addColorStop(0, 'rgba(255,249,214,.95)'); beam.addColorStop(1, 'rgba(255,249,214,0)');
+  ctx.fillStyle = beam; ctx.beginPath(); ctx.arc(-88,-145,65,0,Math.PI*2); ctx.fill();
+  const beam2 = ctx.createRadialGradient(88, -145, 2, 88, -145, 65);
+  beam2.addColorStop(0, 'rgba(255,249,214,.95)'); beam2.addColorStop(1, 'rgba(255,249,214,0)');
+  ctx.fillStyle = beam2; ctx.beginPath(); ctx.arc(88,-145,65,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#fff9d6';
+  ctx.beginPath(); ctx.roundRect(-105,-159,34,24,8); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(71,-159,34,24,8); ctx.fill();
+  ctx.fillStyle = '#c2a378';
+  ctx.fillRect(-106,-129,36,4); ctx.fillRect(70,-129,36,4);
+
+  // Bumper + tow plate
+  ctx.fillStyle = '#080d12'; ctx.beginPath(); ctx.roundRect(-142,-52,284,24,8); ctx.fill();
+  ctx.fillStyle = '#9ca6b2'; ctx.fillRect(-48,-48,96,10);
+  ctx.fillStyle = '#0a1118'; ctx.fillRect(-34,-46,68,7);
+  ctx.fillStyle = '#c2a378'; ctx.fillRect(-6,-45,12,5);
+
+  // Front tires, hubs and mudguards
+  for (const side of [-1, 1]) {
+    const wx = side * 132, wy = -38, wr = 43;
+    ctx.fillStyle = '#05070a';
+    ctx.beginPath(); ctx.ellipse(wx, wy, wr, wr * 1.15, 0, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#2c3743'; ctx.lineWidth = 4; ctx.stroke();
+    ctx.fillStyle = '#aeb7c1'; ctx.beginPath(); ctx.arc(wx,wy,18,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#596575'; ctx.beginPath(); ctx.arc(wx,wy,7,0,Math.PI*2); ctx.fill();
+    for (let i=0;i<6;i++) {
+      const a = wheel + i*Math.PI/3;
+      ctx.strokeStyle = '#66717e'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(wx + Math.cos(a)*8, wy + Math.sin(a)*8); ctx.lineTo(wx + Math.cos(a)*15, wy + Math.sin(a)*15); ctx.stroke();
+    }
+    ctx.fillStyle = dark ? '#102338' : '#315a7e';
+    ctx.beginPath(); ctx.arc(wx, -63, 48, Math.PI, 0); ctx.fill();
+  }
+
+  // Lower body details / steps
+  ctx.fillStyle = dark ? '#10202d' : '#244e73';
+  ctx.fillRect(-118,-28,236,9);
+  ctx.fillStyle = '#c2a378'; ctx.fillRect(-108,-24,216,3);
+  ctx.fillStyle = '#111a22';
+  ctx.fillRect(-151,-20,42,14); ctx.fillRect(109,-20,42,14);
+
+  if (horn > 0) {
+    const p = 1 - horn / 0.7;
+    for (let i=0;i<3;i++) {
+      ctx.strokeStyle = `rgba(194,163,120,${Math.max(0, horn * .9 - i * .15)})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(0,-205,55 + p*130 + i*25, -Math.PI*.9, -Math.PI*.1); ctx.stroke();
+    }
+  }
+  ctx.restore();
+};
+
 /* ------------------------------------------------------------------ */
 /*  Small scroll-reveal helper                                        */
 /* ------------------------------------------------------------------ */
@@ -323,7 +476,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
     const sim = {
       worldX: 0, speed: 160, impulse: 0, wheel: 0, mx: 0.5, my: 0.5, smx: 0.5, smy: 0.5,
-      horn: 0, lastWhoosh: 0, km: 0, hudT: 0, t: 0, lastScroll: window.scrollY,
+      approach: 0, approachTarget: 0, horn: 0, lastWhoosh: 0, km: 0, hudT: 0, t: 0, lastScroll: window.scrollY,
       smoke: [] as { x: number; y: number; r: number; life: number }[],
       box: { x0: 0, y0: 0, x1: 0, y1: 0 },
     };
@@ -336,6 +489,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     };
     const onScroll = () => {
       const y = window.scrollY;
+      const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      sim.approachTarget = clamp(y / maxScroll, 0, 1);
       sim.impulse += Math.abs(y - sim.lastScroll);
       sim.lastScroll = y;
       const max = document.documentElement.scrollHeight - window.innerHeight;
@@ -461,15 +616,17 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
       // truck
       const s = clamp(Math.min(W / 1500, H / 900), 0.5, 1.15);
-      const tx = W * 0.3 + (sim.smx - 0.5) * 60 + 380 * s;
-      const gy = H * 0.86;
+      const approach = sim.approach;
+      const frontS = clamp(s * (0.58 + approach * 0.62), 0.42, 1.38);
+      const tx = W * 0.5 + (sim.smx - 0.5) * (55 - approach * 35);
+      const gy = H * (0.86 + approach * 0.09);
       const accel = clamp((sim.impulse * 18 + 160) - sim.speed, -400, 900);
       const bob = Math.sin(t * 22) * sN * 1.8 + Math.sin(t * 6) * 0.7 + (sim.horn > 0 ? Math.sin(t * 60) * 1.2 : 0);
       const tilt = -accel * 0.000022;
       const lightScreenY = gy - 100 * s;
       const headA = 0.05 + clamp((sim.smy * H - lightScreenY) / (H * 0.9), -0.28, 0.28);
-      drawTruck(ctx, { s, tx, gy, dark, wheel: sim.wheel, bob, tilt, headA, horn: sim.horn });
-      sim.box = { x0: tx - 390 * s, y0: gy - 245 * s, x1: tx + 145 * s, y1: gy };
+      drawFrontTruck(ctx, { s: frontS, tx, gy, dark, wheel: sim.wheel, bob, tilt, headA, horn: sim.horn });
+      sim.box = { x0: tx - 175 * frontS, y0: gy - 430 * frontS, x1: tx + 175 * frontS, y1: gy + 15 * frontS };
 
       // exhaust smoke
       for (const p of sim.smoke) {
@@ -511,6 +668,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       sim.t += dt;
       sim.smx += (sim.mx - sim.smx) * Math.min(1, dt * 6);
       sim.smy += (sim.my - sim.smy) * Math.min(1, dt * 6);
+      sim.approach += (sim.approachTarget - sim.approach) * Math.min(1, dt * 3.5);
       const target = 160 + Math.min(1340, sim.impulse * 18);
       // scroll bursts trigger a whoosh
       if (sim.impulse > 90 && sim.t - sim.lastWhoosh > 0.9) { sim.lastWhoosh = sim.t; if (soundOnRef.current) playWhoosh(); }
@@ -524,8 +682,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       // smoke
       if (Math.random() < dt * (18 + sN * 50)) {
         const s = clamp(Math.min(W / 1500, H / 900), 0.5, 1.15);
-        const tx = W * 0.3 + (sim.smx - 0.5) * 60 + 380 * s;
-        sim.smoke.push({ x: tx - 22 * s, y: H * 0.86 - 238 * s, r: 4 + Math.random() * 4, life: 1 });
+        const tx = W * 0.5 + (sim.smx - 0.5) * 35;
+        const approach = sim.approach;
+        sim.smoke.push({ x: tx - 22 * s, y: H * (0.86 + approach * 0.09) - 238 * s, r: 4 + Math.random() * 4, life: 1 });
       }
       for (const p of sim.smoke) { p.x -= (sim.speed * 0.5 + 30) * dt; p.y -= (34 + sN * 30) * dt; p.r += dt * 16; p.life -= dt * 0.55; }
       sim.smoke = sim.smoke.filter(p => p.life > 0);
