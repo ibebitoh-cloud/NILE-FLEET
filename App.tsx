@@ -1,7 +1,7 @@
 
 import React, { lazy, Suspense, useState, createContext, useContext, useEffect, useMemo, useCallback, useRef } from 'react';
 const Login = lazy(() => import('./screens/Login'));
-const CompanyHome = lazy(() => import('./screens/CompanyHomeV2'));
+const CompanyHome = lazy(() => import('./screens/CompanyHomeV3'));
 const Dashboard = lazy(() => import('./screens/Dashboard'));
 const Operations = lazy(() => import('./screens/Operations'));
 const StockManagement = lazy(() => import('./screens/StockManagement'));
