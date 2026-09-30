@@ -989,10 +989,11 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         @media (prefers-reduced-motion: reduce){ .nf4 *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important} }
         .nf4-bebito-signature{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;position:relative;cursor:default;white-space:nowrap}
         .nf4-bebito-powered{font-family:Inter,system-ui,sans-serif;font-size:9px;font-weight:950;letter-spacing:.42em;color:rgba(226,232,240,.62);text-transform:uppercase;line-height:1}
-        .nf4-bebito-name{font-family:"Brush Script MT","Segoe Script","Lucida Handwriting",cursive;font-size:clamp(40px,5vw,62px);font-weight:900;font-style:italic;letter-spacing:-.02em;line-height:.95;color:#fff;text-shadow:0 0 24px rgba(194,163,120,.18);transform-origin:center;transition:color .2s ease,text-shadow .2s ease}
+        .nf4-bebito-name{font-family:"Brush Script MT","Segoe Script","Lucida Handwriting",cursive;font-size:clamp(34px,4.2vw,52px);font-weight:900;font-style:italic;letter-spacing:-.02em;line-height:.95;color:#fff;text-shadow:0 0 24px rgba(194,163,120,.18);transform-origin:center;transition:color .2s ease,text-shadow .2s ease}
         .nf4-bebito-signature:hover .nf4-bebito-name{color:#c2a378;text-shadow:0 0 28px rgba(194,163,120,.42);animation:nf4BebitoSpin .72s cubic-bezier(.16,1,.3,1)}
         @keyframes nf4BebitoSpin{0%{transform:rotate(0deg) scale(1)}45%{transform:rotate(360deg) scale(1.08)}100%{transform:rotate(360deg) scale(1)}}
-        @media(max-width:640px){.nf4-bebito-signature{gap:3px}.nf4-bebito-powered{font-size:8px}.nf4-bebito-name{font-size:42px}}
+        .nf4-footer-signature-line{display:flex;flex-direction:column;align-items:center;gap:4px}.nf4-footer-signature-line strong{font-family:Inter,system-ui,sans-serif;font-size:14px;font-weight:950;letter-spacing:.16em;text-transform:uppercase;color:#fff}.nf4-footer-signature-line span{font-family:Inter,system-ui,sans-serif;font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(226,232,240,.5)}
+@media(max-width:640px){.nf4-footer-signature-line strong{font-size:12px}.nf4-footer-signature-line span{font-size:7px;letter-spacing:.14em}.nf4-bebito-signature{gap:3px}.nf4-bebito-powered{font-size:8px}.nf4-bebito-name{font-size:38px}}
 
 
       /* Strong homepage visual direction - existing canvas background remains untouched */
@@ -1474,8 +1475,12 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                 <div className="mt-2 text-[#c2a378]">nilefleet@nilefleetlogistics.com · Transport 01000992858 · Genset 01212229077</div>
               </div>
             </div>
-            <div className="mt-16 flex justify-center">
-              <div className="nf4-bebito-signature" aria-label="Powered by Bebito">
+            <div className="mt-16 flex flex-col items-center justify-center text-center">
+              <div className="nf4-footer-signature-line">
+                <strong>Nile Fleet</strong>
+                <span>Safe. Reliable. Visible. Connected.</span>
+              </div>
+              <div className="mt-5 nf4-bebito-signature" aria-label="Powered by Bebito">
                 <span className="nf4-bebito-powered">POWERED BY</span>
                 <span className="nf4-bebito-name">Bebito</span>
               </div>
