@@ -825,6 +825,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         sim.dragX = clamp(sim.dragX, -W * 0.15, W * 1.15);
         sim.dragY = clamp(sim.dragY, H * 0.40, H * 0.80);
         sim.box = { x0: sim.dragX - 405, y0: sim.dragY - 245, x1: sim.dragX + 155, y1: sim.dragY + 10 };
+        sim.worldX += 160 * dt;
+        sim.wheel += (160 * dt) / 32;
         return;
       }
       if (sim.falling) {
@@ -838,6 +840,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           sim.wreckTimer = 0;
           sim.impact = true;
         }
+        sim.worldX += 160 * dt;
+        sim.wheel += (160 * dt) / 32;
         return;
       }
       if (sim.wrecked) {
