@@ -896,7 +896,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
   const nav = [[tx.about, '#about'], [tx.operations, '#operations'], [ar ? 'لماذا نحن' : 'WHY US', '#why-us'], [tx.leadership, '#leadership']];
 
   return (
-    <div ref={wrapRef} className={`nf-home nf4 min-h-screen overflow-x-hidden selection:bg-[#c2a378] selection:text-black ${K.root}`}>
+    <div ref={wrapRef} className={`nf-home nf4 ${isDark ? 'nf4-dark' : 'nf4-light'} min-h-screen overflow-x-hidden selection:bg-[#c2a378] selection:text-black ${K.root}`}>
       <style>{`
         @keyframes nf4Reveal { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
         @keyframes nf4Pulse { 0%,100%{box-shadow:0 0 0 rgba(194,163,120,0)} 50%{box-shadow:0 0 42px rgba(194,163,120,.28)} }
@@ -907,6 +907,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         .nf4-logo-viewport:before,.nf4-logo-viewport:after{content:"";position:absolute;top:0;bottom:0;width:90px;z-index:2;pointer-events:none}
         .nf4-logo-viewport:before{left:0;background:linear-gradient(90deg,#050b12,transparent)}
         .nf4-logo-viewport:after{right:0;background:linear-gradient(-90deg,#050b12,transparent)}
+        .nf-home:not(.nf4-dark) .nf4-logo-viewport:before{background:linear-gradient(90deg,#f8fafc,transparent)}
+        .nf-home:not(.nf4-dark) .nf4-logo-viewport:after{background:linear-gradient(-90deg,#f8fafc,transparent)}
         .nf4-experience-card{background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));border-color:rgba(194,163,120,.24);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 24px 80px rgba(0,0,0,.18)}
         .nf4-experience-card:before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(194,163,120,.08),transparent 42%,rgba(255,255,255,.025));pointer-events:none}
         .nf4-live-orb{position:absolute;right:-70px;top:-70px;width:190px;height:190px;border-radius:999px;background:radial-gradient(circle,rgba(194,163,120,.22) 0,rgba(194,163,120,.08) 30%,transparent 68%);filter:blur(2px);animation:nf4LiveGlow 3.2s ease-in-out infinite}
