@@ -802,6 +802,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     ? { root: 'bg-[#020305] text-white', head: 'border-white/10 bg-black/55', text: 'text-white', muted: 'text-slate-400', soft: 'text-slate-300', faint: 'text-slate-500', card: 'border-white/10 bg-black/45', band: 'border-white/10 bg-black/60', line: 'border-white/15', foot: 'bg-[#00111f]/85', chip: 'border-white/10 bg-white/[.04] text-slate-300' }
     : { root: 'bg-[#dbeafe] text-[#0b1a2b]', head: 'border-black/10 bg-white/60', text: 'text-[#0b1a2b]', muted: 'text-slate-600', soft: 'text-slate-700', faint: 'text-slate-500', card: 'border-black/10 bg-white/60', band: 'border-black/10 bg-white/70', line: 'border-black/15', foot: 'bg-[#0b2a4a]/90 text-white', chip: 'border-black/10 bg-white/60 text-slate-600' };
   const gold = isDark ? 'text-[#c2a378]' : 'text-[#8a6a35]';
+  const gensetTheme = isDark
+    ? { card: 'border-[#c2a378]/40 bg-[#050b12]/85 text-white', overlay: 'bg-[radial-gradient(circle_at_75%_35%,rgba(194,163,120,.22),transparent_30%),linear-gradient(135deg,#07121a,#010203)]', badge: 'bg-[#c2a378] text-black', meta: 'text-[#c2a378]', body: 'text-slate-400', action: 'text-white' }
+    : { card: 'border-[#8a6a35]/35 bg-white/90 text-[#0b1a2b] shadow-[0_20px_60px_rgba(15,23,42,.12)]', overlay: 'bg-[radial-gradient(circle_at_75%_35%,rgba(194,163,120,.18),transparent_30%),linear-gradient(135deg,#ffffff,#edf3f8)]', badge: 'bg-[#8a6a35] text-white', meta: 'text-[#8a6a35]', body: 'text-slate-600', action: 'text-[#0b1a2b]' };
 
   const tx = {
     brandSub: ar ? 'النقل · اللوجستيات · مصر' : 'Transport · Logistics · Egypt',
@@ -1282,15 +1285,15 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
               </div>
 
               <div className="mt-14 grid gap-5 lg:grid-cols-[1.35fr_.65fr]">
-                <button onClick={onGenset} className="group relative min-h-[380px] overflow-hidden rounded-[2rem] border border-[#c2a378]/40 bg-[#050b12]/85 text-left text-white backdrop-blur-md transition duration-500 hover:-translate-y-2 hover:border-[#c2a378]">
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_35%,rgba(194,163,120,.22),transparent_30%),linear-gradient(135deg,#07121a,#010203)]" />
+                <button onClick={onGenset} className={`group relative min-h-[380px] overflow-hidden rounded-[2rem] border text-left backdrop-blur-md transition duration-500 hover:-translate-y-2 hover:border-[#c2a378] ${gensetTheme.card}`}>
+                  <div className={`absolute inset-0 ${gensetTheme.overlay}`} />
                   <div className="relative flex min-h-[380px] flex-col justify-between p-8 sm:p-10">
-                    <div className="flex items-center justify-between"><span className="rounded-full bg-[#c2a378] px-3 py-1 text-[7px] font-black tracking-[.2em] text-black">{tx.liveSystem}</span><span className="text-[8px] font-black tracking-[.25em] text-slate-500">01</span></div>
+                    <div className="flex items-center justify-between"><span className={`rounded-full px-3 py-1 text-[7px] font-black tracking-[.2em] ${gensetTheme.badge}`}>{tx.liveSystem}</span><span className={`text-[8px] font-black tracking-[.25em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>01</span></div>
                     <div>
-                      <div className="text-[10px] font-black uppercase tracking-[.3em] text-[#c2a378]">{tx.authorized}</div>
+                      <div className={`text-[10px] font-black uppercase tracking-[.3em] ${gensetTheme.meta}`}>{tx.authorized}</div>
                       <div className="mt-3 text-4xl font-black uppercase italic tracking-[-.04em]">{tx.gensetControl}</div>
-                      <p className="mt-4 max-w-md text-xs leading-6 text-slate-400">{tx.gensetDesc}</p>
-                      <div className="mt-7 inline-flex items-center gap-3 text-[8px] font-black uppercase tracking-[.25em] text-white">{tx.enterSystem} <span className="transition group-hover:translate-x-2">→</span></div>
+                      <p className={`mt-4 max-w-md text-xs leading-6 ${gensetTheme.body}`}>{tx.gensetDesc}</p>
+                      <div className={`mt-7 inline-flex items-center gap-3 text-[8px] font-black uppercase tracking-[.25em] ${gensetTheme.action}`}>{tx.enterSystem} <span className="transition group-hover:translate-x-2">→</span></div>
                     </div>
                   </div>
                 </button>
