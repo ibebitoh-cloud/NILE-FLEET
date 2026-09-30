@@ -373,7 +373,41 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         .stick-box { animation:boxSlide 2.8s ease-in-out infinite alternate; }
         .stick-wheel { transform-box:fill-box; transform-origin:center; animation:wheelSpin 1.8s linear infinite; }
         .stick-hand-wave { transform-box:fill-box; transform-origin:bottom left; animation:stickWave 1.4s ease-in-out infinite; }
-        .signature-scene .signature-guide { stroke-dasharray:5 5; opacity:.28; }
+        .signature-scene .signature-guide { stroke-dasharray:5 5; opacity:.22; }
+        /* Rebuilt stickman: the character physically reaches the BEBITO letters with hand, head and foot. */
+        @keyframes manHandReach { 0%,18%{transform:translateX(-8px)} 35%{transform:translateX(20px)} 47%{transform:translateX(44px)} 58%{transform:translateX(30px)} 78%,100%{transform:translateX(-8px)} }
+        @keyframes manHandHit { 0%,28%{transform:translate(0,0) rotate(0)} 42%{transform:translate(24px,-4px) rotate(-8deg)} 48%{transform:translate(38px,0) rotate(10deg)} 54%{transform:translate(24px,2px) rotate(-5deg)} 72%,100%{transform:translate(0,0) rotate(0)} }
+        @keyframes manHeadbutt { 0%,30%{transform:translateX(0)} 45%{transform:translateX(24px)} 52%{transform:translateX(39px)} 59%{transform:translateX(25px)} 78%,100%{transform:translateX(0)} }
+        @keyframes manKick { 0%,30%{transform:rotate(0) translateX(0)} 44%{transform:rotate(-8deg) translateX(3px)} 52%{transform:rotate(12deg) translateX(17px)} 62%{transform:rotate(-4deg) translateX(4px)} 80%,100%{transform:rotate(0) translateX(0)} }
+        @keyframes manJumpKick { 0%,28%{transform:translate(0,0) rotate(0)} 43%{transform:translate(15px,-16px) rotate(-8deg)} 55%{transform:translate(43px,-12px) rotate(12deg)} 68%{transform:translate(20px,0) rotate(-4deg)} 82%,100%{transform:translate(0,0) rotate(0)} }
+        @keyframes manPullHands { 0%,25%{transform:translateX(0)} 48%{transform:translateX(30px)} 62%{transform:translateX(17px)} 80%,100%{transform:translateX(0)} }
+        @keyframes manCarryHead { 0%,25%{transform:translateX(-8px)} 45%{transform:translateX(8px)} 58%{transform:translateX(24px)} 75%,100%{transform:translateX(-8px)} }
+        @keyframes impactPop { 0%,46%{opacity:0;transform:scale(.2)} 50%{opacity:1;transform:scale(1.25)} 66%{opacity:0;transform:scale(1.8)} 100%{opacity:0} }
+        @keyframes letterJolt { 0%,100%{transform:translate(0,0) rotate(0)} 48%{transform:translate(5px,-3px) rotate(5deg)} 56%{transform:translate(-3px,2px) rotate(-4deg)} 65%{transform:translate(0,0) rotate(0)} }
+        .stick-action { transform-box:fill-box; transform-origin:center; }
+        .stick-action-hand { animation:manHandHit 4.8s cubic-bezier(.2,.8,.2,1) infinite; }
+        .stick-action-head { animation:manHeadbutt 4.8s cubic-bezier(.2,.8,.2,1) infinite; }
+        .stick-action-foot { animation:manKick 4.8s cubic-bezier(.2,.8,.2,1) infinite; }
+        .stick-action-jump { animation:manJumpKick 5s cubic-bezier(.2,.8,.2,1) infinite; }
+        .stick-action-pull { animation:manPullHands 4.8s ease-in-out infinite; }
+        .stick-action-carry { animation:manCarryHead 5s ease-in-out infinite; }
+        .stick-impact { transform-box:fill-box; transform-origin:center; animation:impactPop 4.8s ease-out infinite; }
+        .welcome-anim-0 .stick-hand-scene { display:block; }
+        .welcome-anim-1 .stick-hand-scene { display:block; }
+        .welcome-anim-2 .stick-head-scene { display:block; }
+        .welcome-anim-3 .stick-foot-scene { display:block; }
+        .welcome-anim-4 .stick-jump-scene { display:block; }
+        .welcome-anim-5 .stick-pull-scene { display:block; }
+        .welcome-anim-6 .stick-carry-scene { display:block; }
+        .welcome-anim-7 .stick-hand-scene { display:block; }
+        .welcome-anim-0 .signature-letter:nth-child(5), .welcome-anim-7 .signature-letter:nth-child(9){animation:letterJolt 4.8s ease-in-out infinite;}
+        .welcome-anim-1 .signature-letter:nth-child(6){animation:letterJolt 4.8s ease-in-out infinite .18s;}
+        .welcome-anim-2 .signature-letter:nth-child(7){animation:letterJolt 4.8s ease-in-out infinite .35s;}
+        .welcome-anim-3 .signature-letter:nth-child(8){animation:letterJolt 4.8s ease-in-out infinite .5s;}
+        .welcome-anim-4 .signature-letter:nth-child(10){animation:letterJolt 5s ease-in-out infinite .65s;}
+        .welcome-anim-5 .signature-letter:nth-child(7){animation:letterJolt 4.8s ease-in-out infinite .3s;}
+        .welcome-anim-6 .signature-letter:nth-child(9){animation:letterJolt 5s ease-in-out infinite .45s;}
+
         .signature-stage { position:relative; display:inline-flex; flex-direction:column; align-items:center; justify-content:flex-end; min-width:290px; min-height:92px; padding-bottom:2px; }
 
         .welcome-rise { animation: welcomeRise .75s cubic-bezier(.2,.8,.2,1) both; }
@@ -480,48 +514,64 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                           <span className="signature-letter text-[#C2A378]">B</span><span className="signature-letter text-white">E</span><span className="signature-letter text-[#C2A378]">B</span><span className="signature-letter text-white">I</span><span className="signature-letter text-[#C2A378]">T</span><span className="signature-letter text-white">O</span>
                         </div>
                         <div className="signature-scene" aria-hidden="true">
-                          <svg viewBox="0 0 290 88" role="presentation">
-                            <path className="stick-white signature-guide" d="M12 72 H278" />
-                            <g className="stick-scene stick-think">
-                              <circle className="stick-line" cx="82" cy="25" r="7" />
-                              <path className="stick-line" d="M82 32 L82 53 M82 38 L70 45 M82 39 L91 29 M82 53 L73 68 M82 53 L91 68" />
-                              <g className="stick-arm-think"><path className="stick-line" d="M91 29 L86 18" /><circle className="stick-fill" cx="86" cy="17" r="1.7" /></g>
-                              <path className="stick-line" d="M101 16 q8 -8 16 0 q-8 7 -16 0 M105 16 h8" />
-                              <path className="stick-white" d="M65 68 H101 M70 72 H95" />
+                          <svg viewBox="0 0 290 100" role="presentation">
+                          <path className="stick-white signature-guide" d="M8 82 H282" />
+                          <g className="stick-scene stick-hand-scene">
+                            <g className="stick-action stick-action-hand">
+                              <circle className="stick-line" cx="70" cy="30" r="7" />
+                              <path className="stick-line" d="M70 37 L70 60 M70 43 L57 52 M70 44 L82 48 M70 60 L58 80 M70 60 L82 80" />
+                              <path className="stick-line" d="M82 48 L105 31 L132 22" />
+                              <circle className="stick-fill" cx="134" cy="21" r="2.2" />
                             </g>
-                            <g className="stick-scene stick-build">
-                              <circle className="stick-line" cx="66" cy="27" r="7" />
-                              <path className="stick-line" d="M66 34 L66 55 M66 39 L55 48 M66 40 L78 48 M66 55 L57 70 M66 55 L75 70" />
-                              <g className="stick-hammer"><path className="stick-line" d="M78 48 L91 35" /><path className="stick-line" d="M88 31 L96 39" /></g>
-                              <path className="stick-line" d="M105 69 h38 v-28 h-38z M105 55 h38 M124 41 v28" />
-                              <path className="stick-white" d="M151 69 l10 -8 v8 l-10 8z M151 41 l10 -8 v28" />
+                            <circle className="stick-impact" cx="147" cy="20" r="8" fill="none" stroke="#C2A378" strokeWidth="1.5" />
+                            <path className="stick-white" d="M142 20 h10 M147 15 v10" />
+                          </g>
+                          <g className="stick-scene stick-head-scene">
+                            <g className="stick-action stick-action-head">
+                              <circle className="stick-line" cx="72" cy="31" r="7" />
+                              <path className="stick-line" d="M72 38 L72 61 M72 44 L59 51 M72 44 L84 51 M72 61 L60 81 M72 61 L84 81" />
+                              <path className="stick-white" d="M78 25 q7 -5 13 0" />
                             </g>
-                            <g className="stick-scene stick-draw">
-                              <circle className="stick-line" cx="68" cy="28" r="7" />
-                              <path className="stick-line" d="M68 35 L68 55 M68 40 L58 50 M68 41 L80 47 M68 55 L59 70 M68 55 L78 69" />
-                              <g className="stick-pen"><path className="stick-line" d="M80 47 L94 57" /><path className="stick-line" d="M92 55 l5 3 l-4 5" /></g>
-                              <path className="stick-line" d="M105 67 q20 -25 42 0 q20 -24 42 0" />
-                              <path className="stick-white" d="M105 73 H190 M112 61 l8 6 M142 61 l8 6 M172 61 l8 6" />
+                            <circle className="stick-impact" cx="128" cy="27" r="9" fill="none" stroke="#C2A378" strokeWidth="1.5" />
+                            <path className="stick-white" d="M122 27 h12 M128 21 v12" />
+                          </g>
+                          <g className="stick-scene stick-foot-scene">
+                            <g className="stick-action stick-action-foot">
+                              <circle className="stick-line" cx="67" cy="29" r="7" />
+                              <path className="stick-line" d="M67 36 L67 59 M67 43 L55 52 M67 43 L80 49 M67 59 L57 81" />
+                              <path className="stick-line" d="M67 59 L93 72 L119 68" />
+                              <circle className="stick-fill" cx="121" cy="67" r="2.2" />
                             </g>
-                            <g className="stick-scene stick-pull">
-                              <circle className="stick-line" cx="48" cy="28" r="7" />
-                              <path className="stick-line" d="M48 35 L48 56 M48 40 L36 51 M48 41 L63 50 M48 56 L38 70 M48 56 L58 70" />
-                              <path className="stick-line stick-rope" d="M63 50 H104" />
-                              <g className="stick-box"><path className="stick-line" d="M104 36 h42 v34 h-42z M104 36 l13 -9 h42 l-13 9 M159 27 v34" /><path className="stick-white" d="M117 43 h29 M117 50 h29 M117 57 h29" /></g>
+                            <circle className="stick-impact" cx="136" cy="65" r="8" fill="none" stroke="#C2A378" strokeWidth="1.5" />
+                            <path className="stick-white" d="M131 65 h10 M136 60 v10" />
+                          </g>
+                          <g className="stick-scene stick-jump-scene">
+                            <g className="stick-action stick-action-jump">
+                              <circle className="stick-line" cx="69" cy="29" r="7" />
+                              <path className="stick-line" d="M69 36 L70 57 M70 43 L57 49 M70 43 L83 47 M70 57 L58 69 M70 57 L87 60 L117 49" />
+                              <circle className="stick-fill" cx="119" cy="48" r="2.2" />
                             </g>
-                            <g className="stick-scene stick-push">
-                              <g className="stick-box"><path className="stick-line" d="M125 39 h45 v31 h-45z M125 39 l12 -8 h45 l-12 8 M182 31 v31" /><path className="stick-white" d="M138 47 h31 M138 55 h31 M138 63 h31" /></g>
-                              <circle className="stick-line" cx="72" cy="28" r="7" />
-                              <path className="stick-line" d="M72 35 L72 56 M72 41 L61 49 M72 41 L88 44 M72 56 L62 70 M72 56 L82 70 M88 44 L125 47" />
-                              <circle className="stick-white stick-wheel" cx="140" cy="72" r="5" /><circle className="stick-white stick-wheel" cx="169" cy="72" r="5" />
+                            <circle className="stick-impact" cx="135" cy="43" r="9" fill="none" stroke="#C2A378" strokeWidth="1.5" />
+                            <path className="stick-white" d="M129 43 h12 M135 37 v12" />
+                          </g>
+                          <g className="stick-scene stick-pull-scene">
+                            <g className="stick-action stick-action-pull">
+                              <circle className="stick-line" cx="60" cy="30" r="7" />
+                              <path className="stick-line" d="M60 37 L60 60 M60 44 L47 53 M60 44 L76 49 M60 60 L49 81 M60 60 L72 81" />
+                              <path className="stick-line" d="M76 49 L132 49" />
+                              <circle className="stick-fill" cx="134" cy="49" r="2.2" />
                             </g>
-                            <g className="stick-scene stick-wave">
-                              <circle className="stick-line" cx="72" cy="28" r="7" />
-                              <path className="stick-line" d="M72 35 L72 56 M72 41 L61 50 M72 42 L83 48 M72 56 L63 70 M72 56 L82 70" />
-                              <g className="stick-hand-wave"><path className="stick-line" d="M83 48 L92 36" /><path className="stick-line" d="M92 36 l5 -5 M92 36 l7 0 M92 36 l2 6" /></g>
-                              <path className="stick-line" d="M112 68 h46 v-29 h22 l13 13 v16 h8 M122 68 a5 5 0 1 0 10 0 M177 68 a5 5 0 1 0 10 0" />
+                            <path className="stick-white" d="M134 38 h22 v22 h-22z" />
+                          </g>
+                          <g className="stick-scene stick-carry-scene">
+                            <g className="stick-action stick-action-carry">
+                              <circle className="stick-line" cx="68" cy="31" r="7" />
+                              <path className="stick-line" d="M68 38 L68 61 M68 45 L54 53 M68 45 L82 53 M68 61 L57 81 M68 61 L80 81" />
+                              <path className="stick-line" d="M82 53 L99 40 L113 40" />
+                              <path className="stick-white" d="M105 34 h18 v12 h-18z" />
                             </g>
-                          </svg>
+                          </g>
+                        </svg>
                         </div>
                       </div>
                         
