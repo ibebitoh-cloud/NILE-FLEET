@@ -524,60 +524,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                           </svg>
                         </div>
                       </div>
-                        <div className="signature-scene" aria-hidden="true">
-                          <svg viewBox="0 0 290 88" role="presentation">
-                            <path className="stick-white signature-guide" d="M12 72 H278" />
-
-                            <g className="stick-scene stick-think">
-                              <circle className="stick-line" cx="82" cy="25" r="7" />
-                              <path className="stick-line" d="M82 32 L82 53 M82 38 L70 45 M82 39 L91 29 M82 53 L73 68 M82 53 L91 68" />
-                              <g className="stick-arm-think"><path className="stick-line" d="M91 29 L86 18" /><circle className="stick-fill" cx="86" cy="17" r="1.7" /></g>
-                              <path className="stick-line" d="M101 16 q8 -8 16 0 q-8 7 -16 0 M105 16 h8" />
-                              <path className="stick-white" d="M65 68 H101 M70 72 H95" />
-                            </g>
-
-                            <g className="stick-scene stick-build">
-                              <circle className="stick-line" cx="66" cy="27" r="7" />
-                              <path className="stick-line" d="M66 34 L66 55 M66 39 L55 48 M66 40 L78 48 M66 55 L57 70 M66 55 L75 70" />
-                              <g className="stick-hammer"><path className="stick-line" d="M78 48 L91 35" /><path className="stick-line" d="M88 31 L96 39" /><path className="stick-line" d="M87 30 L95 38" /></g>
-                              <path className="stick-line" d="M105 69 h38 v-28 h-38z M105 55 h38 M124 41 v28" />
-                              <path className="stick-white" d="M151 69 l10 -8 v8 l-10 8z M151 41 l10 -8 v28" />
-                            </g>
-
-                            <g className="stick-scene stick-draw">
-                              <circle className="stick-line" cx="68" cy="28" r="7" />
-                              <path className="stick-line" d="M68 35 L68 55 M68 40 L58 50 M68 41 L80 47 M68 55 L59 70 M68 55 L78 69" />
-                              <g className="stick-pen"><path className="stick-line" d="M80 47 L94 57" /><path className="stick-line" d="M92 55 l5 3 l-4 5" /></g>
-                              <path className="stick-line" d="M105 67 q20 -25 42 0 q20 -24 42 0" />
-                              <path className="stick-white" d="M105 73 H190 M112 61 l8 6 M142 61 l8 6 M172 61 l8 6" />
-                            </g>
-
-                            <g className="stick-scene stick-pull">
-                              <circle className="stick-line" cx="48" cy="28" r="7" />
-                              <path className="stick-line" d="M48 35 L48 56 M48 40 L36 51 M48 41 L63 50 M48 56 L38 70 M48 56 L58 70" />
-                              <path className="stick-line" d="M63 50 H104" />
-                              <path className="stick-line stick-rope" d="M63 50 H104" />
-                              <g className="stick-box"><path className="stick-line" d="M104 36 h42 v34 h-42z M104 36 l13 -9 h42 l-13 9 M159 27 v34" /><path className="stick-white" d="M117 43 h29 M117 50 h29 M117 57 h29" /></g>
-                              <path className="stick-white" d="M24 73 h136" />
-                            </g>
-
-                            <g className="stick-scene stick-push">
-                              <g className="stick-box"><path className="stick-line" d="M125 39 h45 v31 h-45z M125 39 l12 -8 h45 l-12 8 M182 31 v31" /><path className="stick-white" d="M138 47 h31 M138 55 h31 M138 63 h31" /></g>
-                              <circle className="stick-line" cx="72" cy="28" r="7" />
-                              <path className="stick-line" d="M72 35 L72 56 M72 41 L61 49 M72 41 L88 44 M72 56 L62 70 M72 56 L82 70" />
-                              <path className="stick-line" d="M88 44 L125 47" />
-                              <circle className="stick-white stick-wheel" cx="140" cy="72" r="5" /><circle className="stick-white stick-wheel" cx="169" cy="72" r="5" />
-                            </g>
-
-                            <g className="stick-scene stick-wave">
-                              <circle className="stick-line" cx="72" cy="28" r="7" />
-                              <path className="stick-line" d="M72 35 L72 56 M72 41 L61 50 M72 42 L83 48 M72 56 L63 70 M72 56 L82 70" />
-                              <g className="stick-hand-wave"><path className="stick-line" d="M83 48 L92 36" /><path className="stick-line" d="M92 36 l5 -5 M92 36 l7 0 M92 36 l2 6" /></g>
-                              <path className="stick-line" d="M112 68 h46 v-29 h22 l13 13 v16 h8 M122 68 a5 5 0 1 0 10 0 M177 68 a5 5 0 1 0 10 0" />
-                              <path className="stick-white" d="M160 39 h20 l10 13 h-30z" />
-                            </g>
-                          </svg>
-                        </div>
+                        
                       </div>
                     </div>
                   </div>
