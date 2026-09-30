@@ -166,6 +166,28 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
     setDaliMemory([]);
     daliSessionIdRef.current = crypto.randomUUID();
   };
+  // Restore recent DALI conversation into the chat UI while keeping memory user-scoped.
+  useEffect(() => {
+    if (!isAiChatOpen || aiChatMessages.length > 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const stored = await getDaliRecentMemory(12);
+        if (cancelled || !stored.length) return;
+        const visible = stored
+          .filter((m: any) => m.role === 'user' || m.role === 'assistant')
+          .map((m: any) => ({ role: m.role === 'assistant' ? 'ai' : 'user', text: String(m.message || '') }))
+          .filter(m => m.text.trim());
+        if (visible.length) {
+          setAiChatMessages(visible as { role: 'user' | 'ai'; text: string }[]);
+          setDaliMemory(stored.map((m: any) => ({ role: m.role, message: m.message, entities: m.entities, created_at: m.created_at })).slice(-30));
+        }
+      } catch (memoryError) {
+        console.warn('DALI conversation restore failed:', memoryError);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isAiChatOpen]);
 
   const saveDaliMemory = async (role: 'user' | 'assistant', message: string, entities: any = {}) => {
     try {
@@ -1560,6 +1582,11 @@ I understand the relationships between gensets, bookings, containers, customers,
                     <p className={`text-[10px] font-black tracking-[0.38em] uppercase ${isTerminal ? 'text-white/35' : 'text-[#001F3F]/35'}`}>WELCOME BACK</p>
                     <p className={`mt-1 text-4xl sm:text-5xl font-black uppercase tracking-tight break-words ${isTerminal ? 'text-white/[0.13]' : 'text-[#001F3F]/[0.13]'}`}>{user.name || 'USER'}</p>
                     <p className={`mt-4 text-[10px] font-bold tracking-wide ${isTerminal ? 'text-white/45' : 'text-slate-500/80'}`}>{isAr ? 'أنا دالي — اسألني عن النظام.' : 'I’m Dali — ask me about the system.'}</p>
+                    <div className="mt-4 flex flex-wrap justify-center gap-2 pointer-events-auto">
+                      {(isAr ? ['إجمالي المولدات؟', 'المولدات في الصيانة؟', 'ماذا تعرف؟'] : ['Total gensets?', 'Gensets in maintenance?', 'What do you know?']).map((prompt) => (
+                        <button key={prompt} type="button" onClick={() => setAiChatInput(prompt)} className="px-3 py-2 rounded-xl border text-[10px] font-bold active:scale-95 transition-all bg-white/5 border-white/10 text-[#C2A378]">{prompt}</button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
