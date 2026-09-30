@@ -93,8 +93,11 @@ const drawTruck = (ctx: CanvasRenderingContext2D, o: TruckOpts) => {
   ctx.rotate(tilt);
   ctx.scale(s, s);
 
-  // trailer chassis
-  ctx.fillStyle = '#0a0d12'; ctx.fillRect(-385, -78, 360, 14);
+  // realistic trailer chassis + suspension rails
+  ctx.fillStyle = '#080b10'; ctx.fillRect(-390, -82, 365, 16);
+  ctx.fillStyle = '#1b232d'; ctx.fillRect(-380, -68, 330, 5);
+  ctx.strokeStyle = 'rgba(255,255,255,.08)'; ctx.lineWidth = 2;
+  for (let x = -370; x < -45; x += 38) { ctx.beginPath(); ctx.moveTo(x, -80); ctx.lineTo(x + 8, -66); ctx.stroke(); }
   // container
   const cg = ctx.createLinearGradient(0, -198, 0, -80);
   cg.addColorStop(0, '#dcc197'); cg.addColorStop(1, '#a58248');
@@ -108,15 +111,25 @@ const drawTruck = (ctx: CanvasRenderingContext2D, o: TruckOpts) => {
   // tail lights
   ctx.fillStyle = '#ff2b2b'; ctx.fillRect(-384, -100, 6, 16);
 
-  // cab
-  ctx.fillStyle = dark ? '#0f2f52' : '#14416f';
+  // cab — layered bodywork, grille, bumper and mirrors
+  ctx.fillStyle = dark ? '#0b2743' : '#173f68';
   ctx.beginPath(); ctx.moveTo(-32, -66); ctx.lineTo(-32, -178); ctx.lineTo(52, -178); ctx.lineTo(86, -118); ctx.lineTo(132, -108); ctx.lineTo(136, -66); ctx.closePath(); ctx.fill();
   ctx.fillStyle = '#c2a378'; ctx.fillRect(-32, -92, 168, 7);
   ctx.fillStyle = dark ? '#06111c' : '#a8d4f2';
   ctx.beginPath(); ctx.moveTo(-8, -168); ctx.lineTo(48, -168); ctx.lineTo(76, -122); ctx.lineTo(-8, -122); ctx.closePath(); ctx.fill();
   ctx.fillStyle = 'rgba(255,255,255,.16)';
   ctx.beginPath(); ctx.moveTo(6, -168); ctx.lineTo(26, -168); ctx.lineTo(4, -122); ctx.lineTo(-8, -122); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#0a0d12'; ctx.fillRect(120, -90, 18, 26);
+  ctx.fillStyle = '#071018'; ctx.fillRect(120, -92, 18, 28);
+  ctx.fillStyle = '#101a23'; ctx.fillRect(126, -88, 11, 21);
+  ctx.fillStyle = '#b8c0ca'; ctx.fillRect(127, -72, 9, 2);
+  // front grille / bumper
+  ctx.fillStyle = '#111820'; ctx.fillRect(118, -66, 23, 9);
+  ctx.strokeStyle = '#46515d'; ctx.lineWidth = 1;
+  for (let yy = -64; yy > -69; yy -= 2) { ctx.beginPath(); ctx.moveTo(120, yy); ctx.lineTo(139, yy); ctx.stroke(); }
+  ctx.fillStyle = '#05080b'; ctx.fillRect(133, -55, 12, 5);
+  // side mirror
+  ctx.strokeStyle = '#222b35'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(73,-124); ctx.lineTo(92,-132); ctx.stroke();
+  ctx.fillStyle = '#070b10'; ctx.beginPath(); ctx.ellipse(94,-134,8,5,0,0,Math.PI*2); ctx.fill();
   ctx.fillStyle = '#8a94a3'; ctx.fillRect(-26, -236, 7, 62); // exhaust stack
   ctx.fillStyle = '#9aa4b2'; ctx.fillRect(28, -66, 48, 16); // fuel tank
 
@@ -143,8 +156,10 @@ const drawTruck = (ctx: CanvasRenderingContext2D, o: TruckOpts) => {
   ctx.globalCompositeOperation = 'source-over';
   ctx.fillStyle = '#fff7d6'; ctx.beginPath(); ctx.ellipse(hx, hy, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
 
-  // wheels
+  // wheels with visible hubs / tire sidewalls
   for (const wx of [-322, -272, -4, 92]) drawWheel(ctx, wx, -32, 32, wheel, dark);
+  ctx.fillStyle = 'rgba(255,255,255,.07)';
+  for (const wx of [-322, -272, -4, 92]) { ctx.beginPath(); ctx.arc(wx - 8, -43, 5, 0, Math.PI * 2); ctx.fill(); }
 
   // horn sound rings
   if (horn > 0) {
@@ -189,6 +204,27 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
   darkRef.current = isDark;
 
   const [soundOn, setSoundOn] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+        setIsFullscreen(true);
+      } else {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    } catch {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    }
+  };
+
+  useEffect(() => {
+    const onFs = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener('fullscreenchange', onFs);
+    return () => document.removeEventListener('fullscreenchange', onFs);
+  }, []);
   const soundOnRef = useRef(false);
   const [hud, setHud] = useState({ kmh: 25, km: 0 });
 
@@ -568,6 +604,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
             {nav.map(([label, href]) => <a key={href} href={href} className={`text-[9px] font-black tracking-[.25em] transition hover:text-[#c2a378] ${K.muted}`}>{label}</a>)}
           </nav>
           <div className="flex items-center gap-2 sm:gap-3">
+            <button onClick={toggleFullscreen} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'} className={`rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isFullscreen ? '⛶ EXIT' : '⛶ FULL'}</button>
             <button onClick={toggleSound} aria-pressed={soundOn} className={`rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{soundOn ? '🔊 SOUND ON' : '🔇 SOUND OFF'}</button>
             <button onClick={() => setTheme(isDark ? 'white' : 'phantom')} className={`rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isDark ? '☀ WHITE' : '🌙 DARK'}</button>
             <button onClick={() => setLang(ar ? 'en' : 'ar')} className={`rounded-full border px-4 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{ar ? 'EN' : 'العربية'}</button>
