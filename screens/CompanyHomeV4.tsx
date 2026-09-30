@@ -804,7 +804,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     founded: ar ? 'التأسيس' : 'FOUNDED',
     years: ar ? 'سنوات' : 'YEARS',
     coverage: ar ? 'التغطية · 5 موانئ' : 'COVERAGE · 5 PORTS',
-    coveragePorts: ar ? ['العين السخنة', 'الإسكندرية', 'دمياط', 'بورسعيد', 'الدخيلة'] : ['SOKHNA', 'ALEXANDRIA', 'DAMIETTA', 'PORT SAID', 'DEKHEILA'],
+    coveragePorts: ar ? ['العين السخنة', 'الإسكندرية', 'دمياط', 'بورسعيد', 'SCCT'] : ['SOKHNA', 'ALEXANDRIA', 'DAMIETTA', 'PORT SAID', 'SCCT'],
     ops24: ar ? 'العمليات' : 'OPERATIONS',
     company: ar ? 'الشركة' : 'Company',
     built: ar ? <>مصمم من أجل<br /><span className={gold}>الطريق.</span></> : <>Built for<br /><span className={gold}>the road.</span></>,
