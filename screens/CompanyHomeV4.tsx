@@ -872,21 +872,21 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         .nf4-reveal{animation:nf4Reveal .9s cubic-bezier(.16,1,.3,1) both}
         .nf4-pulse{animation:nf4Pulse 3s ease-in-out infinite}
         .nf4-contact-bar a{white-space:nowrap}
-        .nf4-app-label{display:flex;align-items:center;gap:10px;min-height:58px;padding:7px 14px 7px 9px;border:1px solid rgba(99,211,255,.42);border-radius:15px;background:linear-gradient(135deg,rgba(8,38,58,.94),rgba(5,11,18,.88));box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 24px rgba(47,190,255,.1);color:#fff;transition:transform .3s ease,border-color .3s ease,box-shadow .3s ease}
-        .nf4-app-label:hover{transform:translateY(-3px);border-color:rgba(194,163,120,.72);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 12px 32px rgba(0,0,0,.3),0 0 28px rgba(194,163,120,.14)}
-        .nf4-app-label img{width:40px;height:40px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(99,211,255,.22));transition:transform .35s ease}
+        .nf4-app-label{display:grid;place-items:center;width:68px;height:58px;padding:7px;border:1px solid rgba(255,255,255,.72);border-radius:15px;background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.035));box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 24px rgba(255,255,255,.07);transition:transform .3s ease,border-color .3s ease,box-shadow .3s ease}
+        .nf4-app-label:hover{transform:translateY(-3px) scale(1.04);border-color:#c2a378;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 12px 32px rgba(0,0,0,.3),0 0 28px rgba(194,163,120,.2)}
+        .nf4-app-label img{width:46px;height:46px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(255,255,255,.25));transition:transform .35s ease}
         .nf4-app-label:hover img{transform:rotate(-5deg) scale(1.08)}
-        .nf4-app-label strong{display:block;font-size:10px;font-weight:950;letter-spacing:.08em;line-height:1;color:#fff}
-        .nf4-app-label strong b{color:#63d3ff;font-weight:950}
-        .nf4-app-label strong em{margin-left:6px;color:#c2a378;font-style:normal;font-size:5px;letter-spacing:.16em;vertical-align:middle}
-        .nf4-app-label small{display:block;margin-top:5px;font-size:6px;font-weight:900;letter-spacing:.16em;color:#63d3ff}
-        .nf4-contact-bar{position:relative;border-color:rgba(99,211,255,.35)!important;background:linear-gradient(90deg,rgba(3,18,28,.98),rgba(7,27,40,.96),rgba(3,18,28,.98))!important}
-        .nf4-contact-bar:before{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,#63d3ff 18%,#c2a378 50%,#63d3ff 82%,transparent);opacity:.95}
-        .nf4-contact-bar:after{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(99,211,255,.8),rgba(194,163,120,.8),transparent);opacity:.7}
-        .nf4-contact-card{background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.018));border-color:rgba(99,211,255,.2)}
-        .nf4-contact-card:hover{border-color:rgba(99,211,255,.72);background:linear-gradient(145deg,rgba(99,211,255,.13),rgba(194,163,120,.07));box-shadow:0 12px 30px rgba(0,0,0,.3),0 0 24px rgba(99,211,255,.12)}
-        .nf4-contact-icon{border-color:rgba(99,211,255,.4);color:#63d3ff}
-        .nf4-contact-card:hover .nf4-contact-icon{background:rgba(99,211,255,.13)}
+        .nf4-contact-bar{position:relative;border-color:rgba(255,255,255,.34)!important;background:linear-gradient(90deg,rgba(4,8,14,.98),rgba(20,25,32,.97),rgba(4,8,14,.98))!important}
+        .nf4-contact-bar:before{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,#fff 18%,#c2a378 42%,#d9b66f 50%,#c62828 62%,#fff 82%,transparent);opacity:1}
+        .nf4-contact-bar:after{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),rgba(194,163,120,.9),rgba(198,40,40,.8),transparent);opacity:.75}
+        .nf4-contact-card{background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.02));border-color:rgba(255,255,255,.2)}
+        .nf4-contact-card:hover{border-color:rgba(194,163,120,.8);background:linear-gradient(145deg,rgba(255,255,255,.13),rgba(194,163,120,.08));box-shadow:0 12px 30px rgba(0,0,0,.3),0 0 24px rgba(194,163,120,.15)}
+        .nf4-contact-icon{border-color:rgba(255,255,255,.45);color:#fff}
+        .nf4-contact-card:hover .nf4-contact-icon{background:rgba(198,40,40,.14);border-color:#c62828;color:#fff}
+        .nf4-contact-card small{color:rgba(255,255,255,.62)}
+        .nf4-contact-card strong{color:#fff}
+        .nf4-contact-card:nth-child(2) .nf4-contact-icon{color:#c2a378}
+        .nf4-contact-card:nth-child(3) .nf4-contact-icon{color:#e05a5a}
         .nf4-contact-grid{display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:8px}
         .nf4-contact-card{display:flex;align-items:center;gap:10px;min-height:48px;padding:8px 12px;border:1px solid rgba(255,255,255,.11);border-radius:13px;background:rgba(255,255,255,.045);transition:transform .28s cubic-bezier(.16,1,.3,1),border-color .28s ease,background .28s ease,box-shadow .28s ease}
         .nf4-contact-card:hover{transform:translateY(-4px) scale(1.015);border-color:rgba(194,163,120,.62);background:rgba(194,163,120,.1);box-shadow:0 12px 30px rgba(0,0,0,.3),0 0 22px rgba(194,163,120,.1)}
@@ -938,10 +938,6 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         <div className="mx-auto flex max-w-[1500px] items-center gap-3 px-4 py-3 lg:px-10">
           <a href="#top" className="nf4-app-label shrink-0" aria-label="Nile Fleet homepage">
             <img src="/nile-fleet-logo.png" alt="Nile Fleet" />
-            <span>
-              <strong>NILE <b>FLEET</b><em>POWERED BY BEBITO</em></strong>
-              <small>Transport · Logistics · Egypt</small>
-            </span>
           </a>
           <div className="nf4-contact-grid min-w-0 flex-1">
             <a href="tel:+201000992858" className="nf4-contact-card" aria-label="Call Nile Fleet">
