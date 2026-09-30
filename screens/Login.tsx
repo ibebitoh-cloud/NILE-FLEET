@@ -202,7 +202,6 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBackToHome }) => {
   };
 
   const welcomeQuote = 'Sharp details keep every operation moving in the right direction.';
-  const welcomeAnimationClass = `welcome-anim-${welcomeStyle}`;
 
   return (
     <div className={`min-h-screen flex items-center justify-center p-0 m-0 relative overflow-hidden font-sans transition-colors duration-1000 ${isDark ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'} ${isAr ? 'rtl font-cairo' : 'ltr'}`}>
@@ -390,12 +389,8 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBackToHome }) => {
                   </div>
                 ) : (
                   <div className="w-full flex-1 min-h-[390px] flex flex-col items-center justify-center text-center relative overflow-hidden">
-                    <div className={`relative z-10 w-full max-w-sm ${welcomeAnimationClass}`}>
+                    <div className="relative z-10 w-full max-w-sm">
                       <div className="relative">
-                        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-20 [perspective:900px] pointer-events-none">
-                          <div className="absolute left-1/2 top-1/2 h-14 w-[86%] -translate-x-1/2 -translate-y-1/2 rounded-[50%] border border-[#C2A378]/25 [transform:rotateX(62deg)] core-spin"></div>
-                          <div className="absolute left-1/2 top-1/2 h-8 w-[62%] -translate-x-1/2 -translate-y-1/2 rounded-[50%] border border-[#C2A378]/45 [transform:rotateX(62deg)] core-spin-reverse"></div>
-                        </div>
                         <p className="relative z-10 text-[#C2A378] text-[9px] sm:text-[10px] font-black uppercase tracking-[0.5em] leading-none">NILE FLEET</p>
                         <h3 className="relative z-10 mt-3 text-white text-[2rem] sm:text-4xl font-black uppercase italic tracking-[-0.045em] leading-none">WELCOME <span className="inline-block text-[#C2A378]">BACK</span></h3>
                         <div className="relative z-10 mt-3 inline-flex items-center gap-2 text-xl sm:text-2xl font-black uppercase tracking-[0.18em] text-white">
@@ -404,54 +399,8 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBackToHome }) => {
                         <p className="relative z-10 max-w-xs mx-auto mt-4 text-slate-300 text-[10px] sm:text-xs font-bold leading-relaxed tracking-wide">{welcomeQuote}</p>
                       </div>
                       <button type="button" onClick={enterApp} className="mt-5 px-9 py-3 bg-[#001F3F] hover:bg-[#002b57] border border-[#C2A378]/40 text-white font-black rounded-full uppercase tracking-[0.3em] text-[9px] transition-all active:scale-[0.97] shadow-[0_0_30px_rgba(194,163,120,.12)]">{isAr ? 'دخول إلى النظام' : 'ENTER SYSTEM'}</button>
-                      <div className={`mt-3 signature-stage welcome-anim-${welcomeStyle}`} aria-label="Powered by Bebito">
-                        <svg className="signature-svg" viewBox="0 0 520 122" role="img" aria-labelledby="bebito-signature-title">
-                          <title id="bebito-signature-title">Powered by Bebito</title>
-                          <text x="42" y="22" fontSize="8.5" fill="#C2A378">POWERED</text>
-                          <text x="112" y="22" fontSize="8.5" fill="#FFFFFF">BY</text>
-                          <g aria-hidden="true">
-                            <text className="sig-target-letter" x="150" y="67" fontSize="34" fill="#C2A378">B</text>
-                            <text className="sig-target-letter" x="198" y="67" fontSize="34" fill="#FFFFFF">E</text>
-                            <text className="sig-target-letter" x="246" y="67" fontSize="34" fill="#C2A378">B</text>
-                            <text className="sig-target-letter" x="294" y="67" fontSize="34" fill="#FFFFFF">I</text>
-                            <text className="sig-target-letter" x="330" y="67" fontSize="34" fill="#C2A378">T</text>
-                            <text className="sig-target-letter" x="374" y="67" fontSize="34" fill="#FFFFFF">O</text>
-                          </g>
-                          <path className="sig-ground" d="M138 78 H405"/>
-                          <g className="sig-worker" aria-hidden="true">
-                            <circle className="sig-line" cx="31" cy="18" r="7"/>
-                            <circle className="sig-dot" cx="34" cy="17" r="1.2"/>
-                            <path className="sig-line" d="M31 25 L31 49"/>
-                            <path className="sig-line" d="M31 31 L18 40 L10 31"/>
-                            <g className="sig-action-arm">
-                              <path className="sig-line" d="M31 31 L44 28 L58 27"/>
-                              <circle className="sig-dot" cx="58" cy="27" r="2.2"/>
-                            </g>
-                            <g className="sig-step-a"><path className="sig-line" d="M31 49 L25 61 L20 72"/></g>
-                            <g className="sig-step-b"><path className="sig-line" d="M31 49 L37 61 L42 72"/></g>
-                          </g>
-                          <g className="sig-impact sig-impact-0" aria-hidden="true">
-                            <circle className="sig-gold" cx="150" cy="47" r="6"/>
-                          </g>
-                          <g className="sig-impact sig-impact-1" aria-hidden="true">
-                            <circle className="sig-gold" cx="198" cy="47" r="6"/>
-                          </g>
-                          <g className="sig-impact sig-impact-2" aria-hidden="true">
-                            <circle className="sig-gold" cx="246" cy="47" r="6"/>
-                          </g>
-                          <g className="sig-impact sig-impact-3" aria-hidden="true">
-                            <circle className="sig-gold" cx="294" cy="47" r="6"/>
-                          </g>
-                          <g className="sig-impact sig-impact-4" aria-hidden="true">
-                            <circle className="sig-gold" cx="330" cy="47" r="6"/>
-                          </g>
-                          <g className="sig-impact sig-impact-5" aria-hidden="true">
-                            <circle className="sig-gold" cx="374" cy="47" r="6"/>
-                          </g>
-                        </svg>
-                      </div>
-                        
-                    </div>
+                      <div className="mt-5 text-[9px] font-black uppercase tracking-[0.35em] text-[#C2A378]">POWERED BY <span className="text-white">BEBITO</span></div>
+
                   </div>
                 )}
               </div>
