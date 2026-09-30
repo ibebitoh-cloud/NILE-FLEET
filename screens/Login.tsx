@@ -255,33 +255,62 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         @keyframes welcomeLetter3d { 0%,100% { transform:translateY(0) rotateX(0) rotateY(0); text-shadow:0 0 0 transparent; } 50% { transform:translateY(-4px) rotateX(18deg) rotateY(-12deg); text-shadow:5px 7px 0 rgba(0,31,63,.7), 0 0 18px rgba(194,163,120,.45); } }
         .welcome-letter-3d { animation: welcomeLetter3d 2.8s ease-in-out infinite; transform-style:preserve-3d; }
 
-        /* BEBITO signature: one hand-drawn stick man, with a different story on each login session. */
-        @keyframes stickWalk { 0% { transform:translateX(-92px); opacity:0; } 12% { opacity:1; } 48% { transform:translateX(0); } 82% { transform:translateX(82px); opacity:1; } 100% { transform:translateX(105px); opacity:0; } }
-        @keyframes stickWalkBack { 0% { transform:translateX(105px); opacity:0; } 12% { opacity:1; } 48% { transform:translateX(0); } 82% { transform:translateX(-82px); opacity:1; } 100% { transform:translateX(-105px); opacity:0; } }
-        @keyframes stickThink { 0%,18% { transform:translate(0,18px); opacity:0; } 30% { opacity:1; } 42% { transform:translate(0,0); } 58% { transform:translate(-2px,-2px); } 72% { transform:translate(2px,0); } 100% { transform:translate(0,18px); opacity:0; } }
-        @keyframes stickArmThink { 0%,25% { transform:rotate(25deg); } 45% { transform:rotate(-18deg); } 58% { transform:rotate(-30deg); } 72% { transform:rotate(-12deg); } 100% { transform:rotate(25deg); } }
-        @keyframes stickBuild { 0% { transform:translateX(-75px); opacity:0; } 18% { opacity:1; } 40% { transform:translateX(0); } 55% { transform:translateX(5px); } 70% { transform:translateX(-2px); } 88% { transform:translateX(65px); opacity:1; } 100% { transform:translateX(85px); opacity:0; } }
-        @keyframes stickHammer { 0%,35% { transform:rotate(-18deg); } 48% { transform:rotate(32deg); } 60% { transform:rotate(-25deg); } 72% { transform:rotate(30deg); } 100% { transform:rotate(-18deg); } }
-        @keyframes stickDraw { 0% { transform:translateX(-70px); opacity:0; } 15% { opacity:1; } 35% { transform:translateX(0); } 55% { transform:translateX(20px); } 78% { transform:translateX(62px); } 100% { transform:translateX(90px); opacity:0; } }
-        @keyframes penDraw { 0%,30% { transform:rotate(-35deg); } 45% { transform:rotate(10deg); } 60% { transform:rotate(-20deg); } 75% { transform:rotate(8deg); } 100% { transform:rotate(-35deg); } }
-        @keyframes stickPull { 0% { transform:translateX(-70px); opacity:0; } 15% { opacity:1; } 35% { transform:translateX(0); } 55% { transform:translateX(12px); } 78% { transform:translateX(55px); } 100% { transform:translateX(78px); opacity:0; } }
-        @keyframes ropePull { 0%,32% { transform:scaleX(.55); transform-origin:left center; } 52% { transform:scaleX(1); } 72% { transform:scaleX(.7); } 100% { transform:scaleX(.55); } }
-        @keyframes boxSlide { 0% { transform:translateX(65px); } 45% { transform:translateX(0); } 100% { transform:translateX(-28px); } }
-        @keyframes stickPush { 0% { transform:translateX(-58px); opacity:0; } 15% { opacity:1; } 42% { transform:translateX(0); } 68% { transform:translateX(34px); } 100% { transform:translateX(72px); opacity:0; } }
-        @keyframes wheelSpin { to { transform:rotate(360deg); } }
-        @keyframes stickWave { 0%,20% { transform:rotate(12deg); } 35% { transform:rotate(-28deg); } 50% { transform:rotate(18deg); } 65% { transform:rotate(-25deg); } 80%,100% { transform:rotate(12deg); } }
-        @keyframes sigLetterThink { 0%,100% { transform:translateY(0) rotate(0); text-shadow:none; } 45% { transform:translateY(-5px) rotate(-5deg); text-shadow:0 0 16px rgba(194,163,120,.65); } 65% { transform:translateY(0) rotate(2deg); } }
-        @keyframes sigLetterBuild { 0%,100% { transform:translateY(0) scale(1); text-shadow:none; } 35% { transform:translateY(-3px) scale(1.06); } 48% { transform:translateY(2px) scale(.97); text-shadow:0 0 18px rgba(194,163,120,.55); } 60% { transform:translateY(-2px) scale(1.03); } }
-        @keyframes sigLetterDraw { 0%,100% { transform:translateX(0); opacity:.75; } 45% { transform:translateX(3px); opacity:1; text-shadow:0 0 16px rgba(194,163,120,.7); } 70% { transform:translateX(0); opacity:1; } }
-        @keyframes sigLetterPull { 0%,100% { transform:translateX(0) rotate(0); } 45% { transform:translateX(6px) rotate(2deg); text-shadow:0 0 20px rgba(194,163,120,.8); } 65% { transform:translateX(-1px); } }
-        @keyframes sigLetterPush { 0%,100% { transform:translateX(0) scale(1); } 45% { transform:translateX(-5px) scale(.98); } 65% { transform:translateX(2px) scale(1.03); text-shadow:0 0 18px rgba(194,163,120,.7); } }
-        @keyframes sigLetterWave { 0%,100% { transform:translateY(0) rotate(0); } 25% { transform:translateY(-2px) rotate(-3deg); } 50% { transform:translateY(0) rotate(3deg); } 75% { transform:translateY(-2px) rotate(-2deg); } }
-        .signature-scene { position:absolute; left:50%; bottom:0; width:290px; height:76px; transform:translateX(-50%); pointer-events:none; overflow:visible; z-index:1; }
-        .signature-scene svg { width:100%; height:100%; overflow:visible; }
-        .signature-word { position:relative; z-index:3; display:inline-flex; align-items:baseline; justify-content:center; gap:.08em; }
-        .signature-letter { display:inline-block; transform-origin:center bottom; will-change:transform,opacity,text-shadow; }
-        .signature-letter-space { width:.28em; }
-
+        /* BEBITO signature — fluid hand-drawn character motion. The character is built from separate joints so the body, arms, head and legs move naturally rather than sliding as one object. */
+        @keyframes sigCharacterFloat { 0%,100%{transform:translate3d(0,0,0)} 50%{transform:translate3d(1px,-2px,0)} }
+        @keyframes sigWalk { 0%{transform:translateX(-118px)} 12%{transform:translateX(-82px)} 28%{transform:translateX(-40px)} 44%{transform:translateX(4px)} 60%{transform:translateX(46px)} 78%{transform:translateX(82px)} 100%{transform:translateX(118px)} }
+        @keyframes sigWalkBody { 0%,100%{transform:rotate(0)} 18%{transform:rotate(-2deg)} 42%{transform:rotate(2deg)} 66%{transform:rotate(-2deg)} 84%{transform:rotate(1deg)} }
+        @keyframes sigHeadLook { 0%,100%{transform:rotate(0)} 28%{transform:rotate(-7deg)} 48%{transform:rotate(4deg)} 72%{transform:rotate(7deg)} 88%{transform:rotate(0)} }
+        @keyframes sigArmA { 0%,100%{transform:rotate(24deg)} 22%{transform:rotate(-8deg)} 46%{transform:rotate(34deg)} 70%{transform:rotate(-2deg)} 88%{transform:rotate(20deg)} }
+        @keyframes sigArmB { 0%,100%{transform:rotate(-22deg)} 22%{transform:rotate(8deg)} 46%{transform:rotate(-34deg)} 70%{transform:rotate(2deg)} 88%{transform:rotate(-18deg)} }
+        @keyframes sigLegA { 0%,100%{transform:rotate(18deg)} 25%{transform:rotate(-22deg)} 50%{transform:rotate(28deg)} 75%{transform:rotate(-12deg)} }
+        @keyframes sigLegB { 0%,100%{transform:rotate(-18deg)} 25%{transform:rotate(24deg)} 50%{transform:rotate(-26deg)} 75%{transform:rotate(14deg)} }
+        @keyframes sigReach { 0%,18%{transform:translate(0,0) rotate(12deg)} 34%{transform:translate(8px,-5px) rotate(-20deg)} 48%{transform:translate(18px,-2px) rotate(-42deg)} 62%{transform:translate(6px,1px) rotate(-18deg)} 78%,100%{transform:translate(0,0) rotate(12deg)} }
+        @keyframes sigTap { 0%,34%{transform:translate(0,0)} 43%{transform:translate(14px,-2px)} 49%{transform:translate(20px,-2px)} 56%{transform:translate(8px,0)} 70%,100%{transform:translate(0,0)} }
+        @keyframes sigKick { 0%,30%{transform:rotate(0)} 44%{transform:rotate(-22deg)} 54%{transform:rotate(26deg)} 64%{transform:rotate(-8deg)} 78%,100%{transform:rotate(0)} }
+        @keyframes sigHeadNod { 0%,30%{transform:rotate(0)} 42%{transform:rotate(12deg)} 50%{transform:rotate(19deg)} 58%{transform:rotate(7deg)} 72%,100%{transform:rotate(0)} }
+        @keyframes sigPull { 0%,25%{transform:translateX(0)} 42%{transform:translateX(-7px)} 56%{transform:translateX(5px)} 72%{transform:translateX(-2px)} 100%{transform:translateX(0)} }
+        @keyframes sigLetterReact { 0%,38%,100%{transform:translateY(0) rotate(0) scale(1)} 47%{transform:translateY(-3px) rotate(-3deg) scale(1.04)} 57%{transform:translateY(1px) rotate(2deg) scale(.99)} 68%{transform:translateY(0) rotate(0) scale(1)} }
+        .signature-stage { position:relative; min-height:82px; width:100%; overflow:visible; }
+        .signature-word { position:relative; z-index:6; display:inline-flex; align-items:baseline; justify-content:center; gap:.05em; }
+        .signature-letter { position:relative; display:inline-block; min-width:.62em; text-align:center; transform-origin:center 80%; will-change:transform,opacity,filter; }
+        .signature-stage::after { content:""; position:absolute; left:50%; bottom:5px; width:72%; height:8px; transform:translateX(-50%); border-bottom:1px solid rgba(194,163,120,.18); border-radius:50%; pointer-events:none; }
+        .signature-character { position:absolute; left:50%; bottom:7px; width:62px; height:72px; transform:translateX(-50%); z-index:7; pointer-events:none; }
+        .signature-character .sig-body { transform-origin:31px 34px; animation:sigWalkBody 2.9s ease-in-out infinite; }
+        .signature-character .sig-head { transform-origin:31px 20px; animation:sigHeadLook 2.9s ease-in-out infinite; }
+        .signature-character .sig-arm-a { transform-origin:31px 35px; animation:sigArmA 1.45s ease-in-out infinite; }
+        .signature-character .sig-arm-b { transform-origin:31px 35px; animation:sigArmB 1.45s ease-in-out infinite; }
+        .signature-character .sig-leg-a { transform-origin:31px 51px; animation:sigLegA 1.45s ease-in-out infinite; }
+        .signature-character .sig-leg-b { transform-origin:31px 51px; animation:sigLegB 1.45s ease-in-out infinite; }
+        .signature-character .sig-hand { transform-origin:53px 38px; animation:sigTap 2.9s ease-in-out infinite; }
+        .signature-character .sig-foot { transform-origin:48px 62px; animation:sigKick 2.9s ease-in-out infinite; }
+        .signature-character .sig-head-action { animation:sigHeadNod 2.9s ease-in-out infinite; transform-origin:31px 20px; }
+        .signature-character .sig-pull { animation:sigPull 2.9s ease-in-out infinite; }
+        .signature-character .sig-line { fill:none; stroke:rgba(255,255,255,.92); stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
+        .signature-character .sig-accent { fill:none; stroke:#C2A378; stroke-width:1.5; stroke-linecap:round; vector-effect:non-scaling-stroke; }
+        .signature-character .sig-dot { fill:#C2A378; }
+        .signature-character.sig-scene-0 { animation:sigWalk 2.9s cubic-bezier(.42,0,.58,1) infinite; }
+        .signature-character.sig-scene-1 { animation:sigWalk 3.2s cubic-bezier(.42,0,.58,1) infinite; }
+        .signature-character.sig-scene-2 { animation:sigWalk 3.1s cubic-bezier(.42,0,.58,1) infinite; }
+        .signature-character.sig-scene-3 { animation:sigWalk 3s cubic-bezier(.42,0,.58,1) infinite; }
+        .signature-character.sig-scene-4 { animation:sigWalk 3.3s cubic-bezier(.42,0,.58,1) infinite; }
+        .signature-character.sig-scene-5 { animation:sigWalk 3s cubic-bezier(.42,0,.58,1) infinite; }
+        .signature-character.sig-scene-6 { animation:sigWalk 3.2s cubic-bezier(.42,0,.58,1) infinite; }
+        .signature-character.sig-scene-7 { animation:sigWalk 3.1s cubic-bezier(.42,0,.58,1) infinite; }
+        .signature-character.sig-scene-0 .sig-action-arm { animation:sigReach 2.9s ease-in-out infinite; transform-origin:31px 35px; }
+        .signature-character.sig-scene-0 .sig-action-hand { animation:sigTap 2.9s ease-in-out infinite; }
+        .signature-character.sig-scene-1 .sig-action-arm { animation:sigReach 3.2s ease-in-out infinite; transform-origin:31px 35px; }
+        .signature-character.sig-scene-2 .sig-action-head { animation:sigHeadNod 3.1s ease-in-out infinite; }
+        .signature-character.sig-scene-3 .sig-action-leg { animation:sigKick 3s ease-in-out infinite; transform-origin:31px 51px; }
+        .signature-character.sig-scene-4 .sig-action-pull { animation:sigPull 3.3s ease-in-out infinite; }
+        .signature-character.sig-scene-5 .sig-action-arm { animation:sigReach 3s ease-in-out infinite; transform-origin:31px 35px; }
+        .signature-character.sig-scene-6 .sig-action-head { animation:sigHeadNod 3.2s ease-in-out infinite; }
+        .signature-character.sig-scene-7 .sig-action-arm { animation:sigReach 3.1s ease-in-out infinite; transform-origin:31px 35px; }
+        .signature-stage.welcome-anim-0 .signature-letter:nth-of-type(1),
+        .signature-stage.welcome-anim-0 .signature-letter:nth-of-type(2),
+        .signature-stage.welcome-anim-0 .signature-letter:nth-of-type(3),
+        .signature-stage.welcome-anim-0 .signature-letter:nth-of-type(4),
+        .signature-stage.welcome-anim-0 .signature-letter:nth-of-type(5),
+        .signature-stage.welcome-anim-0 .signature-letter:nth-of-type(6) { animation:sigLetterReact 2.9s ease-in-out infinite; }
         /* Physical BEBITO interaction stories — letters are the objects the stickman manipulates. */
         .signature-stage { position:relative; min-height:82px; width:100%; overflow:visible; }
         .signature-word { position:relative; z-index:6; gap:.05em; }
@@ -513,65 +542,20 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                           <span>POWERED</span><span className="signature-letter-space" aria-hidden="true"></span><span className="text-white">BY</span><span className="signature-letter-space" aria-hidden="true"></span>
                           <span className="signature-letter text-[#C2A378]">B</span><span className="signature-letter text-white">E</span><span className="signature-letter text-[#C2A378]">B</span><span className="signature-letter text-white">I</span><span className="signature-letter text-[#C2A378]">T</span><span className="signature-letter text-white">O</span>
                         </div>
-                        <div className="signature-scene" aria-hidden="true">
-                          <svg viewBox="0 0 290 100" role="presentation">
-                          <path className="stick-white signature-guide" d="M8 82 H282" />
-                          <g className="stick-scene stick-hand-scene">
-                            <g className="stick-action stick-action-hand">
-                              <circle className="stick-line" cx="70" cy="30" r="7" />
-                              <path className="stick-line" d="M70 37 L70 60 M70 43 L57 52 M70 44 L82 48 M70 60 L58 80 M70 60 L82 80" />
-                              <path className="stick-line" d="M82 48 L105 31 L132 22" />
-                              <circle className="stick-fill" cx="134" cy="21" r="2.2" />
+                        <div className={`signature-character sig-scene-${welcomeStyle}`} aria-hidden="true">
+                          <svg viewBox="0 0 62 72" role="presentation">
+                            <g className="sig-body">
+                              <g className="sig-head-action"><circle className="sig-line" cx="31" cy="20" r="7"/><circle className="sig-dot" cx="33.5" cy="19" r="1.2"/></g>
+                              <path className="sig-line" d="M31 27 L31 51"/>
+                              <g className="sig-arm-a"><path className="sig-line" d="M31 35 L17 43 L8 35"/></g>
+                              <g className="sig-arm-b"><path className="sig-line" d="M31 35 L45 40 L54 32"/></g>
+                              <g className="sig-leg-a"><path className="sig-line" d="M31 51 L20 64 L12 69"/></g>
+                              <g className="sig-leg-b"><path className="sig-line" d="M31 51 L42 63 L51 68"/></g>
+                              <circle className="sig-dot" cx="54" cy="32" r="1.8"/>
                             </g>
-                            <circle className="stick-impact" cx="147" cy="20" r="8" fill="none" stroke="#C2A378" strokeWidth="1.5" />
-                            <path className="stick-white" d="M142 20 h10 M147 15 v10" />
-                          </g>
-                          <g className="stick-scene stick-head-scene">
-                            <g className="stick-action stick-action-head">
-                              <circle className="stick-line" cx="72" cy="31" r="7" />
-                              <path className="stick-line" d="M72 38 L72 61 M72 44 L59 51 M72 44 L84 51 M72 61 L60 81 M72 61 L84 81" />
-                              <path className="stick-white" d="M78 25 q7 -5 13 0" />
-                            </g>
-                            <circle className="stick-impact" cx="128" cy="27" r="9" fill="none" stroke="#C2A378" strokeWidth="1.5" />
-                            <path className="stick-white" d="M122 27 h12 M128 21 v12" />
-                          </g>
-                          <g className="stick-scene stick-foot-scene">
-                            <g className="stick-action stick-action-foot">
-                              <circle className="stick-line" cx="67" cy="29" r="7" />
-                              <path className="stick-line" d="M67 36 L67 59 M67 43 L55 52 M67 43 L80 49 M67 59 L57 81" />
-                              <path className="stick-line" d="M67 59 L93 72 L119 68" />
-                              <circle className="stick-fill" cx="121" cy="67" r="2.2" />
-                            </g>
-                            <circle className="stick-impact" cx="136" cy="65" r="8" fill="none" stroke="#C2A378" strokeWidth="1.5" />
-                            <path className="stick-white" d="M131 65 h10 M136 60 v10" />
-                          </g>
-                          <g className="stick-scene stick-jump-scene">
-                            <g className="stick-action stick-action-jump">
-                              <circle className="stick-line" cx="69" cy="29" r="7" />
-                              <path className="stick-line" d="M69 36 L70 57 M70 43 L57 49 M70 43 L83 47 M70 57 L58 69 M70 57 L87 60 L117 49" />
-                              <circle className="stick-fill" cx="119" cy="48" r="2.2" />
-                            </g>
-                            <circle className="stick-impact" cx="135" cy="43" r="9" fill="none" stroke="#C2A378" strokeWidth="1.5" />
-                            <path className="stick-white" d="M129 43 h12 M135 37 v12" />
-                          </g>
-                          <g className="stick-scene stick-pull-scene">
-                            <g className="stick-action stick-action-pull">
-                              <circle className="stick-line" cx="60" cy="30" r="7" />
-                              <path className="stick-line" d="M60 37 L60 60 M60 44 L47 53 M60 44 L76 49 M60 60 L49 81 M60 60 L72 81" />
-                              <path className="stick-line" d="M76 49 L132 49" />
-                              <circle className="stick-fill" cx="134" cy="49" r="2.2" />
-                            </g>
-                            <path className="stick-white" d="M134 38 h22 v22 h-22z" />
-                          </g>
-                          <g className="stick-scene stick-carry-scene">
-                            <g className="stick-action stick-action-carry">
-                              <circle className="stick-line" cx="68" cy="31" r="7" />
-                              <path className="stick-line" d="M68 38 L68 61 M68 45 L54 53 M68 45 L82 53 M68 61 L57 81 M68 61 L80 81" />
-                              <path className="stick-line" d="M82 53 L99 40 L113 40" />
-                              <path className="stick-white" d="M105 34 h18 v12 h-18z" />
-                            </g>
-                          </g>
-                        </svg>
+                            <path className="sig-accent" d="M3 69 H59"/>
+                            <circle className="sig-dot" cx="57" cy="69" r="1.3"/>
+                          </svg>
                         </div>
                       </div>
                         
