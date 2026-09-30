@@ -457,15 +457,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         .signature-shimmer { animation: signatureShimmer 2.8s ease-in-out infinite; }
       `}</style>
 
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#00101f]/80 backdrop-blur-md p-5">
-          <div className="w-full max-w-xs rounded-3xl border border-[#C2A378]/30 bg-[#061827]/95 p-6 text-center shadow-[0_20px_80px_rgba(0,0,0,.55)]">
-            <div className="mx-auto mb-4 h-12 w-12 rounded-2xl border border-[#C2A378]/40 flex items-center justify-center text-[#C2A378] text-xl font-black">N</div>
-            <p className="text-[#C2A378] text-[9px] font-black uppercase tracking-[0.35em]">NILE FLEET</p>
-            <h2 className="mt-2 text-white text-xl font-black uppercase italic tracking-tight">{isAr ? 'افتح العرض الكامل' : 'OPEN FULL VIEW'}</h2>
-            <button type="button" onClick={requestFullscreen} className="mt-5 w-full rounded-xl bg-[#C2A378] text-[#001F3F] py-3 text-[9px] font-black uppercase tracking-[0.28em] shadow-[0_0_30px_rgba(194,163,120,.2)] active:scale-[.98]">{isAr ? 'فتح ملء الشاشة' : 'OPEN FULL VIEW'}</button>
-          </div>
-        </div>
-      )}
 
       <div className="login-screen-shell w-full min-h-screen lg:h-screen grid grid-cols-1 lg:grid-cols-12 overflow-hidden relative z-10">
         <div ref={bgRef} className="absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
