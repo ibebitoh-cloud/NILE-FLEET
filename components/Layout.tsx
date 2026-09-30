@@ -932,7 +932,33 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         recentPayments: db.getPayments().slice(-50).map(p => ({ customerName:p.customerName, amount:p.amount, date:p.date, reference:p.reference }))
       };
       const prompt = `Answer the latest user question directly. Understand natural Egyptian Arabic, Modern Standard Arabic, English, Arabizi/transliterated customer names, and mixed Arabic/English. Use recent conversation only to resolve references in a follow-up; do not let older turns override the latest question. For Nile Fleet facts, use only the supplied live data and say plainly when the needed fact is not present. For general or how-to questions, answer helpfully without forcing an unrelated fleet-data answer. Never invent operational facts. Reply in the latest question's language, preserve IDs/dates/numbers, and keep it concise.\n${creatorContext}\nLATEST QUESTION: ${question}\nLIVE CONTEXT: ${JSON.stringify(context)}`;
-      const answer = await runThinkingAudit(prompt, 420);
+      let answer = '';
+      try {
+        answer = await runThinkingAudit(prompt, 650);
+      } catch (aiError) {
+        console.error('DALI general AI route failed; using deterministic fallback', aiError);
+        const lower = cleanQ;
+        if (/stock|genset|generator|مولد|مولدات|مخزون|ميناء|port/.test(lower)) {
+          const total = gensets.length;
+          const maintenanceCount = gensets.filter(g => String(g.status || '').toUpperCase() === 'MAINTENANCE').length;
+          const inStock = gensets.filter(g => String(g.status || '').toUpperCase() === 'IN_STOCK').length;
+          const clipped = gensets.filter(g => String(g.status || '').toUpperCase() === 'CLIPPED_ON').length;
+          const topPort = stockByPort.slice().sort((a,b) => b.total - a.total)[0];
+          answer = responseIsAr
+            ? 'إجمالي المولدات: ' + total + '\nفي المخزون: ' + inStock + '\nمركبة: ' + clipped + '\nفي الصيانة: ' + maintenanceCount + '\nأكبر مخزون: ' + (topPort?.port || '—') + ' (' + (topPort?.total || 0) + ')'
+            : 'Total gensets: ' + total + '\nIn stock: ' + inStock + '\nClipped on: ' + clipped + '\nMaintenance: ' + maintenanceCount + '\nLargest port stock: ' + (topPort?.port || '—') + ' (' + (topPort?.total || 0) + ')';
+        } else if (/operation|booking|container|عملية|حجز|حاوية|حاويه/.test(lower)) {
+          const active = operations.filter(o => String(o.status || '').toUpperCase() === 'IN PROGRESS').length;
+          const done = operations.filter(o => String(o.status || '').toUpperCase() === 'DONE').length;
+          answer = responseIsAr ? 'إجمالي العمليات المسجلة: ' + operations.length + '\nمكتملة: ' + done + '\nتحت التشغيل: ' + active : 'Total recorded operations: ' + operations.length + '\nDone: ' + done + '\nIn progress: ' + active;
+        } else if (/invoice|financial|money|paid|فاتور|مالي|مدفوع|مستحق/.test(lower)) {
+          const billed = invoices.reduce((n,i) => n + (Number(i.amount) || 0), 0);
+          const paid = invoices.filter(i => String(i.status || '').toUpperCase() === 'PAID').reduce((n,i) => n + (Number(i.amount) || 0), 0);
+          answer = responseIsAr ? 'إجمالي الفواتير: ' + billed.toLocaleString() + '\nالمدفوع: ' + paid.toLocaleString() + '\nالمتبقي: ' + (billed-paid).toLocaleString() : 'Total invoiced: ' + billed.toLocaleString() + '\nPaid: ' + paid.toLocaleString() + '\nOutstanding: ' + (billed-paid).toLocaleString();
+        } else {
+          answer = responseIsAr ? 'لم أتمكن من تشغيل محرك DALI الآن. أستطيع البحث في المولدات والعمليات والحجوزات والحاويات والفواتير والعملاء والصيانة عند عودة الاتصال.' : 'DALI AI is temporarily unavailable. I can still search gensets, operations, bookings, containers, invoices, customers, and maintenance when the AI connection is restored.';
+        }
+      }
       setAiChatMessages(prev => [...prev, { role: 'ai', text: answer || (isAr ? 'لم يصل رد من DALI 1.0.' : 'No response from DALI 1.0.') }]);
     } catch (e) {
       console.error('DALI chat error', e);
