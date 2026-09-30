@@ -574,7 +574,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       if (e.clientX > b.x0 && e.clientX < b.x1 && e.clientY > b.y0 && e.clientY < b.y1) {
         sim.drag = true;
         sim.dragX = e.clientX;
-        sim.dragY = e.clientY;
+        sim.dragY = clamp(e.clientY, H * 0.42, H * 0.80);
         sim.dragDX = 0;
         sim.dragDY = 0;
         sim.speed = 160;
@@ -594,7 +594,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       if (!sim.drag) return;
       sim.drag = false;
       const s = clamp(Math.min(W / 1500, H / 900), 0.5, 1.15);
-      const draggedAway = Math.abs(sim.dragX - W * 0.5) > W * 0.28 || Math.abs(sim.dragY - (H * 0.84)) > H * 0.12;
+      const draggedAway = Math.abs(sim.dragX - W * 0.5) > W * 0.24 || Math.abs(sim.dragY - H * 0.62) > H * 0.08;
       if (draggedAway) {
         sim.falling = true;
         sim.fallV = Math.max(120, sim.dragDY * 7 + 120);
@@ -745,42 +745,38 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         drawTruck(ctx, { s: Math.min(0.72, s), tx: 0, gy: 220, dark, wheel: sim.wheel, bob: 0, tilt: 0.15, headA: 0.05, horn: 0 });
         ctx.restore();
       } else if (sim.wreckParts) {
-        // Lots of scattered wreckage: chassis, cab, wheels, panels, glass, lights and metal debris.
-        const px = sim.wreckX, py = Math.min(H * 0.89, sim.wreckY);
+        // Detailed crash wreck: bent chassis, crushed panels, detached wheels, glass and loose metal.
+        const px = sim.wreckX, py = Math.min(H * 0.91, sim.wreckY);
         ctx.save();
         ctx.translate(px, py);
-        ctx.fillStyle = dark ? 'rgba(8,12,16,.98)' : 'rgba(40,48,58,.94)';
-        ctx.fillRect(-145, -18, 290, 15);
-        const parts = [
-          [-128,-42,34,9,-.18],[-92,-4,22,8,.35],[-55,-35,48,10,-.3],[-18,-8,28,7,.5],
-          [18,-46,38,9,.18],[52,-5,25,8,-.25],[88,-36,42,10,.3],[120,-2,18,7,-.45],
-          [-118,-72,16,16,.5],[-78,-65,12,12,-.2],[-35,-78,18,10,.35],[10,-68,14,14,-.45],
-          [48,-76,20,11,.2],[92,-65,13,13,.5],
-          [-105,18,16,16,0],[-48,15,13,13,0],[12,18,17,17,0],[72,17,14,14,0],
-          [-135,-12,12,12,.2],[135,-14,11,11,-.2]
-        ] as const;
-        for (const [x,y,w,h,a] of parts) {
+        ctx.rotate(-0.035);
+        ctx.fillStyle = dark ? '#080c11' : '#26323d';
+        ctx.beginPath(); ctx.moveTo(-155,4); ctx.lineTo(-112,-15); ctx.lineTo(22,-10); ctx.lineTo(154,3); ctx.lineTo(126,18); ctx.lineTo(-128,18); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = '#697581'; ctx.lineWidth = 2; ctx.stroke();
+        const panels = [[-118,-54,74,43,-.16],[-44,-42,54,36,.22],[18,-48,72,38,-.12],[92,-34,48,31,.3],[-78,10,58,13,.12],[42,8,82,11,-.18]] as const;
+        for (const [x,y,w,h,a] of panels) {
           ctx.save(); ctx.translate(x,y); ctx.rotate(a);
-          ctx.fillStyle = Math.abs(x+y)%3===0 ? '#c2a378' : (dark ? '#26323d' : '#596775');
-          ctx.fillRect(-w/2,-h/2,w,h);
-          ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.lineWidth = 1; ctx.strokeRect(-w/2,-h/2,w,h);
-          ctx.restore();
+          const g = ctx.createLinearGradient(-w/2,0,w/2,h); g.addColorStop(0,dark?'#0a1722':'#183b5d'); g.addColorStop(.55,dark?'#23445d':'#3c6b93'); g.addColorStop(1,dark?'#070d13':'#10283f');
+          ctx.fillStyle=g; ctx.fillRect(-w/2,-h/2,w,h); ctx.strokeStyle='rgba(194,163,120,.55)'; ctx.lineWidth=2; ctx.strokeRect(-w/2,-h/2,w,h); ctx.restore();
         }
-        for (const [x,y,r] of [[-92,6,18],[0,2,20],[86,8,17]] as const) {
-          ctx.fillStyle = '#07090c'; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
-          ctx.strokeStyle = '#59636e'; ctx.lineWidth = 4; ctx.stroke();
-          ctx.fillStyle = '#b8bfca'; ctx.beginPath(); ctx.arc(x,y,r*.42,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle='#8a744e'; ctx.lineWidth=5;
+        ctx.beginPath(); ctx.moveTo(-150,-22); ctx.lineTo(-95,-82); ctx.lineTo(0,-68); ctx.lineTo(82,-88); ctx.lineTo(148,-28); ctx.stroke();
+        for (const [x,y,r,rot] of [[-122,13,23,.2],[-48,27,18,-.5],[56,20,24,.35],[118,9,18,-.3]] as const) {
+          ctx.save(); ctx.translate(x,y); ctx.rotate(rot); ctx.fillStyle='#07090c'; ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#222b35'; ctx.lineWidth=4; ctx.stroke(); ctx.fillStyle='#9ca5af'; ctx.beginPath(); ctx.arc(0,0,r*.43,0,Math.PI*2); ctx.fill(); ctx.restore();
         }
-        // glass shards
-        ctx.fillStyle = 'rgba(145,205,235,.72)';
-        for (const [x,y] of [[-70,-58],[-20,-88],[35,-62],[70,-80],[-5,-30]] as const) {
-          ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+14,y-5); ctx.lineTo(x+5,y+11); ctx.closePath(); ctx.fill();
+        ctx.fillStyle='rgba(150,215,240,.62)';
+        for(const [x,y,w,h,a] of [[-78,-72,28,13,.35],[-20,-94,38,10,-.2],[35,-70,26,12,.4],[74,-91,20,9,-.35],[-4,-34,18,8,.15]] as const){
+          ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.beginPath();ctx.moveTo(-w/2,0);ctx.lineTo(w/2,-h/2);ctx.lineTo(w/3,h/2);ctx.lineTo(-w/2,h/3);ctx.closePath();ctx.fill();ctx.restore();
+        }
+        ctx.strokeStyle='#59636e';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-92,25);ctx.lineTo(-60,43);ctx.lineTo(-25,27);ctx.lineTo(8,44);ctx.lineTo(48,25);ctx.stroke();
+        ctx.fillStyle='#c2a378';
+        for(const [x,y,w,h,a] of [[-142,-2,17,7,.4],[-101,38,13,6,-.2],[-72,-16,11,5,.7],[-22,17,15,5,-.4],[16,-8,12,6,.3],[78,30,18,6,-.5],[137,-12,13,5,.2],[-15,53,11,5,.4],[64,50,9,5,-.3]] as const){
+          ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.fillRect(-w/2,-h/2,w,h);ctx.restore();
         }
         ctx.restore();
-        ctx.fillStyle = dark ? 'rgba(255,80,55,.9)' : 'rgba(160,55,35,.85)';
-        ctx.font = '900 11px system-ui,Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('WRECK / PARTS', px, py - 105);
+        ctx.fillStyle = dark ? 'rgba(255,72,52,.92)' : 'rgba(155,48,30,.88)';
+        ctx.font = '900 10px system-ui,Arial'; ctx.textAlign='center';
+        ctx.fillText('IMPACT · WRECKED',px,py-112);
       }
 
       // exhaust smoke
@@ -826,15 +822,15 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       // Interactive truck sequence: drag it anywhere, release it, let it fall,
       // then reveal a replacement truck after the visitor scrolls onward.
       if (sim.drag) {
-        sim.dragX = clamp(sim.dragX, -W * 0.35, W * 1.35);
-        sim.dragY = clamp(sim.dragY, 40, H * 1.15);
+        sim.dragX = clamp(sim.dragX, -W * 0.15, W * 1.15);
+        sim.dragY = clamp(sim.dragY, H * 0.40, H * 0.80);
         sim.box = { x0: sim.dragX - 405, y0: sim.dragY - 245, x1: sim.dragX + 155, y1: sim.dragY + 10 };
         return;
       }
       if (sim.falling) {
         sim.wreckY += sim.fallV * dt;
-        sim.fallV += 980 * dt;
-        sim.wreckRot += 1.8 * dt;
+        sim.fallV += 1180 * dt;
+        sim.wreckRot += (sim.fallV / 900) * dt * 1.6;
         if (sim.wreckY > H * 0.88) {
           sim.falling = false;
           sim.wrecked = true;
