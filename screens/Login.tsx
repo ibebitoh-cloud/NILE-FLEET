@@ -261,6 +261,16 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         @keyframes footerPulse { 0%,100% { opacity:.55; letter-spacing:.35em; } 50% { opacity:1; letter-spacing:.48em; } }
         @keyframes footerGlitch { 0%,88%,100% { transform:translateX(0); opacity:.7; } 90% { transform:translateX(3px); opacity:1; } 92% { transform:translateX(-2px); opacity:.8; } }
         @keyframes footerOrbit { from { transform:rotate(0deg) translateX(42px) rotate(0deg); } to { transform:rotate(360deg) translateX(42px) rotate(-360deg); } }
+        @keyframes coreSpin { from { transform: rotateX(58deg) rotateZ(0deg); } to { transform: rotateX(58deg) rotateZ(360deg); } }
+        @keyframes coreSpinReverse { from { transform: rotateX(58deg) rotateZ(360deg); } to { transform: rotateX(58deg) rotateZ(0deg); } }
+        @keyframes nodeFloat { 0%,100% { transform: translateY(0) scale(.9); opacity:.35; } 50% { transform: translateY(-10px) scale(1.12); opacity:1; } }
+        @keyframes dataSweep { 0% { transform: translateX(-120%) rotate(18deg); opacity:0; } 35% { opacity:.8; } 100% { transform: translateX(120%) rotate(18deg); opacity:0; } }
+        @keyframes signatureShimmer { 0%,100% { opacity:.62; letter-spacing:.34em; transform:scale(.98); } 50% { opacity:1; letter-spacing:.46em; transform:scale(1.02); } }
+        .core-spin { animation: coreSpin 8s linear infinite; }
+        .core-spin-reverse { animation: coreSpinReverse 6s linear infinite; }
+        .node-float { animation: nodeFloat 2.4s ease-in-out infinite; }
+        .data-sweep { animation: dataSweep 3.2s ease-in-out infinite; }
+        .signature-shimmer { animation: signatureShimmer 2.8s ease-in-out infinite; }
         .welcome-rise { animation: welcomeRise .75s cubic-bezier(.2,.8,.2,1) both; }
         .welcome-glow { animation: welcomeGlow 2.8s ease-in-out infinite; }
         .footer-sweep { animation: footerSweep 3.8s ease-in-out infinite; }
@@ -419,19 +429,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                <p className="text-[8px] font-black uppercase text-slate-400 tracking-[0.12em] sm:tracking-[0.2em] text-center leading-relaxed">{isAr ? 'لطلب حساب، تواصل مع مسؤول النظام.' : 'Contact your administrator to request an account.'}</p>
             </div>
             
-            <div className="relative pt-3 sm:pt-5 border-t border-slate-100 dark:border-white/5">
-               <div className="flex flex-col items-center gap-1 select-none transition-all mx-auto w-fit text-center font-sans">
-                  <div className="bg-slate-50/85 dark:bg-slate-800/50 px-5 sm:px-8 py-2.5 rounded-full border border-slate-100 dark:border-white/10 shadow-sm">
-                     <div className="relative overflow-hidden rounded-full px-5 sm:px-8 py-2.5 bg-slate-50/85 dark:bg-slate-800/50 border border-slate-100 dark:border-white/10 shadow-sm">
-                     <span className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-[#C2A378]/60 to-transparent footer-sweep"></span>
-                     <p className={`relative text-[8px] font-black uppercase text-slate-400 py-1 leading-none ${welcomeStyle % 3 === 0 ? 'footer-pulse' : welcomeStyle % 3 === 1 ? 'footer-glitch' : 'tracking-[0.42em]'}`}>
-                       POWERED BY <span className="text-[#C2A378]">BEBITO</span>
-                     </p>
-                     {welcomeStyle === 4 && <span className="footer-orbit absolute left-1/2 top-1/2 h-1.5 w-1.5 rounded-full bg-[#C2A378] shadow-[0_0_12px_#C2A378]"></span>}
-                  </div>
-                  </div>
-               </div>
-            </div>
               </>
             )}
           </div>
