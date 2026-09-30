@@ -1,10 +1,11 @@
 // Cloudflare Pages Function: runs all AI features on Cloudflare Workers AI.
-// DALI uses DeepSeek V4 Flash for interactive text, with GLM-4.7-Flash as a resilience fallback.
+// DALI uses the open-source DeepSeek-R1-Distill-Qwen-32B model for interactive
+// reasoning, with DeepSeek V4 Flash as the DeepSeek-native fallback.
 // OCR remains on the dedicated vision models below.
-const TEXT_MODEL = '@cf/deepseek-ai/deepseek-v4-flash-0731';
+const TEXT_MODEL = '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b';
 const VISION_MODEL = '@cf/qwen/qwen3.8-27b';
 const VISION_FALLBACK_MODEL = '@cf/meta/llama-3.2-11b-vision-instruct';
-const TEXT_FALLBACK_MODEL = '@cf/zai-org/glm-4.7-flash';
+const TEXT_FALLBACK_MODEL = '@cf/deepseek-ai/deepseek-v4-flash-0731';
 
 // Open models are less reliable than Claude/GPT at strictly following
 // "return only JSON" instructions — strip code fences and grab the first
@@ -45,13 +46,12 @@ export async function onRequestPost(context) {
     return json({ error: 'Invalid Supabase user session' }, 401);
   }
 
-  // Health check: opening /ai-proxy in a browser now tells us whether the
-  // Worker is actually deployed with the Workers AI binding.
   if (request.method === 'GET') {
     return json({
       ok: !!env.AI,
-      service: 'DALI 2.0',
+      service: 'DALI 3.0',
       textModel: TEXT_MODEL,
+      fallbackTextModel: TEXT_FALLBACK_MODEL,
       visionModel: VISION_MODEL,
       message: env.AI ? 'Workers AI binding is connected.' : 'Workers AI binding is missing.'
     }, env.AI ? 200 : 500);
@@ -81,6 +81,7 @@ export async function onRequestPost(context) {
             { role: 'user', content: `Names: ${names.join(', ')}` },
           ],
           max_tokens: 1500,
+          temperature: 0.2,
         });
         return json(parseJsonLoose(extractText(result)));
       }
@@ -94,8 +95,8 @@ export async function onRequestPost(context) {
             { role: 'user', content: prompt },
           ],
           max_tokens: Math.min(Math.max(payload?.maxTokens || 1600, 200), 3000),
-          temperature: 0.2,
-          reasoningEffort: 'high',
+          temperature: 0.6,
+          top_p: 0.95,
         });
         const text = extractText(result);
         if (!text) {
@@ -141,8 +142,9 @@ Respond with ONLY the raw JSON array — no markdown, no code fences, no comment
             { role: 'user', content: csvData },
           ],
           max_tokens: 4000,
+          temperature: 0.2,
         });
-        return json(parseJsonLoose(result.response || ''));
+        return json(parseJsonLoose(extractText(result)));
       }
 
       default:
@@ -160,56 +162,50 @@ Respond with ONLY the raw JSON array — no markdown, no code fences, no comment
 }
 
 function extractText(result) {
-  if (typeof result === 'string') return result.trim();
+  if (typeof result === 'string') return cleanModelText(result);
   if (!result || typeof result !== 'object') return '';
-  if (typeof result.response === 'string') return result.response.trim();
-  if (typeof result.output_text === 'string') return result.output_text.trim();
-  if (typeof result.text === 'string') return result.text.trim();
-  if (typeof result.reasoning === 'string' && result.reasoning.trim()) return result.reasoning.trim();
+  if (typeof result.response === 'string') return cleanModelText(result.response);
+  if (typeof result.output_text === 'string') return cleanModelText(result.output_text);
+  if (typeof result.text === 'string') return cleanModelText(result.text);
+  if (typeof result.reasoning === 'string' && result.reasoning.trim()) return cleanModelText(result.reasoning);
   if (Array.isArray(result.choices)) {
     const choice = result.choices[0];
     const content = choice?.message?.content ?? choice?.text;
-    if (typeof content === 'string') return content.trim();
+    if (typeof content === 'string') return cleanModelText(content);
   }
   return '';
 }
 
-async function runTextModel(env, options) {
-  // DeepSeek V4 Flash is DALI's reasoning engine. Keep reasoning internal while
-  // returning only the final answer to the user. Cloudflare documents configurable
-  // reasoning levels for this model; HIGH is used for novel multi-step questions.
-  const primaryOptions = {
-    ...options,
-    reasoning_effort: options.reasoningEffort || 'none',
-    chat_template_kwargs: {
-      ...(options.chat_template_kwargs || {}),
-    },
-  };
+function cleanModelText(text) {
+  const value = String(text || '').trim();
+  if (!value) return '';
+  // DeepSeek-R1 can return private reasoning in <think>...</think>.
+  // Never show that reasoning to the user; keep only the final response.
+  const withoutThink = value.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+  return withoutThink || value;
+}
 
+async function runTextModel(env, options) {
+  // Primary: open-source DeepSeek-R1 distilled model. Fallback: newer DeepSeek V4 Flash.
+  // Both run inside Cloudflare Workers AI; no external API key is exposed to the browser.
   try {
-    const result = await env.AI.run(TEXT_MODEL, primaryOptions);
+    const result = await env.AI.run(TEXT_MODEL, options);
     if (extractText(result)) return result;
-    console.error('Primary DeepSeek model returned an empty text response:', result);
+    console.error('Primary DeepSeek R1 model returned an empty text response:', result);
   } catch (primaryError) {
-    console.error('Primary DeepSeek model failed, trying fallback', primaryError);
+    console.error('Primary DeepSeek R1 model failed, trying DeepSeek V4 Flash:', primaryError);
   }
 
   try {
-    // Fallback stays conservative so an unavailable DeepSeek reasoning endpoint
-    // does not break ordinary DALI answers.
-    const fallbackOptions = {
+    const result = await env.AI.run(TEXT_FALLBACK_MODEL, {
       ...options,
-      reasoning_effort: 'none',
-      chat_template_kwargs: {
-        ...(options.chat_template_kwargs || {}),
-      },
-    };
-    const result = await env.AI.run(TEXT_FALLBACK_MODEL, fallbackOptions);
+      temperature: Math.min(Number(options.temperature ?? 0.6), 0.4),
+    });
     if (extractText(result)) return result;
-    throw new Error('Workers AI fallback returned an empty text response.');
+    throw new Error('DeepSeek V4 Flash fallback returned an empty text response.');
   } catch (fallbackError) {
     throw new Error(
-      `DeepSeek V4 Flash returned no usable text; fallback model failed: ${fallbackError?.message || fallbackError}`
+      `DeepSeek R1 Distill failed; DeepSeek V4 Flash fallback failed: ${fallbackError?.message || fallbackError}`
     );
   }
 }
