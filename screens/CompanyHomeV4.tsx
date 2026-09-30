@@ -959,6 +959,18 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         .nf4-quote-button:hover{box-shadow:0 12px 34px rgba(194,163,120,.28)}
         @media(max-width:640px){.nf4-contact-bar>div{align-items:stretch}.nf4-contact-bar .nf4-quote-button{width:100%;justify-content:center}.nf4-contact-bar>div>div{width:100%;justify-content:space-between}}
         @media (prefers-reduced-motion: reduce){ .nf4 *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important} }
+        .nf4-bebito-system{position:relative;display:flex;align-items:center;justify-content:center;gap:10px;width:max-content;margin:0 auto;padding:8px 14px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:linear-gradient(90deg,rgba(255,255,255,.025),rgba(194,163,120,.07),rgba(255,255,255,.025));overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 30px rgba(0,0,0,.18)}
+        .nf4-bebito-system:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(194,163,120,.18),transparent);transform:translateX(-100%);animation:nf4BebitoScan 3.8s linear infinite}
+        .nf4-bebito-line{position:relative;width:34px;height:1px;background:linear-gradient(90deg,transparent,#c2a378);opacity:.75}
+        .nf4-bebito-line-right{transform:scaleX(-1)}
+        .nf4-bebito-node{position:relative;width:6px;height:6px;border:1px solid #c2a378;border-radius:50%;background:#07101a;box-shadow:0 0 0 0 rgba(194,163,120,.45);animation:nf4BebitoPulse 2s ease-in-out infinite}
+        .nf4-bebito-copy{position:relative;display:flex;align-items:baseline;gap:6px;white-space:nowrap}
+        .nf4-bebito-copy small{font-size:6px;font-weight:950;letter-spacing:.2em;color:rgba(226,232,240,.55)}
+        .nf4-bebito-copy strong{font-size:11px;font-weight:950;letter-spacing:.18em;color:#fff;text-shadow:0 0 16px rgba(194,163,120,.22)}
+        @keyframes nf4BebitoScan{to{transform:translateX(100%)}}
+        @keyframes nf4BebitoPulse{50%{box-shadow:0 0 0 5px rgba(194,163,120,0);background:#c2a378}}
+        @media(max-width:640px){.nf4-bebito-system{margin-left:0;margin-right:0}.nf4-bebito-line{width:22px}.nf4-bebito-copy strong{font-size:10px}}
+
 
       /* Strong homepage visual direction - existing canvas background remains untouched */
             .nf-home .nf4-hero-inner{position:relative;z-index:2}
@@ -1430,7 +1442,13 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
               <div>
                 <div className="text-[9px] font-black uppercase tracking-[.42em] text-[#c2a378]">Nile Fleet</div>
                 <div className="mt-3 text-3xl font-black uppercase italic">{tx.safe}</div>
-                <div className="mt-5 text-[9px] font-black uppercase tracking-[.34em] text-[#c2a378]">POWERED BY <span className="text-white">BEBITO</span></div>
+                <div className="nf4-bebito-system" aria-label="Powered by Bebito">
+                  <span className="nf4-bebito-line nf4-bebito-line-left"></span>
+                  <span className="nf4-bebito-node"></span>
+                  <span className="nf4-bebito-copy"><small>POWERED BY</small><strong>BEBITO</strong></span>
+                  <span className="nf4-bebito-node"></span>
+                  <span className="nf4-bebito-line nf4-bebito-line-right"></span>
+                </div>
               </div>
               <div className="text-xs leading-6 text-slate-300 md:text-right">
                 <div>23 July St. · Abo Elkheer Building · 2nd Floor</div>
