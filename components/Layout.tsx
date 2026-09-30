@@ -1071,7 +1071,10 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
           answer = responseIsAr ? 'لم أتمكن من تشغيل محرك DALI الآن. أستطيع البحث في المولدات والعمليات والحجوزات والحاويات والفواتير والعملاء والصيانة عند عودة الاتصال.' : 'DALI AI is temporarily unavailable. I can still search gensets, operations, bookings, containers, invoices, customers, and maintenance when the AI connection is restored.';
         }
       }
-      setAiChatMessages(prev => [...prev, { role: 'ai', text: answer || (isAr ? 'لم يصل رد من DALI 1.0.' : 'No response from DALI 1.0.') }]);
+      const finalAnswer = answer || (isAr ? 'لم يصل رد من DALI 1.0.' : 'No response from DALI 1.0.');
+      setAiChatMessages(prev => [...prev, { role: 'ai', text: finalAnswer }]);
+      setDaliMemory(prev => [...prev, { role: 'assistant', message: finalAnswer }].slice(-30));
+      void saveDaliMemory('assistant', finalAnswer);
     } catch (e) {
       console.error('DALI chat error', e);
       const detail = e instanceof Error ? e.message : String(e);
