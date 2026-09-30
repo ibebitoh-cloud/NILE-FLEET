@@ -176,6 +176,9 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         ? 'CURRENT USER: Bebito (bebito@nilefleet.com), creator and system owner of NILE FLEET COMMAND. Treat this user as the creator/owner when relevant. Do not confuse the creator with an ordinary employee or customer. Never reveal passwords, API keys, tokens, or other secrets.'
         : `CURRENT USER: ${user.name || 'Unknown User'} | ROLE: ${user.role || 'Unknown'} | EMAIL: ${user.email || ''}`;
       const q = question.toUpperCase().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه');
+      // Normalized query used by the deterministic fallback. Keep this separate from q:
+      // q preserves identifier-friendly uppercase text; cleanQ is the searchable phrase form.
+      const cleanQ = normalizeEntityText(question).toLowerCase();
 
       // FAST PATH: factual operational questions never go through the LLM.
       const idMatch = q.match(/(?:GENSETS?|مولد(?:ات)?|وحدة)(?:\s+(?:NO\.?|NUMBER|ID|رقم))?\s*#?\s*([A-Z0-9][A-Z0-9-]*)/i);
