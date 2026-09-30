@@ -875,10 +875,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         .nf4-contact-bar:before{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,#fff 12%,#6f879d 28%,#c62828 48%,#fff 68%,#6f879d 84%,transparent);opacity:.9}
         .nf4-contact-bar:after{content:"";position:absolute;left:-10%;top:0;width:34%;height:1px;background:#fff;box-shadow:0 0 18px rgba(255,255,255,.8);animation:nf4RouteSweep 5s linear infinite}
         .nf4-route-line{position:relative;display:grid;grid-template-columns:auto minmax(330px,1fr) auto;align-items:center;gap:22px;min-height:78px;padding-top:9px;padding-bottom:9px}
-        .nf4-route-brand{display:flex;align-items:center;gap:10px;min-width:170px}
-        .nf4-route-brand img{width:45px;height:45px;object-fit:contain;filter:drop-shadow(0 0 12px rgba(255,255,255,.2))}
-        .nf4-route-brand strong{display:block;font-size:12px;font-weight:950;letter-spacing:.08em}
-        .nf4-route-brand small{display:block;margin-top:3px;font-size:6px;font-weight:900;letter-spacing:.2em;color:rgba(226,232,240,.48)}
+        .nf4-route-welcome{display:flex;flex-direction:column;justify-content:center;min-width:175px;line-height:1}
+        .nf4-route-welcome span{font-size:6px;font-weight:900;letter-spacing:.28em;color:rgba(226,232,240,.5)}
+        .nf4-route-welcome strong{margin-top:6px;font-size:15px;font-weight:950;letter-spacing:.1em;color:#fff;text-shadow:0 0 22px rgba(255,255,255,.12)}
         .nf4-route-track{min-width:0}
         .nf4-route-label{font-size:6px;font-weight:950;letter-spacing:.25em;color:#cbd5e1;display:flex;align-items:center;gap:6px;margin-bottom:6px}
         .nf4-route-live{width:5px;height:5px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 0 rgba(239,68,68,.6);animation:nf4RouteLive 1.8s infinite}
@@ -909,8 +908,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         @keyframes nf4TruckRun{0%{left:0;transform:translateX(-4px)}45%{left:55%;transform:translateX(-50%)}100%{left:100%;transform:translateX(-40px)}}
         @keyframes nf4RouteLive{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.6)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
         @keyframes nf4RouteSweep{0%{transform:translateX(-30vw)}100%{transform:translateX(330vw)}}
-        @media(max-width:1120px){.nf4-route-line{grid-template-columns:auto 1fr;gap:14px}.nf4-route-actions{grid-column:2;justify-content:flex-end;margin-top:-2px}.nf4-route-brand{min-width:155px}}
-        @media(max-width:760px){.nf4-route-line{grid-template-columns:1fr;gap:9px;padding-top:10px;padding-bottom:10px}.nf4-route-brand{min-width:0}.nf4-route-actions{grid-column:auto;justify-content:flex-start;flex-wrap:wrap}.nf4-route-phone{margin-right:auto}.nf4-route-meta{display:none}.nf4-route-stop{font-size:5px}.nf4-route-brand img{width:38px;height:38px}}
+        @media(max-width:1120px){.nf4-route-line{grid-template-columns:auto 1fr;gap:14px}.nf4-route-actions{grid-column:2;justify-content:flex-end;margin-top:-2px}.nf4-route-welcome{min-width:155px}}
+        @media(max-width:760px){.nf4-route-line{grid-template-columns:1fr;gap:9px;padding-top:10px;padding-bottom:10px}.nf4-route-brand{min-width:0}.nf4-route-actions{grid-column:auto;justify-content:flex-start;flex-wrap:wrap}.nf4-route-phone{margin-right:auto}.nf4-route-meta{display:none}.nf4-route-stop{font-size:5px}.nf4-route-welcome strong{font-size:13px}}
         @media(prefers-reduced-motion:reduce){.nf4-route-truck,.nf4-route-live,.nf4-contact-bar:after{animation:none!important}}
         .nf4-contact-bar a{white-space:nowrap}
         .nf4-app-label{display:grid;place-items:center;width:68px;height:58px;padding:7px;border:1px solid rgba(255,255,255,.72);border-radius:15px;background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.035));box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 24px rgba(255,255,255,.07);transition:transform .3s ease,border-color .3s ease,box-shadow .3s ease}
@@ -977,23 +976,18 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
       <div className="nf4-contact-bar border-b border-white/10 text-white">
         <div className="nf4-route-line mx-auto max-w-[1500px] px-4 lg:px-10">
-          <div className="nf4-route-brand">
-            <img src="/nile-fleet-logo.png" alt="Nile Fleet" />
-            <div><strong>NILE FLEET</strong><small>ROAD & PORT LOGISTICS</small></div>
+          <div className="nf4-route-welcome">
+            <span>WELCOME TO</span><strong>NILE FLEET</strong>
           </div>
 
           <div className="nf4-route-track" aria-label="Nile Fleet active service route">
-            <div className="nf4-route-label"><span className="nf4-route-live"></span> LIVE ROUTE</div>
+            <div className="nf4-route-label"><span className="nf4-route-live"></span> NILE FLEET • ROAD & PORT LOGISTICS</div>
             <div className="nf4-route-rail">
               <span className="nf4-route-stop">PORT SAID</span>
               <span className="nf4-route-stop">DAMietta</span>
               <span className="nf4-route-stop">ALEXANDRIA</span>
               <span className="nf4-route-stop">SOKHNA</span>
               <span className="nf4-route-stop">SCCT</span>
-              <span className="nf4-route-truck" aria-hidden="true">
-                <span className="nf4-route-truck-body"></span><span className="nf4-route-truck-cab"></span>
-                <i></i><i></i>
-              </span>
             </div>
             <div className="nf4-route-meta"><span>CONTAINER TRANSPORT</span><b>•</b><span>REEFER SUPPORT</span><b>•</b><span>PORT OPERATIONS</span></div>
           </div>
