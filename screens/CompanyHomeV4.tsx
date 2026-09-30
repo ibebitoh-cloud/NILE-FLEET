@@ -871,6 +871,10 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         @keyframes nf4LiveDot{0%{box-shadow:0 0 0 0 rgba(194,163,120,.55)}70%{box-shadow:0 0 0 8px rgba(194,163,120,0)}100%{box-shadow:0 0 0 0 rgba(194,163,120,0)}}
         .nf4-reveal{animation:nf4Reveal .9s cubic-bezier(.16,1,.3,1) both}
         .nf4-pulse{animation:nf4Pulse 3s ease-in-out infinite}
+        .nf4-contact-bar a{white-space:nowrap}
+        .nf4-quote-button{box-shadow:0 8px 28px rgba(194,163,120,.18)}
+        .nf4-quote-button:hover{box-shadow:0 12px 34px rgba(194,163,120,.28)}
+        @media(max-width:640px){.nf4-contact-bar>div{align-items:stretch}.nf4-contact-bar .nf4-quote-button{width:100%;justify-content:center}.nf4-contact-bar>div>div{width:100%;justify-content:space-between}}
         @media (prefers-reduced-motion: reduce){ .nf4 *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important} }
       `}
 /* Strong homepage visual direction - existing canvas background remains untouched */
@@ -899,6 +903,22 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
       {/* route progress (scroll) */}
       <div className="fixed left-0 right-0 top-0 z-50 h-[3px] bg-black/10"><div ref={barRef} className="h-full w-0 bg-[#c2a378] shadow-[0_0_12px_#c2a378]" /></div>
+
+      <div className="nf4-contact-bar border-b border-white/10 bg-[#050b12]/90 text-white backdrop-blur-xl">
+        <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-3 px-5 py-2.5 lg:px-10">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[8px] font-black uppercase tracking-[.16em]">
+            <a href="tel:+201000992858" className="transition hover:text-[#c2a378]">☎ +20 10 0099 2858</a>
+            <a href="https://www.linkedin.com/company/nile-fleet-for-transport-and-logistics-service" target="_blank" rel="noreferrer" className="transition hover:text-[#c2a378]">in LinkedIn</a>
+            <a href="https://www.facebook.com/" target="_blank" rel="noreferrer" className="transition hover:text-[#c2a378]" title="Nile Fleet Facebook profile">f Facebook</a>
+          </div>
+          <a
+            href="mailto:nilefleet@nilefleetlogistics.com?subject=NILE%20FLEET%20-%20Request%20for%20Quote&body=Hello%20NILE%20FLEET%2C%0A%0AI%20would%20like%20to%20request%20a%20quotation.%0A%0ACompany%3A%20%0AService%20required%3A%20%0AOrigin%3A%20%0ADestination%3A%20%0ACargo%2FContainer%20details%3A%20%0APreferred%20date%3A%20%0AAdditional%20details%3A%20%0A%0AThank%20you."
+            className="nf4-quote-button inline-flex items-center gap-2 rounded-full border border-[#c2a378]/60 bg-[#c2a378] px-4 py-2 text-[8px] font-black uppercase tracking-[.2em] text-black transition hover:-translate-y-0.5 hover:bg-[#d2b98f]"
+          >
+            REQUEST QUOTE <span>→</span>
+          </a>
+        </div>
+      </div>
 
       <header className={`sticky top-0 z-40 border-b backdrop-blur-2xl ${K.head}`}>
         <div className="mx-auto flex max-w-[1500px] items-center justify-between px-5 py-4 lg:px-10">
