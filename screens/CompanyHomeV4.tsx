@@ -987,12 +987,12 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         .nf4-quote-button:hover{box-shadow:0 12px 34px rgba(194,163,120,.28)}
         @media(max-width:640px){.nf4-contact-bar>div{align-items:stretch}.nf4-contact-bar .nf4-quote-button{width:100%;justify-content:center}.nf4-contact-bar>div>div{width:100%;justify-content:space-between}}
         @media (prefers-reduced-motion: reduce){ .nf4 *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important} }
-        .nf4-bebito-signature{display:flex;align-items:baseline;justify-content:center;gap:10px;position:relative;cursor:default;white-space:nowrap}
-        .nf4-bebito-powered{font-family:Inter,system-ui,sans-serif;font-size:7px;font-weight:900;letter-spacing:.3em;color:rgba(226,232,240,.46);text-transform:uppercase}
-        .nf4-bebito-name{font-family:"Brush Script MT","Segoe Script","Lucida Handwriting",cursive;font-size:clamp(32px,4vw,48px);font-weight:900;font-style:italic;letter-spacing:-.045em;line-height:1;color:#fff;text-shadow:0 0 24px rgba(194,163,120,.18);transform-origin:center;transition:color .2s ease,text-shadow .2s ease}
+        .nf4-bebito-signature{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;position:relative;cursor:default;white-space:nowrap}
+        .nf4-bebito-powered{font-family:Inter,system-ui,sans-serif;font-size:9px;font-weight:950;letter-spacing:.42em;color:rgba(226,232,240,.62);text-transform:uppercase;line-height:1}
+        .nf4-bebito-name{font-family:"Brush Script MT","Segoe Script","Lucida Handwriting",cursive;font-size:clamp(40px,5vw,62px);font-weight:900;font-style:italic;letter-spacing:-.02em;line-height:.95;color:#fff;text-shadow:0 0 24px rgba(194,163,120,.18);transform-origin:center;transition:color .2s ease,text-shadow .2s ease}
         .nf4-bebito-signature:hover .nf4-bebito-name{color:#c2a378;text-shadow:0 0 28px rgba(194,163,120,.42);animation:nf4BebitoSpin .72s cubic-bezier(.16,1,.3,1)}
         @keyframes nf4BebitoSpin{0%{transform:rotate(0deg) scale(1)}45%{transform:rotate(360deg) scale(1.08)}100%{transform:rotate(360deg) scale(1)}}
-        @media(max-width:640px){.nf4-bebito-signature{gap:7px}.nf4-bebito-powered{font-size:6px}.nf4-bebito-name{font-size:34px}}
+        @media(max-width:640px){.nf4-bebito-signature{gap:3px}.nf4-bebito-powered{font-size:8px}.nf4-bebito-name{font-size:42px}}
 
 
       /* Strong homepage visual direction - existing canvas background remains untouched */
