@@ -425,6 +425,43 @@ class SupabaseDB {
   getSupportContacts(): SupportContact[] { return _supportContacts; }
   getFAQs(): FAQItem[] { return _faqs; }
   getPortsInfo(): PortInfo[] { return _portsInfo; }
+  async getDaliConversationMemory(sessionId: string, limit = 16): Promise<{ role: 'user' | 'assistant'; message: string; entities?: any; created_at?: string }[]> {
+    const safeLimit = Math.max(1, Math.min(Number(limit) || 16, 50));
+    const { data, error } = await supabase
+      .from('dali_conversations')
+      .select('role,message,entities,created_at')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: false })
+      .limit(safeLimit);
+    if (error) {
+      console.error('[supabaseDb] DALI memory read:', error.message);
+      throw new Error(error.message);
+    }
+    return (data || []).reverse() as any[];
+  }
+
+  async saveDaliConversationMessage(input: {
+    sessionId: string;
+    role: 'user' | 'assistant' | 'system';
+    message: string;
+    entities?: any;
+  }): Promise<void> {
+    const { data: authData } = await supabase.auth.getUser();
+    const userId = authData.user?.id;
+    if (!userId || !input.message.trim()) return;
+    const { error } = await supabase.from('dali_conversations').insert({
+      user_id: userId,
+      session_id: input.sessionId,
+      role: input.role,
+      message: input.message.slice(0, 12000),
+      entities: input.entities || {},
+    });
+    if (error) {
+      console.error('[supabaseDb] DALI memory write:', error.message);
+      throw new Error(error.message);
+    }
+  }
+
   getMaintenanceLogs(): GensetMaintenanceLog[] {
     return [..._maintenanceLogs].sort((a, b) => new Date(b.serviceDate).getTime() - new Date(a.serviceDate).getTime());
   }
