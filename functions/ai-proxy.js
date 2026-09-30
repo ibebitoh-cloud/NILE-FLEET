@@ -95,6 +95,7 @@ export async function onRequestPost(context) {
           ],
           max_tokens: Math.min(Math.max(payload?.maxTokens || 1600, 200), 3000),
           temperature: 0.2,
+          reasoningEffort: 'high',
         });
         const text = extractText(result);
         if (!text) {
@@ -179,7 +180,7 @@ async function runTextModel(env, options) {
   // reasoning levels for this model; HIGH is used for novel multi-step questions.
   const primaryOptions = {
     ...options,
-    reasoning_effort: options.reasoningEffort || 'high',
+    reasoning_effort: options.reasoningEffort || 'none',
     chat_template_kwargs: {
       ...(options.chat_template_kwargs || {}),
     },
