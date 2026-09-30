@@ -737,7 +737,51 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     : { root: 'bg-[#dbeafe] text-[#0b1a2b]', head: 'border-black/10 bg-white/60', text: 'text-[#0b1a2b]', muted: 'text-slate-600', soft: 'text-slate-700', faint: 'text-slate-500', card: 'border-black/10 bg-white/60', band: 'border-black/10 bg-white/70', line: 'border-black/15', foot: 'bg-[#0b2a4a]/90 text-white', chip: 'border-black/10 bg-white/60 text-slate-600' };
   const gold = isDark ? 'text-[#c2a378]' : 'text-[#8a6a35]';
 
-  const nav = [['ABOUT', '#about'], ['OPERATIONS', '#operations'], ['LEADERSHIP', '#leadership']];
+  const tx = {
+    brandSub: ar ? 'النقل · اللوجستيات · مصر' : 'Transport · Logistics · Egypt',
+    about: ar ? 'عن الشركة' : 'ABOUT',
+    operations: ar ? 'العمليات' : 'OPERATIONS',
+    leadership: ar ? 'القيادة' : 'LEADERSHIP',
+    full: ar ? '⛶ ملء الشاشة' : '⛶ FULL',
+    exit: ar ? '⛶ خروج' : '⛶ EXIT',
+    soundOn: ar ? '🔊 الصوت مفعل' : '🔊 SOUND ON',
+    soundOff: ar ? '🔇 الصوت متوقف' : '🔇 SOUND OFF',
+    white: ar ? '☀ فاتح' : '☀ WHITE',
+    dark: ar ? '🌙 داكن' : '🌙 DARK',
+    gensetAccess: ar ? 'دخول الجينسيت' : 'GENSET ACCESS',
+    since: ar ? 'منذ 2009 · مصر' : 'Since 2009 · Egypt',
+    heroTitle: ar ? <>الشحن<br /><span className={gold}>في حركة.</span></> : <>{tx.heroTitle}</>,
+    explore: ar ? 'استكشف العمليات' : 'Explore Operations',
+    scrollHint: ar ? 'مرر لتحريك المشهد · اضغط على الشاحنة للبوق' : 'Scroll to drive · Click the truck for the horn',
+    founded: ar ? 'التأسيس' : 'FOUNDED',
+    years: ar ? 'سنوات' : 'YEARS',
+    coverage: ar ? 'التغطية' : 'COVERAGE',
+    ops24: ar ? 'العمليات' : 'OPERATIONS',
+    company: ar ? 'الشركة' : 'Company',
+    built: ar ? <>مصمم من أجل<br /><span className={gold}>الطريق.</span></> : <>{tx.built}</>,
+    about1: ar ? 'نيل فليت لخدمات النقل واللوجستيات هي إحدى شركات النقل واللوجستيات الرائدة في مصر، وتقدم خدمات نقل الشاحنات والحاويات وحلولاً لوجستية متكاملة منذ عام 2009.' : 'Nile Fleet for Transport and Logistics Service is one of Egypt’s leading transportation and logistics providers, offering reliable trucking, container transportation, and integrated logistics solutions since 2009.',
+    about2: ar ? 'بخبرة تتجاوز 17 عاماً في المجال، تخدم الشركة خطوط الملاحة ووكلاء الشحن والمستوردين والمصدرين والعملاء الصناعيين من خلال إدارة الأسطول وعمليات الخدمات اللوجستية بالموانئ ودعم سلاسل الإمداد.' : 'With more than 17 years of industry experience, the company supports shipping lines, freight forwarders, importers, exporters, and industrial clients through fleet management, port logistics operations, and supply chain support.',
+    values: ar ? ['السلامة', 'الموثوقية', 'الرؤية التشغيلية', 'الابتكار', 'نجاح العملاء'] : ['SAFETY', 'RELIABILITY', 'VISIBILITY', 'INNOVATION', 'CUSTOMER SUCCESS'],
+    oneFleet: ar ? <>أسطول واحد.<br /><span className={gold}>مهام متعددة.</span></> : <>{tx.oneFleet}</>,
+    opsDesc: ar ? 'من النقل البري إلى عمليات الجينسيت داخل الموانئ، تربط نيل فليت بين الحركة الفعلية والتحكم التشغيلي.' : 'From road transport to port-side genset operations, Nile Fleet connects physical movement with operational control.',
+    authorized: ar ? 'دخول مصرح' : 'Authorized access',
+    gensetControl: ar ? <>تحكم<br />الجينسيت</> : <>{tx.gensetControl}</>,
+    liveSystem: ar ? 'نظام مباشر' : 'LIVE SYSTEM',
+    gensetDesc: ar ? 'الوصول إلى منصة عمليات الجينسيت للحجوزات والمخزون والحركات والفواتير والتحكم التشغيلي.' : 'Access the existing Genset operations platform for bookings, stock, movements, invoices and operational control.',
+    enterSystem: ar ? 'دخول إلى النظام' : 'Enter system',
+    nextLayer: ar ? 'طبقة العمليات التالية' : 'Next operation layer',
+    coming: ar ? 'قريباً' : 'COMING SOON',
+    transport: ar ? 'النقل' : 'TRANSPORT',
+    transportDesc: ar ? 'نظام متكامل لإدارة نقل الشاحنات والحاويات قيد التطوير.' : 'Integrated trucking and container transport management is under development.',
+    leadLabel: ar ? 'القيادة' : 'Leadership',
+    people: ar ? <>الأشخاص وراء<br /><span className={gold}>حركة الشحن.</span></> : <>{tx.people}</>,
+    leadDesc: ar ? 'القيادة عبر عمليات الشركة وقطاع النقل وخدمات الجينسيت.' : 'Leadership across company operations, transport and genset services.',
+    roles: ar ? ['الرئيس التنفيذي', 'رئيس قطاع النقل', 'رئيس قطاع الجينسيت'] : ['CEO', 'HEAD OF TRANSPORT DEPARTMENT', 'HEAD OF GENSET DEPARTMENT'],
+    areas: ar ? ['الشركة', 'النقل', 'الجينسيت'] : ['COMPANY', 'TRANSPORT', 'GENSET'],
+    safe: ar ? 'آمن. موثوق. واضح. متصل.' : 'Safe. Reliable. Visible. Connected.',
+  };
+
+  const nav = [[tx.about, '#about'], [tx.operations, '#operations'], [tx.leadership, '#leadership']];
 
   return (
     <div ref={wrapRef} className={`nf4 min-h-screen overflow-x-hidden selection:bg-[#c2a378] selection:text-black ${K.root}`}>
@@ -760,18 +804,18 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
             <img src="/nile-fleet-logo.png" className="h-10 w-10 object-contain transition-transform duration-500 group-hover:rotate-6" alt="Nile Fleet" />
             <div>
               <div className="flex items-baseline gap-2 text-[17px] font-black tracking-tight">NILE <span className={gold}>FLEET</span><span className="text-[7px] font-black uppercase tracking-[.18em] text-[#c2a378] whitespace-nowrap">POWERED BY <span className="text-white">BEBITO</span></span></div>
-              <div className={`text-[7px] font-black uppercase tracking-[.34em] ${K.faint}`}>Transport · Logistics · Egypt</div>
+              <div className={`text-[7px] font-black uppercase tracking-[.34em] ${K.faint}`}>{tx.brandSub}</div>
             </div>
           </a>
           <nav className="hidden items-center gap-8 md:flex">
             {nav.map(([label, href]) => <a key={href} href={href} className={`text-[9px] font-black tracking-[.25em] transition hover:text-[#c2a378] ${K.muted}`}>{label}</a>)}
           </nav>
           <div className="flex items-center gap-2 sm:gap-3">
-            <button onClick={toggleFullscreen} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'} className={`rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isFullscreen ? '⛶ EXIT' : '⛶ FULL'}</button>
-            <button onClick={toggleSound} aria-pressed={soundOn} className={`rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{soundOn ? '🔊 SOUND ON' : '🔇 SOUND OFF'}</button>
-            <button onClick={() => setTheme(isDark ? 'white' : 'phantom')} className={`rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isDark ? '☀ WHITE' : '🌙 DARK'}</button>
+            <button onClick={toggleFullscreen} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'} className={`rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isFullscreen ? tx.exit : tx.full}</button>
+            <button onClick={toggleSound} aria-pressed={soundOn} className={`rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{soundOn ? tx.soundOn : tx.soundOff}</button>
+            <button onClick={() => setTheme(isDark ? 'white' : 'phantom')} className={`rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isDark ? tx.white : tx.dark}</button>
             <button onClick={() => setLang(ar ? 'en' : 'ar')} className={`rounded-full border px-4 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{ar ? 'EN' : 'العربية'}</button>
-            <button onClick={onGenset} className="hidden rounded-full bg-[#c2a378] px-5 py-2.5 text-[9px] font-black tracking-[.18em] text-black transition hover:scale-105 sm:block">GENSET ACCESS</button>
+            <button onClick={onGenset} className="hidden rounded-full bg-[#c2a378] px-5 py-2.5 text-[9px] font-black tracking-[.18em] text-black transition hover:scale-105 sm:block">{tx.gensetAccess}</button>
           </div>
         </div>
       </header>
@@ -782,23 +826,23 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
             <div className="nf4-reveal">
               <div className="mb-5 flex items-center gap-4">
                 <span className="h-px w-16 bg-[#c2a378]" />
-                <span className={`text-[9px] font-black uppercase tracking-[.48em] ${gold}`}>Since 2009 · Egypt</span>
+                <span className={`text-[9px] font-black uppercase tracking-[.48em] ${gold}`}>{tx.since}</span>
               </div>
               <h1 className="max-w-6xl text-[clamp(2.6rem,6.4vw,6.4rem)] font-black uppercase italic leading-[.85] tracking-[-.06em]">
-                Cargo<br /><span className={gold}>in motion.</span>
+                {tx.heroTitle}
               </h1>
               <p className={`mt-6 max-w-2xl text-sm font-medium leading-7 sm:text-base ${K.soft}`}>
                 {ar ? 'نيل فليت لخدمات النقل واللوجستيات — نقل الشاحنات والحاويات وحلول لوجستية متكاملة مع رؤية تشغيلية كاملة.' : 'Nile Fleet for Transport and Logistics Service — trucking, container transportation and integrated logistics built around safe movement and operational visibility.'}
               </p>
               <div className="mt-7 flex flex-wrap items-center gap-4">
-                <a href="#operations" className={`nf4-pulse rounded-full border border-[#c2a378]/60 bg-[#c2a378]/10 px-7 py-3 text-[9px] font-black uppercase tracking-[.24em] ${gold}`}>Explore Operations</a>
-                <span className={`text-[8px] font-black uppercase tracking-[.25em] ${K.faint}`}>Scroll to drive · Click the truck for the horn</span>
+                <a href="#operations" className={`nf4-pulse rounded-full border border-[#c2a378]/60 bg-[#c2a378]/10 px-7 py-3 text-[9px] font-black uppercase tracking-[.24em] ${gold}`}>{tx.explore}</a>
+                <span className={`text-[8px] font-black uppercase tracking-[.25em] ${K.faint}`}>{tx.scrollHint}</span>
               </div>
             </div>
 
             <div className="hidden lg:block">
               <div className="grid grid-cols-2 gap-3">
-                {[['2009', 'FOUNDED'], ['17+', 'YEARS'], ['EGYPT', 'COVERAGE'], ['24/7', 'OPERATIONS']].map(([v, l]) => (
+                {[['2009', tx.founded], ['17+', tx.years], ['EGYPT', tx.coverage], ['24/7', tx.ops24]].map(([v, l]) => (
                   <div key={l} className={`rounded-2xl border p-4 backdrop-blur-md ${K.card}`}>
                     <div className="text-2xl font-black">{v}</div>
                     <div className={`mt-1 text-[7px] font-black tracking-[.2em] ${gold}`}>{l}</div>
@@ -813,15 +857,15 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           <Reveal>
             <div className="mx-auto grid max-w-[1500px] gap-14 px-5 py-28 lg:grid-cols-[.75fr_1.25fr] lg:px-10">
               <div>
-                <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>01 / Company</div>
-                <h2 className="mt-5 text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">Built for<br /><span className={gold}>the road.</span></h2>
+                <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>01 / {tx.company}</div>
+                <h2 className="mt-5 text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{tx.built}</h2>
               </div>
               <div className="max-w-3xl">
-                <p className={`text-base leading-8 sm:text-lg ${K.soft}`}>Nile Fleet for Transport and Logistics Service is one of Egypt’s leading transportation and logistics providers, offering reliable trucking, container transportation, and integrated logistics solutions since 2009.</p>
-                <p className={`mt-7 text-sm leading-7 ${K.muted}`}>With more than 17 years of industry experience, the company supports shipping lines, freight forwarders, importers, exporters, and industrial clients through fleet management, port logistics operations, and supply chain support.</p>
+                <p className={`text-base leading-8 sm:text-lg ${K.soft}`}>{tx.about1}</p>
+                <p className={`mt-7 text-sm leading-7 ${K.muted}`}>{tx.about2}</p>
                 <div className="mt-12 h-px w-full bg-gradient-to-r from-[#c2a378] via-[#c2a378]/20 to-transparent" />
                 <div className="mt-7 flex flex-wrap gap-3">
-                  {['SAFETY', 'RELIABILITY', 'VISIBILITY', 'INNOVATION', 'CUSTOMER SUCCESS'].map(x => <span key={x} className={`rounded-full border px-4 py-2 text-[7px] font-black tracking-[.2em] ${K.chip}`}>{x}</span>)}
+                  {tx.values.map(x => <span key={x} className={`rounded-full border px-4 py-2 text-[7px] font-black tracking-[.2em] ${K.chip}`}>{x}</span>)}
                 </div>
               </div>
             </div>
@@ -833,33 +877,33 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
             <div className="relative mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
               <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
                 <div>
-                  <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>02 / Operations</div>
-                  <h2 className="mt-4 text-5xl font-black uppercase italic tracking-[-.05em] sm:text-7xl">One fleet.<br /><span className={gold}>Many missions.</span></h2>
+                  <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>02 / {tx.operations}</div>
+                  <h2 className="mt-4 text-5xl font-black uppercase italic tracking-[-.05em] sm:text-7xl">{tx.oneFleet}</h2>
                 </div>
-                <div className={`max-w-sm text-xs leading-6 ${K.muted}`}>From road transport to port-side genset operations, Nile Fleet connects physical movement with operational control.</div>
+                <div className={`max-w-sm text-xs leading-6 ${K.muted}`}>{tx.opsDesc}</div>
               </div>
 
               <div className="mt-14 grid gap-5 lg:grid-cols-[1.35fr_.65fr]">
                 <button onClick={onGenset} className="group relative min-h-[380px] overflow-hidden rounded-[2rem] border border-[#c2a378]/40 bg-[#050b12]/85 text-left text-white backdrop-blur-md transition duration-500 hover:-translate-y-2 hover:border-[#c2a378]">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_35%,rgba(194,163,120,.22),transparent_30%),linear-gradient(135deg,#07121a,#010203)]" />
                   <div className="relative flex min-h-[380px] flex-col justify-between p-8 sm:p-10">
-                    <div className="flex items-center justify-between"><span className="rounded-full bg-[#c2a378] px-3 py-1 text-[7px] font-black tracking-[.2em] text-black">LIVE SYSTEM</span><span className="text-[8px] font-black tracking-[.25em] text-slate-500">01</span></div>
+                    <div className="flex items-center justify-between"><span className="rounded-full bg-[#c2a378] px-3 py-1 text-[7px] font-black tracking-[.2em] text-black">{tx.liveSystem}</span><span className="text-[8px] font-black tracking-[.25em] text-slate-500">01</span></div>
                     <div>
-                      <div className="text-[10px] font-black uppercase tracking-[.3em] text-[#c2a378]">Authorized access</div>
-                      <div className="mt-3 text-4xl font-black uppercase italic tracking-[-.04em]">GENSET<br />CONTROL</div>
-                      <p className="mt-4 max-w-md text-xs leading-6 text-slate-400">Access the existing Genset operations platform for bookings, stock, movements, invoices and operational control.</p>
-                      <div className="mt-7 inline-flex items-center gap-3 text-[8px] font-black uppercase tracking-[.25em] text-white">Enter system <span className="transition group-hover:translate-x-2">→</span></div>
+                      <div className="text-[10px] font-black uppercase tracking-[.3em] text-[#c2a378]">{tx.authorized}</div>
+                      <div className="mt-3 text-4xl font-black uppercase italic tracking-[-.04em]">{tx.gensetControl}</div>
+                      <p className="mt-4 max-w-md text-xs leading-6 text-slate-400">{tx.gensetDesc}</p>
+                      <div className="mt-7 inline-flex items-center gap-3 text-[8px] font-black uppercase tracking-[.25em] text-white">{tx.enterSystem} <span className="transition group-hover:translate-x-2">→</span></div>
                     </div>
                   </div>
                 </button>
 
                 <div className={`group relative min-h-[380px] overflow-hidden rounded-[2rem] border p-8 backdrop-blur-md sm:p-10 ${K.card}`}>
                   <div className="relative flex h-full flex-col justify-between">
-                    <div className="flex justify-between"><span className={`text-[8px] font-black tracking-[.25em] ${K.faint}`}>02</span><span className={`rounded-full border px-3 py-1 text-[7px] font-black tracking-[.2em] ${K.line} ${K.faint}`}>COMING SOON</span></div>
+                    <div className="flex justify-between"><span className={`text-[8px] font-black tracking-[.25em] ${K.faint}`}>02</span><span className={`rounded-full border px-3 py-1 text-[7px] font-black tracking-[.2em] ${K.line} ${K.faint}`}>{tx.coming}</span></div>
                     <div>
-                      <div className={`text-[10px] font-black uppercase tracking-[.3em] ${K.faint}`}>Next operation layer</div>
-                      <div className="mt-3 text-4xl font-black uppercase italic">TRANSPORT</div>
-                      <p className={`mt-4 text-xs leading-6 ${K.muted}`}>Integrated trucking and container transport management is under development.</p>
+                      <div className={`text-[10px] font-black uppercase tracking-[.3em] ${K.faint}`}>{tx.nextLayer}</div>
+                      <div className="mt-3 text-4xl font-black uppercase italic">{tx.transport}</div>
+                      <p className={`mt-4 text-xs leading-6 ${K.muted}`}>{tx.transportDesc}</p>
                     </div>
                   </div>
                 </div>
@@ -871,13 +915,13 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         <section id="leadership" className={`border-y backdrop-blur-[2px] ${K.band}`}>
           <Reveal>
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
-              <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>03 / Leadership</div>
+              <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>03 / {tx.leadLabel}</div>
               <div className="mt-4 flex flex-col justify-between gap-6 md:flex-row md:items-end">
-                <h2 className="text-5xl font-black uppercase italic tracking-[-.05em] sm:text-7xl">People behind<br /><span className={gold}>the movement.</span></h2>
-                <p className={`max-w-sm text-xs leading-6 ${K.muted}`}>Leadership across company operations, transport and genset services.</p>
+                <h2 className="text-5xl font-black uppercase italic tracking-[-.05em] sm:text-7xl">{tx.people}</h2>
+                <p className={`max-w-sm text-xs leading-6 ${K.muted}`}>{tx.leadDesc}</p>
               </div>
               <div className="mt-14 grid gap-4 md:grid-cols-3">
-                {[['SHERIF HEGAZY', 'CEO', 'COMPANY'], ['SAMAR HEGAZY', 'HEAD OF TRANSPORT DEPARTMENT', 'TRANSPORT'], ['YASMINE HEGAZY', 'HEAD OF GENSET DEPARTMENT', 'GENSET']].map(([name, role, area], i) => (
+                {[[['SHERIF HEGAZY', tx.roles[0], tx.areas[0]], ['SAMAR HEGAZY', tx.roles[1], tx.areas[1]], ['YASMINE HEGAZY', tx.roles[2], tx.areas[2]]]].map(([name, role, area], i) => (
                   <div key={name} className={`group relative overflow-hidden rounded-[1.7rem] border p-7 backdrop-blur-md transition duration-500 hover:-translate-y-2 hover:border-[#c2a378]/60 ${K.card}`}>
                     <div className="flex items-center justify-between"><span className={`text-[7px] font-black tracking-[.25em] ${gold}`}>{String(i + 1).padStart(2, '0')}</span><span className={`text-[7px] font-black tracking-[.2em] ${K.faint}`}>{area}</span></div>
                     <div className="mt-20 h-px w-10 bg-[#c2a378] transition-all duration-500 group-hover:w-20" />
@@ -895,7 +939,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
             <div className="flex flex-col justify-between gap-8 md:flex-row md:items-center">
               <div>
                 <div className="text-[9px] font-black uppercase tracking-[.42em] text-[#c2a378]">Nile Fleet</div>
-                <div className="mt-3 text-3xl font-black uppercase italic">Safe. Reliable. Visible. Connected.</div>
+                <div className="mt-3 text-3xl font-black uppercase italic">{tx.safe}</div>
                 <div className="mt-5 text-[9px] font-black uppercase tracking-[.34em] text-[#c2a378]">POWERED BY <span className="text-white">BEBITO</span></div>
               </div>
               <div className="text-xs leading-6 text-slate-300 md:text-right">
