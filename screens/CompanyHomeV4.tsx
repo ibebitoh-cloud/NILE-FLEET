@@ -586,8 +586,12 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         for (const cx of MID_CRANES) { const x = base + cx; if (x > -320 && x < W + 320) drawCrane(ctx, x, gMid, 300, dark ? '#132a40' : '#6f8aa5'); }
       }
 
-      // road
-      const gRoad = H * 0.775;
+      // Road follows the truck's lane/position so the vehicle never looks detached
+      // from the roadway when scrolling between sections.
+      const baseScale = clamp(Math.min(W / 1500, H / 900), 0.5, 1.15);
+      const roadApproach = sim.approach;
+      const truckGy = H * (0.84 + roadApproach * 0.045);
+      const gRoad = clamp(truckGy + 38 * baseScale, H * 0.72, H * 0.88);
       const road = ctx.createLinearGradient(0, gRoad, 0, H);
       if (dark) { road.addColorStop(0, '#0c1218'); road.addColorStop(1, '#04060a'); } else { road.addColorStop(0, '#5b6472'); road.addColorStop(1, '#3a4250'); }
       ctx.fillStyle = road; ctx.fillRect(-10, gRoad, W + 20, H - gRoad + 10);
@@ -614,19 +618,19 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         }
       }
 
-      // truck
+      // Truck: side profile, visibly travelling from left -> right.
+      // Scroll changes speed/position, while the road uses the exact same lane Y.
       const s = clamp(Math.min(W / 1500, H / 900), 0.5, 1.15);
       const approach = sim.approach;
-      const frontS = clamp(s * (0.58 + approach * 0.62), 0.42, 1.38);
-      const tx = W * 0.5 + (sim.smx - 0.5) * (55 - approach * 35);
-      const gy = H * (0.86 + approach * 0.09);
+      const tx = ((sim.worldX * 0.9 + W * 0.18) % (W + 760)) - 430;
+      const gy = truckGy;
       const accel = clamp((sim.impulse * 18 + 160) - sim.speed, -400, 900);
       const bob = Math.sin(t * 22) * sN * 1.8 + Math.sin(t * 6) * 0.7 + (sim.horn > 0 ? Math.sin(t * 60) * 1.2 : 0);
       const tilt = -accel * 0.000022;
       const lightScreenY = gy - 100 * s;
       const headA = 0.05 + clamp((sim.smy * H - lightScreenY) / (H * 0.9), -0.28, 0.28);
-      drawFrontTruck(ctx, { s: frontS, tx, gy, dark, wheel: sim.wheel, bob, tilt, headA, horn: sim.horn });
-      sim.box = { x0: tx - 175 * frontS, y0: gy - 430 * frontS, x1: tx + 175 * frontS, y1: gy + 15 * frontS };
+      drawTruck(ctx, { s, tx, gy, dark, wheel: sim.wheel, bob, tilt, headA, horn: sim.horn });
+      sim.box = { x0: tx - 405 * s, y0: gy - 245 * s, x1: tx + 155 * s, y1: gy + 10 * s };
 
       // exhaust smoke
       for (const p of sim.smoke) {
@@ -682,11 +686,11 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       // smoke
       if (Math.random() < dt * (18 + sN * 50)) {
         const s = clamp(Math.min(W / 1500, H / 900), 0.5, 1.15);
-        const tx = W * 0.5 + (sim.smx - 0.5) * 35;
         const approach = sim.approach;
-        sim.smoke.push({ x: tx - 22 * s, y: H * (0.86 + approach * 0.09) - 238 * s, r: 4 + Math.random() * 4, life: 1 });
+        const tx = ((sim.worldX * 0.9 + W * 0.18) % (W + 760)) - 430;
+        sim.smoke.push({ x: tx - 385 * s, y: H * (0.84 + approach * 0.045) - 92 * s, r: 4 + Math.random() * 4, life: 1 });
       }
-      for (const p of sim.smoke) { p.x -= (sim.speed * 0.5 + 30) * dt; p.y -= (34 + sN * 30) * dt; p.r += dt * 16; p.life -= dt * 0.55; }
+      for (const p of sim.smoke) { p.x -= (sim.speed * 0.18 + 30) * dt; p.y -= (34 + sN * 30) * dt; p.r += dt * 16; p.life -= dt * 0.55; }
       sim.smoke = sim.smoke.filter(p => p.life > 0);
 
       // audio follows speed
