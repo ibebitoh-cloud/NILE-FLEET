@@ -3,9 +3,9 @@ import { ThemeContext, LanguageContext } from '../App';
 import { translations } from '../translations';
 
 // onLogin resolves to a function that enters the app on success, or null on failure.
-interface LoginProps { onLogin: (email: string, pass: string) => Promise<(() => void) | null>; }
+interface LoginProps { onLogin: (email: string, pass: string) => Promise<(() => void) | null>; onBackToHome?: () => void; }
 
-const Login: React.FC<LoginProps> = ({ onLogin }) => {
+const Login: React.FC<LoginProps> = ({ onLogin, onBackToHome }) => {
   const { theme, isDark } = useContext(ThemeContext);
   const { lang, setLang } = useContext(LanguageContext);
   const t = translations[lang];
@@ -350,6 +350,14 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         </div>
 
         <div className="col-span-full lg:col-span-5 min-h-screen lg:h-screen flex items-center lg:items-center justify-center px-4 py-7 sm:px-8 sm:py-10 lg:px-12 lg:py-0 relative z-10">
+          <div className="absolute top-4 left-4 sm:top-6 sm:left-6 lg:top-8 lg:left-8 z-20">
+            {onBackToHome && (
+              <button type="button" onClick={onBackToHome} className="rounded-xl border border-white/15 bg-slate-900/55 px-3 py-2 text-[9px] font-black uppercase tracking-widest text-white backdrop-blur hover:border-[#C2A378]/50 hover:text-[#C2A378] transition-all">
+                ← COMPANY HOME
+              </button>
+            )}
+          </div>
+
           <div className="absolute top-4 right-4 sm:top-6 sm:right-6 lg:top-8 lg:right-8 z-20 flex items-center gap-2">
             <button type="button" onClick={() => setLang(lang === 'en' ? 'ar' : 'en')} className={`px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all shadow-sm flex items-center gap-1.5 ${isDark ? 'border-[#C2A378]/40 bg-slate-800/80 text-[#C2A378] hover:bg-slate-700' : 'border-slate-300 bg-slate-50 text-[#001F3F] hover:bg-slate-100'}`}>
               <span>🌐</span><span>{lang === 'en' ? 'العربية' : 'ENGLISH'}</span>
