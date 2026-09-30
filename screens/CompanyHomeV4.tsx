@@ -1011,7 +1011,10 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         .nf4-bebito-name.nf4-bebito-changing{animation:nf4BebitoDisappear .28s ease forwards}
         @keyframes nf4BebitoReveal{0%{opacity:0;transform:scale(.55) rotate(-8deg);filter:blur(7px)}65%{opacity:1;transform:scale(1.06) rotate(2deg);filter:blur(0)}100%{opacity:1;transform:scale(1) rotate(0);filter:blur(0)}}
         @keyframes nf4BebitoDisappear{0%{opacity:1;transform:scale(1) rotate(0);filter:blur(0)}100%{opacity:0;transform:scale(.7) rotate(12deg);filter:blur(6px)}}
-        .nf4-footer-signature-line{display:flex;flex-direction:column;align-items:center;gap:4px}.nf4-footer-signature-line strong{font-family:Inter,system-ui,sans-serif;font-size:14px;font-weight:950;letter-spacing:.16em;text-transform:uppercase;color:#fff}.nf4-footer-signature-line span{font-family:Inter,system-ui,sans-serif;font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(226,232,240,.5)}
+        .nf4-footer-signature-line{display:flex;flex-direction:column;align-items:center;gap:4px}
+        .nf4-footer-contact{margin-top:10px;max-width:760px;text-align:center;font-family:Inter,system-ui,sans-serif;font-size:8px;font-weight:650;line-height:1.7;letter-spacing:.08em;color:rgba(226,232,240,.52)}
+        .nf4-footer-contact div:last-child{margin-top:3px;color:rgba(194,163,120,.72)}
+.nf4-footer-signature-line strong{font-family:Inter,system-ui,sans-serif;font-size:14px;font-weight:950;letter-spacing:.16em;text-transform:uppercase;color:#fff}.nf4-footer-signature-line span{font-family:Inter,system-ui,sans-serif;font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(226,232,240,.5)}
 @media(max-width:640px){.nf4-footer-signature-line strong{font-size:12px}.nf4-footer-signature-line span{font-size:7px;letter-spacing:.14em}.nf4-bebito-signature{gap:3px}.nf4-bebito-powered{font-size:8px}.nf4-bebito-name{font-size:38px}}
 
 
@@ -1483,13 +1486,6 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
         <section className={`relative overflow-hidden backdrop-blur-md ${K.foot}`}>
           <div className="mx-auto max-w-[1500px] px-5 pb-24 pt-20 lg:px-10">
-            <div className="flex justify-end">
-              <div className="text-xs leading-6 text-slate-300 text-right">
-                <div>23 July St. · Abo Elkheer Building · 2nd Floor</div>
-                <div>Port Said, Egypt</div>
-                <div className="mt-2 text-[#c2a378]">nilefleet@nilefleetlogistics.com · Transport 01000992858 · Genset 01212229077</div>
-              </div>
-            </div>
             <div className="mt-16 flex flex-col items-center justify-center text-center">
               <div className="nf4-footer-signature-line">
                 <strong>Nile Fleet</strong>
@@ -1502,6 +1498,11 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cycleBebitoStyle(); } }}
                   style={{fontFamily:bebitoStyles[bebitoStyleIndex].fontFamily,color:bebitoStyles[bebitoStyleIndex].color,textShadow:`0 0 20px ${bebitoStyles[bebitoStyleIndex].shadow}`}}
                   aria-label="Change Bebito signature style">Bebito</span>
+                <div className="nf4-footer-contact">
+                  <div>23 July St. · Abo Elkheer Building · 2nd Floor</div>
+                  <div>Port Said, Egypt</div>
+                  <div>nilefleet@nilefleetlogistics.com · Transport 01000992858 · Genset 01212229077</div>
+                </div>
               </div>
             </div>
           </div>
