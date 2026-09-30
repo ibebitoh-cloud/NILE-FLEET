@@ -1057,6 +1057,53 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
             .nf-home .nf4-leadership-grid>div{min-height:330px}
             @media(max-width:1023px){.nf-home .nf4-about-layout>div:first-child{position:static}.nf-home .nf4-services-grid>div:first-child{grid-column:span 1}}
             @media(max-width:767px){.nf-home .nf4-hero-title{font-size:clamp(3.2rem,18vw,5.2rem)}.nf-home .nf4-network-grid>div,.nf-home .nf4-services-grid>div,.nf-home .nf4-leadership-grid>div{min-height:220px}}
+        @media(max-width:767px){
+          .nf-home{font-size:14px}
+          .nf-home main{width:100%;overflow-x:clip}
+          .nf-home .nf4-route-line{padding-left:16px!important;padding-right:16px!important}
+          .nf-home .nf4-route-welcome strong{font-size:12px;letter-spacing:.08em}
+          .nf-home .nf4-route-welcome span{font-size:5px}
+          .nf-home .nf4-route-actions{gap:7px}
+          .nf-home .nf4-route-phone{min-width:0}
+          .nf-home .nf4-route-phone div strong{font-size:9px}
+          .nf-home .nf4-route-phone div small{font-size:5px}
+          .nf-home .nf4-route-social{width:30px;height:30px}
+          .nf-home .nf4-route-quote{font-size:7px;padding:9px 11px}
+          .nf-home .nf4-hero-inner{padding-left:16px!important;padding-right:16px!important;padding-top:72px!important;gap:28px}
+          .nf-home .nf4-hero-title{font-size:clamp(2.65rem,15vw,4.25rem);line-height:.88;letter-spacing:-.055em}
+          .nf-home .nf4-hero-inner p{font-size:12px;line-height:1.65}
+          .nf-home .nf4-hero-actions{gap:8px}
+          .nf-home .nf4-hero-actions a{min-height:40px;padding:10px 13px;font-size:8px}
+          .nf-home .nf4-hero-stats{padding-top:1.5rem}
+          .nf-home .nf4-stat{min-height:100px;padding:12px!important;border-radius:18px}
+          .nf-home .nf4-stat>div:first-child{font-size:2rem}
+          .nf-home #about>div,.nf-home #operations>div,.nf-home #why-us>div,.nf-home #network>div,.nf-home #services>div,.nf-home #proof>div,.nf-home #partners>div,.nf-home #leadership>div{padding:3.25rem 16px!important}
+          .nf-home #about h2,.nf-home #why-us h2,.nf-home #network h2,.nf-home #services h2,.nf-home #proof h2,.nf-home #partners h2,.nf-home #leadership h2{font-size:clamp(2.25rem,11vw,3.5rem);line-height:.92}
+          .nf-home #about .grid,.nf-home #operations .grid,.nf-home #why-us .grid,.nf-home #network .grid,.nf-home #services .grid,.nf-home #proof .grid,.nf-home #leadership .grid{gap:12px}
+          .nf-home .nf4-network-grid>div,.nf-home .nf4-services-grid>div,.nf-home .nf4-leadership-grid>div{min-height:180px}
+          .nf-home .nf4-experience-card{padding:18px!important;border-radius:22px}
+          .nf-home .nf4-experience-cell{min-height:42px;padding:9px 10px;font-size:8px}
+          .nf-home .nf4-logo-viewport{width:100%;max-width:100%;overflow:hidden!important}
+          .nf-home .nf4-logo-track{gap:6px}
+          .nf-home .nf4-logo-track a{min-width:122px!important;height:50px!important;padding:0 9px!important}
+          .nf-home .nf4-logo-track a>div>div:first-child{width:28px!important;height:28px!important}
+          .nf-home .nf4-logo-track a>div{gap:7px!important}
+          .nf-home .nf4-logo-track a .text-left>div:first-child{font-size:6px!important}
+          .nf-home .nf4-logo-track a .text-left>div:last-child{font-size:4px!important}
+          .nf-home .nf4-logo-viewport:before,.nf-home .nf4-logo-viewport:after{width:34px}
+          .nf-home #partners .mt-8{margin-top:20px!important}
+          .nf-home #partners .flex.flex-wrap.gap-2 a{padding:7px 9px!important}
+          .nf-home #partners .flex.flex-wrap.gap-2 a img{width:22px;height:22px}
+          .nf-home #partners .flex.flex-wrap.gap-2 a span{font-size:7px}
+          .nf-home #partners .mt-5{margin-top:14px!important}
+          .nf-home #partners .mt-6{margin-top:12px!important}
+          .nf-home .nf4-bebito-name{font-size:34px}
+          .nf-home .nf4-footer-contact{max-width:330px;font-size:6.5px;line-height:1.6;letter-spacing:.04em}
+          .nf-home .nf4-footer-signature-line strong{font-size:11px}
+          .nf-home .nf4-footer-signature-line span{font-size:6px}
+          .nf-home>div.pointer-events-none.fixed.bottom-4{right:10px;bottom:10px;padding:8px 10px;border-radius:14px;transform:scale(.78);transform-origin:bottom right}
+        }
+
             
       `}
 </style>
