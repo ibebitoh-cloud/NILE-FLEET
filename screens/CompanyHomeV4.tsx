@@ -1425,7 +1425,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
               <div className="text-[9px] font-black uppercase tracking-[.42em] text-[#c2a378]">07 / {ar ? 'شبكة الشحن والنقل' : 'SHIPPING & TRUCKING NETWORK'}</div>
               <div className="mt-5 flex flex-col justify-between gap-6 md:flex-row md:items-end">
-                <h2 className="text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{tx.partnersTitle}</h2>
+                <h2 className="text-5xl font-black italic leading-[.9] tracking-[-.05em] sm:text-7xl">{ar ? <>شركاء <span className={gold}>النجاح.</span></> : <>Partners in <span className={gold}>success.</span></>}</h2>
                 <p className="max-w-sm text-xs leading-6 text-slate-400">{tx.partnersDesc}</p>
               </div>
               <div className="nf4-logo-viewport mt-14 overflow-hidden rounded-[2rem] border border-white/10 bg-black/30 py-8">
