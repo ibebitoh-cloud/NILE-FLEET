@@ -167,7 +167,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     const next = available[Math.floor(Math.random() * available.length)];
     sessionStorage.setItem('nilefleet_welcome_style', String(next));
     setWelcomeStyle(next);
-    setStage('welcome');
+    setStage('form');
+    requestAnimationFrame(() => setStage('welcome'));
   };
 
   const requestFullscreen = async () => {
@@ -254,14 +255,45 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         @keyframes welcomeLetter3d { 0%,100% { transform:translateY(0) rotateX(0) rotateY(0); text-shadow:0 0 0 transparent; } 50% { transform:translateY(-4px) rotateX(18deg) rotateY(-12deg); text-shadow:5px 7px 0 rgba(0,31,63,.7), 0 0 18px rgba(194,163,120,.45); } }
         .welcome-letter-3d { animation: welcomeLetter3d 2.8s ease-in-out infinite; transform-style:preserve-3d; }
 
-        /* Six different welcome motion signatures. The letters always return to a readable resting state. */
-        @keyframes welcomeRandom0 { 0% { opacity:0; transform:translateY(26px) rotateX(-70deg) scale(.72); filter:blur(7px); } 55% { opacity:1; transform:translateY(-3px) rotateX(8deg) scale(1.04); filter:blur(0); } 100% { opacity:1; transform:none; filter:none; } }
-        @keyframes welcomeRandom1 { 0% { opacity:0; transform:translateX(-32px) rotateY(-75deg) scale(.8); filter:blur(6px); } 60% { opacity:1; transform:translateX(2px) rotateY(10deg) scale(1.03); filter:blur(0); } 100% { opacity:1; transform:none; } }
-        @keyframes welcomeRandom2 { 0% { opacity:0; transform:scale(.35) rotateZ(-18deg); filter:blur(8px); } 55% { opacity:1; transform:scale(1.08) rotateZ(2deg); filter:blur(0); } 100% { opacity:1; transform:none; } }
-        @keyframes welcomeRandom3 { 0% { opacity:0; transform:translateY(-24px) rotateX(70deg); filter:blur(7px); } 58% { opacity:1; transform:translateY(2px) rotateX(-8deg); filter:blur(0); } 100% { opacity:1; transform:none; } }
-        @keyframes welcomeRandom4 { 0% { opacity:0; transform:translateX(30px) rotateY(70deg) scale(.82); filter:blur(6px); } 58% { opacity:1; transform:translateX(-2px) rotateY(-9deg) scale(1.03); filter:blur(0); } 100% { opacity:1; transform:none; } }
-        @keyframes welcomeRandom5 { 0% { opacity:0; transform:perspective(700px) rotateX(70deg) rotateY(-35deg) translateY(18px) scale(.78); filter:blur(9px); } 62% { opacity:1; transform:perspective(700px) rotateX(-5deg) rotateY(7deg) translateY(-2px) scale(1.03); filter:blur(0); } 100% { opacity:1; transform:perspective(700px) rotateX(0) rotateY(0) translateY(0) scale(1); } }
-        .welcome-random-motion { animation-duration: 1.25s; animation-timing-function: cubic-bezier(.2,.8,.2,1); animation-fill-mode:both; }
+        /* Random industrial line-art animation: only the BEBITO signature area moves. */
+        @keyframes lineDraw { from { stroke-dashoffset: 900; opacity: 0; } 12% { opacity: 1; } 55% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+        @keyframes lineMove0 { 0% { transform:translateX(-150px); opacity:0; } 18% { opacity:1; } 48% { transform:translateX(18px); } 72% { transform:translateX(100px); opacity:1; } 100% { transform:translateX(150px); opacity:0; } }
+        @keyframes lineMove1 { 0% { transform:translate(150px,20px) rotate(8deg); opacity:0; } 18% { opacity:1; } 52% { transform:translate(-12px,-4px) rotate(-2deg); } 78% { transform:translate(-105px,-12px) rotate(-8deg); opacity:1; } 100% { transform:translate(-150px,-18px) rotate(-10deg); opacity:0; } }
+        @keyframes lineMove2 { 0% { transform:translateY(70px); opacity:0; } 18% { opacity:1; } 50% { transform:translateY(-5px); } 78% { transform:translateY(-62px); opacity:1; } 100% { transform:translateY(-90px); opacity:0; } }
+        @keyframes lineMove3 { 0% { transform:translateX(-120px) rotateY(0); opacity:0; } 20% { opacity:1; } 50% { transform:translateX(0) rotateY(180deg); } 80% { transform:translateX(110px) rotateY(360deg); opacity:1; } 100% { transform:translateX(150px) rotateY(450deg); opacity:0; } }
+        @keyframes lineMove4 { 0% { transform:translate(-90px,55px) rotate(-15deg); opacity:0; } 20% { opacity:1; } 50% { transform:translate(0,0) rotate(0); } 75% { transform:translate(90px,-55px) rotate(15deg); opacity:1; } 100% { transform:translate(135px,-80px) rotate(20deg); opacity:0; } }
+        @keyframes lineMove5 { 0% { transform:translate(0,-75px) scaleX(.5); opacity:0; } 20% { opacity:1; } 50% { transform:translate(0,0) scaleX(1); } 80% { transform:translate(0,70px) scaleX(1.2); opacity:1; } 100% { transform:translate(0,100px) scaleX(1.3); opacity:0; } }
+        .signature-scene { position:absolute; left:50%; top:50%; width:280px; height:76px; transform:translate(-50%,-50%); pointer-events:none; overflow:visible; }
+        .signature-scene svg { width:100%; height:100%; overflow:visible; }
+        .scene-line { fill:none; stroke:#C2A378; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:900; animation:lineDraw 2.8s ease-in-out both; }
+        .scene-solid { fill:#C2A378; opacity:.9; }
+        .scene-soft { fill:none; stroke:rgba(255,255,255,.65); stroke-width:1.2; stroke-linecap:round; stroke-linejoin:round; }
+        .scene-object { transform-box:fill-box; transform-origin:center; opacity:0; }
+        .welcome-anim-0 .scene-object { animation:lineMove0 2.8s cubic-bezier(.2,.8,.2,1) both; }
+        .welcome-anim-1 .scene-object { animation:lineMove1 2.8s cubic-bezier(.2,.8,.2,1) both; }
+        .welcome-anim-2 .scene-object { animation:lineMove2 2.8s cubic-bezier(.2,.8,.2,1) both; }
+        .welcome-anim-3 .scene-object { animation:lineMove3 2.8s cubic-bezier(.2,.8,.2,1) both; }
+        .welcome-anim-4 .scene-object { animation:lineMove4 2.8s cubic-bezier(.2,.8,.2,1) both; }
+        .welcome-anim-5 .scene-object { animation:lineMove5 2.8s cubic-bezier(.2,.8,.2,1) both; }
+        .welcome-anim-0 .scene-object:nth-child(2),
+        .welcome-anim-1 .scene-object:nth-child(2),
+        .welcome-anim-2 .scene-object:nth-child(2),
+        .welcome-anim-3 .scene-object:nth-child(2),
+        .welcome-anim-4 .scene-object:nth-child(2),
+        .welcome-anim-5 .scene-object:nth-child(2) { animation-delay:.18s; }
+        .welcome-anim-0 .scene-object:nth-child(3),
+        .welcome-anim-1 .scene-object:nth-child(3),
+        .welcome-anim-2 .scene-object:nth-child(3),
+        .welcome-anim-3 .scene-object:nth-child(3),
+        .welcome-anim-4 .scene-object:nth-child(3),
+        .welcome-anim-5 .scene-object:nth-child(3) { animation-delay:.36s; }
+        .welcome-anim-0 .scene-object:nth-child(4),
+        .welcome-anim-1 .scene-object:nth-child(4),
+        .welcome-anim-2 .scene-object:nth-child(4),
+        .welcome-anim-3 .scene-object:nth-child(4),
+        .welcome-anim-4 .scene-object:nth-child(4),
+        .welcome-anim-5 .scene-object:nth-child(4) { animation-delay:.54s; }
+        .signature-stage { position:relative; display:inline-flex; align-items:center; justify-content:center; min-width:210px; min-height:76px; }
 
         .welcome-rise { animation: welcomeRise .75s cubic-bezier(.2,.8,.2,1) both; }
         .welcome-glow { animation: welcomeGlow 2.8s ease-in-out infinite; }
@@ -347,7 +379,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   </div>
                 ) : (
                   <div className="w-full min-h-[340px] flex flex-col items-center justify-center text-center relative overflow-hidden">
-                    <div className="welcome-glow absolute h-48 w-48 rounded-full bg-[#C2A378]/10 blur-3xl"></div>
                     <div className={`relative z-10 w-full max-w-sm ${welcomeAnimationClass}`}>
                       <div className="relative">
                         <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-20 [perspective:900px] pointer-events-none">
@@ -362,9 +393,29 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         <p className="relative z-10 max-w-xs mx-auto mt-4 text-slate-300 text-[10px] sm:text-xs font-bold leading-relaxed tracking-wide">{welcomeQuote}</p>
                       </div>
                       <button type="button" onClick={enterApp} className="mt-5 px-9 py-3 bg-[#001F3F] hover:bg-[#002b57] border border-[#C2A378]/40 text-white font-black rounded-full uppercase tracking-[0.3em] text-[9px] transition-all active:scale-[0.97] shadow-[0_0_30px_rgba(194,163,120,.12)]">{isAr ? 'دخول إلى النظام' : 'ENTER SYSTEM'}</button>
-                      <div className="mt-3 relative">
-                        <div className="mx-auto h-px w-20 bg-gradient-to-r from-transparent via-[#C2A378]/60 to-transparent"></div>
-                        <p className="signature-shimmer mt-2 text-[#C2A378] text-[7px] sm:text-[8px] font-black uppercase tracking-[0.34em]">POWERED BY <span className="text-white">BEBITO</span></p>
+                      <div className="mt-3 relative signature-stage">
+                        <div className={`signature-scene welcome-anim-${welcomeStyle}`} aria-hidden="true">
+                          <svg viewBox="0 0 280 76" role="presentation">
+                            <path className="scene-line" d="M8 58 H272" />
+                            <g className="scene-object">
+                              <path className="scene-line" d="M18 50 h42 v-18 h-28 l-14 18 m14-18 v18 M25 50 a5 5 0 1 0 10 0 M50 50 a5 5 0 1 0 10 0" />
+                              <path className="scene-soft" d="M68 42 H104 M78 38 l8 -8 l8 8 M86 30 v-10" />
+                            </g>
+                            <g className="scene-object">
+                              <path className="scene-line" d="M110 48 h28 v-22 h20 l12 12 v10 h8 M118 48 a5 5 0 1 0 10 0 M166 48 a5 5 0 1 0 10 0" />
+                              <path className="scene-soft" d="M142 28 h14 l7 9 h-21z M176 34 h18 M187 29 l7 5 l-7 5" />
+                            </g>
+                            <g className="scene-object">
+                              <path className="scene-line" d="M204 48 v-26 h24 v26 M204 30 h24 M216 22 v26 M216 36 h12" />
+                              <path className="scene-soft" d="M238 48 h30 M244 42 l-6 6 l6 6 M254 42 l-6 6 l6 6" />
+                            </g>
+                            <g className="scene-object">
+                              <path className="scene-line" d="M24 18 H256" />
+                              <path className="scene-soft" d="M45 12 v12 M70 12 v12 M95 12 v12 M120 12 v12 M145 12 v12 M170 12 v12 M195 12 v12 M220 12 v12" />
+                            </g>
+                          </svg>
+                        </div>
+                        <p className="relative z-10 text-[#C2A378] text-[7px] sm:text-[8px] font-black uppercase tracking-[0.3em] whitespace-nowrap">POWERED BY <span className="text-white">BEBITO</span></p>
                       </div>
                     </div>
                   </div>
