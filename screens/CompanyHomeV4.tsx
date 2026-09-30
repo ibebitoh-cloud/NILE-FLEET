@@ -407,6 +407,24 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
   const [soundOn, setSoundOn] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const bebitoStyles = [
+    { fontFamily: '"Brush Script MT","Segoe Script","Lucida Handwriting",cursive', color: '#ffffff', shadow: 'rgba(194,163,120,.34)' },
+    { fontFamily: 'Georgia, "Times New Roman", serif', color: '#c2a378', shadow: 'rgba(194,163,120,.38)' },
+    { fontFamily: '"Trebuchet MS",Arial,sans-serif', color: '#d7e6f5', shadow: 'rgba(100,170,255,.34)' },
+    { fontFamily: '"Courier New",monospace', color: '#9cc8ff', shadow: 'rgba(80,150,255,.34)' },
+    { fontFamily: 'Impact, Haettenschweiler, sans-serif', color: '#e7edf4', shadow: 'rgba(255,255,255,.26)' }
+  ];
+  const [bebitoStyleIndex, setBebitoStyleIndex] = useState(0);
+  const cycleBebitoStyle = () => {
+    setBebitoStyleIndex(prev => (prev + 1) % bebitoStyles.length);
+    window.setTimeout(() => {
+      const el = document.querySelector('.nf4-bebito-name');
+      if (el) {
+        el.classList.add('nf4-bebito-changing');
+        window.setTimeout(() => el.classList.remove('nf4-bebito-changing'), 300);
+      }
+    }, 10);
+  };
 
   const toggleFullscreen = async () => {
     try {
@@ -989,9 +1007,10 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         @media (prefers-reduced-motion: reduce){ .nf4 *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important} }
         .nf4-bebito-signature{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;position:relative;cursor:default;white-space:nowrap}
         .nf4-bebito-powered{font-family:Inter,system-ui,sans-serif;font-size:9px;font-weight:950;letter-spacing:.42em;color:rgba(226,232,240,.62);text-transform:uppercase;line-height:1}
-        .nf4-bebito-name{font-family:"Brush Script MT","Segoe Script","Lucida Handwriting",cursive;font-size:clamp(34px,4.2vw,52px);font-weight:900;font-style:italic;letter-spacing:-.02em;line-height:.95;color:#fff;text-shadow:0 0 24px rgba(194,163,120,.18);transform-origin:center;transition:color .2s ease,text-shadow .2s ease}
-        .nf4-bebito-signature:hover .nf4-bebito-name{color:#c2a378;text-shadow:0 0 28px rgba(194,163,120,.42);animation:nf4BebitoSpin .72s cubic-bezier(.16,1,.3,1)}
-        @keyframes nf4BebitoSpin{0%{transform:rotate(0deg) scale(1)}45%{transform:rotate(360deg) scale(1.08)}100%{transform:rotate(360deg) scale(1)}}
+        .nf4-bebito-name{font-family:"Brush Script MT","Segoe Script","Lucida Handwriting",cursive;font-size:clamp(28px,3.4vw,44px);font-weight:900;font-style:italic;letter-spacing:-.02em;line-height:.95;color:#fff;text-shadow:0 0 18px rgba(194,163,120,.14);transform-origin:center;transition:font-family .12s ease,color .18s ease,text-shadow .18s ease,transform .18s ease;animation:nf4BebitoReveal .82s cubic-bezier(.16,1,.3,1) both;cursor:pointer;outline:none}
+        .nf4-bebito-name.nf4-bebito-changing{animation:nf4BebitoDisappear .28s ease forwards}
+        @keyframes nf4BebitoReveal{0%{opacity:0;transform:scale(.55) rotate(-8deg);filter:blur(7px)}65%{opacity:1;transform:scale(1.06) rotate(2deg);filter:blur(0)}100%{opacity:1;transform:scale(1) rotate(0);filter:blur(0)}}
+        @keyframes nf4BebitoDisappear{0%{opacity:1;transform:scale(1) rotate(0);filter:blur(0)}100%{opacity:0;transform:scale(.7) rotate(12deg);filter:blur(6px)}}
         .nf4-footer-signature-line{display:flex;flex-direction:column;align-items:center;gap:4px}.nf4-footer-signature-line strong{font-family:Inter,system-ui,sans-serif;font-size:14px;font-weight:950;letter-spacing:.16em;text-transform:uppercase;color:#fff}.nf4-footer-signature-line span{font-family:Inter,system-ui,sans-serif;font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(226,232,240,.5)}
 @media(max-width:640px){.nf4-footer-signature-line strong{font-size:12px}.nf4-footer-signature-line span{font-size:7px;letter-spacing:.14em}.nf4-bebito-signature{gap:3px}.nf4-bebito-powered{font-size:8px}.nf4-bebito-name{font-size:38px}}
 
@@ -1478,7 +1497,11 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
               </div>
               <div className="mt-5 nf4-bebito-signature" aria-label="Powered by Bebito">
                 <span className="nf4-bebito-powered">POWERED BY</span>
-                <span className="nf4-bebito-name">Bebito</span>
+                <span className="nf4-bebito-name" role="button" tabIndex={0}
+                  onClick={cycleBebitoStyle} onTouchStart={cycleBebitoStyle}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cycleBebitoStyle(); } }}
+                  style={{fontFamily:bebitoStyles[bebitoStyleIndex].fontFamily,color:bebitoStyles[bebitoStyleIndex].color,textShadow:`0 0 20px ${bebitoStyles[bebitoStyleIndex].shadow}`}}
+                  aria-label="Change Bebito signature style">Bebito</span>
               </div>
             </div>
           </div>
