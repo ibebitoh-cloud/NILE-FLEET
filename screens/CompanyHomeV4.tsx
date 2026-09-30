@@ -346,18 +346,52 @@ const Reveal: React.FC<{ children: React.ReactNode; className?: string }> = ({ c
 /*  Page                                                              */
 /* ------------------------------------------------------------------ */
 const PARTNER_LOGOS = [
+  { name: 'Egytrans', type: 'TRANSPORT & LOGISTICS', url: 'https://egytrans.com/', logo: 'https://www.google.com/s2/favicons?domain=egytrans.com&sz=128' },
+  { name: 'NOSCO', type: 'TRANSPORT & LOGISTICS', url: 'http://www.noscoegypt.com/', logo: 'https://www.google.com/s2/favicons?domain=noscoegypt.com&sz=128' },
+  { name: 'Nautic Logistics', type: 'LOGISTICS & TRANSPORT', url: 'http://www.nauticlog.com/', logo: 'https://www.google.com/s2/favicons?domain=nauticlog.com&sz=128' },
+  { name: 'Egyptian United / Egytride', type: 'LOGISTICS SERVICES', url: 'http://www.egytridealex.com/', logo: 'https://www.google.com/s2/favicons?domain=egytridealex.com&sz=128' },
+  { name: 'El Bedaya Logistics', type: 'INTERNATIONAL TRANSPORT', url: 'https://elbedayalogistics.com/', logo: 'https://www.google.com/s2/favicons?domain=elbedayalogistics.com&sz=128' },
+  { name: 'National Freight', type: 'FREIGHT & LOGISTICS', url: 'http://www.nfreight.net/', logo: 'https://www.google.com/s2/favicons?domain=nfreight.net&sz=128' },
+  { name: '2BS Cargo Egypt', type: 'CARGO & LOGISTICS', url: 'http://www.2bscargoegypt.com/', logo: 'https://www.google.com/s2/favicons?domain=2bscargoegypt.com&sz=128' },
+  { name: 'Commander Cargo', type: 'CARGO & LOGISTICS', url: 'http://www.commandercargo.com/', logo: 'https://www.google.com/s2/favicons?domain=commandercargo.com&sz=128' },
+  { name: 'Compact Logistics', type: 'LOGISTICS', url: 'http://www.compactlogisticseg.com/', logo: 'https://www.google.com/s2/favicons?domain=compactlogisticseg.com&sz=128' },
+  { name: 'CFS Egypt', type: 'FREIGHT SERVICES', url: 'http://www.cfsegypt.com/', logo: 'https://www.google.com/s2/favicons?domain=cfsegypt.com&sz=128' },
+  { name: 'COPAM Logistics', type: 'LOGISTICS INTERNATIONAL', url: 'http://www.cli-logistics.com/', logo: 'https://www.google.com/s2/favicons?domain=cli-logistics.com&sz=128' },
+  { name: 'Nano Logistics Egypt', type: 'LOGISTICS', url: 'https://nlegypt.com/', logo: 'https://www.google.com/s2/favicons?domain=nlegypt.com&sz=128' },
   { name: 'LATT', type: 'SHIPPING & LOGISTICS', url: 'https://www.latt.com.eg/', logo: 'https://www.google.com/s2/favicons?domain=www.latt.com.eg&sz=128' },
   { name: 'GSS Shipping', type: 'SHIPPING AGENCY', url: 'https://gssshipping-eg.com/', logo: 'https://www.google.com/s2/favicons?domain=gssshipping-eg.com&sz=128' },
-  { name: 'Egytrans', type: 'TRANSPORT & LOGISTICS', url: 'https://egytrans.com/', logo: 'https://www.google.com/s2/favicons?domain=egytrans.com&sz=128' },
   { name: 'Maersk', type: 'SHIPPING LINE', url: 'https://www.maersk.com/', logo: 'https://www.google.com/s2/favicons?domain=maersk.com&sz=128' },
-  { name: 'CMA CGM', type: 'SHIPPING LINE', url: 'https://www.cma-cgm.com/', logo: 'https://www.google.com/s2/favicons?domain=cma-cgm.com&sz=128' },
+  { name: 'CMA CGM', type: 'SHIPPING & LOGISTICS', url: 'https://www.cma-cgm.com/', logo: 'https://www.google.com/s2/favicons?domain=cma-cgm.com&sz=128' },
   { name: 'Hapag-Lloyd', type: 'SHIPPING LINE', url: 'https://www.hapag-lloyd.com/', logo: 'https://www.google.com/s2/favicons?domain=hapag-lloyd.com&sz=128' },
   { name: 'COSCO Shipping', type: 'SHIPPING LINE', url: 'https://lines.coscoshipping.com/', logo: 'https://www.google.com/s2/favicons?domain=coscoshipping.com&sz=128' },
   { name: 'ONE', type: 'SHIPPING LINE', url: 'https://www.one-line.com/', logo: 'https://www.google.com/s2/favicons?domain=one-line.com&sz=128' },
+  { name: 'MSC', type: 'SHIPPING LINE', url: 'https://www.msc.com/', logo: 'https://www.google.com/s2/favicons?domain=msc.com&sz=128' },
   { name: 'GAC', type: 'SHIPPING & LOGISTICS', url: 'https://www.gac.com/', logo: 'https://www.google.com/s2/favicons?domain=gac.com&sz=128' },
   { name: 'Inchcape Shipping', type: 'SHIPPING SERVICES', url: 'https://www.iss-shipping.com/', logo: 'https://www.google.com/s2/favicons?domain=iss-shipping.com&sz=128' },
   { name: 'Fairtrans Marine', type: 'FREIGHT FORWARDING', url: 'https://www.fairtransmarine.com/', logo: 'https://www.google.com/s2/favicons?domain=fairtransmarine.com&sz=128' },
-  { name: 'Kadmar Shipping', type: 'SHIPPING AGENCY', url: 'https://www.kadmar.com/', logo: 'https://www.google.com/s2/favicons?domain=kadmar.com&sz=128' },
+  { name: 'Kadmar Shipping', type: 'SHIPPING AGENCY', url: 'https://www.kadmar.com/', logo: 'https://www.google.com/s2/favicons?domain=www.kadmar.com&sz=128' },
+  { name: 'CEVA Logistics Egypt', type: 'LOGISTICS', url: 'https://www.cevalogistics.com/', logo: 'https://www.google.com/s2/favicons?domain=cevalogistics.com&sz=128' },
+  { name: 'Agility Logistics Egypt', type: 'LOGISTICS & FREIGHT', url: 'https://www.agility.com/', logo: 'https://www.google.com/s2/favicons?domain=agility.com&sz=128' },
+  { name: 'DHL Express Egypt', type: 'EXPRESS & LOGISTICS', url: 'https://www.dhl.com/eg-en/home.html', logo: 'https://www.google.com/s2/favicons?domain=dhl.com&sz=128' },
+  { name: 'Aramex Egypt', type: 'EXPRESS & LOGISTICS', url: 'https://www.aramex.com/', logo: 'https://www.google.com/s2/favicons?domain=aramex.com&sz=128' },
+  { name: 'Raya Logistics', type: 'LOGISTICS', url: 'https://www.rayalogistics.com/', logo: 'https://www.google.com/s2/favicons?domain=rayalogistics.com&sz=128' },
+  { name: 'EgyMar', type: 'SHIPPING & LOGISTICS', url: 'https://egymar.com/', logo: 'https://www.google.com/s2/favicons?domain=egymar.com&sz=128' },
+  { name: 'Transmar', type: 'CONTAINER SHIPPING', url: 'https://www.transmar.com/', logo: 'https://www.google.com/s2/favicons?domain=transmar.com&sz=128' },
+  { name: 'Blue Sky Logistics', type: 'LOGISTICS', url: 'https://www.blueskylogistics.com/', logo: 'https://www.google.com/s2/favicons?domain=blueskylogistics.com&sz=128' },
+  { name: 'Egyptian Global Logistics', type: 'LOGISTICS', url: 'https://www.egl-eg.com/', logo: 'https://www.google.com/s2/favicons?domain=egl-eg.com&sz=128' },
+  { name: 'AIM Logistics', type: 'LOGISTICS', url: 'https://www.aimlogistics.com/', logo: 'https://www.google.com/s2/favicons?domain=aimlogistics.com&sz=128' },
+  { name: 'First Global Logistics', type: 'LOGISTICS', url: 'https://www.firstgloballogistics.com/', logo: 'https://www.google.com/s2/favicons?domain=firstgloballogistics.com&sz=128' },
+  { name: 'INEX Logistics', type: 'LOGISTICS', url: 'https://www.inexlogistics.com/', logo: 'https://www.google.com/s2/favicons?domain=inexlogistics.com&sz=128' },
+  { name: 'Sphinx Logistics', type: 'FREIGHT FORWARDING', url: 'https://www.sphinxlogistics.com/', logo: 'https://www.google.com/s2/favicons?domain=sphinxlogistics.com&sz=128' },
+  { name: 'Martico Egypt', type: 'ROAD FREIGHT', url: 'https://marticogroup.com/contact/egypt/', logo: 'https://www.google.com/s2/favicons?domain=marticogroup.com&sz=128' },
+  { name: 'Freight Link Egypt', type: 'TRUCKING & FREIGHT', url: 'https://freightlinkegypt.com/', logo: 'https://www.google.com/s2/favicons?domain=freightlinkegypt.com&sz=128' },
+  { name: 'USCO Log', type: 'TRUCK TRANSPORTATION', url: 'https://www.usco-log.com/', logo: 'https://www.google.com/s2/favicons?domain=usco-log.com&sz=128' },
+  { name: 'TransGlobe', type: 'TRANSPORT & LOGISTICS', url: 'https://www.transglobe.com/', logo: 'https://www.google.com/s2/favicons?domain=transglobe.com&sz=128' },
+  { name: 'Link Cargo', type: 'TRUCK TRANSPORTATION', url: 'https://linkcargo.com/', logo: 'https://www.google.com/s2/favicons?domain=linkcargo.com&sz=128' },
+  { name: 'HVO Logistics', type: 'TRUCK TRANSPORTATION', url: 'https://hvo-logistics.com/', logo: 'https://www.google.com/s2/favicons?domain=hvo-logistics.com&sz=128' },
+  { name: 'Rady Trans', type: 'TRUCK TRANSPORTATION', url: 'https://radytrans.com/', logo: 'https://www.google.com/s2/favicons?domain=radytrans.com&sz=128' },
+  { name: '2M Transportation', type: 'TRANSPORT SERVICES', url: 'https://www.2mtransportation.com/', logo: 'https://www.google.com/s2/favicons?domain=2mtransportation.com&sz=128' },
+  { name: 'Freight & Logistics Egypt', type: 'FREIGHT TRANSPORT', url: 'https://www.fle.com.eg/', logo: 'https://www.google.com/s2/favicons?domain=fle.com.eg&sz=128' },
 ];
 
 const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
@@ -1067,7 +1101,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                 </div>
               </div>
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-                <div className="text-[8px] font-black uppercase tracking-[.18em] text-slate-600">{ar ? 'خطوط ملاحية · وكلاء شحن · لوجستيات · شركات نقل بري' : 'Shipping lines · freight forwarders · logistics operators · trucking companies'}</div>
+                <div className="text-[8px] font-black uppercase tracking-[.18em] text-slate-600">{ar ? 'خطوط ملاحية · وكلاء شحن · لوجستيات · نقل بري · شركات شاحنات' : 'Shipping lines · freight forwarders · logistics operators · road transport · trucking'}</div>
                 <div className="text-[8px] font-black uppercase tracking-[.18em] text-slate-600">{ar ? 'اضغط على أي شركة لزيارة موقعها.' : 'Click any company to visit its website.'}</div>
               </div>
               <div className="mt-6 text-[8px] font-black uppercase tracking-[.2em] text-slate-600">{tx.globalTitle} · {tx.globalDesc}</div>
