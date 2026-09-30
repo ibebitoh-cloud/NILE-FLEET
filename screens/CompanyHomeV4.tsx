@@ -801,10 +801,10 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     since: ar ? 'منذ 2009 · مصر' : 'Since 2009 · Egypt',
     heroTitle: ar ? <>الشحن<br /><span className={gold}>في حركة.</span></> : <>Cargo<br /><span className={gold}>in motion.</span></>,
     explore: ar ? 'استكشف العمليات' : 'Explore Operations',
-    scrollHint: ar ? 'مرر لتحريك المشهد · اضغط على الشاحنة للبوق' : 'Scroll to drive · Click the truck for the horn',
     founded: ar ? 'التأسيس' : 'FOUNDED',
     years: ar ? 'سنوات' : 'YEARS',
-    coverage: ar ? 'التغطية' : 'COVERAGE',
+    coverage: ar ? 'التغطية · 5 موانئ' : 'COVERAGE · 5 PORTS',
+    coveragePorts: ar ? ['العين السخنة', 'الإسكندرية', 'دمياط', 'بورسعيد', 'الدخيلة'] : ['SOKHNA', 'ALEXANDRIA', 'DAMIETTA', 'PORT SAID', 'DEKHEILA'],
     ops24: ar ? 'العمليات' : 'OPERATIONS',
     company: ar ? 'الشركة' : 'Company',
     built: ar ? <>مصمم من أجل<br /><span className={gold}>الطريق.</span></> : <>Built for<br /><span className={gold}>the road.</span></>,
@@ -837,7 +837,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     serviceItems: ar ? ['نقل الحاويات', 'نقل الحاويات المبردة', 'النقل الداخلي', 'إدارة الأسطول', 'عمليات الموانئ', 'دعم سلاسل الإمداد'] : ['CONTAINER TRANSPORT', 'REEFER TRANSPORT', 'INLAND TRUCKING', 'FLEET MANAGEMENT', 'PORT OPERATIONS', 'SUPPLY CHAIN SUPPORT'],
     proofTitle: ar ? <>ما نقدمه لعملائنا <span className={gold}>كل يوم.</span></> : <>What we deliver to customers <span className={gold}>every day.</span></>,
     proofDesc: ar ? 'لا نعرض تقييمات أو شعارات عملاء إلا عندما تكون معتمدة وقابلة للنشر. الجودة تُقاس بما يحدث على أرض الواقع.' : 'We only publish customer reviews and partner logos when they are approved and verifiable. Quality is measured by what happens on the ground.',
-    reviewPending: ar ? 'آراء العملاء المعتمدة ستظهر هنا قريباً.' : 'Verified customer feedback will appear here.',
+    reviewPending: ar ? 'ملخصات تجربة الخدمة بالذكاء الاصطناعي' : 'AI service experience summaries',
+    reviewAiNote: ar ? 'ملخصات تم إنشاؤها بالذكاء الاصطناعي من الخدمات التي نقدمها يومياً — وليست شهادات عملاء حقيقية.' : 'AI-generated summaries of the service experience we aim to deliver every day — not real customer testimonials.',
     partnersTitle: ar ? <>شركاء <span className={gold}>النجاح.</span></> : <>Partners in <span className={gold}>success.</span></>,
     partnersDesc: ar ? 'قسم مخصص للشركاء والعملاء المعتمدين — مع شعارات رسمية بعد الحصول على الموافقة.' : 'A dedicated space for approved customers and partners — with official logos added only after authorization.',
     globalTitle: ar ? 'منظومة لوجستية عالمية' : 'GLOBAL LOGISTICS ECOSYSTEM',
@@ -906,16 +907,16 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
               </p>
               <div className="mt-7 flex flex-wrap items-center gap-4">
                 <a href="#operations" className={`nf4-pulse rounded-full border border-[#c2a378]/60 bg-[#c2a378]/10 px-7 py-3 text-[9px] font-black uppercase tracking-[.24em] ${gold}`}>{tx.explore}</a>
-                <span className={`text-[8px] font-black uppercase tracking-[.25em] ${K.faint}`}>{tx.scrollHint}</span>
-              </div>
+                              </div>
             </div>
 
             <div className="hidden lg:block">
               <div className="grid grid-cols-2 gap-3">
-                {[['2009', tx.founded], ['17+', tx.years], ['EGYPT', tx.coverage], ['24/7', tx.ops24]].map(([v, l]) => (
+                {[['2009', tx.founded], ['17+', tx.years], ['5', tx.coverage], ['24/7', tx.ops24]].map(([v, l]) => (
                   <div key={l} className={`rounded-2xl border p-4 backdrop-blur-md ${K.card}`}>
                     <div className="text-2xl font-black">{v}</div>
-                    <div className={`mt-1 text-[7px] font-black tracking-[.2em] ${gold}`}>{l}</div>
+                    <div className={`mt-1 text-[7px] font-black tracking-[.16em] ${gold}`}>{l}</div>
+                    {l === tx.coverage && <div className={`mt-2 text-[7px] font-bold leading-4 ${K.faint}`}>{tx.coveragePorts.join(' · ')}</div>}
                   </div>
                 ))}
               </div>
@@ -1065,10 +1066,15 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                   </div>
                 </div>
                 <div className={`relative overflow-hidden rounded-[2rem] border p-8 ${K.card}`}>
-                  <div className="absolute -right-12 -top-12 text-[9rem] font-black opacity-5">★★★★★</div>
-                  <div className={`text-4xl tracking-[.12em] ${gold}`}>★★★★★</div>
-                  <div className="mt-8 text-lg font-black">{tx.reviewPending}</div>
-                  <div className={`mt-4 text-xs leading-6 ${K.muted}`}>{ar ? 'أرسل لنا تقييمات العملاء المعتمدة لإضافتها هنا بأسمائهم وشعاراتهم.' : 'Provide approved customer testimonials and we can place them here with names and company logos.'}</div>
+                  <div className="absolute -right-12 -top-12 text-[9rem] font-black opacity-5">AI</div>
+                  <div className={`text-[9px] font-black tracking-[.28em] ${gold}`}>AI / SERVICE EXPERIENCE</div>
+                  <div className="mt-6 text-2xl font-black leading-tight">{tx.reviewPending}</div>
+                  <div className={`mt-4 text-xs leading-6 ${K.muted}`}>{tx.reviewAiNote}</div>
+                  <div className="mt-8 space-y-3">
+                    {(ar ? ['استجابة تشغيلية سريعة وواضحة', 'متابعة دقيقة لحركة النقل', 'تنسيق مستمر مع عمليات الموانئ'] : ['Fast, clear operational response', 'Accurate transport movement follow-up', 'Continuous coordination with port operations']).map(x => (
+                      <div key={x} className={`rounded-xl border px-4 py-3 text-[9px] font-bold ${K.chip}`}>“{x}”</div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
