@@ -234,206 +234,82 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         @keyframes welcomeLetter3d { 0%,100% { transform:translateY(0) rotateX(0) rotateY(0); text-shadow:0 0 0 transparent; } 50% { transform:translateY(-4px) rotateX(18deg) rotateY(-12deg); text-shadow:5px 7px 0 rgba(0,31,63,.7), 0 0 18px rgba(194,163,120,.45); } }
         .welcome-letter-3d { animation: welcomeLetter3d 2.8s ease-in-out infinite; transform-style:preserve-3d; }
 
-        /* BEBITO signature — fluid hand-drawn character motion. The character is built from separate joints so the body, arms, head and legs move naturally rather than sliding as one object. */
-        @keyframes sigCharacterFloat { 0%,100%{transform:translate3d(0,0,0)} 50%{transform:translate3d(1px,-2px,0)} }
-        @keyframes sigWalk { 0%{transform:translateX(-118px)} 12%{transform:translateX(-82px)} 28%{transform:translateX(-40px)} 44%{transform:translateX(4px)} 60%{transform:translateX(46px)} 78%{transform:translateX(82px)} 100%{transform:translateX(118px)} }
-        @keyframes sigWalkBody { 0%,100%{transform:rotate(0)} 18%{transform:rotate(-2deg)} 42%{transform:rotate(2deg)} 66%{transform:rotate(-2deg)} 84%{transform:rotate(1deg)} }
-        @keyframes sigHeadLook { 0%,100%{transform:rotate(0)} 28%{transform:rotate(-7deg)} 48%{transform:rotate(4deg)} 72%{transform:rotate(7deg)} 88%{transform:rotate(0)} }
-        @keyframes sigArmA { 0%,100%{transform:rotate(24deg)} 22%{transform:rotate(-8deg)} 46%{transform:rotate(34deg)} 70%{transform:rotate(-2deg)} 88%{transform:rotate(20deg)} }
-        @keyframes sigArmB { 0%,100%{transform:rotate(-22deg)} 22%{transform:rotate(8deg)} 46%{transform:rotate(-34deg)} 70%{transform:rotate(2deg)} 88%{transform:rotate(-18deg)} }
-        @keyframes sigLegA { 0%,100%{transform:rotate(18deg)} 25%{transform:rotate(-22deg)} 50%{transform:rotate(28deg)} 75%{transform:rotate(-12deg)} }
-        @keyframes sigLegB { 0%,100%{transform:rotate(-18deg)} 25%{transform:rotate(24deg)} 50%{transform:rotate(-26deg)} 75%{transform:rotate(14deg)} }
-        @keyframes sigReach { 0%,18%{transform:translate(0,0) rotate(12deg)} 34%{transform:translate(8px,-5px) rotate(-20deg)} 48%{transform:translate(18px,-2px) rotate(-42deg)} 62%{transform:translate(6px,1px) rotate(-18deg)} 78%,100%{transform:translate(0,0) rotate(12deg)} }
-        @keyframes sigTap { 0%,34%{transform:translate(0,0)} 43%{transform:translate(14px,-2px)} 49%{transform:translate(20px,-2px)} 56%{transform:translate(8px,0)} 70%,100%{transform:translate(0,0)} }
-        @keyframes sigKick { 0%,30%{transform:rotate(0)} 44%{transform:rotate(-22deg)} 54%{transform:rotate(26deg)} 64%{transform:rotate(-8deg)} 78%,100%{transform:rotate(0)} }
-        @keyframes sigHeadNod { 0%,30%{transform:rotate(0)} 42%{transform:rotate(12deg)} 50%{transform:rotate(19deg)} 58%{transform:rotate(7deg)} 72%,100%{transform:rotate(0)} }
-        @keyframes sigPull { 0%,25%{transform:translateX(0)} 42%{transform:translateX(-7px)} 56%{transform:translateX(5px)} 72%{transform:translateX(-2px)} 100%{transform:translateX(0)} }
-        @keyframes sigLetterReact { 0%,38%,100%{transform:translateY(0) rotate(0) scale(1)} 47%{transform:translateY(-3px) rotate(-3deg) scale(1.04)} 57%{transform:translateY(1px) rotate(2deg) scale(.99)} 68%{transform:translateY(0) rotate(0) scale(1)} }
-        .signature-stage { position:relative; min-height:82px; width:100%; overflow:visible; }
+        /* BEBITO signature — staged physical contact with individual letters. */
+        .signature-stage { position:relative; display:inline-flex; flex-direction:column; align-items:center; justify-content:flex-end; min-width:290px; min-height:100px; padding-bottom:0; overflow:visible; }
         .signature-word { position:relative; z-index:6; display:inline-flex; align-items:baseline; justify-content:center; gap:.05em; }
-        .signature-letter { position:relative; display:inline-block; min-width:.62em; text-align:center; transform-origin:center 80%; will-change:transform,opacity,filter; }
-        .signature-stage::after { content:""; position:absolute; left:50%; bottom:5px; width:72%; height:8px; transform:translateX(-50%); border-bottom:1px solid rgba(194,163,120,.18); border-radius:50%; pointer-events:none; }
-        .signature-character { position:absolute; left:50%; bottom:7px; width:62px; height:72px; transform:translateX(-50%); z-index:7; pointer-events:none; }
-        .signature-character .sig-body { transform-origin:31px 34px; animation:sigWalkBody 2.9s ease-in-out infinite; }
-        .signature-character .sig-head { transform-origin:31px 20px; animation:sigHeadLook 2.9s ease-in-out infinite; }
-        .signature-character .sig-arm-a { transform-origin:31px 35px; animation:sigArmA 1.45s ease-in-out infinite; }
-        .signature-character .sig-arm-b { transform-origin:31px 35px; animation:sigArmB 1.45s ease-in-out infinite; }
-        .signature-character .sig-leg-a { transform-origin:31px 51px; animation:sigLegA 1.45s ease-in-out infinite; }
-        .signature-character .sig-leg-b { transform-origin:31px 51px; animation:sigLegB 1.45s ease-in-out infinite; }
-        .signature-character .sig-hand { transform-origin:53px 38px; animation:sigTap 2.9s ease-in-out infinite; }
-        .signature-character .sig-foot { transform-origin:48px 62px; animation:sigKick 2.9s ease-in-out infinite; }
-        .signature-character .sig-head-action { animation:sigHeadNod 2.9s ease-in-out infinite; transform-origin:31px 20px; }
-        .signature-character .sig-pull { animation:sigPull 2.9s ease-in-out infinite; }
-        .signature-character .sig-line { fill:none; stroke:rgba(255,255,255,.92); stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
+        .signature-letter { position:relative; display:inline-block; min-width:.62em; text-align:center; transform-origin:center 85%; will-change:transform,filter; }
+        .signature-stage::after { content:""; position:absolute; left:50%; bottom:3px; width:72%; height:8px; transform:translateX(-50%); border-bottom:1px solid rgba(194,163,120,.18); border-radius:50%; pointer-events:none; }
+        .signature-character { position:absolute; left:50%; bottom:7px; width:62px; height:72px; z-index:7; pointer-events:none; transform-box:fill-box; }
+        .signature-character .sig-line { fill:none; stroke:rgba(255,255,255,.94); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
         .signature-character .sig-accent { fill:none; stroke:#C2A378; stroke-width:1.5; stroke-linecap:round; vector-effect:non-scaling-stroke; }
         .signature-character .sig-dot { fill:#C2A378; }
-        .signature-character.sig-scene-0 { animation:sigWalk 2.9s cubic-bezier(.42,0,.58,1) infinite; }
-        .signature-character.sig-scene-1 { animation:sigWalk 3.2s cubic-bezier(.42,0,.58,1) infinite; }
-        .signature-character.sig-scene-2 { animation:sigWalk 3.1s cubic-bezier(.42,0,.58,1) infinite; }
-        .signature-character.sig-scene-3 { animation:sigWalk 3s cubic-bezier(.42,0,.58,1) infinite; }
-        .signature-character.sig-scene-4 { animation:sigWalk 3.3s cubic-bezier(.42,0,.58,1) infinite; }
-        .signature-character.sig-scene-5 { animation:sigWalk 3s cubic-bezier(.42,0,.58,1) infinite; }
-        .signature-character.sig-scene-6 { animation:sigWalk 3.2s cubic-bezier(.42,0,.58,1) infinite; }
-        .signature-character.sig-scene-7 { animation:sigWalk 3.1s cubic-bezier(.42,0,.58,1) infinite; }
-        .signature-character.sig-scene-0 .sig-action-arm { animation:sigReach 2.9s ease-in-out infinite; transform-origin:31px 35px; }
-        .signature-character.sig-scene-0 .sig-action-hand { animation:sigTap 2.9s ease-in-out infinite; }
-        .signature-character.sig-scene-1 .sig-action-arm { animation:sigReach 3.2s ease-in-out infinite; transform-origin:31px 35px; }
-        .signature-character.sig-scene-2 .sig-action-head { animation:sigHeadNod 3.1s ease-in-out infinite; }
-        .signature-character.sig-scene-3 .sig-action-leg { animation:sigKick 3s ease-in-out infinite; transform-origin:31px 51px; }
-        .signature-character.sig-scene-4 .sig-action-pull { animation:sigPull 3.3s ease-in-out infinite; }
-        .signature-character.sig-scene-5 .sig-action-arm { animation:sigReach 3s ease-in-out infinite; transform-origin:31px 35px; }
-        .signature-character.sig-scene-6 .sig-action-head { animation:sigHeadNod 3.2s ease-in-out infinite; }
-        .signature-character.sig-scene-7 .sig-action-arm { animation:sigReach 3.1s ease-in-out infinite; transform-origin:31px 35px; }
-        .signature-stage.welcome-anim-0 .signature-letter:nth-of-type(1),
-        .signature-stage.welcome-anim-0 .signature-letter:nth-of-type(2),
-        .signature-stage.welcome-anim-0 .signature-letter:nth-of-type(3),
-        .signature-stage.welcome-anim-0 .signature-letter:nth-of-type(4),
-        .signature-stage.welcome-anim-0 .signature-letter:nth-of-type(5),
-        .signature-stage.welcome-anim-0 .signature-letter:nth-of-type(6) { animation:sigLetterReact 2.9s ease-in-out infinite; }
-        @keyframes sigContactHand { 0%,18%{transform:rotate(24deg) translate(0,0)} 32%{transform:rotate(-8deg) translate(3px,-1px)} 42%{transform:rotate(-35deg) translate(12px,-4px)} 48%{transform:rotate(-48deg) translate(20px,-3px)} 54%{transform:rotate(-25deg) translate(10px,0)} 70%,100%{transform:rotate(24deg) translate(0,0)} }
-        @keyframes sigContactHead { 0%,28%{transform:translate(0,0) rotate(0)} 40%{transform:translate(7px,2px) rotate(9deg)} 48%{transform:translate(14px,3px) rotate(14deg)} 56%{transform:translate(6px,1px) rotate(6deg)} 72%,100%{transform:translate(0,0) rotate(0)} }
-        @keyframes sigContactFoot { 0%,30%{transform:rotate(18deg)} 42%{transform:rotate(-8deg)} 52%{transform:rotate(-30deg)} 60%{transform:rotate(-5deg)} 76%,100%{transform:rotate(18deg)} }
-        @keyframes sigLetterTouch { 0%,38%,100%{transform:translate(0,0) rotate(0)} 44%{transform:translate(2px,-1px) rotate(-2deg)} 49%{transform:translate(6px,0) rotate(4deg)} 54%{transform:translate(2px,1px) rotate(-2deg)} 64%{transform:translate(0,0) rotate(0)} }
-        @keyframes sigContactPulse { 0%,42%,100%{opacity:0;transform:scale(.4)} 47%{opacity:1;transform:scale(1.15)} 55%{opacity:0;transform:scale(1.6)} }
-        .signature-character .sig-contact-hand { transform-origin:31px 35px; animation:sigContactHand 3s ease-in-out infinite; }
-        .signature-character .sig-contact-head { transform-origin:31px 20px; animation:sigContactHead 3s ease-in-out infinite; }
-        .signature-character .sig-contact-foot { transform-origin:31px 51px; animation:sigContactFoot 3s ease-in-out infinite; }
-        .signature-character .sig-contact-pulse { transform-origin:center; animation:sigContactPulse 3s ease-out infinite; }
-        .signature-stage.welcome-anim-0 .signature-letter,
-        .signature-stage.welcome-anim-1 .signature-letter,
-        .signature-stage.welcome-anim-2 .signature-letter,
-        .signature-stage.welcome-anim-3 .signature-letter,
-        .signature-stage.welcome-anim-4 .signature-letter,
-        .signature-stage.welcome-anim-5 .signature-letter,
-        .signature-stage.welcome-anim-6 .signature-letter,
-        .signature-stage.welcome-anim-7 .signature-letter { animation:sigLetterTouch 3s ease-in-out infinite; }
-        /* Physical BEBITO interaction stories — letters are the objects the stickman manipulates. */
-        .signature-stage { position:relative; min-height:82px; width:100%; overflow:visible; }
-        .signature-word { position:relative; z-index:6; gap:.05em; }
-        .signature-letter { position:relative; display:inline-block; min-width:.62em; text-align:center; transform-origin:center 80%; will-change:transform,opacity,filter; }
-        .signature-stage::after { content:""; position:absolute; left:50%; bottom:5px; width:72%; height:8px; transform:translateX(-50%); border-bottom:1px solid rgba(194,163,120,.18); border-radius:50%; pointer-events:none; }
-        @keyframes physShuffleB { 0%,12%{transform:translate(0,0) rotate(0)} 24%{transform:translate(-12px,-10px) rotate(-12deg)} 38%{transform:translate(28px,7px) rotate(15deg)} 52%{transform:translate(8px,-7px) rotate(-7deg)} 68%,100%{transform:translate(0,0) rotate(0)} }
-        @keyframes physShuffleE { 0%,18%{transform:translate(0,0)} 32%{transform:translate(18px,9px) rotate(10deg)} 46%{transform:translate(-22px,-6px) rotate(-12deg)} 64%,100%{transform:translate(0,0)} }
-        @keyframes physBuild { 0%{transform:translate(var(--sx),-18px) scale(.72);opacity:.15} 28%{opacity:1} 58%,100%{transform:translate(0,0) scale(1);opacity:1} }
-        @keyframes physThrow { 0%,22%{transform:translate(0,0) rotate(0) scale(1)} 42%{transform:translate(58px,-28px) rotate(120deg) scale(1.06)} 60%{transform:translate(0,0) rotate(360deg) scale(1)} 72%,100%{transform:translate(0,0) rotate(360deg)} }
-        @keyframes physPull { 0%,25%{transform:translate(0,0) rotate(0)} 45%{transform:translate(24px,0) rotate(4deg)} 62%{transform:translate(9px,0) rotate(-2deg)} 78%,100%{transform:translate(0,0)} }
-        @keyframes physCrane { 0%,18%{transform:translateY(-25px) rotate(-8deg);opacity:.25} 40%{opacity:1} 58%{transform:translateY(2px) rotate(3deg)} 72%{transform:translateY(0) rotate(0)} 100%{transform:translateY(0) rotate(0)} }
-        @keyframes physConveyor { 0%,15%{transform:translateX(-34px);opacity:.25} 38%{opacity:1} 58%{transform:translateX(8px) rotate(4deg)} 76%,100%{transform:translateX(0) rotate(0);opacity:1} }
-        @keyframes physInspect { 0%,28%{transform:translate(0,0) rotate(0)} 44%{transform:translateY(-6px) rotate(-4deg)} 56%{transform:translateY(2px) rotate(3deg)} 70%,100%{transform:translate(0,0) rotate(0)} }
-        @keyframes physAssemble { 0%{transform:translateY(22px) scale(.82);opacity:.15} 18%{opacity:1} 48%{transform:translateY(-3px) scale(1.05)} 62%,100%{transform:translateY(0) scale(1);opacity:1} }
-        @keyframes stickInteraction { 0%,100%{transform:translateX(0)} 45%{transform:translateX(7px)} 60%{transform:translateX(2px)} }
-        @keyframes stickInteractionBack { 0%,100%{transform:translateX(0)} 45%{transform:translateX(-7px)} 60%{transform:translateX(-2px)} }
-        .welcome-anim-0 .signature-letter:nth-child(5){animation:physShuffleB 4.8s ease-in-out infinite;}
-        .welcome-anim-0 .signature-letter:nth-child(6){animation:physShuffleE 4.8s ease-in-out infinite .12s;}
-        .welcome-anim-0 .signature-letter:nth-child(7){animation:physShuffleB 4.8s ease-in-out infinite .24s;}
-        .welcome-anim-1 .signature-letter:nth-child(5){--sx:-54px;animation:physBuild 5.4s cubic-bezier(.2,.8,.2,1) infinite;}
-        .welcome-anim-1 .signature-letter:nth-child(6){--sx:36px;animation:physBuild 5.4s cubic-bezier(.2,.8,.2,1) infinite .55s;}
-        .welcome-anim-1 .signature-letter:nth-child(7){--sx:-28px;animation:physBuild 5.4s cubic-bezier(.2,.8,.2,1) infinite 1.1s;}
-        .welcome-anim-2 .signature-letter:nth-child(10){animation:physThrow 5s cubic-bezier(.2,.75,.2,1) infinite;}
-        .welcome-anim-2 .signature-letter:nth-child(8){animation:physThrow 5s cubic-bezier(.2,.75,.2,1) infinite 1s;}
-        .welcome-anim-2 .signature-letter:nth-child(6){animation:physThrow 5s cubic-bezier(.2,.75,.2,1) infinite 2s;}
-        .welcome-anim-3 .signature-letter:nth-child(7){animation:physPull 4.8s ease-in-out infinite;}
-        .welcome-anim-3 .signature-letter:nth-child(8){animation:physPull 4.8s ease-in-out infinite .35s;}
-        .welcome-anim-4 .signature-letter:nth-child(5){animation:physCrane 5.2s ease-in-out infinite;}
-        .welcome-anim-4 .signature-letter:nth-child(9){animation:physCrane 5.2s ease-in-out infinite .9s;}
-        .welcome-anim-5 .signature-letter:nth-child(6){animation:physConveyor 4.9s cubic-bezier(.25,.7,.25,1) infinite;}
-        .welcome-anim-5 .signature-letter:nth-child(8){animation:physConveyor 4.9s cubic-bezier(.25,.7,.25,1) infinite .8s;}
-        .welcome-anim-6 .signature-letter:nth-child(5){animation:physInspect 4.7s ease-in-out infinite;}
-        .welcome-anim-6 .signature-letter:nth-child(10){animation:physInspect 4.7s ease-in-out infinite .8s;}
-        .welcome-anim-7 .signature-letter{animation:physAssemble 4.6s cubic-bezier(.2,.8,.2,1) infinite;}
-        .welcome-anim-7 .signature-letter:nth-child(6){animation-delay:.12s}
-        .welcome-anim-7 .signature-letter:nth-child(7){animation-delay:.24s}
-        .welcome-anim-7 .signature-letter:nth-child(8){animation-delay:.36s}
-        .welcome-anim-7 .signature-letter:nth-child(9){animation-delay:.48s}
-        .welcome-anim-7 .signature-letter:nth-child(10){animation-delay:.60s}
-        .welcome-anim-0 .stick-think,.welcome-anim-1 .stick-build,.welcome-anim-2 .stick-draw,.welcome-anim-3 .stick-pull,.welcome-anim-4 .stick-push,.welcome-anim-5 .stick-wave{animation-duration:5.4s;animation-timing-function:ease-in-out;}
-        .welcome-anim-0 .stick-think,.welcome-anim-6 .stick-think{animation:stickInteraction 4.8s ease-in-out infinite;}
-        .welcome-anim-1 .stick-build,.welcome-anim-7 .stick-build{animation:stickInteraction 5.2s ease-in-out infinite;}
-        .welcome-anim-2 .stick-draw{animation:stickInteraction 5s ease-in-out infinite;}
-        .welcome-anim-3 .stick-pull{animation:stickInteractionBack 4.8s ease-in-out infinite;}
-        .welcome-anim-4 .stick-push{animation:stickInteraction 5.2s ease-in-out infinite;}
-        .welcome-anim-5 .stick-wave{animation:stickInteraction 4.9s ease-in-out infinite;}
-        .welcome-anim-6 .stick-think .stick-arm-think{animation:stickArmThink 4.7s ease-in-out infinite;}
-        .welcome-anim-7 .stick-build .stick-hammer{animation:stickHammer 4.8s ease-in-out infinite;}
-        @media (prefers-reduced-motion: reduce) {
-          .signature-letter,.stick-scene,.signature-scene *{animation:none!important;transition:none!important;}
+        /* The character walks to a letter, stops, reaches with its hand, touches, and reacts. */
+        @keyframes physCharacter {
+          0%,12% { transform:translateX(var(--start)); }
+          24% { transform:translateX(var(--target)); }
+          34%,48% { transform:translateX(var(--target)); }
+          54% { transform:translateX(calc(var(--target) + 5px)); }
+          61% { transform:translateX(var(--target)); }
+          76%,100% { transform:translateX(var(--start)); }
         }
-
-        .welcome-anim-0 .signature-letter:nth-child(1) { animation:sigLetterThink 2.4s ease-in-out infinite; }
-        .welcome-anim-1 .signature-letter:nth-child(3) { animation:sigLetterBuild 2.1s ease-in-out infinite .12s; }
-        .welcome-anim-1 .signature-letter:nth-child(5) { animation:sigLetterBuild 2.1s ease-in-out infinite .3s; }
-        .welcome-anim-2 .signature-letter:nth-child(1),
-        .welcome-anim-2 .signature-letter:nth-child(2),
-        .welcome-anim-2 .signature-letter:nth-child(3),
-        .welcome-anim-2 .signature-letter:nth-child(4),
-        .welcome-anim-2 .signature-letter:nth-child(5),
-        .welcome-anim-2 .signature-letter:nth-child(6) { animation:sigLetterDraw 2.8s ease-in-out infinite; }
-        .welcome-anim-2 .signature-letter:nth-child(2) { animation-delay:.15s; }
-        .welcome-anim-2 .signature-letter:nth-child(3) { animation-delay:.3s; }
-        .welcome-anim-2 .signature-letter:nth-child(4) { animation-delay:.45s; }
-        .welcome-anim-2 .signature-letter:nth-child(5) { animation-delay:.6s; }
-        .welcome-anim-2 .signature-letter:nth-child(6) { animation-delay:.75s; }
-        .welcome-anim-3 .signature-letter:nth-child(1) { animation:sigLetterPull 2.5s ease-in-out infinite; }
-        .welcome-anim-4 .signature-letter:nth-child(6) { animation:sigLetterPush 2.2s ease-in-out infinite; }
-        .welcome-anim-5 .signature-letter { animation:sigLetterWave 2.6s ease-in-out infinite; }
-        .welcome-anim-5 .signature-letter:nth-child(2) { animation-delay:.1s; }
-        .welcome-anim-5 .signature-letter:nth-child(3) { animation-delay:.2s; }
-        .welcome-anim-5 .signature-letter:nth-child(4) { animation-delay:.3s; }
-        .welcome-anim-5 .signature-letter:nth-child(5) { animation-delay:.4s; }
-        .welcome-anim-5 .signature-letter:nth-child(6) { animation-delay:.5s; }
-        .stick-line { fill:none; stroke:#C2A378; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
-        .stick-white { fill:none; stroke:rgba(255,255,255,.7); stroke-width:1.25; stroke-linecap:round; stroke-linejoin:round; }
-        .stick-fill { fill:#C2A378; opacity:.95; }
-        .stick-scene { display:none; transform-box:fill-box; transform-origin:center; }
-        .welcome-anim-0 .stick-think { display:block; animation:stickThink 6.5s ease-in-out infinite alternate; }
-        .welcome-anim-1 .stick-build { display:block; animation:stickBuild 8s ease-in-out infinite alternate; }
-        .welcome-anim-2 .stick-draw { display:block; animation:stickDraw 7.5s ease-in-out infinite alternate; }
-        .welcome-anim-3 .stick-pull { display:block; animation:stickPull 9s ease-in-out infinite alternate; }
-        .welcome-anim-4 .stick-push { display:block; animation:stickPush 6.8s ease-in-out infinite alternate; }
-        .welcome-anim-5 .stick-wave { display:block; animation:stickWalk 8.5s ease-in-out infinite alternate; }
-        .stick-arm-think { transform-box:fill-box; transform-origin:bottom left; animation:stickArmThink 4.5s ease-in-out infinite alternate; }
-        .stick-hammer { transform-box:fill-box; transform-origin:bottom left; animation:stickHammer 1.15s ease-in-out infinite; }
-        .stick-pen { transform-box:fill-box; transform-origin:bottom left; animation:penDraw 2.2s ease-in-out infinite; }
-        .stick-rope { transform-box:fill-box; transform-origin:left center; animation:ropePull 2.4s ease-in-out infinite alternate; }
-        .stick-box { animation:boxSlide 2.8s ease-in-out infinite alternate; }
-        .stick-wheel { transform-box:fill-box; transform-origin:center; animation:wheelSpin 1.8s linear infinite; }
-        .stick-hand-wave { transform-box:fill-box; transform-origin:bottom left; animation:stickWave 1.4s ease-in-out infinite; }
-        .signature-scene .signature-guide { stroke-dasharray:5 5; opacity:.22; }
-        /* Rebuilt stickman: the character physically reaches the BEBITO letters with hand, head and foot. */
-        @keyframes manHandReach { 0%,18%{transform:translateX(-8px)} 35%{transform:translateX(20px)} 47%{transform:translateX(44px)} 58%{transform:translateX(30px)} 78%,100%{transform:translateX(-8px)} }
-        @keyframes manHandHit { 0%,28%{transform:translate(0,0) rotate(0)} 42%{transform:translate(24px,-4px) rotate(-8deg)} 48%{transform:translate(38px,0) rotate(10deg)} 54%{transform:translate(24px,2px) rotate(-5deg)} 72%,100%{transform:translate(0,0) rotate(0)} }
-        @keyframes manHeadbutt { 0%,30%{transform:translateX(0)} 45%{transform:translateX(24px)} 52%{transform:translateX(39px)} 59%{transform:translateX(25px)} 78%,100%{transform:translateX(0)} }
-        @keyframes manKick { 0%,30%{transform:rotate(0) translateX(0)} 44%{transform:rotate(-8deg) translateX(3px)} 52%{transform:rotate(12deg) translateX(17px)} 62%{transform:rotate(-4deg) translateX(4px)} 80%,100%{transform:rotate(0) translateX(0)} }
-        @keyframes manJumpKick { 0%,28%{transform:translate(0,0) rotate(0)} 43%{transform:translate(15px,-16px) rotate(-8deg)} 55%{transform:translate(43px,-12px) rotate(12deg)} 68%{transform:translate(20px,0) rotate(-4deg)} 82%,100%{transform:translate(0,0) rotate(0)} }
-        @keyframes manPullHands { 0%,25%{transform:translateX(0)} 48%{transform:translateX(30px)} 62%{transform:translateX(17px)} 80%,100%{transform:translateX(0)} }
-        @keyframes manCarryHead { 0%,25%{transform:translateX(-8px)} 45%{transform:translateX(8px)} 58%{transform:translateX(24px)} 75%,100%{transform:translateX(-8px)} }
-        @keyframes impactPop { 0%,46%{opacity:0;transform:scale(.2)} 50%{opacity:1;transform:scale(1.25)} 66%{opacity:0;transform:scale(1.8)} 100%{opacity:0} }
-        @keyframes letterJolt { 0%,100%{transform:translate(0,0) rotate(0)} 48%{transform:translate(5px,-3px) rotate(5deg)} 56%{transform:translate(-3px,2px) rotate(-4deg)} 65%{transform:translate(0,0) rotate(0)} }
-        .stick-action { transform-box:fill-box; transform-origin:center; }
-        .stick-action-hand { animation:manHandHit 4.8s cubic-bezier(.2,.8,.2,1) infinite; }
-        .stick-action-head { animation:manHeadbutt 4.8s cubic-bezier(.2,.8,.2,1) infinite; }
-        .stick-action-foot { animation:manKick 4.8s cubic-bezier(.2,.8,.2,1) infinite; }
-        .stick-action-jump { animation:manJumpKick 5s cubic-bezier(.2,.8,.2,1) infinite; }
-        .stick-action-pull { animation:manPullHands 4.8s ease-in-out infinite; }
-        .stick-action-carry { animation:manCarryHead 5s ease-in-out infinite; }
-        .stick-impact { transform-box:fill-box; transform-origin:center; animation:impactPop 4.8s ease-out infinite; }
-        .welcome-anim-0 .stick-hand-scene { display:block; }
-        .welcome-anim-1 .stick-hand-scene { display:block; }
-        .welcome-anim-2 .stick-head-scene { display:block; }
-        .welcome-anim-3 .stick-foot-scene { display:block; }
-        .welcome-anim-4 .stick-jump-scene { display:block; }
-        .welcome-anim-5 .stick-pull-scene { display:block; }
-        .welcome-anim-6 .stick-carry-scene { display:block; }
-        .welcome-anim-7 .stick-hand-scene { display:block; }
-        .welcome-anim-0 .signature-letter:nth-child(5), .welcome-anim-7 .signature-letter:nth-child(9){animation:letterJolt 4.8s ease-in-out infinite;}
-        .welcome-anim-1 .signature-letter:nth-child(6){animation:letterJolt 4.8s ease-in-out infinite .18s;}
-        .welcome-anim-2 .signature-letter:nth-child(7){animation:letterJolt 4.8s ease-in-out infinite .35s;}
-        .welcome-anim-3 .signature-letter:nth-child(8){animation:letterJolt 4.8s ease-in-out infinite .5s;}
-        .welcome-anim-4 .signature-letter:nth-child(10){animation:letterJolt 5s ease-in-out infinite .65s;}
-        .welcome-anim-5 .signature-letter:nth-child(7){animation:letterJolt 4.8s ease-in-out infinite .3s;}
-        .welcome-anim-6 .signature-letter:nth-child(9){animation:letterJolt 5s ease-in-out infinite .45s;}
-
-        .signature-stage { position:relative; display:inline-flex; flex-direction:column; align-items:center; justify-content:flex-end; min-width:290px; min-height:92px; padding-bottom:2px; }
+        @keyframes physArm {
+          0%,30% { transform:rotate(0deg); }
+          40% { transform:rotate(-12deg) translate(5px,-2px); }
+          48% { transform:rotate(-25deg) translate(13px,-5px); }
+          54% { transform:rotate(-30deg) translate(17px,-4px); }
+          61% { transform:rotate(-10deg) translate(6px,-1px); }
+          72%,100% { transform:rotate(0deg); }
+        }
+        @keyframes physLetter {
+          0%,43% { transform:translate(0,0) rotate(0) scale(1); }
+          48% { transform:translate(3px,-2px) rotate(-5deg) scale(1.06); }
+          53% { transform:translate(-3px,2px) rotate(4deg) scale(1.02); }
+          58% { transform:translate(2px,0) rotate(-2deg) scale(1.01); }
+          66%,100% { transform:translate(0,0) rotate(0) scale(1); }
+        }
+        @keyframes contactPulse {
+          0%,43% { opacity:0; transform:scale(.25); }
+          48% { opacity:1; transform:scale(1); }
+          58% { opacity:0; transform:scale(1.8); }
+          100% { opacity:0; }
+        }
+        .signature-character .sig-action-arm { transform-box:fill-box; transform-origin:31px 31px; animation:physArm 4.8s cubic-bezier(.2,.8,.2,1) infinite; }
+        .signature-character .sig-contact-pulse { transform-origin:center; animation:contactPulse 4.8s ease-out infinite; }
+        .signature-character.sig-scene-0 { --start:-112px; --target:-58px; animation:physCharacter 4.8s cubic-bezier(.2,.8,.2,1) infinite; }
+        .signature-character.sig-scene-1 { --start:-112px; --target:-35px; animation:physCharacter 5s cubic-bezier(.2,.8,.2,1) infinite; }
+        .signature-character.sig-scene-2 { --start:-92px; --target:-12px; animation:physCharacter 5.2s cubic-bezier(.2,.8,.2,1) infinite; }
+        .signature-character.sig-scene-3 { --start:-70px; --target:12px; animation:physCharacter 5.1s cubic-bezier(.2,.8,.2,1) infinite; }
+        .signature-character.sig-scene-4 { --start:-42px; --target:34px; animation:physCharacter 5.3s cubic-bezier(.2,.8,.2,1) infinite; }
+        .signature-character.sig-scene-5 { --start:-15px; --target:55px; animation:physCharacter 5s cubic-bezier(.2,.8,.2,1) infinite; }
+        .signature-character.sig-scene-6 { --start:15px; --target:77px; animation:physCharacter 5.2s cubic-bezier(.2,.8,.2,1) infinite; }
+        .signature-character.sig-scene-7 { --start:42px; --target:98px; animation:physCharacter 5.1s cubic-bezier(.2,.8,.2,1) infinite; }
+        .signature-character .sig-contact-hand { display:none; }
+        .signature-stage.welcome-anim-0 .signature-letter:nth-child(5),
+        .signature-stage.welcome-anim-1 .signature-letter:nth-child(6),
+        .signature-stage.welcome-anim-2 .signature-letter:nth-child(7),
+        .signature-stage.welcome-anim-3 .signature-letter:nth-child(8),
+        .signature-stage.welcome-anim-4 .signature-letter:nth-child(9),
+        .signature-stage.welcome-anim-5 .signature-letter:nth-child(10),
+        .signature-stage.welcome-anim-6 .signature-letter:nth-child(9),
+        .signature-stage.welcome-anim-7 .signature-letter:nth-child(10) { animation:physLetter 4.8s cubic-bezier(.2,.8,.2,1) infinite; }
+        .signature-stage.welcome-anim-1 .signature-letter:nth-child(6) { animation-delay:.2s; }
+        .signature-stage.welcome-anim-2 .signature-letter:nth-child(7) { animation-delay:.4s; }
+        .signature-stage.welcome-anim-3 .signature-letter:nth-child(8) { animation-delay:.6s; }
+        .signature-stage.welcome-anim-4 .signature-letter:nth-child(9) { animation-delay:.8s; }
+        .signature-stage.welcome-anim-5 .signature-letter:nth-child(10) { animation-delay:1s; }
+        .signature-stage.welcome-anim-6 .signature-letter:nth-child(9) { animation-delay:1.2s; }
+        .signature-stage.welcome-anim-7 .signature-letter:nth-child(10) { animation-delay:1.4s; }
+        .welcome-anim-0 .signature-character .sig-action-arm,
+        .welcome-anim-1 .signature-character .sig-action-arm,
+        .welcome-anim-2 .signature-character .sig-action-arm,
+        .welcome-anim-3 .signature-character .sig-action-arm,
+        .welcome-anim-4 .signature-character .sig-action-arm,
+        .welcome-anim-5 .signature-character .sig-action-arm,
+        .welcome-anim-6 .signature-character .sig-action-arm,
+        .welcome-anim-7 .signature-character .sig-action-arm { display:block; }
+        @media (prefers-reduced-motion: reduce) {
+          .signature-letter,.signature-character,.signature-character * { animation:none!important; transition:none!important; }
+        }
 
         .welcome-rise { animation: welcomeRise .75s cubic-bezier(.2,.8,.2,1) both; }
         .welcome-glow { animation: welcomeGlow 2.8s ease-in-out infinite; }
@@ -529,17 +405,16 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         <div className={`signature-character sig-scene-${welcomeStyle}`} aria-hidden="true">
                           <svg viewBox="0 0 62 72" role="presentation">
                             <g className="sig-body">
-                              <g className="sig-contact-head"><circle className="sig-line" cx="31" cy="20" r="7"/><circle className="sig-dot" cx="33.5" cy="19" r="1.2"/></g>
-                              <path className="sig-line" d="M31 27 L31 51"/>
-                              <g className="sig-contact-hand"><path className="sig-line" d="M31 35 L17 43 L8 35 L3 27"/></g>
-                              <path className="sig-line" d="M31 35 L45 40 L54 32"/>
-                              <g className="sig-contact-foot"><path className="sig-line" d="M31 51 L20 64 L12 69"/></g>
-                              <path className="sig-line" d="M31 51 L42 63 L51 68"/>
-                              <circle className="sig-dot" cx="3" cy="27" r="1.8"/>
-                              <circle className="sig-contact-pulse" cx="3" cy="27" r="4" fill="none" stroke="#C2A378" stroke-width="1.5"/>
+                              <circle className="sig-line" cx="31" cy="18" r="7"/>
+                              <circle className="sig-dot" cx="34" cy="17" r="1.2"/>
+                              <path className="sig-line" d="M31 25 L31 49"/>
+                              <path className="sig-line" d="M31 31 L18 40 L10 31"/>
+                              <g className="sig-action-arm"><path className="sig-line" d="M31 31 L44 23 L58 17"/><circle className="sig-dot" cx="58" cy="17" r="1.7"/></g>
+                              <path className="sig-line" d="M31 49 L20 62 L12 68"/>
+                              <path className="sig-line" d="M31 49 L42 62 L51 68"/>
+                              <circle className="sig-contact-pulse" cx="58" cy="17" r="4" fill="none" stroke="#C2A378" stroke-width="1.5"/>
                             </g>
                             <path className="sig-accent" d="M3 69 H59"/>
-                            <circle className="sig-dot" cx="57" cy="69" r="1.3"/>
                           </svg>
                         </div>
                       </div>
