@@ -22,6 +22,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const musicTimersRef = useRef<number[]>([]);
   const enterRef = useRef<(() => void) | null>(null);
   const bgRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
   // Cinematic login soundtrack. Browsers may block unmuted autoplay, so we attempt
@@ -113,6 +114,24 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   }, []);
 
   // Cursor-following light + subtle 3D tilt on the login card (mouse/pen only).
+  // Mobile Safari/Chrome can be conservative about background-video autoplay.
+  // Explicitly keep the video muted/inline and retry playback after the element is ready.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+    const play = () => { void video.play().catch(() => {}); };
+    video.addEventListener('loadedmetadata', play);
+    video.addEventListener('canplay', play);
+    play();
+    return () => {
+      video.removeEventListener('loadedmetadata', play);
+      video.removeEventListener('canplay', play);
+    };
+  }, []);
+
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const onMove = (e: PointerEvent) => {
@@ -227,7 +246,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <div className="login-screen-shell w-full min-h-screen lg:h-screen grid grid-cols-1 lg:grid-cols-12 overflow-hidden relative z-10">
         <div ref={bgRef} className="absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
           <video
-            className="h-full w-full object-cover"
+            ref={videoRef}
+            className="absolute inset-0 h-full w-full object-cover object-center lg:object-cover"
             src="/genmark-clip-on-gc5-genset.mp4"
             poster="/login-poster.jpg"
             autoPlay
@@ -235,9 +255,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             loop
             playsInline
             preload="auto"
+            disablePictureInPicture
+            controls={false}
             aria-hidden="true"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#001F3F]/65 via-[#001F3F]/45 to-[#071521]/55"></div>
+          <div className="absolute inset-0 bg-gradient-to-b lg:bg-gradient-to-r from-[#001F3F]/70 via-[#001F3F]/42 to-[#071521]/80 lg:from-[#001F3F]/65 lg:via-[#001F3F]/45 lg:to-[#071521]/55"></div>
           <div className="absolute inset-0 opacity-[0.12] bg-[repeating-linear-gradient(0deg,transparent_0px,transparent_3px,rgba(220,230,240,0.22)_4px)]"></div>
           <div className="film-scanline absolute -inset-x-8 top-0 h-24 bg-gradient-to-b from-transparent via-[#C2A378]/30 to-transparent"></div>
           <div className="film-flicker absolute inset-0 bg-[#C2A378]/20 mix-blend-screen"></div>
@@ -276,9 +298,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         </div>
 
         {/* RIGHT PANEL */}
-        <div className="col-span-full lg:col-span-5 min-h-screen flex items-center justify-center px-5 py-20 sm:px-8 sm:py-16 lg:px-12 lg:py-0 relative z-10">
+        <div className="col-span-full lg:col-span-5 min-h-screen lg:h-screen flex items-center lg:items-center justify-center px-4 pt-20 pb-7 sm:px-8 sm:py-16 lg:px-12 lg:py-0 relative z-10">
           {/* Top Bar for Language Switcher */}
-          <div className="absolute top-6 right-6 lg:top-8 lg:right-8 z-20 flex items-center gap-2">
+          <div className="absolute top-4 right-4 sm:top-6 sm:right-6 lg:top-8 lg:right-8 z-20 flex items-center gap-2">
             <button
               type="button"
               onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
@@ -293,8 +315,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </button>
           </div>
 
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[30rem] lg:text-[40rem] font-black text-slate-500/5 pointer-events-none select-none italic tracking-tighter">N</div>
-          <div ref={cardRef} style={{ transform: 'perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))', transition: 'transform 120ms ease-out' }} className={`max-w-sm w-full mx-auto space-y-5 sm:space-y-6 lg:space-y-7 relative z-10 rounded-3xl px-6 py-7 sm:px-8 sm:py-8 backdrop-blur-md border shadow-2xl ${isDark ? 'bg-slate-900/35 border-white/10' : 'bg-white/35 border-white/30'}`}>
+          <div className="absolute top-[42%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-[16rem] sm:text-[24rem] lg:text-[40rem] font-black text-slate-500/5 pointer-events-none select-none italic tracking-tighter">N</div>
+          <div ref={cardRef} style={{ transform: 'perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))', transition: 'transform 120ms ease-out' }} className={`max-w-sm sm:max-w-md lg:max-w-sm w-full mx-auto space-y-5 sm:space-y-6 lg:space-y-7 relative z-10 rounded-3xl px-5 py-6 sm:px-8 sm:py-8 backdrop-blur-md border shadow-2xl ${isDark ? 'bg-slate-900/35 border-white/10' : 'bg-white/35 border-white/30'}`}>
             <div className="pointer-events-none absolute inset-0 rounded-3xl" style={{ background: 'radial-gradient(260px circle at var(--cx, 50%) var(--cy, 0%), rgba(194,163,120,0.22), transparent 60%)' }}></div>
             {stage !== 'form' ? (
               <div className="flex flex-col items-center justify-center text-center min-h-[340px] space-y-4" role="status" aria-live="polite">
@@ -331,8 +353,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               </div>
             ) : (
               <>
-            <div className="space-y-3 text-center lg:text-start relative">
-              <h3 className={`text-2xl sm:text-3xl lg:text-4xl font-black uppercase italic tracking-tighter leading-[0.95] ${isDark ? 'text-white' : 'text-[#001F3F]'}`}>
+            <div className="space-y-2.5 sm:space-y-3 text-center lg:text-start relative">
+              <h3 className={`text-[1.65rem] sm:text-3xl lg:text-4xl font-black uppercase italic tracking-tighter leading-[0.95] ${isDark ? 'text-white' : 'text-[#001F3F]'}`}>
                 <>{isAr ? 'مرحباً بكم في' : 'WELCOME TO'} <br/> <span className="text-[#C2A378]">{isAr ? 'أسطول النيل' : 'NILE FLEET'}</span></>
               </h3>
               <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#C2A378] italic">
@@ -340,17 +362,17 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 text-start">
+            <form onSubmit={handleSubmit} className="space-y-3.5 sm:space-y-5 text-start">
               <div className="group">
                 <label className="text-[8px] font-black text-slate-400 uppercase tracking-[0.16em] sm:tracking-widest block mb-2 px-1 group-focus-within:text-[#C2A378] transition-colors">{t.networkIdentity}</label>
-                <input type="email" required className="w-full h-11 sm:h-12 px-4 sm:px-5 rounded-xl border outline-none transition-all text-sm font-bold bg-[var(--input-bg)] border-[var(--border-primary)] text-[var(--text-primary)] focus:border-[var(--accent)]" placeholder="EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <input type="email" required className="w-full h-12 sm:h-12 px-4 sm:px-5 rounded-xl border outline-none transition-all text-sm font-bold bg-[var(--input-bg)] border-[var(--border-primary)] text-[var(--text-primary)] focus:border-[var(--accent)]" placeholder="EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
               <div className="group">
                 <label className="text-[8px] font-black text-slate-400 uppercase tracking-[0.16em] sm:tracking-widest block mb-2 px-1 group-focus-within:text-[#C2A378] transition-colors">{t.strategicPasskey}</label>
                 <input type="password" required className="w-full h-12 sm:h-14 px-4 sm:px-6 rounded-xl border outline-none transition-all text-sm font-bold bg-[var(--input-bg)] border-[var(--border-primary)] text-[var(--text-primary)] focus:border-[var(--accent)]" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
               </div>
 
-              <button type="submit" className="w-full min-h-11 sm:min-h-12 bg-[#001F3F] hover:bg-[#002b57] text-white font-black py-3 sm:py-4 rounded-xl transition-all uppercase tracking-[0.28em] sm:tracking-[0.4em] text-[9px] sm:text-[10px] shadow-2xl active:scale-[0.98] mt-3 relative overflow-hidden group/btn border border-white/5">
+              <button type="submit" className="w-full min-h-12 sm:min-h-12 bg-[#001F3F] hover:bg-[#002b57] text-white font-black py-3 sm:py-4 rounded-xl transition-all uppercase tracking-[0.28em] sm:tracking-[0.4em] text-[9px] sm:text-[10px] shadow-2xl active:scale-[0.98] mt-3 relative overflow-hidden group/btn border border-white/5">
                 <span className="relative z-10">{t.initializeCommand}</span>
                 <div className="absolute inset-0 bg-[#C2A378] translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500 opacity-20"></div>
               </button>
@@ -360,7 +382,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                <p className="text-[8px] font-black uppercase text-slate-400 tracking-[0.12em] sm:tracking-[0.2em] text-center leading-relaxed">{isAr ? 'لطلب حساب، تواصل مع مسؤول النظام.' : 'Contact your administrator to request an account.'}</p>
             </div>
             
-            <div className="relative pt-4 sm:pt-5 border-t border-slate-100 dark:border-white/5">
+            <div className="relative pt-3 sm:pt-5 border-t border-slate-100 dark:border-white/5">
                <div className="flex flex-col items-center gap-1 select-none transition-all mx-auto w-fit text-center font-sans">
                   <div className="bg-slate-50/85 dark:bg-slate-800/50 px-5 sm:px-8 py-2.5 rounded-full border border-slate-100 dark:border-white/10 shadow-sm">
                      <p className="text-[8px] font-black uppercase tracking-[0.35em] sm:tracking-[0.6em] text-slate-400 py-1 leading-none">
