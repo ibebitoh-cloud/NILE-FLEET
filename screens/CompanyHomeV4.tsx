@@ -907,7 +907,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         @keyframes nf4Reveal { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
         @keyframes nf4Pulse { 0%,100%{box-shadow:0 0 0 rgba(194,163,120,0)} 50%{box-shadow:0 0 42px rgba(194,163,120,.28)} }
         @keyframes nf4Partners { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-        .nf4-logo-viewport{position:relative;border:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;border-radius:0!important}
+        .nf4-logo-viewport{position:relative;border:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;border-radius:0!important;overflow:hidden!important}
         .nf4-logo-track{animation:nf4Partners 75s linear infinite}
         .nf4-logo-track a{height:68px!important;min-width:175px!important;border-radius:12px!important;padding:0 16px!important}
         .nf4-logo-track a>div>div:first-child{width:34px!important;height:34px!important;border-radius:8px!important}
@@ -1429,8 +1429,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                 <h2 className="text-5xl font-black italic leading-[.9] tracking-[-.05em] sm:text-7xl">{ar ? <>شركاء <span className={gold}>النجاح.</span></> : <>Partners in <span className={gold}>success.</span></>}</h2>
                 <p className={`max-w-sm text-xs leading-6 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{tx.partnersDesc}</p>
               </div>
-              <div className={`nf4-logo-viewport mt-12 overflow-hidden rounded-[1.4rem] border p-2 shadow-[0_18px_50px_rgba(15,23,42,.08)] ${isDark ? 'border-white/10 bg-black/20' : 'border-black/[.08] bg-white/45'}`}>
-                <div className="nf4-logo-track flex w-max items-center gap-3 px-1 py-1">
+              <div className="nf4-logo-viewport mt-12 overflow-hidden">
+                <div className="nf4-logo-track flex w-max items-center gap-3">
                   {[...PARTNER_LOGOS, ...PARTNER_LOGOS].map((p, i) => (
                     <a key={`${p.name}-${i}`} href={p.url} target="_blank" rel="noreferrer" className={`group flex h-[76px] min-w-[190px] items-center justify-center rounded-xl border px-4 text-center transition duration-500 hover:-translate-y-0.5 hover:border-[#c2a378]/70 ${isDark ? 'border-white/[.09] bg-white/[.025] hover:bg-white/[.055]' : 'border-black/[.07] bg-white/75 hover:bg-white shadow-sm'}`}>
                       <div className="flex items-center gap-3">
