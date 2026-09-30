@@ -546,10 +546,6 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       approach: 0, approachTarget: 0, horn: 0, lastWhoosh: 0, km: 0, hudT: 0, t: 0, lastScroll: window.scrollY,
       smoke: [] as { x: number; y: number; r: number; life: number }[],
       box: { x0: 0, y0: 0, x1: 0, y1: 0 },
-      drag: false, dragMode: '', dragX: 0, dragY: 0, dragDX: 0, dragDY: 0,
-      wrecked: false, falling: false, fallV: 0, wreckX: 0, wreckY: 0, wreckRot: 0,
-      collector: false, collectorX: -420, collectorY: 0, collectorTarget: false, collectorCarry: false, collectorDone: false,
-      collectorScrollReady: false, wreckParts: false, wreckTimer: 0, pickupTimer: 0, impact: false,
     };
 
     const onMove = (e: MouseEvent) => {
@@ -569,53 +565,16 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     };
     const onDown = (e: PointerEvent) => {
       if ((e.target as HTMLElement).closest('button,a,input')) return;
-      if (sim.wrecked || sim.falling) return;
       const b = sim.box;
       if (e.clientX > b.x0 && e.clientX < b.x1 && e.clientY > b.y0 && e.clientY < b.y1) {
-        const localX = e.clientX - b.x0;
-        const localY = e.clientY - b.y0;
-        sim.dragMode = (localX > 80 && localX < 470 && localY < 210) ? 'container' : 'truck';
-        sim.drag = true; sim.dragX = e.clientX; sim.dragY = clamp(e.clientY,H*.42,H*.80);
-        sim.dragDX = 0; sim.dragDY = 0; sim.speed = Math.max(sim.speed,260);
-        if (wrapRef.current) wrapRef.current.style.cursor='grabbing';
+        sim.horn = 0.7;
+        if (soundOnRef.current) playHorn();
       }
-    };
-    const onPointerMove = (e: PointerEvent) => {
-      if (!sim.drag) return;
-      sim.dragDX=e.clientX-sim.dragX; sim.dragDY=e.clientY-sim.dragY;
-      sim.dragX=e.clientX; sim.dragY=clamp(e.clientY,H*.28,H*.62);
-    };
-    const onUp = () => {
-      if (!sim.drag) return;
-      const mode=sim.dragMode; sim.drag=false; sim.dragMode='';
-      if (mode === 'container') {
-        // Throw only the container; keep the tractor active and driving.
-        sim.impact = true;
-        sim.falling = false;
-        sim.wrecked = false;
-        sim.wreckParts = false;
-        sim.wreckTimer = 0;
-        sim.worldX += 220; sim.speed = 420;
-      } else {
-        // Throw the complete truck. It returns automatically after the crash sequence.
-        sim.falling = true;
-        sim.fallV = Math.max(260, sim.dragDY * 8 + 260);
-        sim.wreckX = sim.dragX;
-        sim.wreckY = sim.dragY;
-        sim.wreckRot = sim.dragDX * 0.02;
-        sim.wreckParts = false;
-        sim.wrecked = false;
-        sim.wreckTimer = 0;
-      }
-      if (wrapRef.current) wrapRef.current.style.cursor='';
     };
     window.addEventListener('resize', resize);
     window.addEventListener('mousemove', onMove, { passive: true });
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('pointerdown', onDown);
-    window.addEventListener('pointermove', onPointerMove, { passive: true });
-    window.addEventListener('pointerup', onUp);
-    window.addEventListener('pointercancel', onUp);
     onScroll();
 
     const render = () => {
@@ -736,51 +695,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       const tilt = -accel * 0.000022;
       const lightScreenY = gy - 100 * s;
       const headA = 0.05 + clamp((sim.smy * H - lightScreenY) / (H * 0.9), -0.28, 0.28);
-      if (!sim.wrecked && !sim.falling && !sim.drag) {
-        drawTruck(ctx, { s, tx, gy, dark, wheel: sim.wheel, bob, tilt, headA, horn: sim.horn });
-        sim.box = { x0: tx - 405 * s, y0: gy - 245 * s, x1: tx + 155 * s, y1: gy + 10 * s };
-      } else if (sim.drag) {
-        drawTruck(ctx, { s: Math.min(0.82, s), tx: sim.dragX, gy: sim.dragY + 220, dark, wheel: sim.wheel, bob: 0, tilt: 0, headA: 0.05, horn: 0 });
-      } else if (sim.falling) {
-        ctx.save();
-        ctx.translate(sim.wreckX, sim.wreckY);
-        ctx.rotate(sim.wreckRot);
-        drawTruck(ctx, { s: Math.min(0.72, s), tx: 0, gy: 220, dark, wheel: sim.wheel, bob: 0, tilt: 0.15, headA: 0.05, horn: 0 });
-        ctx.restore();
-      } else if (sim.wreckParts) {
-        // Detailed crash wreck: bent chassis, crushed panels, detached wheels, glass and loose metal.
-        const px = sim.wreckX, py = Math.min(H * 0.91, sim.wreckY);
-        ctx.save();
-        ctx.translate(px, py);
-        ctx.rotate(-0.035);
-        ctx.fillStyle = dark ? '#080c11' : '#26323d';
-        ctx.beginPath(); ctx.moveTo(-155,4); ctx.lineTo(-112,-15); ctx.lineTo(22,-10); ctx.lineTo(154,3); ctx.lineTo(126,18); ctx.lineTo(-128,18); ctx.closePath(); ctx.fill();
-        ctx.strokeStyle = '#697581'; ctx.lineWidth = 2; ctx.stroke();
-        const panels = [[-118,-54,74,43,-.16],[-44,-42,54,36,.22],[18,-48,72,38,-.12],[92,-34,48,31,.3],[-78,10,58,13,.12],[42,8,82,11,-.18]] as const;
-        for (const [x,y,w,h,a] of panels) {
-          ctx.save(); ctx.translate(x,y); ctx.rotate(a);
-          const g = ctx.createLinearGradient(-w/2,0,w/2,h); g.addColorStop(0,dark?'#0a1722':'#183b5d'); g.addColorStop(.55,dark?'#23445d':'#3c6b93'); g.addColorStop(1,dark?'#070d13':'#10283f');
-          ctx.fillStyle=g; ctx.fillRect(-w/2,-h/2,w,h); ctx.strokeStyle='rgba(194,163,120,.55)'; ctx.lineWidth=2; ctx.strokeRect(-w/2,-h/2,w,h); ctx.restore();
-        }
-        ctx.strokeStyle='#8a744e'; ctx.lineWidth=5;
-        ctx.beginPath(); ctx.moveTo(-150,-22); ctx.lineTo(-95,-82); ctx.lineTo(0,-68); ctx.lineTo(82,-88); ctx.lineTo(148,-28); ctx.stroke();
-        for (const [x,y,r,rot] of [[-122,13,23,.2],[-48,27,18,-.5],[56,20,24,.35],[118,9,18,-.3]] as const) {
-          ctx.save(); ctx.translate(x,y); ctx.rotate(rot); ctx.fillStyle='#07090c'; ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#222b35'; ctx.lineWidth=4; ctx.stroke(); ctx.fillStyle='#9ca5af'; ctx.beginPath(); ctx.arc(0,0,r*.43,0,Math.PI*2); ctx.fill(); ctx.restore();
-        }
-        ctx.fillStyle='rgba(150,215,240,.62)';
-        for(const [x,y,w,h,a] of [[-78,-72,28,13,.35],[-20,-94,38,10,-.2],[35,-70,26,12,.4],[74,-91,20,9,-.35],[-4,-34,18,8,.15]] as const){
-          ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.beginPath();ctx.moveTo(-w/2,0);ctx.lineTo(w/2,-h/2);ctx.lineTo(w/3,h/2);ctx.lineTo(-w/2,h/3);ctx.closePath();ctx.fill();ctx.restore();
-        }
-        ctx.strokeStyle='#59636e';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-92,25);ctx.lineTo(-60,43);ctx.lineTo(-25,27);ctx.lineTo(8,44);ctx.lineTo(48,25);ctx.stroke();
-        ctx.fillStyle='#c2a378';
-        for(const [x,y,w,h,a] of [[-142,-2,17,7,.4],[-101,38,13,6,-.2],[-72,-16,11,5,.7],[-22,17,15,5,-.4],[16,-8,12,6,.3],[78,30,18,6,-.5],[137,-12,13,5,.2],[-15,53,11,5,.4],[64,50,9,5,-.3]] as const){
-          ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.fillRect(-w/2,-h/2,w,h);ctx.restore();
-        }
-        ctx.restore();
-        ctx.fillStyle = dark ? 'rgba(255,72,52,.92)' : 'rgba(155,48,30,.88)';
-        ctx.font = '900 10px system-ui,Arial'; ctx.textAlign='center';
-        ctx.fillText('IMPACT · WRECKED',px,py-112);
-      }
+      drawTruck(ctx, { s, tx, gy, dark, wheel: sim.wheel, bob, tilt, headA, horn: sim.horn });
+      sim.box = { x0: tx - 405 * s, y0: gy - 245 * s, x1: tx + 155 * s, y1: gy + 10 * s };
 
       // exhaust smoke
       for (const p of sim.smoke) {
@@ -821,53 +737,27 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     const step = (dt: number) => {
       sim.t += dt;
       sim.smx += (sim.mx - sim.smx) * Math.min(1, dt * 6);
+      sim.smy += (sim.my - sim.smy) * Math.min(1, dt * 6);
+      sim.approach += (sim.approachTarget - sim.approach) * Math.min(1, dt * 3.5);
+      const target = 160 + Math.min(1340, sim.impulse * 18);
+      // scroll bursts trigger a whoosh
+      if (sim.impulse > 90 && sim.t - sim.lastWhoosh > 0.9) { sim.lastWhoosh = sim.t; if (soundOnRef.current) playWhoosh(); }
+      sim.speed += (target - sim.speed) * Math.min(1, dt * 3);
+      sim.impulse *= Math.pow(0.9, dt * 60);
+      sim.worldX += sim.speed * dt;
+      sim.wheel += (sim.speed * dt) / 32;
+      if (sim.horn > 0) sim.horn = Math.max(0, sim.horn - dt);
+
       const sN = clamp((sim.speed - 160) / 1340, 0, 1);
-
-      // Interactive truck sequence: drag it anywhere, release it, let it fall,
-      // then reveal a replacement truck after the visitor scrolls onward.
-      if (sim.drag) {
-        sim.worldX += 260 * dt;
-        sim.wheel += (260 * dt) / 32;
-        return;
+      // smoke
+      if (Math.random() < dt * (18 + sN * 50)) {
+        const s = clamp(Math.min(W / 1500, H / 900), 0.5, 1.15);
+        const approach = sim.approach;
+        const tx = ((sim.worldX * 0.9 + W * 0.18) % (W + 760)) - 430;
+        sim.smoke.push({ x: tx - 385 * s, y: H * (0.84 + approach * 0.045) - 92 * s, r: 4 + Math.random() * 4, life: 1 });
       }
-      if (sim.falling) {
-        sim.wreckY += sim.fallV * dt;
-        sim.fallV += 1180 * dt;
-        sim.wreckRot += (sim.fallV / 900) * dt * 1.6;
-        if (sim.wreckY > H * 0.88) {
-          sim.falling = false;
-          sim.wrecked = true;
-          sim.wreckParts = true;
-          sim.wreckTimer = 0;
-          sim.impact = true;
-        }
-        sim.worldX += 260 * dt;
-        sim.wheel += (260 * dt) / 32;
-        return;
-      }
-      sim.worldX += Math.max(220, sim.speed) * dt;
-      sim.wheel += (Math.max(220, sim.speed) * dt) / 32;
-
-      if (sim.wrecked) {
-        sim.wreckTimer += dt;
-        if (sim.wreckTimer >= 2) {
-          sim.wrecked = false;
-          sim.falling = false;
-          sim.wreckParts = false;
-          sim.drag = false;
-          sim.dragMode = '';
-          sim.worldX = -W * 0.9;
-          sim.speed = 260;
-          sim.wreckX = 0;
-          sim.wreckY = 0;
-          sim.wreckRot = 0;
-          sim.wreckTimer = 0;
-          sim.impact = false;
-        }
-        sim.worldX += 260 * dt;
-        sim.wheel += (260 * dt) / 32;
-        return;
-      }
+      for (const p of sim.smoke) { p.x -= (sim.speed * 0.18 + 30) * dt; p.y -= (34 + sN * 30) * dt; p.r += dt * 16; p.life -= dt * 0.55; }
+      sim.smoke = sim.smoke.filter(p => p.life > 0);
 
       // audio follows speed
       const a = audioRef.current;
@@ -904,9 +794,6 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('pointerdown', onDown);
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onUp);
-      window.removeEventListener('pointercancel', onUp);
     };
   }, []);
 
@@ -1161,9 +1048,6 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 </style>
 
       <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 z-0" aria-hidden="true" />
-      <div className="pointer-events-none fixed bottom-5 left-1/2 z-20 -translate-x-1/2 rounded-full border border-[#c2a378]/30 bg-black/45 px-4 py-2 text-[8px] font-black uppercase tracking-[.22em] text-white/70 backdrop-blur-md">
-        CLICK & DRAG THE TRUCK · DROP IT · SCROLL TO RESTART THE ROUTE
-      </div>
 
       {/* route progress (scroll) */}
       <div className="fixed left-0 right-0 top-0 z-50 h-[3px] bg-black/10"><div ref={barRef} className="h-full w-0 bg-[#c2a378] shadow-[0_0_12px_#c2a378]" /></div>
