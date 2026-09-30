@@ -774,20 +774,35 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     transport: ar ? 'النقل' : 'TRANSPORT',
     transportDesc: ar ? 'نظام متكامل لإدارة نقل الشاحنات والحاويات قيد التطوير.' : 'Integrated trucking and container transport management is under development.',
     leadLabel: ar ? 'القيادة' : 'Leadership',
-    people: ar ? <>الأشخاص وراء<br /><span className={gold}>حركة الشحن.</span></> : <>People behind<br /><span className={gold}>the movement.</span></>,
+    people: ar ? <>القيادة التي تحرّك<br /><span className={gold}>أعمالنا.</span></> : <>People who move<br /><span className={gold}>our business.</span></>,
     leadDesc: ar ? 'القيادة عبر عمليات الشركة وقطاع النقل وخدمات الجينسيت.' : 'Leadership across company operations, transport and genset services.',
     roles: ar ? ['الرئيس التنفيذي', 'رئيس قطاع النقل', 'رئيس قطاع الجينسيت'] : ['CEO', 'HEAD OF TRANSPORT DEPARTMENT', 'HEAD OF GENSET DEPARTMENT'],
     areas: ar ? ['الشركة', 'النقل', 'الجينسيت'] : ['COMPANY', 'TRANSPORT', 'GENSET'],
     safe: ar ? 'آمن. موثوق. واضح. متصل.' : 'Safe. Reliable. Visible. Connected.',
+    whyTitle: ar ? <>لماذا <span className={gold}>نيل فليت؟</span></> : <>Why <span className={gold}>Nile Fleet?</span>,
+    whyDesc: ar ? 'خبرة تشغيلية، استجابة سريعة، إدارة أسطول ورؤية واضحة للحركة — مصممة لخدمة الأعمال التي لا تتوقف.' : 'Operational experience, fast response, fleet control and clear visibility — built for businesses that cannot afford to stop.',
+    standards: ar ? ['الجودة أولاً', 'التسليم في الموعد', 'السلامة في كل رحلة', 'رؤية تشغيلية كاملة', 'استجابة سريعة', 'فريق تشغيل متخصص'] : ['QUALITY FIRST', 'ON-TIME DELIVERY', 'SAFETY ON EVERY MOVE', 'FULL OPERATIONAL VISIBILITY', 'FAST RESPONSE', 'SPECIALIZED OPERATIONS'],
+    footprint: ar ? <>حركة <span className={gold}>تمتد عبر مصر.</span></> : <>A footprint that <span className={gold}>moves across Egypt.</span></>,
+    footprintDesc: ar ? 'من الموانئ والمناطق الصناعية إلى وجهة العميل، نربط عمليات النقل بالحركة الفعلية على الأرض.' : 'From ports and industrial zones to the customer destination, we connect transport planning with movement on the ground.',
+    serviceTitle: ar ? <>حلول نقل <span className={gold}>مصممة للعمل.</span></> : <>Transport solutions <span className={gold}>built for business.</span>,
+    serviceItems: ar ? ['نقل الحاويات', 'نقل الحاويات المبردة', 'النقل الداخلي', 'إدارة الأسطول', 'عمليات الموانئ', 'دعم سلاسل الإمداد'] : ['CONTAINER TRANSPORT', 'REEFER TRANSPORT', 'INLAND TRUCKING', 'FLEET MANAGEMENT', 'PORT OPERATIONS', 'SUPPLY CHAIN SUPPORT'],
+    proofTitle: ar ? <>ما نقدمه لعملائنا <span className={gold}>كل يوم.</span></> : <>What we deliver to customers <span className={gold}>every day.</span>,
+    proofDesc: ar ? 'لا نعرض تقييمات أو شعارات عملاء إلا عندما تكون معتمدة وقابلة للنشر. الجودة تُقاس بما يحدث على أرض الواقع.' : 'We only publish customer reviews and partner logos when they are approved and verifiable. Quality is measured by what happens on the ground.',
+    reviewPending: ar ? 'آراء العملاء المعتمدة ستظهر هنا قريباً.' : 'Verified customer feedback will appear here.',
+    partnersTitle: ar ? <>شركاء <span className={gold}>النجاح.</span></> : <>Partners in <span className={gold}>success.</span>,
+    partnersDesc: ar ? 'قسم مخصص للشركاء والعملاء المعتمدين — مع شعارات رسمية بعد الحصول على الموافقة.' : 'A dedicated space for approved customers and partners — with official logos added only after authorization.',
+    globalTitle: ar ? 'منظومة لوجستية عالمية' : 'GLOBAL LOGISTICS ECOSYSTEM',
+    globalDesc: ar ? 'نخدم عمليات تتصل بخطوط الملاحة ووكلاء الشحن والمستوردين والمصدرين والعملاء الصناعيين.' : 'We support operations connected to shipping lines, freight forwarders, importers, exporters and industrial clients.',
   };
 
-  const nav = [[tx.about, '#about'], [tx.operations, '#operations'], [tx.leadership, '#leadership']];
+  const nav = [[tx.about, '#about'], [tx.operations, '#operations'], [ar ? 'لماذا نحن' : 'WHY US', '#why-us'], [tx.leadership, '#leadership']];
 
   return (
     <div ref={wrapRef} className={`nf4 min-h-screen overflow-x-hidden selection:bg-[#c2a378] selection:text-black ${K.root}`}>
       <style>{`
         @keyframes nf4Reveal { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
         @keyframes nf4Pulse { 0%,100%{box-shadow:0 0 0 rgba(194,163,120,0)} 50%{box-shadow:0 0 42px rgba(194,163,120,.28)} }
+        @keyframes nf4Partners { from{transform:translateX(0)} to{transform:translateX(-50%)} }
         .nf4-reveal{animation:nf4Reveal .9s cubic-bezier(.16,1,.3,1) both}
         .nf4-pulse{animation:nf4Pulse 3s ease-in-out infinite}
         @media (prefers-reduced-motion: reduce){ .nf4 *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important} }
@@ -912,6 +927,128 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           </Reveal>
         </section>
 
+
+        <section id="why-us" className={`relative overflow-hidden border-y backdrop-blur-[2px] ${K.band}`}>
+          <Reveal>
+            <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
+              <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>03 / {ar ? 'لماذا نحن' : 'WHY US'}</div>
+              <div className="mt-5 grid gap-12 lg:grid-cols-[.8fr_1.2fr]">
+                <div>
+                  <h2 className="text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{tx.whyTitle}</h2>
+                  <p className={`mt-7 max-w-xl text-sm leading-7 ${K.muted}`}>{tx.whyDesc}</p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {tx.standards.map((x, i) => (
+                    <div key={x} className={`group rounded-[1.5rem] border p-6 backdrop-blur-md transition duration-500 hover:-translate-y-1 hover:border-[#c2a378]/60 ${K.card}`}>
+                      <div className={`text-[8px] font-black tracking-[.22em] ${gold}`}>{String(i + 1).padStart(2, '0')}</div>
+                      <div className="mt-10 text-sm font-black uppercase leading-5">{x}</div>
+                      <div className="mt-5 h-px w-8 bg-[#c2a378] transition-all duration-500 group-hover:w-16" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Reveal>
+        </section>
+
+        <section id="network" className={`relative overflow-hidden border-y backdrop-blur-[2px] ${K.band}`}>
+          <Reveal>
+            <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
+              <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>04 / {ar ? 'شبكة الحركة' : 'NETWORK'}</div>
+              <div className="mt-5 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+                <h2 className="text-5xl font-black uppercase italic tracking-[-.05em] sm:text-7xl">{tx.footprint}</h2>
+                <p className={`max-w-sm text-xs leading-6 ${K.muted}`}>{tx.footprintDesc}</p>
+              </div>
+              <div className="mt-14 grid gap-4 md:grid-cols-3">
+                {[
+                  ['PORTS', ar ? 'الإسكندرية · دمياط · بورسعيد · الدخيلة · السخنة' : 'Alexandria · Damietta · Port Said · Dekheila · Sokhna'],
+                  ['CARGO', ar ? 'حاويات · حاويات مبردة · استيراد · تصدير' : 'Containers · Reefers · Import · Export'],
+                  ['CONTROL', ar ? 'تشغيل · أسطول · موانئ · رؤية تشغيلية' : 'Operations · Fleet · Ports · Visibility'],
+                ].map(([title, body], i) => (
+                  <div key={title} className={`relative overflow-hidden rounded-[1.7rem] border p-8 ${K.card}`}>
+                    <div className={`text-[8px] font-black tracking-[.25em] ${gold}`}>0{i + 1}</div>
+                    <div className="mt-14 text-xl font-black italic">{title}</div>
+                    <div className={`mt-4 text-xs leading-6 ${K.muted}`}>{body}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Reveal>
+        </section>
+
+        <section id="services" className={`relative overflow-hidden border-y backdrop-blur-[2px] ${K.band}`}>
+          <Reveal>
+            <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
+              <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>05 / {ar ? 'الخدمات' : 'SERVICES'}</div>
+              <h2 className="mt-5 max-w-5xl text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{tx.serviceTitle}</h2>
+              <div className="mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {tx.serviceItems.map((x, i) => (
+                  <div key={x} className={`group relative min-h-[170px] overflow-hidden rounded-[1.5rem] border p-7 transition duration-500 hover:-translate-y-1 hover:border-[#c2a378]/60 ${K.card}`}>
+                    <div className={`text-[8px] font-black tracking-[.25em] ${gold}`}>0{i + 1}</div>
+                    <div className="absolute right-7 top-7 text-5xl font-black opacity-10">{String(i + 1).padStart(2, '0')}</div>
+                    <div className="absolute bottom-0 left-0 h-1 w-0 bg-[#c2a378] transition-all duration-700 group-hover:w-full" />
+                    <div className="mt-14 max-w-[220px] text-sm font-black uppercase leading-5">{x}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Reveal>
+        </section>
+
+        <section id="proof" className={`relative overflow-hidden border-y backdrop-blur-[2px] ${K.band}`}>
+          <Reveal>
+            <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
+              <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>06 / {ar ? 'الثقة والجودة' : 'QUALITY & TRUST'}</div>
+              <div className="mt-5 grid gap-10 lg:grid-cols-[1fr_.8fr]">
+                <div>
+                  <h2 className="text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{tx.proofTitle}</h2>
+                  <p className={`mt-7 max-w-2xl text-sm leading-7 ${K.muted}`}>{tx.proofDesc}</p>
+                  <div className="mt-10 flex flex-wrap gap-2">
+                    {['★★★★★', ar ? 'تقييمات معتمدة' : 'VERIFIED FEEDBACK', ar ? 'جودة' : 'QUALITY', ar ? 'سرعة الاستجابة' : 'FAST RESPONSE'].map(x => (
+                      <span key={x} className={`rounded-full border px-4 py-2 text-[8px] font-black tracking-[.18em] ${K.chip}`}>{x}</span>
+                    ))}
+                  </div>
+                </div>
+                <div className={`relative overflow-hidden rounded-[2rem] border p-8 ${K.card}`}>
+                  <div className="absolute -right-12 -top-12 text-[9rem] font-black opacity-5">★★★★★</div>
+                  <div className={`text-4xl tracking-[.12em] ${gold}`}>★★★★★</div>
+                  <div className="mt-8 text-lg font-black">{tx.reviewPending}</div>
+                  <div className={`mt-4 text-xs leading-6 ${K.muted}`}>{ar ? 'أرسل لنا تقييمات العملاء المعتمدة لإضافتها هنا بأسمائهم وشعاراتهم.' : 'Provide approved customer testimonials and we can place them here with names and company logos.'}</div>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+        </section>
+
+        <section id="partners" className="relative overflow-hidden border-y bg-[#050b12] text-white">
+          <Reveal>
+            <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
+              <div className="text-[9px] font-black uppercase tracking-[.42em] text-[#c2a378]">07 / {ar ? 'الشركاء' : 'PARTNERS'}</div>
+              <div className="mt-5 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+                <h2 className="text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{tx.partnersTitle}</h2>
+                <p className="max-w-sm text-xs leading-6 text-slate-400">{tx.partnersDesc}</p>
+              </div>
+              <div className="mt-14 overflow-hidden rounded-[2rem] border border-white/10 bg-black/20 py-8">
+                <div className="flex w-max animate-[nf4Partners_26s_linear_infinite] items-center gap-4 px-4">
+                  {[
+                    ['SHIPPING LINES', ar ? 'خطوط ملاحية' : 'SHIPPING LINES'],
+                    ['FREIGHT FORWARDERS', ar ? 'وكلاء شحن' : 'FREIGHT FORWARDERS'],
+                    ['IMPORTERS', ar ? 'مستوردون' : 'IMPORTERS'],
+                    ['EXPORTERS', ar ? 'مصدرون' : 'EXPORTERS'],
+                    ['INDUSTRIAL CLIENTS', ar ? 'عملاء صناعيون' : 'INDUSTRIAL CLIENTS'],
+                    ['LOGISTICS NETWORK', ar ? 'شبكة لوجستية' : 'LOGISTICS NETWORK'],
+                  ].map(([a,b], i) => (
+                    <div key={i} className="flex h-24 min-w-[220px] items-center justify-center rounded-2xl border border-white/10 bg-white/[.035] px-6 text-center">
+                      <div><div className="text-[9px] font-black tracking-[.22em] text-[#c2a378]">{a}</div><div className="mt-2 text-[8px] font-bold tracking-[.12em] text-slate-500">{b}</div></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-6 text-[8px] font-black uppercase tracking-[.2em] text-slate-600">{tx.globalTitle} · {tx.globalDesc}</div>
+            </div>
+          </Reveal>
+        </section>
+
         <section id="leadership" className={`border-y backdrop-blur-[2px] ${K.band}`}>
           <Reveal>
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
@@ -945,7 +1082,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
               <div className="text-xs leading-6 text-slate-300 md:text-right">
                 <div>23 July St. · Abo Elkheer Building · 2nd Floor</div>
                 <div>Port Said, Egypt</div>
-                <div className="mt-2 text-[#c2a378]">mohamedalaa@nilefleetlogistics.com · +20 114 647 5759</div>
+                <div className="mt-2 text-[#c2a378]">nilefleet@nilefleetlogistics.com · Transport 01000992858 · Genset 01212229077</div>
               </div>
             </div>
           </div>
