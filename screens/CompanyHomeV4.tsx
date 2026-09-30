@@ -345,6 +345,21 @@ const Reveal: React.FC<{ children: React.ReactNode; className?: string }> = ({ c
 /* ------------------------------------------------------------------ */
 /*  Page                                                              */
 /* ------------------------------------------------------------------ */
+const PARTNER_LOGOS = [
+  { name: 'LATT', type: 'SHIPPING & LOGISTICS', url: 'https://www.latt.com.eg/', logo: 'https://www.google.com/s2/favicons?domain=www.latt.com.eg&sz=128' },
+  { name: 'GSS Shipping', type: 'SHIPPING AGENCY', url: 'https://gssshipping-eg.com/', logo: 'https://www.google.com/s2/favicons?domain=gssshipping-eg.com&sz=128' },
+  { name: 'Egytrans', type: 'TRANSPORT & LOGISTICS', url: 'https://egytrans.com/', logo: 'https://www.google.com/s2/favicons?domain=egytrans.com&sz=128' },
+  { name: 'Maersk', type: 'SHIPPING LINE', url: 'https://www.maersk.com/', logo: 'https://www.google.com/s2/favicons?domain=maersk.com&sz=128' },
+  { name: 'CMA CGM', type: 'SHIPPING LINE', url: 'https://www.cma-cgm.com/', logo: 'https://www.google.com/s2/favicons?domain=cma-cgm.com&sz=128' },
+  { name: 'Hapag-Lloyd', type: 'SHIPPING LINE', url: 'https://www.hapag-lloyd.com/', logo: 'https://www.google.com/s2/favicons?domain=hapag-lloyd.com&sz=128' },
+  { name: 'COSCO Shipping', type: 'SHIPPING LINE', url: 'https://lines.coscoshipping.com/', logo: 'https://www.google.com/s2/favicons?domain=coscoshipping.com&sz=128' },
+  { name: 'ONE', type: 'SHIPPING LINE', url: 'https://www.one-line.com/', logo: 'https://www.google.com/s2/favicons?domain=one-line.com&sz=128' },
+  { name: 'GAC', type: 'SHIPPING & LOGISTICS', url: 'https://www.gac.com/', logo: 'https://www.google.com/s2/favicons?domain=gac.com&sz=128' },
+  { name: 'Inchcape Shipping', type: 'SHIPPING SERVICES', url: 'https://www.iss-shipping.com/', logo: 'https://www.google.com/s2/favicons?domain=iss-shipping.com&sz=128' },
+  { name: 'Fairtrans Marine', type: 'FREIGHT FORWARDING', url: 'https://www.fairtransmarine.com/', logo: 'https://www.google.com/s2/favicons?domain=fairtransmarine.com&sz=128' },
+  { name: 'Kadmar Shipping', type: 'SHIPPING AGENCY', url: 'https://www.kadmar.com/', logo: 'https://www.google.com/s2/favicons?domain=kadmar.com&sz=128' },
+];
+
 const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
   const { lang, setLang } = useContext(LanguageContext);
   const { isDark, setTheme } = useContext(ThemeContext);
@@ -802,7 +817,14 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       <style>{`
         @keyframes nf4Reveal { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
         @keyframes nf4Pulse { 0%,100%{box-shadow:0 0 0 rgba(194,163,120,0)} 50%{box-shadow:0 0 42px rgba(194,163,120,.28)} }
-        @keyframes nf4Partners { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+        @keyframes nf4Partners { from{transform:translateX(0)}
+
+.nf4-logo-viewport{position:relative}
+.nf4-logo-track{animation:nf4Partners 34s linear infinite}
+.nf4-logo-track:hover{animation-play-state:paused}
+.nf4-logo-viewport:before,.nf4-logo-viewport:after{content:"";position:absolute;top:0;bottom:0;width:90px;z-index:2;pointer-events:none}
+.nf4-logo-viewport:before{left:0;background:linear-gradient(90deg,#050b12,transparent)}
+.nf4-logo-viewport:after{right:0;background:linear-gradient(-90deg,#050b12,transparent)} to{transform:translateX(-50%)} }
         .nf4-reveal{animation:nf4Reveal .9s cubic-bezier(.16,1,.3,1) both}
         .nf4-pulse{animation:nf4Pulse 3s ease-in-out infinite}
         @media (prefers-reduced-motion: reduce){ .nf4 *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important} }
@@ -1028,21 +1050,26 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                 <h2 className="text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{tx.partnersTitle}</h2>
                 <p className="max-w-sm text-xs leading-6 text-slate-400">{tx.partnersDesc}</p>
               </div>
-              <div className="mt-14 overflow-hidden rounded-[2rem] border border-white/10 bg-black/20 py-8">
-                <div className="flex w-max animate-[nf4Partners_26s_linear_infinite] items-center gap-4 px-4">
-                  {[
-                    ['SHIPPING LINES', ar ? 'خطوط ملاحية' : 'SHIPPING LINES'],
-                    ['FREIGHT FORWARDERS', ar ? 'وكلاء شحن' : 'FREIGHT FORWARDERS'],
-                    ['IMPORTERS', ar ? 'مستوردون' : 'IMPORTERS'],
-                    ['EXPORTERS', ar ? 'مصدرون' : 'EXPORTERS'],
-                    ['INDUSTRIAL CLIENTS', ar ? 'عملاء صناعيون' : 'INDUSTRIAL CLIENTS'],
-                    ['LOGISTICS NETWORK', ar ? 'شبكة لوجستية' : 'LOGISTICS NETWORK'],
-                  ].map(([a,b], i) => (
-                    <div key={i} className="flex h-24 min-w-[220px] items-center justify-center rounded-2xl border border-white/10 bg-white/[.035] px-6 text-center">
-                      <div><div className="text-[9px] font-black tracking-[.22em] text-[#c2a378]">{a}</div><div className="mt-2 text-[8px] font-bold tracking-[.12em] text-slate-500">{b}</div></div>
-                    </div>
+              <div className="nf4-logo-viewport mt-14 overflow-hidden rounded-[2rem] border border-white/10 bg-black/30 py-8">
+                <div className="nf4-logo-track flex w-max items-center gap-4 px-4">
+                  {[...PARTNER_LOGOS, ...PARTNER_LOGOS].map((p, i) => (
+                    <a key={`${p.name}-${i}`} href={p.url} target="_blank" rel="noreferrer" className="group flex h-28 min-w-[230px] items-center justify-center rounded-2xl border border-white/10 bg-white/[.035] px-7 text-center transition duration-500 hover:-translate-y-1 hover:border-[#c2a378]/60 hover:bg-white/[.06]">
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white p-2 shadow-[0_0_30px_rgba(255,255,255,.08)]">
+                          <img src={p.logo} alt={`${p.name} logo`} className="h-full w-full object-contain" loading="lazy" />
+                        </div>
+                        <div className="text-left">
+                          <div className="text-[9px] font-black tracking-[.12em] text-white">{p.name}</div>
+                          <div className="mt-1 text-[7px] font-bold tracking-[.16em] text-[#c2a378]">{p.type}</div>
+                        </div>
+                      </div>
+                    </a>
                   ))}
                 </div>
+              </div>
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                <div className="text-[8px] font-black uppercase tracking-[.18em] text-slate-600">{ar ? 'شعارات جهات في قطاع الشحن واللوجستيات — ليست قائمة عملاء.' : 'Brands from the Egyptian shipping & logistics ecosystem — not a customer list.'}</div>
+                <div className="text-[8px] font-black uppercase tracking-[.18em] text-slate-600">{ar ? 'اضغط على الشعار لزيارة الموقع.' : 'Click a logo to visit its website.'}</div>
               </div>
               <div className="mt-6 text-[8px] font-black uppercase tracking-[.2em] text-slate-600">{tx.globalTitle} · {tx.globalDesc}</div>
             </div>
