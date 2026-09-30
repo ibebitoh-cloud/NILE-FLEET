@@ -750,7 +750,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     dark: ar ? '🌙 داكن' : '🌙 DARK',
     gensetAccess: ar ? 'دخول الجينسيت' : 'GENSET ACCESS',
     since: ar ? 'منذ 2009 · مصر' : 'Since 2009 · Egypt',
-    heroTitle: ar ? <>الشحن<br /><span className={gold}>في حركة.</span></> : <>{tx.heroTitle}</>,
+    heroTitle: ar ? <>الشحن<br /><span className={gold}>في حركة.</span></> : <>Cargo<br /><span className={gold}>in motion.</span></>,
     explore: ar ? 'استكشف العمليات' : 'Explore Operations',
     scrollHint: ar ? 'مرر لتحريك المشهد · اضغط على الشاحنة للبوق' : 'Scroll to drive · Click the truck for the horn',
     founded: ar ? 'التأسيس' : 'FOUNDED',
