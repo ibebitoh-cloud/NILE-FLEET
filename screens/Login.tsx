@@ -288,27 +288,27 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         .sig-worker .sig-action-arm{transform-box:fill-box;transform-origin:31px 31px;animation:sigArmReachExact 5.6s ease-in-out infinite}
         .sig-worker .sig-step-a{transform-box:fill-box;transform-origin:31px 49px;animation:sigLegWalkA 5.6s ease-in-out infinite}
         .sig-worker .sig-step-b{transform-box:fill-box;transform-origin:31px 49px;animation:sigLegWalkB 5.6s ease-in-out infinite}
-        .signature-stage .sig-target-letter{animation:sigPush 5.6s ease-in-out infinite}
+        .signature-stage .sig-target-letter{animation:none}
         .signature-stage .sig-impact{transform-box:fill-box;transform-origin:center;animation:sigImpact 5.6s ease-out infinite}
         /* Exact SVG target: worker's hand is aligned to each letter's left edge. */
-        .signature-stage.welcome-anim-0{--tx:55px;--sx:-130px}
-        .signature-stage.welcome-anim-1{--tx:95px;--sx:-110px}
-        .signature-stage.welcome-anim-2{--tx:135px;--sx:-90px}
-        .signature-stage.welcome-anim-3{--tx:175px;--sx:-70px}
-        .signature-stage.welcome-anim-4{--tx:215px;--sx:-50px}
-        .signature-stage.welcome-anim-5{--tx:255px;--sx:-30px}
+        .signature-stage.welcome-anim-0{--tx:100px;--sx:-80px}
+        .signature-stage.welcome-anim-1{--tx:157px;--sx:-60px}
+        .signature-stage.welcome-anim-2{--tx:214px;--sx:-40px}
+        .signature-stage.welcome-anim-3{--tx:271px;--sx:-20px}
+        .signature-stage.welcome-anim-4{--tx:314px;--sx:0px}
+        .signature-stage.welcome-anim-5{--tx:371px;--sx:20px}
         .signature-stage.welcome-anim-0 .sig-target-letter:nth-of-type(1),
         .signature-stage.welcome-anim-1 .sig-target-letter:nth-of-type(2),
         .signature-stage.welcome-anim-2 .sig-target-letter:nth-of-type(3),
         .signature-stage.welcome-anim-3 .sig-target-letter:nth-of-type(4),
         .signature-stage.welcome-anim-4 .sig-target-letter:nth-of-type(5),
         .signature-stage.welcome-anim-5 .sig-target-letter:nth-of-type(6){animation:sigPush 5.6s ease-in-out infinite}
-        .signature-stage.welcome-anim-0 .sig-impact:nth-of-type(1),
-        .signature-stage.welcome-anim-1 .sig-impact:nth-of-type(2),
-        .signature-stage.welcome-anim-2 .sig-impact:nth-of-type(3),
-        .signature-stage.welcome-anim-3 .sig-impact:nth-of-type(4),
-        .signature-stage.welcome-anim-4 .sig-impact:nth-of-type(5),
-        .signature-stage.welcome-anim-5 .sig-impact:nth-of-type(6){animation:sigImpact 5.6s ease-out infinite}
+        .signature-stage.welcome-anim-0 .sig-impact-0,
+        .signature-stage.welcome-anim-1 .sig-impact-1,
+        .signature-stage.welcome-anim-2 .sig-impact-2,
+        .signature-stage.welcome-anim-3 .sig-impact-3,
+        .signature-stage.welcome-anim-4 .sig-impact-4,
+        .signature-stage.welcome-anim-5 .sig-impact-5{animation:sigImpact 5.6s ease-out infinite}
         @media (prefers-reduced-motion:reduce){.sig-worker,.signature-stage .sig-target-letter,.sig-worker *,.signature-stage .sig-impact{animation:none!important}}
         .welcome-rise { animation: welcomeRise .75s cubic-bezier(.2,.8,.2,1) both; }
         .welcome-glow { animation: welcomeGlow 2.8s ease-in-out infinite; }
@@ -422,22 +422,22 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                             <g className="sig-step-a"><path className="sig-line" d="M31 49 L20 62 L12 68"/></g>
                             <g className="sig-step-b"><path className="sig-line" d="M31 49 L42 62 L51 68"/></g>
                           </g>
-                          <g className="sig-impact" aria-hidden="true">
+                          <g className="sig-impact sig-impact-0" aria-hidden="true">
                             <circle className="sig-gold" cx="158" cy="55" r="6"/>
                           </g>
-                          <g className="sig-impact" aria-hidden="true">
+                          <g className="sig-impact sig-impact-1" aria-hidden="true">
                             <circle className="sig-gold" cx="215" cy="55" r="6"/>
                           </g>
-                          <g className="sig-impact" aria-hidden="true">
+                          <g className="sig-impact sig-impact-2" aria-hidden="true">
                             <circle className="sig-gold" cx="272" cy="55" r="6"/>
                           </g>
-                          <g className="sig-impact" aria-hidden="true">
+                          <g className="sig-impact sig-impact-3" aria-hidden="true">
                             <circle className="sig-gold" cx="329" cy="55" r="6"/>
                           </g>
-                          <g className="sig-impact" aria-hidden="true">
+                          <g className="sig-impact sig-impact-4" aria-hidden="true">
                             <circle className="sig-gold" cx="372" cy="55" r="6"/>
                           </g>
-                          <g className="sig-impact" aria-hidden="true">
+                          <g className="sig-impact sig-impact-5" aria-hidden="true">
                             <circle className="sig-gold" cx="429" cy="55" r="6"/>
                           </g>
                         </svg>
