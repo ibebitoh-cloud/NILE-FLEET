@@ -801,7 +801,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     footprintDesc: ar ? 'من الموانئ والمناطق الصناعية إلى وجهة العميل، نربط عمليات النقل بالحركة الفعلية على الأرض.' : 'From ports and industrial zones to the customer destination, we connect transport planning with movement on the ground.',
     serviceTitle: ar ? <>حلول نقل <span className={gold}>مصممة للعمل.</span></> : <>Transport solutions <span className={gold}>built for business.</span></>,
     serviceItems: ar ? ['نقل الحاويات', 'نقل الحاويات المبردة', 'النقل الداخلي', 'إدارة الأسطول', 'عمليات الموانئ', 'دعم سلاسل الإمداد'] : ['CONTAINER TRANSPORT', 'REEFER TRANSPORT', 'INLAND TRUCKING', 'FLEET MANAGEMENT', 'PORT OPERATIONS', 'SUPPLY CHAIN SUPPORT'],
-    proofTitle: ar ? <>ما نقدمه لعملائنا <span className={gold}>كل يوم.</span></> : <>What we deliver to customers <span className={gold}>every day.</span>,
+    proofTitle: ar ? <>ما نقدمه لعملائنا <span className={gold}>كل يوم.</span></> : <>What we deliver to customers <span className={gold}>every day.</span></>,
     proofDesc: ar ? 'لا نعرض تقييمات أو شعارات عملاء إلا عندما تكون معتمدة وقابلة للنشر. الجودة تُقاس بما يحدث على أرض الواقع.' : 'We only publish customer reviews and partner logos when they are approved and verifiable. Quality is measured by what happens on the ground.',
     reviewPending: ar ? 'آراء العملاء المعتمدة ستظهر هنا قريباً.' : 'Verified customer feedback will appear here.',
     partnersTitle: ar ? <>شركاء <span className={gold}>النجاح.</span></> : <>Partners in <span className={gold}>success.</span></>,
