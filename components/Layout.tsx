@@ -937,8 +937,40 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         answer = await runThinkingAudit(prompt, 650);
       } catch (aiError) {
         console.error('DALI general AI route failed; using deterministic fallback', aiError);
-        const lower = cleanQ;
-        if (/stock|genset|generator|مولد|مولدات|مخزون|ميناء|port/.test(lower)) {
+        const cleanQ = q.toLowerCase();
+
+        // DETERMINISTIC OPERATIONAL ANSWERS
+        // These questions must never depend on the LLM. The database/cache is the source of truth.
+        const asksMaintenanceList = /which gensets|what gensets|list.*gensets|gensets.*maintenance|maintenance.*gensets|في الصيانة|بالصيانة|مولدات.*صيانة|المولدات.*صيانة/.test(cleanQ);
+        const asksPortStock = /stock in each port|stock.*each port|each port.*stock|stock by port|port stock|المخزون.*كل.*ميناء|كل.*ميناء.*المخزون|رصيد.*ميناء|مخزون.*ميناء/.test(cleanQ);
+        const asksPortSaid = /how many gensets.*port said|gensets.*port said|port said.*gensets|مولدات.*بورسعيد|مولدات.*بورسعيد|كم.*مولد.*بورسعيد/.test(cleanQ);
+
+        if (asksMaintenanceList) {
+          const maintenanceUnits = gensets
+            .filter(g => String(g.status || '').toUpperCase() === 'MAINTENANCE')
+            .map(g => String(g.unitNumber || g.gensetNumber || '').trim())
+            .filter(Boolean);
+          answer = responseIsAr
+            ? 'المولدات الموجودة في الصيانة: ' + maintenanceUnits.length + '\n' + (maintenanceUnits.length ? maintenanceUnits.join('، ') : 'لا يوجد')
+            : 'Gensets in maintenance: ' + maintenanceUnits.length + '\n' + (maintenanceUnits.length ? maintenanceUnits.join(', ') : 'None');
+        } else if (asksPortSaid) {
+          // SCCT is the Suez Canal Container Terminal in East Port Said.
+          // Keep the raw database location code in the answer so DALI never silently
+          // invents a location mapping for another yard such as GOUDA.
+          const portSaid = stockByPort.find(x => x.port.toUpperCase() === 'SCCT');
+          answer = responseIsAr
+            ? 'Port Said (SCCT): ' + (portSaid?.total || 0) + ' gensets\nفي المخزون: ' + (portSaid?.inStock || 0) + '\nمركبة: ' + (portSaid?.clippedOn || 0)
+            : 'Port Said (SCCT): ' + (portSaid?.total || 0) + ' gensets\nIn stock: ' + (portSaid?.inStock || 0) + '\nClipped on: ' + (portSaid?.clippedOn || 0);
+        } else if (asksPortStock) {
+          const portRows = stockByPort
+            .filter(x => x.port.toUpperCase() !== 'WORKSHOP')
+            .map(x => x.port + ': ' + x.total + ' total (' + x.inStock + ' in stock, ' + x.clippedOn + ' clipped on)')
+            .join('\n');
+          const workshop = stockByPort.find(x => x.port.toUpperCase() === 'WORKSHOP');
+          answer = responseIsAr
+            ? 'المخزون حسب الموقع:\n' + portRows + (workshop ? '\n\nWORKSHOP: ' + workshop.total + ' (منها ' + workshop.maintenance + ' صيانة و' + (workshop.total - workshop.maintenance) + ' متقاعد)' : '')
+            : 'Stock by port/location:\n' + portRows + (workshop ? '\n\nWORKSHOP: ' + workshop.total + ' (' + workshop.maintenance + ' maintenance, ' + (workshop.total - workshop.maintenance) + ' retired)' : '');
+        } else if (/stock|genset|generator|مولد|مولدات|مخزون|ميناء|port/.test(cleanQ)) {
           const total = gensets.length;
           const maintenanceCount = gensets.filter(g => String(g.status || '').toUpperCase() === 'MAINTENANCE').length;
           const inStock = gensets.filter(g => String(g.status || '').toUpperCase() === 'IN_STOCK').length;
