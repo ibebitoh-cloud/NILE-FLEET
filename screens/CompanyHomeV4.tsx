@@ -871,6 +871,47 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         @keyframes nf4LiveDot{0%{box-shadow:0 0 0 0 rgba(194,163,120,.55)}70%{box-shadow:0 0 0 8px rgba(194,163,120,0)}100%{box-shadow:0 0 0 0 rgba(194,163,120,0)}}
         .nf4-reveal{animation:nf4Reveal .9s cubic-bezier(.16,1,.3,1) both}
         .nf4-pulse{animation:nf4Pulse 3s ease-in-out infinite}
+        .nf4-contact-bar{position:relative;z-index:2;background:linear-gradient(180deg,rgba(3,8,14,.97),rgba(7,13,21,.94));box-shadow:0 10px 35px rgba(0,0,0,.28);overflow:hidden}
+        .nf4-contact-bar:before{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,#fff 12%,#6f879d 28%,#c62828 48%,#fff 68%,#6f879d 84%,transparent);opacity:.9}
+        .nf4-contact-bar:after{content:"";position:absolute;left:-10%;top:0;width:34%;height:1px;background:#fff;box-shadow:0 0 18px rgba(255,255,255,.8);animation:nf4RouteSweep 5s linear infinite}
+        .nf4-route-line{position:relative;display:grid;grid-template-columns:auto minmax(330px,1fr) auto;align-items:center;gap:22px;min-height:78px;padding-top:9px;padding-bottom:9px}
+        .nf4-route-brand{display:flex;align-items:center;gap:10px;min-width:170px}
+        .nf4-route-brand img{width:45px;height:45px;object-fit:contain;filter:drop-shadow(0 0 12px rgba(255,255,255,.2))}
+        .nf4-route-brand strong{display:block;font-size:12px;font-weight:950;letter-spacing:.08em}
+        .nf4-route-brand small{display:block;margin-top:3px;font-size:6px;font-weight:900;letter-spacing:.2em;color:rgba(226,232,240,.48)}
+        .nf4-route-track{min-width:0}
+        .nf4-route-label{font-size:6px;font-weight:950;letter-spacing:.25em;color:#cbd5e1;display:flex;align-items:center;gap:6px;margin-bottom:6px}
+        .nf4-route-live{width:5px;height:5px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 0 rgba(239,68,68,.6);animation:nf4RouteLive 1.8s infinite}
+        .nf4-route-rail{position:relative;height:25px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(255,255,255,.16);border-bottom:1px solid rgba(255,255,255,.07)}
+        .nf4-route-rail:before{content:"";position:absolute;left:0;right:0;top:11px;height:1px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.25) 0 18px,transparent 18px 31px)}
+        .nf4-route-stop{position:relative;z-index:1;padding:0 5px;background:#07101a;font-size:6px;font-weight:950;letter-spacing:.12em;color:#9aa8b7}
+        .nf4-route-stop:first-child{color:#fff}
+        .nf4-route-stop:last-of-type{color:#fca5a5}
+        .nf4-route-truck{position:absolute;z-index:3;left:0;top:-5px;width:45px;height:22px;animation:nf4TruckRun 7s cubic-bezier(.55,.05,.45,.95) infinite}
+        .nf4-route-truck-body{position:absolute;left:0;top:5px;width:28px;height:11px;border:1px solid #dce6ef;background:#172b3d;box-shadow:0 0 10px rgba(255,255,255,.16)}
+        .nf4-route-truck-cab{position:absolute;right:0;top:8px;width:15px;height:8px;border:1px solid #fff;background:#c62828;clip-path:polygon(0 0,65% 0,100% 100%,0 100%)}
+        .nf4-route-truck i{position:absolute;bottom:0;width:7px;height:7px;border-radius:50%;background:#05070a;border:1px solid #93a4b4;box-shadow:0 0 5px rgba(255,255,255,.25)}
+        .nf4-route-truck i:first-of-type{left:6px}.nf4-route-truck i:last-of-type{right:5px}
+        .nf4-route-meta{display:flex;gap:7px;align-items:center;margin-top:6px;font-size:5px;font-weight:900;letter-spacing:.16em;color:rgba(203,213,225,.45)}
+        .nf4-route-meta b{color:#c62828;font-size:7px}
+        .nf4-route-actions{display:flex;align-items:center;gap:7px}
+        .nf4-route-action{display:flex;align-items:center;gap:8px;text-decoration:none}
+        .nf4-route-phone>span{display:grid;place-items:center;width:32px;height:32px;border:1px solid rgba(255,255,255,.25);border-radius:9px;color:#fff;font-size:13px;background:rgba(255,255,255,.04)}
+        .nf4-route-phone small{display:block;font-size:5px;font-weight:900;letter-spacing:.16em;color:#7f8c9a}
+        .nf4-route-phone strong{display:block;margin-top:2px;font-size:8px;letter-spacing:.04em;color:#fff}
+        .nf4-route-social{display:grid;place-items:center;width:32px;height:32px;border:1px solid rgba(255,255,255,.2);border-radius:9px;color:#dbe4ec;font-size:11px;font-weight:950;background:rgba(255,255,255,.025);transition:all .25s ease}
+        .nf4-route-social:hover{transform:translateY(-3px);border-color:#fff;background:rgba(255,255,255,.09);color:#fff}
+        .nf4-route-fb:hover{border-color:#4f8cff;background:rgba(79,140,255,.12)}
+        .nf4-route-quote{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 13px;border:1px solid rgba(255,255,255,.42);border-radius:9px;background:linear-gradient(135deg,rgba(255,255,255,.09),rgba(255,255,255,.025));color:#fff;font-size:7px;font-weight:950;letter-spacing:.16em;text-decoration:none;transition:all .28s ease;box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+        .nf4-route-quote span{color:#ef4444;font-size:13px;transition:transform .28s ease}
+        .nf4-route-quote:hover{transform:translateY(-3px);border-color:#ef4444;background:rgba(198,40,40,.1);box-shadow:0 10px 28px rgba(198,40,40,.18)}
+        .nf4-route-quote:hover span{transform:translate(2px,-2px)}
+        @keyframes nf4TruckRun{0%{left:0;transform:translateX(-4px)}45%{left:55%;transform:translateX(-50%)}100%{left:100%;transform:translateX(-40px)}}
+        @keyframes nf4RouteLive{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.6)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
+        @keyframes nf4RouteSweep{0%{transform:translateX(-30vw)}100%{transform:translateX(330vw)}}
+        @media(max-width:1120px){.nf4-route-line{grid-template-columns:auto 1fr;gap:14px}.nf4-route-actions{grid-column:2;justify-content:flex-end;margin-top:-2px}.nf4-route-brand{min-width:155px}}
+        @media(max-width:760px){.nf4-route-line{grid-template-columns:1fr;gap:9px;padding-top:10px;padding-bottom:10px}.nf4-route-brand{min-width:0}.nf4-route-actions{grid-column:auto;justify-content:flex-start;flex-wrap:wrap}.nf4-route-phone{margin-right:auto}.nf4-route-meta{display:none}.nf4-route-stop{font-size:5px}.nf4-route-brand img{width:38px;height:38px}}
+        @media(prefers-reduced-motion:reduce){.nf4-route-truck,.nf4-route-live,.nf4-contact-bar:after{animation:none!important}}
         .nf4-contact-bar a{white-space:nowrap}
         .nf4-app-label{display:grid;place-items:center;width:68px;height:58px;padding:7px;border:1px solid rgba(255,255,255,.72);border-radius:15px;background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.035));box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 24px rgba(255,255,255,.07);transition:transform .3s ease,border-color .3s ease,box-shadow .3s ease}
         .nf4-app-label:hover{transform:translateY(-3px) scale(1.04);border-color:#c2a378;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 12px 32px rgba(0,0,0,.3),0 0 28px rgba(194,163,120,.2)}
@@ -934,28 +975,35 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       {/* route progress (scroll) */}
       <div className="fixed left-0 right-0 top-0 z-50 h-[3px] bg-black/10"><div ref={barRef} className="h-full w-0 bg-[#c2a378] shadow-[0_0_12px_#c2a378]" /></div>
 
-      <div className="nf4-contact-bar border-b border-white/10 bg-[#050b12]/95 text-white backdrop-blur-xl">
-        <div className="mx-auto flex max-w-[1500px] items-center gap-3 px-4 py-3 lg:px-10">
-          <a href="#top" className="nf4-app-label shrink-0" aria-label="Nile Fleet homepage">
+      <div className="nf4-contact-bar border-b border-white/10 text-white">
+        <div className="nf4-route-line mx-auto max-w-[1500px] px-4 lg:px-10">
+          <div className="nf4-route-brand">
             <img src="/nile-fleet-logo.png" alt="Nile Fleet" />
-          </a>
-          <div className="nf4-contact-grid min-w-0 flex-1">
-            <a href="tel:+201000992858" className="nf4-contact-card" aria-label="Call Nile Fleet">
-              <span className="nf4-contact-icon">☎</span><span><small>TRANSPORT DESK</small><strong>+20 10 0099 2858</strong></span>
-            </a>
-            <a href="https://www.linkedin.com/company/nile-fleet-for-transport-and-logistics-service" target="_blank" rel="noreferrer" className="nf4-contact-card" aria-label="Nile Fleet LinkedIn">
-              <span className="nf4-contact-icon">in</span><span><small>OFFICIAL LINKEDIN</small><strong>CONNECT WITH US</strong></span>
-            </a>
-            <a href="https://www.facebook.com/profile.php?id=61591362501143" target="_blank" rel="noreferrer" className="nf4-contact-card" title="Nile Fleet Facebook profile" aria-label="Nile Fleet Facebook">
-              <span className="nf4-contact-icon">f</span><span><small>OFFICIAL FACEBOOK</small><strong>FOLLOW NILE FLEET</strong></span>
-            </a>
+            <div><strong>NILE FLEET</strong><small>ROAD & PORT LOGISTICS</small></div>
           </div>
-          <a
-            href="mailto:nilefleet@nilefleetlogistics.com?subject=NILE%20FLEET%20-%20Request%20for%20Quote&body=Hello%20NILE%20FLEET%2C%0A%0AI%20would%20like%20to%20request%20a%20quotation.%0A%0ACompany%3A%20%0AService%20required%3A%20%0AOrigin%3A%20%0ADestination%3A%20%0ACargo%2FContainer%20details%3A%20%0APreferred%20date%3A%20%0AAdditional%20details%3A%20%0A%0AThank%20you."
-            className="nf4-quote-button shrink-0 inline-flex items-center gap-3 rounded-xl border border-[#c2a378]/70 bg-[#c2a378] px-5 py-3 text-[9px] font-black uppercase tracking-[.18em] text-black transition"
-          >
-            <span>REQUEST QUOTE</span><span className="text-base">→</span>
-          </a>
+
+          <div className="nf4-route-track" aria-label="Nile Fleet active service route">
+            <div className="nf4-route-label"><span className="nf4-route-live"></span> LIVE ROUTE</div>
+            <div className="nf4-route-rail">
+              <span className="nf4-route-stop">PORT SAID</span>
+              <span className="nf4-route-stop">DAMietta</span>
+              <span className="nf4-route-stop">ALEXANDRIA</span>
+              <span className="nf4-route-stop">SOKHNA</span>
+              <span className="nf4-route-stop">SCCT</span>
+              <span className="nf4-route-truck" aria-hidden="true">
+                <span className="nf4-route-truck-body"></span><span className="nf4-route-truck-cab"></span>
+                <i></i><i></i>
+              </span>
+            </div>
+            <div className="nf4-route-meta"><span>CONTAINER TRANSPORT</span><b>•</b><span>REEFER SUPPORT</span><b>•</b><span>PORT OPERATIONS</span></div>
+          </div>
+
+          <div className="nf4-route-actions">
+            <a href="tel:+201000992858" className="nf4-route-action nf4-route-phone" aria-label="Call Nile Fleet"><span>☎</span><div><small>24/7 TRANSPORT DESK</small><strong>+20 10 0099 2858</strong></div></a>
+            <a href="https://www.linkedin.com/company/nile-fleet-for-transport-and-logistics-service" target="_blank" rel="noreferrer" className="nf4-route-social" aria-label="Nile Fleet LinkedIn">in</a>
+            <a href="https://www.facebook.com/profile.php?id=61591362501143" target="_blank" rel="noreferrer" className="nf4-route-social nf4-route-fb" aria-label="Nile Fleet Facebook">f</a>
+            <a href="mailto:nilefleet@nilefleetlogistics.com?subject=NILE%20FLEET%20-%20Request%20for%20Quote&body=Hello%20NILE%20FLEET%2C%0A%0AI%20would%20like%20to%20request%20a%20quotation.%0A%0ACompany%3A%20%0AService%20required%3A%20%0AOrigin%3A%20%0ADestination%3A%20%0ACargo%2FContainer%20details%3A%20%0APreferred%20date%3A%20%0AAdditional%20details%3A%20%0A%0AThank%20you." className="nf4-route-quote">REQUEST QUOTE <span>↗</span></a>
+          </div>
         </div>
       </div>
 
