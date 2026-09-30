@@ -1464,12 +1464,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
         <section className={`relative overflow-hidden backdrop-blur-md ${K.foot}`}>
           <div className="mx-auto max-w-[1500px] px-5 pb-24 pt-20 lg:px-10">
-            <div className="flex flex-col justify-between gap-8 md:flex-row md:items-center">
-              <div>
-                <div className="text-[9px] font-black uppercase tracking-[.42em] text-[#c2a378]">Nile Fleet</div>
-                <div className="mt-3 text-3xl font-black uppercase italic">{tx.safe}</div>
-              </div>
-              <div className="text-xs leading-6 text-slate-300 md:text-right">
+            <div className="flex justify-end">
+              <div className="text-xs leading-6 text-slate-300 text-right">
                 <div>23 July St. · Abo Elkheer Building · 2nd Floor</div>
                 <div>Port Said, Egypt</div>
                 <div className="mt-2 text-[#c2a378]">nilefleet@nilefleetlogistics.com · Transport 01000992858 · Genset 01212229077</div>
