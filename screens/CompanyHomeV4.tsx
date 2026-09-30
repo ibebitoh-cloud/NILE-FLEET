@@ -1,0 +1,719 @@
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { LanguageContext, ThemeContext } from '../App';
+
+interface Props { onGenset: () => void; }
+
+/* ------------------------------------------------------------------ */
+/*  Scene data (deterministic, so the port skyline never "jumps")      */
+/* ------------------------------------------------------------------ */
+const TILE = 2600;
+const rng = (seed: number) => () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+
+const FAR = (() => {
+  const r = rng(7);
+  const items: { x: number; w: number; h: number; win: number[] }[] = [];
+  let x = 0;
+  while (x < TILE) {
+    const w = 30 + r() * 70;
+    items.push({ x, w, h: 40 + r() * 150, win: Array.from({ length: 8 }, () => r()) });
+    x += w + r() * 14;
+  }
+  return items;
+})();
+const FAR_CRANES = [420, 1500, 2300];
+
+const MID = (() => {
+  const r = rng(21);
+  const stacks: { x: number; cols: number; rows: number; c: number }[] = [];
+  let x = 0;
+  while (x < TILE) {
+    const cols = 1 + Math.floor(r() * 3);
+    stacks.push({ x, cols, rows: 1 + Math.floor(r() * 4), c: Math.floor(r() * 4) });
+    x += cols * 70 + 30 + r() * 40;
+  }
+  return stacks;
+})();
+const MID_CRANES = [700, 1900];
+
+const STARS = (() => {
+  const r = rng(99);
+  return Array.from({ length: 120 }, () => ({ x: r(), y: r() * 0.62, s: 0.5 + r() * 1.4, p: r() * 6.28 }));
+})();
+const STREAKS = (() => {
+  const r = rng(5);
+  return Array.from({ length: 16 }, () => ({ y: 0.25 + r() * 0.7, k: 0.7 + r() * 0.8, o: r() }));
+})();
+const CLOUDS = (() => {
+  const r = rng(13);
+  return Array.from({ length: 7 }, () => ({ x: r() * 2400, y: 0.06 + r() * 0.28, w: 140 + r() * 180, a: 0.55 + r() * 0.35 }));
+})();
+
+const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
+
+/* ------------------------------------------------------------------ */
+/*  Canvas drawing helpers                                            */
+/* ------------------------------------------------------------------ */
+const drawCrane = (ctx: CanvasRenderingContext2D, x: number, g: number, h: number, color: string) => {
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(x - 42, g); ctx.lineTo(x - 14, g - h);
+  ctx.moveTo(x + 42, g); ctx.lineTo(x + 14, g - h);
+  ctx.moveTo(x - 30, g - h * 0.45); ctx.lineTo(x + 30, g - h * 0.45);
+  ctx.stroke();
+  ctx.fillRect(x - 150, g - h - 6, 390, 9); // boom
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x, g - h - 6); ctx.lineTo(x + 150, g - h - 6 - 40); ctx.lineTo(x + 240, g - h - 6);
+  ctx.moveTo(x, g - h - 6); ctx.lineTo(x - 90, g - h - 6 - 30); ctx.lineTo(x - 150, g - h - 6);
+  ctx.stroke();
+};
+
+const drawWheel = (ctx: CanvasRenderingContext2D, x: number, y: number, r: number, ang: number, dark: boolean) => {
+  ctx.fillStyle = '#07090c'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = dark ? '#1c2530' : '#2b3644'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, r - 4, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = '#b8bfca'; ctx.beginPath(); ctx.arc(x, y, r * 0.46, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#4b5563';
+  for (let i = 0; i < 5; i++) {
+    const a = ang + (i * Math.PI * 2) / 5;
+    ctx.beginPath(); ctx.arc(x + Math.cos(a) * r * 0.28, y + Math.sin(a) * r * 0.28, 2.6, 0, Math.PI * 2); ctx.fill();
+  }
+};
+
+interface TruckOpts { s: number; tx: number; gy: number; dark: boolean; wheel: number; bob: number; tilt: number; headA: number; horn: number; }
+
+const drawTruck = (ctx: CanvasRenderingContext2D, o: TruckOpts) => {
+  const { s, tx, gy, dark, wheel, bob, tilt, headA, horn } = o;
+  ctx.save();
+  ctx.translate(tx, gy);
+  // ground shadow (stays on the road)
+  ctx.fillStyle = dark ? 'rgba(0,0,0,.6)' : 'rgba(0,0,0,.28)';
+  ctx.beginPath(); ctx.ellipse(-120 * s, 5 * s, 300 * s, 12 * s, 0, 0, Math.PI * 2); ctx.fill();
+
+  ctx.translate(0, bob);
+  ctx.rotate(tilt);
+  ctx.scale(s, s);
+
+  // trailer chassis
+  ctx.fillStyle = '#0a0d12'; ctx.fillRect(-385, -78, 360, 14);
+  // container
+  const cg = ctx.createLinearGradient(0, -198, 0, -80);
+  cg.addColorStop(0, '#dcc197'); cg.addColorStop(1, '#a58248');
+  ctx.fillStyle = cg; ctx.fillRect(-380, -198, 340, 118);
+  ctx.strokeStyle = 'rgba(0,0,0,.2)'; ctx.lineWidth = 2;
+  for (let x = -368; x < -45; x += 20) { ctx.beginPath(); ctx.moveTo(x, -192); ctx.lineTo(x, -86); ctx.stroke(); }
+  ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(-380, -198, 340, 6); ctx.fillRect(-380, -86, 340, 6);
+  ctx.fillStyle = '#0b1b2c'; ctx.textAlign = 'center';
+  ctx.font = 'italic 900 38px system-ui, Arial, sans-serif'; ctx.fillText('NILE FLEET', -210, -132);
+  ctx.font = '800 11px system-ui, Arial, sans-serif'; ctx.fillText('TRANSPORT · LOGISTICS · EGYPT', -210, -110);
+  // tail lights
+  ctx.fillStyle = '#ff2b2b'; ctx.fillRect(-384, -100, 6, 16);
+
+  // cab
+  ctx.fillStyle = dark ? '#0f2f52' : '#14416f';
+  ctx.beginPath(); ctx.moveTo(-32, -66); ctx.lineTo(-32, -178); ctx.lineTo(52, -178); ctx.lineTo(86, -118); ctx.lineTo(132, -108); ctx.lineTo(136, -66); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#c2a378'; ctx.fillRect(-32, -92, 168, 7);
+  ctx.fillStyle = dark ? '#06111c' : '#a8d4f2';
+  ctx.beginPath(); ctx.moveTo(-8, -168); ctx.lineTo(48, -168); ctx.lineTo(76, -122); ctx.lineTo(-8, -122); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.16)';
+  ctx.beginPath(); ctx.moveTo(6, -168); ctx.lineTo(26, -168); ctx.lineTo(4, -122); ctx.lineTo(-8, -122); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#0a0d12'; ctx.fillRect(120, -90, 18, 26);
+  ctx.fillStyle = '#8a94a3'; ctx.fillRect(-26, -236, 7, 62); // exhaust stack
+  ctx.fillStyle = '#9aa4b2'; ctx.fillRect(28, -66, 48, 16); // fuel tank
+
+  // headlight beam (follows the mouse height)
+  const L = 1500, sp = 0.14;
+  const hx = 130, hy = -100;
+  const bg = ctx.createLinearGradient(hx, hy, hx + Math.cos(headA) * L, hy + Math.sin(headA) * L);
+  bg.addColorStop(0, dark ? 'rgba(255,244,205,.6)' : 'rgba(255,238,170,.34)');
+  bg.addColorStop(1, 'rgba(255,244,205,0)');
+  ctx.globalCompositeOperation = dark ? 'lighter' : 'source-over';
+  ctx.fillStyle = bg;
+  ctx.beginPath(); ctx.moveTo(hx, hy);
+  ctx.lineTo(hx + Math.cos(headA - sp) * L, hy + Math.sin(headA - sp) * L);
+  ctx.lineTo(hx + Math.cos(headA + sp) * L, hy + Math.sin(headA + sp) * L);
+  ctx.closePath(); ctx.fill();
+  const lg = ctx.createRadialGradient(hx, hy, 0, hx, hy, 70);
+  lg.addColorStop(0, 'rgba(255,248,215,.95)'); lg.addColorStop(1, 'rgba(255,248,215,0)');
+  ctx.fillStyle = lg; ctx.beginPath(); ctx.arc(hx, hy, 70, 0, Math.PI * 2); ctx.fill();
+  if (dark) { // tail light glow
+    const tg = ctx.createRadialGradient(-384, -92, 0, -384, -92, 40);
+    tg.addColorStop(0, 'rgba(255,40,40,.55)'); tg.addColorStop(1, 'rgba(255,40,40,0)');
+    ctx.fillStyle = tg; ctx.beginPath(); ctx.arc(-384, -92, 40, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = '#fff7d6'; ctx.beginPath(); ctx.ellipse(hx, hy, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
+
+  // wheels
+  for (const wx of [-322, -272, -4, 92]) drawWheel(ctx, wx, -32, 32, wheel, dark);
+
+  // horn sound rings
+  if (horn > 0) {
+    for (let i = 0; i < 3; i++) {
+      const p = 1 - horn / 0.7;
+      ctx.strokeStyle = `rgba(194,163,120,${Math.max(0, horn * 0.9 - i * 0.15)})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(40, -190, 30 + p * 200 + i * 34, -Math.PI * 0.85, -Math.PI * 0.15); ctx.stroke();
+    }
+  }
+  ctx.restore();
+};
+
+/* ------------------------------------------------------------------ */
+/*  Small scroll-reveal helper                                        */
+/* ------------------------------------------------------------------ */
+const Reveal: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(es => { if (es[0].isIntersecting) { setOn(true); io.disconnect(); } }, { threshold: 0.12 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return <div ref={ref} className={`transition-all duration-1000 ease-out ${on ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'} ${className}`}>{children}</div>;
+};
+
+/* ------------------------------------------------------------------ */
+/*  Page                                                              */
+/* ------------------------------------------------------------------ */
+const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
+  const { lang, setLang } = useContext(LanguageContext);
+  const { isDark, setTheme } = useContext(ThemeContext);
+  const ar = lang === 'ar';
+
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+  const darkRef = useRef(isDark);
+  darkRef.current = isDark;
+
+  const [soundOn, setSoundOn] = useState(false);
+  const soundOnRef = useRef(false);
+  const [hud, setHud] = useState({ kmh: 25, km: 0 });
+
+  // ---- audio -------------------------------------------------------
+  type Audio = { ctx: AudioContext; master: GainNode; o1: OscillatorNode; o2: OscillatorNode; lp: BiquadFilterNode; eg: GainNode; wf: BiquadFilterNode; wg: GainNode; noise: AudioBuffer };
+  const audioRef = useRef<Audio | null>(null);
+
+  const startAudio = () => {
+    const AC = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AC) return;
+    const ctx: AudioContext = audioRef.current?.ctx || new AC();
+    if (ctx.state === 'suspended') void ctx.resume().catch(() => {});
+    if (audioRef.current) { audioRef.current.master.gain.setTargetAtTime(0.55, ctx.currentTime, 0.1); return; }
+    const master = ctx.createGain(); master.gain.value = 0.0001; master.connect(ctx.destination);
+    master.gain.setTargetAtTime(0.55, ctx.currentTime, 0.2);
+    // engine: two detuned saws through a low-pass
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 220; lp.Q.value = 2;
+    const eg = ctx.createGain(); eg.gain.value = 0.06;
+    const o1 = ctx.createOscillator(); o1.type = 'sawtooth'; o1.frequency.value = 40;
+    const o2 = ctx.createOscillator(); o2.type = 'square'; o2.frequency.value = 20.5;
+    o1.connect(lp); o2.connect(lp); lp.connect(eg); eg.connect(master); o1.start(); o2.start();
+    // wind: looped noise through a band-pass
+    const len = ctx.sampleRate * 2;
+    const noise = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = noise.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource(); src.buffer = noise; src.loop = true;
+    const wf = ctx.createBiquadFilter(); wf.type = 'bandpass'; wf.frequency.value = 500; wf.Q.value = 0.7;
+    const wg = ctx.createGain(); wg.gain.value = 0;
+    src.connect(wf); wf.connect(wg); wg.connect(master); src.start();
+    audioRef.current = { ctx, master, o1, o2, lp, eg, wf, wg, noise };
+  };
+
+  const stopAudio = () => {
+    const a = audioRef.current;
+    if (a) a.master.gain.setTargetAtTime(0.0001, a.ctx.currentTime, 0.08);
+  };
+
+  const playHorn = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    const { ctx, master } = a;
+    const t = ctx.currentTime;
+    const g = ctx.createGain();
+    const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2200;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.32, t + 0.03);
+    g.gain.setValueAtTime(0.32, t + 0.5); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+    [349, 440].forEach(fr => {
+      const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = fr;
+      o.connect(f); o.start(t); o.stop(t + 0.75);
+    });
+    f.connect(g); g.connect(master);
+  };
+
+  const playWhoosh = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    const { ctx, master, noise } = a;
+    const t = ctx.currentTime;
+    const src = ctx.createBufferSource(); src.buffer = noise;
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 1.2;
+    bp.frequency.setValueAtTime(300, t); bp.frequency.exponentialRampToValueAtTime(2600, t + 0.45);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 0.15); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.55);
+    src.connect(bp); bp.connect(g); g.connect(master); src.start(t); src.stop(t + 0.6);
+  };
+
+  const toggleSound = () => {
+    const next = !soundOnRef.current;
+    soundOnRef.current = next;
+    setSoundOn(next);
+    if (next) { startAudio(); setTimeout(playHorn, 120); } else stopAudio();
+  };
+
+  useEffect(() => () => {
+    const a = audioRef.current;
+    if (a) { try { a.o1.stop(); a.o2.stop(); void a.ctx.close(); } catch { /* already closed */ } audioRef.current = null; }
+  }, []);
+
+  // ---- simulation + render loop -----------------------------------
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    let W = 0, H = 0, dpr = 1;
+    const resize = () => {
+      dpr = Math.min(2, window.devicePixelRatio || 1);
+      W = window.innerWidth; H = window.innerHeight;
+      canvas.width = Math.floor(W * dpr); canvas.height = Math.floor(H * dpr);
+      canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+
+    const sim = {
+      worldX: 0, speed: 160, impulse: 0, wheel: 0, mx: 0.5, my: 0.5, smx: 0.5, smy: 0.5,
+      horn: 0, lastWhoosh: 0, km: 0, hudT: 0, t: 0, lastScroll: window.scrollY,
+      smoke: [] as { x: number; y: number; r: number; life: number }[],
+      box: { x0: 0, y0: 0, x1: 0, y1: 0 },
+    };
+
+    const onMove = (e: MouseEvent) => {
+      sim.mx = e.clientX / W; sim.my = e.clientY / H;
+      const b = sim.box;
+      const inside = e.clientX > b.x0 && e.clientX < b.x1 && e.clientY > b.y0 && e.clientY < b.y1;
+      if (wrapRef.current) wrapRef.current.style.cursor = inside ? 'pointer' : '';
+    };
+    const onScroll = () => {
+      const y = window.scrollY;
+      sim.impulse += Math.abs(y - sim.lastScroll);
+      sim.lastScroll = y;
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      if (barRef.current) barRef.current.style.width = (max > 0 ? (y / max) * 100 : 0) + '%';
+    };
+    const onDown = (e: PointerEvent) => {
+      if ((e.target as HTMLElement).closest('button,a,input')) return;
+      const b = sim.box;
+      if (e.clientX > b.x0 && e.clientX < b.x1 && e.clientY > b.y0 && e.clientY < b.y1) {
+        sim.horn = 0.7;
+        if (soundOnRef.current) playHorn();
+      }
+    };
+    window.addEventListener('resize', resize);
+    window.addEventListener('mousemove', onMove, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('pointerdown', onDown);
+    onScroll();
+
+    const render = () => {
+      const dark = darkRef.current;
+      const sN = clamp((sim.speed - 160) / 1340, 0, 1);
+      const t = sim.t;
+      const ox = (sim.smx - 0.5);
+      ctx.save();
+      if (sN > 0.35) ctx.translate((Math.random() - 0.5) * sN * 3, (Math.random() - 0.5) * sN * 3);
+
+      // sky
+      const sky = ctx.createLinearGradient(0, 0, 0, H * 0.75);
+      if (dark) { sky.addColorStop(0, '#01030a'); sky.addColorStop(0.55, '#07121f'); sky.addColorStop(1, '#14304a'); }
+      else { sky.addColorStop(0, '#5aaef7'); sky.addColorStop(0.6, '#bfe3ff'); sky.addColorStop(1, '#fff3da'); }
+      ctx.fillStyle = sky; ctx.fillRect(-10, -10, W + 20, H + 20);
+
+      if (dark) {
+        for (const s of STARS) {
+          const a = 0.35 + 0.5 * Math.abs(Math.sin(t * 1.3 + s.p));
+          ctx.fillStyle = `rgba(255,255,255,${a})`;
+          ctx.fillRect(s.x * W - ox * 14 * s.s, s.y * H, s.s, s.s);
+        }
+        const mg = ctx.createRadialGradient(W * 0.78 - ox * 24, H * 0.2, 0, W * 0.78 - ox * 24, H * 0.2, 120);
+        mg.addColorStop(0, 'rgba(255,244,214,.9)'); mg.addColorStop(0.3, 'rgba(255,244,214,.25)'); mg.addColorStop(1, 'rgba(255,244,214,0)');
+        ctx.fillStyle = mg; ctx.beginPath(); ctx.arc(W * 0.78 - ox * 24, H * 0.2, 120, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#f6efd9'; ctx.beginPath(); ctx.arc(W * 0.78 - ox * 24, H * 0.2, 30, 0, Math.PI * 2); ctx.fill();
+      } else {
+        const sx = W * 0.78 - ox * 24, sy = H * 0.2;
+        const sg = ctx.createRadialGradient(sx, sy, 0, sx, sy, 200);
+        sg.addColorStop(0, 'rgba(255,240,170,.95)'); sg.addColorStop(0.25, 'rgba(255,230,140,.4)'); sg.addColorStop(1, 'rgba(255,230,140,0)');
+        ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(sx, sy, 200, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fff6c9'; ctx.beginPath(); ctx.arc(sx, sy, 38, 0, Math.PI * 2); ctx.fill();
+        for (const c of CLOUDS) {
+          const cx = ((c.x - sim.worldX * 0.03 - ox * 30) % (W + 500) + (W + 500)) % (W + 500) - 250;
+          ctx.fillStyle = `rgba(255,255,255,${c.a})`;
+          ctx.beginPath(); ctx.ellipse(cx, c.y * H, c.w, c.w * 0.18, 0, 0, Math.PI * 2); ctx.ellipse(cx + c.w * 0.4, c.y * H - 10, c.w * 0.6, c.w * 0.16, 0, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+
+      const layerBase = (p: number, k: number) => -((sim.worldX * p) % TILE) - ox * p * 90 + k * TILE;
+      const tiles = Math.ceil(W / TILE) + 1;
+
+      // far port skyline
+      const gFar = H * 0.7;
+      for (let k = 0; k < tiles; k++) {
+        const base = layerBase(0.06, k);
+        ctx.fillStyle = dark ? '#0a1826' : '#aebfd1';
+        for (const b of FAR) {
+          const x = base + b.x;
+          if (x < -160 || x > W + 60) continue;
+          ctx.fillRect(x, gFar - b.h, b.w, b.h);
+          if (dark) {
+            ctx.fillStyle = 'rgba(255,214,140,.55)';
+            b.win.forEach((v, i) => { if (v > 0.55) ctx.fillRect(x + 5 + (i % 4) * (b.w / 4.5), gFar - b.h + 10 + Math.floor(i / 4) * 18, 3, 4); });
+            ctx.fillStyle = '#0a1826';
+          }
+        }
+        for (const cx of FAR_CRANES) { const x = base + cx; if (x > -320 && x < W + 320) drawCrane(ctx, x, gFar, 230, dark ? '#0d2033' : '#93a8bd'); }
+      }
+      ctx.fillStyle = dark ? '#0a1826' : '#aebfd1'; ctx.fillRect(-10, gFar, W + 20, H);
+
+      // mid container yard
+      const gMid = H * 0.755;
+      const palD = ['#1b2b3c', '#3a2f22', '#22352b', '#3b2226'];
+      const palL = ['#7f9bb8', '#d0a96b', '#86b096', '#cc8686'];
+      for (let k = 0; k < tiles; k++) {
+        const base = layerBase(0.22, k);
+        for (const s of MID) {
+          const x = base + s.x;
+          if (x < -320 || x > W + 60) continue;
+          ctx.fillStyle = (dark ? palD : palL)[s.c];
+          for (let r = 0; r < s.rows; r++) for (let c = 0; c < s.cols; c++) {
+            ctx.fillRect(x + c * 70, gMid - (r + 1) * 36, 66, 33);
+          }
+        }
+        for (const cx of MID_CRANES) { const x = base + cx; if (x > -320 && x < W + 320) drawCrane(ctx, x, gMid, 300, dark ? '#132a40' : '#6f8aa5'); }
+      }
+
+      // road
+      const gRoad = H * 0.775;
+      const road = ctx.createLinearGradient(0, gRoad, 0, H);
+      if (dark) { road.addColorStop(0, '#0c1218'); road.addColorStop(1, '#04060a'); } else { road.addColorStop(0, '#5b6472'); road.addColorStop(1, '#3a4250'); }
+      ctx.fillStyle = road; ctx.fillRect(-10, gRoad, W + 20, H - gRoad + 10);
+      ctx.fillStyle = dark ? 'rgba(194,163,120,.55)' : 'rgba(255,255,255,.85)'; ctx.fillRect(-10, gRoad + 4, W + 20, 3);
+      ctx.fillRect(-10, H - 26, W + 20, 3);
+      const dashY = H * 0.93;
+      const off = -((sim.worldX) % 130);
+      ctx.fillStyle = dark ? 'rgba(255,255,255,.55)' : 'rgba(255,255,255,.95)';
+      for (let x = off - 130; x < W + 130; x += 130) ctx.fillRect(x - ox * 40, dashY, 74, 6);
+
+      // roadside lamp posts
+      const spacing = 520;
+      const pOff = -((sim.worldX * 0.6 + ox * 60) % spacing);
+      for (let x = pOff - spacing; x < W + spacing; x += spacing) {
+        ctx.fillStyle = dark ? '#111a24' : '#4b5563';
+        ctx.fillRect(x, gRoad - 210, 6, 214);
+        ctx.fillRect(x, gRoad - 210, 44, 5);
+        if (dark) {
+          ctx.globalCompositeOperation = 'lighter';
+          const lg = ctx.createRadialGradient(x + 44, gRoad - 200, 0, x + 44, gRoad - 200, 130);
+          lg.addColorStop(0, 'rgba(255,214,140,.55)'); lg.addColorStop(1, 'rgba(255,214,140,0)');
+          ctx.fillStyle = lg; ctx.beginPath(); ctx.arc(x + 44, gRoad - 200, 130, 0, Math.PI * 2); ctx.fill();
+          ctx.globalCompositeOperation = 'source-over';
+        }
+      }
+
+      // truck
+      const s = clamp(Math.min(W / 1500, H / 900), 0.5, 1.15);
+      const tx = W * 0.3 + (sim.smx - 0.5) * 60 + 380 * s;
+      const gy = H * 0.86;
+      const accel = clamp((sim.impulse * 18 + 160) - sim.speed, -400, 900);
+      const bob = Math.sin(t * 22) * sN * 1.8 + Math.sin(t * 6) * 0.7 + (sim.horn > 0 ? Math.sin(t * 60) * 1.2 : 0);
+      const tilt = -accel * 0.000022;
+      const lightScreenY = gy - 100 * s;
+      const headA = 0.05 + clamp((sim.smy * H - lightScreenY) / (H * 0.9), -0.28, 0.28);
+      drawTruck(ctx, { s, tx, gy, dark, wheel: sim.wheel, bob, tilt, headA, horn: sim.horn });
+      sim.box = { x0: tx - 390 * s, y0: gy - 245 * s, x1: tx + 145 * s, y1: gy };
+
+      // exhaust smoke
+      for (const p of sim.smoke) {
+        ctx.fillStyle = dark ? `rgba(160,175,195,${p.life * 0.22})` : `rgba(90,100,115,${p.life * 0.25})`;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+      }
+
+      // speed streaks
+      if (sN > 0.2) {
+        ctx.strokeStyle = dark ? `rgba(255,255,255,${0.3 * sN})` : `rgba(255,255,255,${0.7 * sN})`;
+        ctx.lineWidth = 1.5;
+        for (const st of STREAKS) {
+          const x = (((st.o * W) + t * sim.speed * st.k) % (W + 400)) - 200;
+          const len = 60 + sN * 240;
+          ctx.beginPath(); ctx.moveTo(W - x, st.y * H); ctx.lineTo(W - x + len, st.y * H); ctx.stroke();
+        }
+      }
+
+      // cursor light
+      const mxp = sim.smx * W, myp = sim.smy * H;
+      ctx.globalCompositeOperation = dark ? 'lighter' : 'source-over';
+      const cg = ctx.createRadialGradient(mxp, myp, 0, mxp, myp, 260);
+      cg.addColorStop(0, dark ? 'rgba(194,163,120,.20)' : 'rgba(255,214,120,.30)'); cg.addColorStop(1, 'rgba(194,163,120,0)');
+      ctx.fillStyle = cg; ctx.beginPath(); ctx.arc(mxp, myp, 260, 0, Math.PI * 2); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+
+      // vignette
+      const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.8);
+      vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, dark ? 'rgba(0,0,0,.55)' : 'rgba(20,40,70,.16)');
+      ctx.fillStyle = vg; ctx.fillRect(-10, -10, W + 20, H + 20);
+      ctx.restore();
+
+      return { s, tx, gy };
+    };
+
+    let raf = 0;
+    let last = performance.now();
+    const step = (dt: number) => {
+      sim.t += dt;
+      sim.smx += (sim.mx - sim.smx) * Math.min(1, dt * 6);
+      sim.smy += (sim.my - sim.smy) * Math.min(1, dt * 6);
+      const target = 160 + Math.min(1340, sim.impulse * 18);
+      // scroll bursts trigger a whoosh
+      if (sim.impulse > 90 && sim.t - sim.lastWhoosh > 0.9) { sim.lastWhoosh = sim.t; if (soundOnRef.current) playWhoosh(); }
+      sim.speed += (target - sim.speed) * Math.min(1, dt * 3);
+      sim.impulse *= Math.pow(0.9, dt * 60);
+      sim.worldX += sim.speed * dt;
+      sim.wheel += (sim.speed * dt) / 32;
+      if (sim.horn > 0) sim.horn = Math.max(0, sim.horn - dt);
+
+      const sN = clamp((sim.speed - 160) / 1340, 0, 1);
+      // smoke
+      if (Math.random() < dt * (18 + sN * 50)) {
+        const s = clamp(Math.min(W / 1500, H / 900), 0.5, 1.15);
+        const tx = W * 0.3 + (sim.smx - 0.5) * 60 + 380 * s;
+        sim.smoke.push({ x: tx - 22 * s, y: H * 0.86 - 238 * s, r: 4 + Math.random() * 4, life: 1 });
+      }
+      for (const p of sim.smoke) { p.x -= (sim.speed * 0.5 + 30) * dt; p.y -= (34 + sN * 30) * dt; p.r += dt * 16; p.life -= dt * 0.55; }
+      sim.smoke = sim.smoke.filter(p => p.life > 0);
+
+      // audio follows speed
+      const a = audioRef.current;
+      if (a && soundOnRef.current) {
+        const now = a.ctx.currentTime;
+        a.o1.frequency.setTargetAtTime(40 + sN * 78, now, 0.08);
+        a.o2.frequency.setTargetAtTime(20.5 + sN * 39, now, 0.08);
+        a.lp.frequency.setTargetAtTime(200 + sN * 900, now, 0.1);
+        a.eg.gain.setTargetAtTime(0.06 + sN * 0.11, now, 0.1);
+        a.wf.frequency.setTargetAtTime(420 + sN * 1900, now, 0.1);
+        a.wg.gain.setTargetAtTime(sN * 0.16, now, 0.12);
+      }
+
+      // HUD (throttled)
+      sim.km += (25 + sN * 95) / 3600 * dt;
+      sim.hudT += dt;
+      if (sim.hudT > 0.12) { sim.hudT = 0; setHud({ kmh: Math.round(25 + sN * 95), km: sim.km }); }
+    };
+
+    const frame = (now: number) => {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      if (!document.hidden) { step(dt); render(); }
+      raf = requestAnimationFrame(frame);
+    };
+    if (reduce) { render(); } else { raf = requestAnimationFrame(frame); }
+    const redrawOnResize = () => { resize(); if (reduce) render(); };
+    window.addEventListener('resize', redrawOnResize);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('resize', redrawOnResize);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('pointerdown', onDown);
+    };
+  }, []);
+
+  // ---- theme-dependent classes ------------------------------------
+  const K = isDark
+    ? { root: 'bg-[#020305] text-white', head: 'border-white/10 bg-black/55', text: 'text-white', muted: 'text-slate-400', soft: 'text-slate-300', faint: 'text-slate-500', card: 'border-white/10 bg-black/45', band: 'border-white/10 bg-black/60', line: 'border-white/15', foot: 'bg-[#00111f]/85', chip: 'border-white/10 bg-white/[.04] text-slate-300' }
+    : { root: 'bg-[#dbeafe] text-[#0b1a2b]', head: 'border-black/10 bg-white/60', text: 'text-[#0b1a2b]', muted: 'text-slate-600', soft: 'text-slate-700', faint: 'text-slate-500', card: 'border-black/10 bg-white/60', band: 'border-black/10 bg-white/70', line: 'border-black/15', foot: 'bg-[#0b2a4a]/90 text-white', chip: 'border-black/10 bg-white/60 text-slate-600' };
+  const gold = isDark ? 'text-[#c2a378]' : 'text-[#8a6a35]';
+
+  const nav = [['ABOUT', '#about'], ['OPERATIONS', '#operations'], ['LEADERSHIP', '#leadership']];
+
+  return (
+    <div ref={wrapRef} className={`nf4 min-h-screen overflow-x-hidden selection:bg-[#c2a378] selection:text-black ${K.root}`}>
+      <style>{`
+        @keyframes nf4Reveal { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes nf4Pulse { 0%,100%{box-shadow:0 0 0 rgba(194,163,120,0)} 50%{box-shadow:0 0 42px rgba(194,163,120,.28)} }
+        .nf4-reveal{animation:nf4Reveal .9s cubic-bezier(.16,1,.3,1) both}
+        .nf4-pulse{animation:nf4Pulse 3s ease-in-out infinite}
+        @media (prefers-reduced-motion: reduce){ .nf4 *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important} }
+      `}</style>
+
+      <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 z-0" aria-hidden="true" />
+
+      {/* route progress (scroll) */}
+      <div className="fixed left-0 right-0 top-0 z-50 h-[3px] bg-black/10"><div ref={barRef} className="h-full w-0 bg-[#c2a378] shadow-[0_0_12px_#c2a378]" /></div>
+
+      <header className={`sticky top-0 z-40 border-b backdrop-blur-2xl ${K.head}`}>
+        <div className="mx-auto flex max-w-[1500px] items-center justify-between px-5 py-4 lg:px-10">
+          <a href="#top" className="group flex items-center gap-3">
+            <img src="/nile-fleet-logo.png" className="h-10 w-10 object-contain transition-transform duration-500 group-hover:rotate-6" alt="Nile Fleet" />
+            <div>
+              <div className="text-[17px] font-black tracking-tight">NILE <span className={gold}>FLEET</span></div>
+              <div className={`text-[7px] font-black uppercase tracking-[.34em] ${K.faint}`}>Transport · Logistics · Egypt</div>
+            </div>
+          </a>
+          <nav className="hidden items-center gap-8 md:flex">
+            {nav.map(([label, href]) => <a key={href} href={href} className={`text-[9px] font-black tracking-[.25em] transition hover:text-[#c2a378] ${K.muted}`}>{label}</a>)}
+          </nav>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button onClick={toggleSound} aria-pressed={soundOn} className={`rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{soundOn ? '🔊 SOUND ON' : '🔇 SOUND OFF'}</button>
+            <button onClick={() => setTheme(isDark ? 'white' : 'phantom')} className={`rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isDark ? '☀ WHITE' : '🌙 DARK'}</button>
+            <button onClick={() => setLang(ar ? 'en' : 'ar')} className={`rounded-full border px-4 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{ar ? 'EN' : 'العربية'}</button>
+            <button onClick={onGenset} className="hidden rounded-full bg-[#c2a378] px-5 py-2.5 text-[9px] font-black tracking-[.18em] text-black transition hover:scale-105 sm:block">GENSET ACCESS</button>
+          </div>
+        </div>
+      </header>
+
+      <main id="top" className="relative z-10">
+        <section className="relative flex min-h-[100vh] items-start overflow-hidden">
+          <div className="mx-auto grid w-full max-w-[1500px] items-start gap-12 px-5 pt-24 lg:grid-cols-[1.25fr_.75fr] lg:px-10 lg:pt-28">
+            <div className="nf4-reveal">
+              <div className="mb-5 flex items-center gap-4">
+                <span className="h-px w-16 bg-[#c2a378]" />
+                <span className={`text-[9px] font-black uppercase tracking-[.48em] ${gold}`}>Since 2009 · Egypt</span>
+              </div>
+              <h1 className="max-w-6xl text-[clamp(2.6rem,6.4vw,6.4rem)] font-black uppercase italic leading-[.85] tracking-[-.06em]">
+                Cargo<br /><span className={gold}>in motion.</span>
+              </h1>
+              <p className={`mt-6 max-w-2xl text-sm font-medium leading-7 sm:text-base ${K.soft}`}>
+                {ar ? 'نيل فليت لخدمات النقل واللوجستيات — نقل الشاحنات والحاويات وحلول لوجستية متكاملة مع رؤية تشغيلية كاملة.' : 'Nile Fleet for Transport and Logistics Service — trucking, container transportation and integrated logistics built around safe movement and operational visibility.'}
+              </p>
+              <div className="mt-7 flex flex-wrap items-center gap-4">
+                <a href="#operations" className={`nf4-pulse rounded-full border border-[#c2a378]/60 bg-[#c2a378]/10 px-7 py-3 text-[9px] font-black uppercase tracking-[.24em] ${gold}`}>Explore Operations</a>
+                <span className={`text-[8px] font-black uppercase tracking-[.25em] ${K.faint}`}>Scroll to drive · Click the truck for the horn</span>
+              </div>
+            </div>
+
+            <div className="hidden lg:block">
+              <div className="grid grid-cols-2 gap-3">
+                {[['2009', 'FOUNDED'], ['17+', 'YEARS'], ['EGYPT', 'COVERAGE'], ['24/7', 'OPERATIONS']].map(([v, l]) => (
+                  <div key={l} className={`rounded-2xl border p-4 backdrop-blur-md ${K.card}`}>
+                    <div className="text-2xl font-black">{v}</div>
+                    <div className={`mt-1 text-[7px] font-black tracking-[.2em] ${gold}`}>{l}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="about" className={`relative border-y backdrop-blur-[2px] ${K.band}`}>
+          <Reveal>
+            <div className="mx-auto grid max-w-[1500px] gap-14 px-5 py-28 lg:grid-cols-[.75fr_1.25fr] lg:px-10">
+              <div>
+                <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>01 / Company</div>
+                <h2 className="mt-5 text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">Built for<br /><span className={gold}>the road.</span></h2>
+              </div>
+              <div className="max-w-3xl">
+                <p className={`text-base leading-8 sm:text-lg ${K.soft}`}>Nile Fleet for Transport and Logistics Service is one of Egypt’s leading transportation and logistics providers, offering reliable trucking, container transportation, and integrated logistics solutions since 2009.</p>
+                <p className={`mt-7 text-sm leading-7 ${K.muted}`}>With more than 17 years of industry experience, the company supports shipping lines, freight forwarders, importers, exporters, and industrial clients through fleet management, port logistics operations, and supply chain support.</p>
+                <div className="mt-12 h-px w-full bg-gradient-to-r from-[#c2a378] via-[#c2a378]/20 to-transparent" />
+                <div className="mt-7 flex flex-wrap gap-3">
+                  {['SAFETY', 'RELIABILITY', 'VISIBILITY', 'INNOVATION', 'CUSTOMER SUCCESS'].map(x => <span key={x} className={`rounded-full border px-4 py-2 text-[7px] font-black tracking-[.2em] ${K.chip}`}>{x}</span>)}
+                </div>
+              </div>
+            </div>
+          </Reveal>
+        </section>
+
+        <section id="operations" className={`relative overflow-hidden border-y backdrop-blur-[2px] ${K.band}`}>
+          <Reveal>
+            <div className="relative mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
+              <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+                <div>
+                  <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>02 / Operations</div>
+                  <h2 className="mt-4 text-5xl font-black uppercase italic tracking-[-.05em] sm:text-7xl">One fleet.<br /><span className={gold}>Many missions.</span></h2>
+                </div>
+                <div className={`max-w-sm text-xs leading-6 ${K.muted}`}>From road transport to port-side genset operations, Nile Fleet connects physical movement with operational control.</div>
+              </div>
+
+              <div className="mt-14 grid gap-5 lg:grid-cols-[1.35fr_.65fr]">
+                <button onClick={onGenset} className="group relative min-h-[380px] overflow-hidden rounded-[2rem] border border-[#c2a378]/40 bg-[#050b12]/85 text-left text-white backdrop-blur-md transition duration-500 hover:-translate-y-2 hover:border-[#c2a378]">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_35%,rgba(194,163,120,.22),transparent_30%),linear-gradient(135deg,#07121a,#010203)]" />
+                  <div className="relative flex min-h-[380px] flex-col justify-between p-8 sm:p-10">
+                    <div className="flex items-center justify-between"><span className="rounded-full bg-[#c2a378] px-3 py-1 text-[7px] font-black tracking-[.2em] text-black">LIVE SYSTEM</span><span className="text-[8px] font-black tracking-[.25em] text-slate-500">01</span></div>
+                    <div>
+                      <div className="text-[10px] font-black uppercase tracking-[.3em] text-[#c2a378]">Authorized access</div>
+                      <div className="mt-3 text-4xl font-black uppercase italic tracking-[-.04em]">GENSET<br />CONTROL</div>
+                      <p className="mt-4 max-w-md text-xs leading-6 text-slate-400">Access the existing Genset operations platform for bookings, stock, movements, invoices and operational control.</p>
+                      <div className="mt-7 inline-flex items-center gap-3 text-[8px] font-black uppercase tracking-[.25em] text-white">Enter system <span className="transition group-hover:translate-x-2">→</span></div>
+                    </div>
+                  </div>
+                </button>
+
+                <div className={`group relative min-h-[380px] overflow-hidden rounded-[2rem] border p-8 backdrop-blur-md sm:p-10 ${K.card}`}>
+                  <div className="relative flex h-full flex-col justify-between">
+                    <div className="flex justify-between"><span className={`text-[8px] font-black tracking-[.25em] ${K.faint}`}>02</span><span className={`rounded-full border px-3 py-1 text-[7px] font-black tracking-[.2em] ${K.line} ${K.faint}`}>COMING SOON</span></div>
+                    <div>
+                      <div className={`text-[10px] font-black uppercase tracking-[.3em] ${K.faint}`}>Next operation layer</div>
+                      <div className="mt-3 text-4xl font-black uppercase italic">TRANSPORT</div>
+                      <p className={`mt-4 text-xs leading-6 ${K.muted}`}>Integrated trucking and container transport management is under development.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+        </section>
+
+        <section id="leadership" className={`border-y backdrop-blur-[2px] ${K.band}`}>
+          <Reveal>
+            <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
+              <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>03 / Leadership</div>
+              <div className="mt-4 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+                <h2 className="text-5xl font-black uppercase italic tracking-[-.05em] sm:text-7xl">People behind<br /><span className={gold}>the movement.</span></h2>
+                <p className={`max-w-sm text-xs leading-6 ${K.muted}`}>Leadership across company operations, transport and genset services.</p>
+              </div>
+              <div className="mt-14 grid gap-4 md:grid-cols-3">
+                {[['SHERIF HEGAZY', 'CEO', 'COMPANY'], ['SAMAR HEGAZY', 'HEAD OF TRANSPORT DEPARTMENT', 'TRANSPORT'], ['YASMINE HEGAZY', 'HEAD OF GENSET DEPARTMENT', 'GENSET']].map(([name, role, area], i) => (
+                  <div key={name} className={`group relative overflow-hidden rounded-[1.7rem] border p-7 backdrop-blur-md transition duration-500 hover:-translate-y-2 hover:border-[#c2a378]/60 ${K.card}`}>
+                    <div className="flex items-center justify-between"><span className={`text-[7px] font-black tracking-[.25em] ${gold}`}>{String(i + 1).padStart(2, '0')}</span><span className={`text-[7px] font-black tracking-[.2em] ${K.faint}`}>{area}</span></div>
+                    <div className="mt-20 h-px w-10 bg-[#c2a378] transition-all duration-500 group-hover:w-20" />
+                    <div className="mt-5 text-xl font-black uppercase">{name}</div>
+                    <div className={`mt-2 text-[8px] font-black uppercase tracking-[.2em] ${K.faint}`}>{role}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Reveal>
+        </section>
+
+        <section className={`relative overflow-hidden backdrop-blur-md ${K.foot}`}>
+          <div className="mx-auto max-w-[1500px] px-5 pb-32 pt-20 lg:px-10">
+            <div className="flex flex-col justify-between gap-8 md:flex-row md:items-center">
+              <div>
+                <div className="text-[9px] font-black uppercase tracking-[.42em] text-[#c2a378]">Nile Fleet</div>
+                <div className="mt-3 text-3xl font-black uppercase italic">Safe. Reliable. Visible. Connected.</div>
+              </div>
+              <div className="text-xs leading-6 text-slate-300 md:text-right">
+                <div>23 July St. · Abo Elkheer Building · 2nd Floor</div>
+                <div>Port Said, Egypt</div>
+                <div className="mt-2 text-[#c2a378]">mohamedalaa@nilefleetlogistics.com · +20 114 647 5759</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* speedometer */}
+      <div className={`pointer-events-none fixed bottom-4 right-4 z-30 rounded-2xl border px-4 py-3 backdrop-blur-md ${K.card}`} aria-hidden="true">
+        <div className="flex items-end gap-2"><span className="text-3xl font-black tabular-nums leading-none">{String(hud.kmh).padStart(3, '0')}</span><span className={`pb-0.5 text-[8px] font-black tracking-[.25em] ${gold}`}>KM/H</span></div>
+        <div className={`mt-1 text-[7px] font-black tracking-[.25em] ${K.faint}`}>ODO {hud.km.toFixed(2)} KM</div>
+      </div>
+    </div>
+  );
+};
+
+export default CompanyHomeV4;

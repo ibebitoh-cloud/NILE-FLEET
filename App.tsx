@@ -1,6 +1,7 @@
 
 import React, { lazy, Suspense, useState, createContext, useContext, useEffect, useMemo, useCallback, useRef } from 'react';
 const Login = lazy(() => import('./screens/Login'));
+const CompanyHome = lazy(() => import('./screens/CompanyHomeV4'));
 const Dashboard = lazy(() => import('./screens/Dashboard'));
 const Operations = lazy(() => import('./screens/Operations'));
 const StockManagement = lazy(() => import('./screens/StockManagement'));
@@ -78,6 +79,7 @@ export const ThemeContext = createContext<ThemeContextType>({
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [showCompanyHome, setShowCompanyHome] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
   const loggingInRef = useRef(false);
   
@@ -130,6 +132,7 @@ const App: React.FC = () => {
       if (cancelled) return;
 
       if (sessionUser) {
+        setShowCompanyHome(false);
         setUser(sessionUser);
         localStorage.setItem('user', JSON.stringify(sessionUser));
 
@@ -570,6 +573,7 @@ const App: React.FC = () => {
   const handleLogout = useCallback(async () => {
     await supabaseLogout();
     setUser(null);
+    setShowCompanyHome(true);
     localStorage.removeItem('user');
     window.location.hash = '';
   }, []);
@@ -603,7 +607,11 @@ const App: React.FC = () => {
       <LanguageContext value={languageContextValue}>
         <ThemeContext value={themeContextValue}>
           <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-slate-500">Loading…</div>}>
-            <Login onLogin={handleLogin} />
+            {showCompanyHome ? (
+              <CompanyHome onGenset={() => setShowCompanyHome(false)} />
+            ) : (
+              <Login onLogin={handleLogin} onBackToHome={() => setShowCompanyHome(true)} />
+            )}
           </Suspense>
         </ThemeContext>
       </LanguageContext>
