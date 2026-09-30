@@ -5,6 +5,7 @@ import { LanguageContext, ThemeContext } from '../App';
 import { translations, translateEntity, dynamicTranslations } from '../translations';
 import { db } from '../services/supabaseDb';
 import { runThinkingAudit } from '../services/aiService';
+import { getDaliRecentMemory, getDaliConversationMemory, saveDaliConversationMessage } from '../services/daliMemory';
 
 interface LayoutProps {
   user: User;
@@ -168,7 +169,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
 
   const saveDaliMemory = async (role: 'user' | 'assistant', message: string, entities: any = {}) => {
     try {
-      await db.saveDaliConversationMessage({
+      await saveDaliConversationMessage({
         sessionId: daliSessionIdRef.current,
         role,
         message,
@@ -204,10 +205,10 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       try {
         // Use cross-session memory first so DALI can continue a conversation after
         // a reload, logout/login, or a new browser session.
-        const storedMemory = await db.getDaliRecentMemory(24);
+        const storedMemory = await getDaliRecentMemory(24);
         if (storedMemory.length) recentMemory = storedMemory;
         else {
-          const sessionMemory = await db.getDaliConversationMemory(daliSessionIdRef.current, 16);
+          const sessionMemory = await getDaliConversationMemory(daliSessionIdRef.current, 16);
           if (sessionMemory.length) recentMemory = sessionMemory;
         }
       } catch (memoryError) {
