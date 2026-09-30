@@ -256,7 +256,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         .welcome-letter-3d { animation: welcomeLetter3d 2.8s ease-in-out infinite; transform-style:preserve-3d; }
 
         /* Random industrial line-art animation: only the BEBITO signature area moves. */
-        @keyframes lineDraw { from { stroke-dashoffset: 900; opacity: 0; } 12% { opacity: 1; } 55% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+        @keyframes lineDraw { 0% { stroke-dashoffset: 900; opacity: 0; } 20% { opacity: 1; } 52% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 1; } }
         @keyframes lineMove0 { 0% { transform:translateX(-150px); opacity:0; } 18% { opacity:1; } 48% { transform:translateX(18px); } 72% { transform:translateX(100px); opacity:1; } 100% { transform:translateX(150px); opacity:0; } }
         @keyframes lineMove1 { 0% { transform:translate(150px,20px) rotate(8deg); opacity:0; } 18% { opacity:1; } 52% { transform:translate(-12px,-4px) rotate(-2deg); } 78% { transform:translate(-105px,-12px) rotate(-8deg); opacity:1; } 100% { transform:translate(-150px,-18px) rotate(-10deg); opacity:0; } }
         @keyframes lineMove2 { 0% { transform:translateY(70px); opacity:0; } 18% { opacity:1; } 50% { transform:translateY(-5px); } 78% { transform:translateY(-62px); opacity:1; } 100% { transform:translateY(-90px); opacity:0; } }
@@ -265,16 +265,28 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         @keyframes lineMove5 { 0% { transform:translate(0,-75px) scaleX(.5); opacity:0; } 20% { opacity:1; } 50% { transform:translate(0,0) scaleX(1); } 80% { transform:translate(0,70px) scaleX(1.2); opacity:1; } 100% { transform:translate(0,100px) scaleX(1.3); opacity:0; } }
         .signature-scene { position:absolute; left:50%; top:50%; width:280px; height:76px; transform:translate(-50%,-50%); pointer-events:none; overflow:visible; }
         .signature-scene svg { width:100%; height:100%; overflow:visible; }
-        .scene-line { fill:none; stroke:#C2A378; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:900; animation:lineDraw 2.8s ease-in-out both; }
+        .scene-line { fill:none; stroke:#C2A378; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:900; animation:lineDraw 5.6s ease-in-out alternate infinite; }
         .scene-solid { fill:#C2A378; opacity:.9; }
         .scene-soft { fill:none; stroke:rgba(255,255,255,.65); stroke-width:1.2; stroke-linecap:round; stroke-linejoin:round; }
         .scene-object { transform-box:fill-box; transform-origin:center; opacity:0; }
-        .welcome-anim-0 .scene-object { animation:lineMove0 2.8s cubic-bezier(.2,.8,.2,1) both; }
-        .welcome-anim-1 .scene-object { animation:lineMove1 2.8s cubic-bezier(.2,.8,.2,1) both; }
-        .welcome-anim-2 .scene-object { animation:lineMove2 2.8s cubic-bezier(.2,.8,.2,1) both; }
-        .welcome-anim-3 .scene-object { animation:lineMove3 2.8s cubic-bezier(.2,.8,.2,1) both; }
-        .welcome-anim-4 .scene-object { animation:lineMove4 2.8s cubic-bezier(.2,.8,.2,1) both; }
-        .welcome-anim-5 .scene-object { animation:lineMove5 2.8s cubic-bezier(.2,.8,.2,1) both; }
+        .welcome-anim-0 .scene-object { animation:lineMove0 5.6s cubic-bezier(.2,.8,.2,1) alternate infinite; }
+        .welcome-anim-1 .scene-object { animation:lineMove1 5.6s cubic-bezier(.2,.8,.2,1) alternate infinite; }
+        .welcome-anim-2 .scene-object { animation:lineMove2 5.6s cubic-bezier(.2,.8,.2,1) alternate infinite; }
+        .welcome-anim-3 .scene-object { animation:lineMove3 5.6s cubic-bezier(.2,.8,.2,1) alternate infinite; }
+        .welcome-anim-4 .scene-object { animation:lineMove4 5.6s cubic-bezier(.2,.8,.2,1) alternate infinite; }
+        .welcome-anim-5 .scene-object { animation:lineMove5 5.6s cubic-bezier(.2,.8,.2,1) alternate infinite; }
+        .welcome-anim-0 .scene-line { animation-duration:4.8s; }
+        .welcome-anim-1 .scene-line { animation-duration:7.2s; }
+        .welcome-anim-2 .scene-line { animation-duration:9.5s; }
+        .welcome-anim-3 .scene-line { animation-duration:6.6s; }
+        .welcome-anim-4 .scene-line { animation-duration:11s; }
+        .welcome-anim-5 .scene-line { animation-duration:8.4s; }
+        .welcome-anim-0 .scene-object { animation-duration:4.8s; }
+        .welcome-anim-1 .scene-object { animation-duration:7.2s; }
+        .welcome-anim-2 .scene-object { animation-duration:9.5s; }
+        .welcome-anim-3 .scene-object { animation-duration:6.6s; }
+        .welcome-anim-4 .scene-object { animation-duration:11s; }
+        .welcome-anim-5 .scene-object { animation-duration:8.4s; }
         .welcome-anim-0 .scene-object:nth-child(2),
         .welcome-anim-1 .scene-object:nth-child(2),
         .welcome-anim-2 .scene-object:nth-child(2),
@@ -346,7 +358,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
         </div>
 
-        <div className="col-span-full lg:col-span-5 min-h-screen lg:h-screen flex items-center lg:items-center justify-center px-4 pt-20 pb-7 sm:px-8 sm:py-16 lg:px-12 lg:py-0 relative z-10">
+        <div className="col-span-full lg:col-span-5 min-h-screen lg:h-screen flex items-center lg:items-center justify-center px-4 py-7 sm:px-8 sm:py-10 lg:px-12 lg:py-0 relative z-10">
           <div className="absolute top-4 right-4 sm:top-6 sm:right-6 lg:top-8 lg:right-8 z-20 flex items-center gap-2">
             <button type="button" onClick={() => setLang(lang === 'en' ? 'ar' : 'en')} className={`px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all shadow-sm flex items-center gap-1.5 ${isDark ? 'border-[#C2A378]/40 bg-slate-800/80 text-[#C2A378] hover:bg-slate-700' : 'border-slate-300 bg-slate-50 text-[#001F3F] hover:bg-slate-100'}`}>
               <span>🌐</span><span>{lang === 'en' ? 'العربية' : 'ENGLISH'}</span>
@@ -357,7 +369,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <div ref={cardRef} style={{ transform: 'perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))', transition: 'transform 120ms ease-out' }} className={`max-w-sm sm:max-w-md lg:max-w-sm w-full mx-auto space-y-5 sm:space-y-6 lg:space-y-7 relative z-10 rounded-3xl px-5 py-6 sm:px-8 sm:py-8 backdrop-blur-md border shadow-2xl ${isDark ? 'bg-slate-900/35 border-white/10' : 'bg-white/35 border-white/30'}`}>
             <div className="pointer-events-none absolute inset-0 rounded-3xl" style={{ background: 'radial-gradient(260px circle at var(--cx, 50%) var(--cy, 0%), rgba(194,163,120,0.22), transparent 60%)' }}></div>
             {stage !== 'form' ? (
-              <div className="flex flex-col items-center justify-center text-center min-h-[340px]" role="status" aria-live="polite">
+              <div className="flex flex-col items-center justify-center text-center min-h-[380px] w-full" role="status" aria-live="polite">
                 {stage === 'verifying' ? (
                   <div className="space-y-4">
                     <h3 className={`text-2xl font-black uppercase italic tracking-tighter ${isDark ? 'text-white' : 'text-[#001F3F]'}`}>{isAr ? 'جارٍ التحقق...' : 'VERIFYING...'}</h3>
@@ -378,7 +390,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     <button type="button" onClick={enterWelcome} className="mt-3 px-8 min-h-10 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-full uppercase tracking-[0.3em] text-[9px] transition-all active:scale-[0.97]">{isAr ? 'متابعة' : 'CONTINUE'}</button>
                   </div>
                 ) : (
-                  <div className="w-full min-h-[340px] flex flex-col items-center justify-center text-center relative overflow-hidden">
+                  <div className="w-full min-h-[380px] flex flex-col items-center justify-center text-center relative overflow-hidden">
                     <div className={`relative z-10 w-full max-w-sm ${welcomeAnimationClass}`}>
                       <div className="relative">
                         <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-20 [perspective:900px] pointer-events-none">
