@@ -158,6 +158,14 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
     if (daliDraggedRef.current) localStorage.setItem('nile-dali-button-position', JSON.stringify(next));
   };
 
+  const clearDaliChat = () => {
+    if (aiChatLoading) return;
+    setAiChatMessages([]);
+    setAiChatInput('');
+    setDaliMemory([]);
+    daliSessionIdRef.current = crypto.randomUUID();
+  };
+
   const saveDaliMemory = async (role: 'user' | 'assistant', message: string, entities: any = {}) => {
     try {
       await db.saveDaliConversationMessage({
@@ -171,33 +179,9 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
     }
   };
 
-  // Restore the user's recent DALI conversation across page reloads/new sessions.
-  // RLS on dali_conversations guarantees this can only return the signed-in user's rows.
-  useEffect(() => {
-    let cancelled = false;
-    const loadDaliHistory = async () => {
-      try {
-        const stored = await db.getDaliRecentMemory(30);
-        if (cancelled || !stored.length) return;
-        const memoryRows = stored.map((m: any) => ({
-          role: m.role === 'assistant' ? 'ai' as const : 'user' as const,
-          text: String(m.message || ''),
-        }));
-        setAiChatMessages(memoryRows);
-        setDaliMemory(stored.map((m: any) => ({
-          role: m.role,
-          message: String(m.message || ''),
-          entities: m.entities,
-          created_at: m.created_at,
-        })).slice(-30));
-      } catch (memoryError) {
-        console.warn('DALI history restore failed:', memoryError);
-      }
-    };
-    void loadDaliHistory();
-    return () => { cancelled = true; };
-  }, [user.id]);
-
+  // Each mounted app starts a fresh visible chat. Persistent DALI memory remains in Supabase
+  // and is loaded by askNileAi when the user asks a new question, so continuity is preserved
+  // without replaying the previous chat into the new session's UI.
   const askNileAi = async () => {
     const question = aiChatInput.trim();
     if (!question || aiChatLoading) return;
@@ -397,8 +381,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       const matchedBookingId = bookingMatch?.[1];
       const matchedContainerId = containerMatch?.[1];
       if (isIdentifier(matchedBookingId) || isIdentifier(matchedContainerId)) {
-        const value = (matchedBookingId || matchedContainerId || '').toUpperCase();
-        let hits = operations.filter(o =>
+        const value = (matchedBookingId || matchedContainerId || '').toUpperCase();        let hits = operations.filter(o =>
           String(o.bookingNumber || '').toUpperCase() === value ||
           String(o.containerNumber || '').toUpperCase() === value
         );
@@ -797,8 +780,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
           const customerPayments = db.getPayments().filter(p => matchesSoaCustomer(p.customerName, p.customerId));
           const unbilled = customerOps.filter(o => !o.invoiced).reduce((s, o) => s + (parseFloat(String(o.rate || '0').replace(/,/g,'')) || 0) + (parseFloat(String(o.vat || '0').replace(/,/g,'')) || 0), 0);
           const invoiced = customerInvoices.reduce((s, i) => s + (Number(i.amount) || 0), 0);
-          const unpaid = customerInvoices.filter(i => i.status === 'UNPAID').reduce((s, i) => s + Math.max(0, (Number(i.amount) || 0) - db.getInvoicePaidAmount(i.id)), 0);
-          const paidInvoices = customerInvoices.filter(i => i.status === 'PAID').reduce((s, i) => s + (Number(i.amount) || 0), 0);
+          const unpaid = customerInvoices.filter(i => i.status === 'UNPAID').reduce((s, i) => s + Math.max(0, (Number(i.amount) || 0) - db.getInvoicePaidAmount(i.id)), 0);          const paidInvoices = customerInvoices.filter(i => i.status === 'PAID').reduce((s, i) => s + (Number(i.amount) || 0), 0);
           const collected = customerPayments.reduce((s, p) => s + (Number(p.amount) || 0), 0);
           const historical = Number(customer?.pastOutstandingAmount) || 0;
           // SOA definition: the customer balance is the amount still due after all
@@ -1197,8 +1179,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
     { id: 'financials', label: t.financials, icon: '🏦' },
     { id: 'support', label: t.support, icon: '🎧' },
     { id: 'system-log', label: t.systemLog, icon: '🕒' },
-  ] : (isGate ? [
-    { id: 'port-gate', label: t.portGate, icon: '🚧' },
+  ] : (isGate ? [    { id: 'port-gate', label: t.portGate, icon: '🚧' },
     { id: 'notifications', label: isAr ? 'التنبيهات' : 'NOTIFICATIONS', icon: '🔔' },
     { id: 'support', label: t.support, icon: '🎧' },
     { id: 'user-settings', label: t.userSettings, icon: '⚙️' },
@@ -1491,6 +1472,20 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
           0%, 42%, 48%, 100% { transform: scaleY(1); }
           45% { transform: scaleY(.08); }
         }
+        .dali-chat-surface {
+          background-image:
+            radial-gradient(circle at 12% 8%, rgba(194,163,120,.14), transparent 32%),
+            radial-gradient(circle at 88% 82%, rgba(0,31,63,.12), transparent 36%),
+            linear-gradient(rgba(194,163,120,.035) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(194,163,120,.035) 1px, transparent 1px);
+          background-size: auto, auto, 28px 28px, 28px 28px;
+        }
+        .dali-chat-surface-light {
+          background-color: rgba(248,250,252,.72);
+        }
+        .dali-chat-surface-dark {
+          background-color: rgba(4,14,24,.72);
+        }
         .dali-peek-face { animation: daliPeek 3.8s ease-in-out infinite; }
         .dali-eye { animation: daliBlink 3.8s ease-in-out infinite; transform-origin: center; }
         @media (prefers-reduced-motion: reduce) {
@@ -1513,9 +1508,17 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
                   <p className="text-sm font-black">NILE FLEET ASSISTANT</p>
                 </div>
               </div>
-              <button onClick={() => setIsAiChatOpen(false)} className={`w-8 h-8 rounded-xl border transition-all ${isTerminal ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white/40 border-white/60 text-slate-700 hover:bg-white/70'}`}>✕</button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={clearDaliChat}
+                  disabled={aiChatLoading || aiChatMessages.length === 0}
+                  className={`h-8 px-3 rounded-xl border text-[8px] font-black uppercase tracking-widest transition-all disabled:opacity-30 ${isTerminal ? 'bg-white/5 border-white/10 text-[#C2A378] hover:bg-white/10' : 'bg-white/40 border-white/60 text-[#001F3F] hover:bg-white/70'}`}
+                  title={isAr ? 'مسح المحادثة الحالية وبدء محادثة جديدة' : 'Clear this chat and start a new conversation'}
+                >{isAr ? 'مسح' : 'CLEAR'}</button>
+                <button onClick={() => setIsAiChatOpen(false)} className={`w-8 h-8 rounded-xl border transition-all ${isTerminal ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white/40 border-white/60 text-slate-700 hover:bg-white/70'}`}>✕</button>
+              </div>
             </div>
-            <div className="relative flex-1 overflow-y-auto p-4 space-y-3">
+            <div className={`relative flex-1 overflow-y-auto p-4 space-y-3 dali-chat-surface ${isTerminal ? 'dali-chat-surface-dark' : 'dali-chat-surface-light'}`}>
               {aiChatMessages.length === 0 && (
                 <div className="absolute inset-0 flex items-center justify-center p-6 pointer-events-none">
                   <div className="text-center">
@@ -1597,8 +1600,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
             {!isHome && activeScreen !== 'no-access' && (
               <button 
                 onClick={() => setActiveScreen(dashboardId)} 
-                className="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center gap-1 border border-rose-500"
-              >
+                className="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center gap-1 border border-rose-500"              >
                 <span>{isAr ? 'إغلاق' : 'CLOSE'}</span>
                 <span className="text-xs">✕</span>
               </button>
