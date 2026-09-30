@@ -1448,6 +1448,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                       </div>
                     </a>
                   ))}
+                  </div>
                 </div>
               </div>
               <div className="mt-8 space-y-7">
