@@ -1058,18 +1058,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
             <span>WELCOME TO</span><strong>NILE FLEET</strong>
           </div>
 
-          <div className="nf4-route-track" aria-label="Nile Fleet active service route">
-            <div className="nf4-route-label"><span className="nf4-route-live"></span> NILE FLEET • ROAD & PORT LOGISTICS</div>
-            <div className="nf4-route-rail">
-              <span className="nf4-route-stop">PORT SAID</span>
-              <span className="nf4-route-stop">DAMietta</span>
-              <span className="nf4-route-stop">ALEXANDRIA</span>
-              <span className="nf4-route-stop">SOKHNA</span>
-              <span className="nf4-route-stop">SCCT</span>
-            </div>
-            <div className="nf4-route-meta"><span>CONTAINER TRANSPORT</span><b>•</b><span>REEFER SUPPORT</span><b>•</b><span>PORT OPERATIONS</span></div>
-          </div>
-
+          <div className="nf4-route-track" aria-hidden="true"></div>
           <div className="nf4-route-actions">
             <a href="tel:+201000992858" className="nf4-route-action nf4-route-phone" aria-label="Call Nile Fleet"><span>☎</span><div><small>24/7 TRANSPORT DESK</small><strong>+20 10 0099 2858</strong></div></a>
             <a href="https://www.linkedin.com/company/nile-fleet-for-transport-and-logistics-service" target="_blank" rel="noreferrer" className="nf4-route-social" aria-label="Nile Fleet LinkedIn">in</a>
