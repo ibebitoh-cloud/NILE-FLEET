@@ -817,14 +817,13 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       <style>{`
         @keyframes nf4Reveal { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
         @keyframes nf4Pulse { 0%,100%{box-shadow:0 0 0 rgba(194,163,120,0)} 50%{box-shadow:0 0 42px rgba(194,163,120,.28)} }
-        @keyframes nf4Partners { from{transform:translateX(0)}
-
-.nf4-logo-viewport{position:relative}
-.nf4-logo-track{animation:nf4Partners 34s linear infinite}
-.nf4-logo-track:hover{animation-play-state:paused}
-.nf4-logo-viewport:before,.nf4-logo-viewport:after{content:"";position:absolute;top:0;bottom:0;width:90px;z-index:2;pointer-events:none}
-.nf4-logo-viewport:before{left:0;background:linear-gradient(90deg,#050b12,transparent)}
-.nf4-logo-viewport:after{right:0;background:linear-gradient(-90deg,#050b12,transparent)} to{transform:translateX(-50%)} }
+        @keyframes nf4Partners { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+        .nf4-logo-viewport{position:relative}
+        .nf4-logo-track{animation:nf4Partners 34s linear infinite}
+        .nf4-logo-track:hover{animation-play-state:paused}
+        .nf4-logo-viewport:before,.nf4-logo-viewport:after{content:"";position:absolute;top:0;bottom:0;width:90px;z-index:2;pointer-events:none}
+        .nf4-logo-viewport:before{left:0;background:linear-gradient(90deg,#050b12,transparent)}
+        .nf4-logo-viewport:after{right:0;background:linear-gradient(-90deg,#050b12,transparent)}
         .nf4-reveal{animation:nf4Reveal .9s cubic-bezier(.16,1,.3,1) both}
         .nf4-pulse{animation:nf4Pulse 3s ease-in-out infinite}
         @media (prefers-reduced-motion: reduce){ .nf4 *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important} }
