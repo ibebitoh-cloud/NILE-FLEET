@@ -170,22 +170,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     requestAnimationFrame(() => setStage('welcome'));
   };
 
-  const requestFullscreen = async () => {
-    try {
-      const root = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> };
-      if (document.fullscreenElement) {
-        return;
-      }
-      if (root.requestFullscreen) await root.requestFullscreen();
-      else if (root.webkitRequestFullscreen) await root.webkitRequestFullscreen();
-    } catch {
-    }
-  };
-
-  useEffect(() => {
-    document.addEventListener('fullscreenchange', onFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
-  }, []);
 
   const enterApp = () => {
     const go = enterRef.current;
