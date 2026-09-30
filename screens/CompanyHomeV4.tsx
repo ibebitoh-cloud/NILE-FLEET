@@ -1117,13 +1117,24 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                 <h2 className="text-5xl font-black uppercase italic tracking-[-.05em] sm:text-7xl">{tx.people}</h2>
                 <p className={`max-w-sm text-xs leading-6 ${K.muted}`}>{tx.leadDesc}</p>
               </div>
-              <div className="mt-14 grid gap-4 md:grid-cols-3">
-                {[[['SHERIF HEGAZY', tx.roles[0], tx.areas[0]], ['SAMAR HEGAZY', tx.roles[1], tx.areas[1]], ['YASMINE HEGAZY', tx.roles[2], tx.areas[2]]]].map(([name, role, area], i) => (
-                  <div key={name} className={`group relative overflow-hidden rounded-[1.7rem] border p-7 backdrop-blur-md transition duration-500 hover:-translate-y-2 hover:border-[#c2a378]/60 ${K.card}`}>
-                    <div className="flex items-center justify-between"><span className={`text-[7px] font-black tracking-[.25em] ${gold}`}>{String(i + 1).padStart(2, '0')}</span><span className={`text-[7px] font-black tracking-[.2em] ${K.faint}`}>{area}</span></div>
-                    <div className="mt-20 h-px w-10 bg-[#c2a378] transition-all duration-500 group-hover:w-20" />
-                    <div className="mt-5 text-xl font-black uppercase">{name}</div>
-                    <div className={`mt-2 text-[8px] font-black uppercase tracking-[.2em] ${K.faint}`}>{role}</div>
+              <div className="mt-14 grid gap-5 md:grid-cols-3" dir={ar ? 'rtl' : 'ltr'}>
+                {[
+                  ['SHERIF HEGAZY', tx.roles[0], tx.areas[0]],
+                  ['SAMAR HEGAZY', tx.roles[1], tx.areas[1]],
+                  ['YASMINE HEGAZY', tx.roles[2], tx.areas[2]],
+                ].map(([name, role, area], i) => (
+                  <div
+                    key={name}
+                    className={`group relative min-h-[280px] overflow-hidden rounded-[2rem] border p-7 sm:p-8 backdrop-blur-md transition duration-500 hover:-translate-y-2 hover:border-[#c2a378]/70 ${K.card}`}
+                  >
+                    <div className={`flex items-center ${ar ? 'flex-row-reverse' : 'flex-row'} justify-between gap-3`}>
+                      <span className={`text-[8px] font-black tracking-[.25em] ${gold}`}>{String(i + 1).padStart(2, '0')}</span>
+                      <span className={`max-w-[65%] text-[8px] font-black leading-4 tracking-[.12em] ${K.faint} ${ar ? 'text-left' : 'text-right'}`}>{area}</span>
+                    </div>
+                    <div className="mt-20 h-px w-12 bg-[#c2a378] transition-all duration-500 group-hover:w-24" />
+                    <div className={`mt-6 text-2xl font-black uppercase leading-tight ${ar ? 'text-right' : 'text-left'}`}>{name}</div>
+                    <div className={`mt-3 text-[9px] font-black leading-5 tracking-[.12em] ${K.faint} ${ar ? 'text-right' : 'text-left'}`}>{role}</div>
+                    <div className="absolute bottom-0 left-0 h-1 w-0 bg-[#c2a378] transition-all duration-700 group-hover:w-full" />
                   </div>
                 ))}
               </div>
