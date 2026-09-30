@@ -270,8 +270,39 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         @keyframes stickPush { 0% { transform:translateX(-58px); opacity:0; } 15% { opacity:1; } 42% { transform:translateX(0); } 68% { transform:translateX(34px); } 100% { transform:translateX(72px); opacity:0; } }
         @keyframes wheelSpin { to { transform:rotate(360deg); } }
         @keyframes stickWave { 0%,20% { transform:rotate(12deg); } 35% { transform:rotate(-28deg); } 50% { transform:rotate(18deg); } 65% { transform:rotate(-25deg); } 80%,100% { transform:rotate(12deg); } }
-        .signature-scene { position:absolute; left:50%; top:50%; width:290px; height:88px; transform:translate(-50%,-50%); pointer-events:none; overflow:visible; }
+        @keyframes sigLetterThink { 0%,100% { transform:translateY(0) rotate(0); text-shadow:none; } 45% { transform:translateY(-5px) rotate(-5deg); text-shadow:0 0 16px rgba(194,163,120,.65); } 65% { transform:translateY(0) rotate(2deg); } }
+        @keyframes sigLetterBuild { 0%,100% { transform:translateY(0) scale(1); text-shadow:none; } 35% { transform:translateY(-3px) scale(1.06); } 48% { transform:translateY(2px) scale(.97); text-shadow:0 0 18px rgba(194,163,120,.55); } 60% { transform:translateY(-2px) scale(1.03); } }
+        @keyframes sigLetterDraw { 0%,100% { transform:translateX(0); opacity:.75; } 45% { transform:translateX(3px); opacity:1; text-shadow:0 0 16px rgba(194,163,120,.7); } 70% { transform:translateX(0); opacity:1; } }
+        @keyframes sigLetterPull { 0%,100% { transform:translateX(0) rotate(0); } 45% { transform:translateX(6px) rotate(2deg); text-shadow:0 0 20px rgba(194,163,120,.8); } 65% { transform:translateX(-1px); } }
+        @keyframes sigLetterPush { 0%,100% { transform:translateX(0) scale(1); } 45% { transform:translateX(-5px) scale(.98); } 65% { transform:translateX(2px) scale(1.03); text-shadow:0 0 18px rgba(194,163,120,.7); } }
+        @keyframes sigLetterWave { 0%,100% { transform:translateY(0) rotate(0); } 25% { transform:translateY(-2px) rotate(-3deg); } 50% { transform:translateY(0) rotate(3deg); } 75% { transform:translateY(-2px) rotate(-2deg); } }
+        .signature-scene { position:absolute; left:50%; bottom:0; width:290px; height:76px; transform:translateX(-50%); pointer-events:none; overflow:visible; z-index:1; }
         .signature-scene svg { width:100%; height:100%; overflow:visible; }
+        .signature-word { position:relative; z-index:3; display:inline-flex; align-items:baseline; justify-content:center; gap:.08em; }
+        .signature-letter { display:inline-block; transform-origin:center bottom; will-change:transform,opacity,text-shadow; }
+        .signature-letter-space { width:.28em; }
+        .welcome-anim-0 .signature-letter:nth-child(1) { animation:sigLetterThink 2.4s ease-in-out infinite; }
+        .welcome-anim-1 .signature-letter:nth-child(3) { animation:sigLetterBuild 2.1s ease-in-out infinite .12s; }
+        .welcome-anim-1 .signature-letter:nth-child(5) { animation:sigLetterBuild 2.1s ease-in-out infinite .3s; }
+        .welcome-anim-2 .signature-letter:nth-child(1),
+        .welcome-anim-2 .signature-letter:nth-child(2),
+        .welcome-anim-2 .signature-letter:nth-child(3),
+        .welcome-anim-2 .signature-letter:nth-child(4),
+        .welcome-anim-2 .signature-letter:nth-child(5),
+        .welcome-anim-2 .signature-letter:nth-child(6) { animation:sigLetterDraw 2.8s ease-in-out infinite; }
+        .welcome-anim-2 .signature-letter:nth-child(2) { animation-delay:.15s; }
+        .welcome-anim-2 .signature-letter:nth-child(3) { animation-delay:.3s; }
+        .welcome-anim-2 .signature-letter:nth-child(4) { animation-delay:.45s; }
+        .welcome-anim-2 .signature-letter:nth-child(5) { animation-delay:.6s; }
+        .welcome-anim-2 .signature-letter:nth-child(6) { animation-delay:.75s; }
+        .welcome-anim-3 .signature-letter:nth-child(1) { animation:sigLetterPull 2.5s ease-in-out infinite; }
+        .welcome-anim-4 .signature-letter:nth-child(6) { animation:sigLetterPush 2.2s ease-in-out infinite; }
+        .welcome-anim-5 .signature-letter { animation:sigLetterWave 2.6s ease-in-out infinite; }
+        .welcome-anim-5 .signature-letter:nth-child(2) { animation-delay:.1s; }
+        .welcome-anim-5 .signature-letter:nth-child(3) { animation-delay:.2s; }
+        .welcome-anim-5 .signature-letter:nth-child(4) { animation-delay:.3s; }
+        .welcome-anim-5 .signature-letter:nth-child(5) { animation-delay:.4s; }
+        .welcome-anim-5 .signature-letter:nth-child(6) { animation-delay:.5s; }
         .stick-line { fill:none; stroke:#C2A378; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
         .stick-white { fill:none; stroke:rgba(255,255,255,.7); stroke-width:1.25; stroke-linecap:round; stroke-linejoin:round; }
         .stick-fill { fill:#C2A378; opacity:.95; }
@@ -289,8 +320,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         .stick-box { animation:boxSlide 2.8s ease-in-out infinite alternate; }
         .stick-wheel { transform-box:fill-box; transform-origin:center; animation:wheelSpin 1.8s linear infinite; }
         .stick-hand-wave { transform-box:fill-box; transform-origin:bottom left; animation:stickWave 1.4s ease-in-out infinite; }
-        .signature-scene .signature-guide { stroke-dasharray:5 5; opacity:.35; }
-        .signature-stage { position:relative; display:inline-flex; align-items:center; justify-content:center; min-width:210px; min-height:76px; }
+        .signature-scene .signature-guide { stroke-dasharray:5 5; opacity:.28; }
+        .signature-stage { position:relative; display:inline-flex; flex-direction:column; align-items:center; justify-content:flex-end; min-width:290px; min-height:92px; padding-bottom:2px; }
 
         .welcome-rise { animation: welcomeRise .75s cubic-bezier(.2,.8,.2,1) both; }
         .welcome-glow { animation: welcomeGlow 2.8s ease-in-out infinite; }
@@ -351,21 +382,21 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
 
           <div className="absolute top-[42%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-[16rem] sm:text-[24rem] lg:text-[40rem] font-black text-slate-500/5 pointer-events-none select-none italic tracking-tighter">N</div>
-          <div ref={cardRef} style={{ transform: 'perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))', transition: 'transform 120ms ease-out' }} className={`max-w-sm sm:max-w-md lg:max-w-sm w-full mx-auto space-y-5 sm:space-y-6 lg:space-y-7 relative z-10 rounded-3xl px-5 py-6 sm:px-8 sm:py-8 backdrop-blur-md border shadow-2xl ${isDark ? 'bg-slate-900/35 border-white/10' : 'bg-white/35 border-white/30'}`}>
+          <div ref={cardRef} style={{ transform: 'perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))', transition: 'transform 120ms ease-out' }} className={`max-w-sm sm:max-w-md lg:max-w-sm w-full mx-auto space-y-5 sm:space-y-6 lg:space-y-7 relative z-10 rounded-3xl px-5 py-6 sm:px-8 sm:py-8 backdrop-blur-md border shadow-2xl ${stage !== 'form' ? 'flex flex-col items-center justify-center text-center min-h-[440px]' : ''} ${isDark ? 'bg-slate-900/35 border-white/10' : 'bg-white/35 border-white/30'}`}>
             <div className="pointer-events-none absolute inset-0 rounded-3xl" style={{ background: 'radial-gradient(260px circle at var(--cx, 50%) var(--cy, 0%), rgba(194,163,120,0.22), transparent 60%)' }}></div>
             {stage !== 'form' ? (
-              <div className="flex flex-col items-center justify-center text-center min-h-[380px] w-full" role="status" aria-live="polite">
+              <div className="flex flex-1 w-full min-h-[390px] items-center justify-center text-center" role="status" aria-live="polite">
                 {stage === 'verifying' ? (
-                  <div className="space-y-4">
+                  <div className="w-full flex flex-col items-center justify-center space-y-4 text-center">
                     <h3 className={`text-2xl font-black uppercase italic tracking-tighter ${isDark ? 'text-white' : 'text-[#001F3F]'}`}>{isAr ? 'جارٍ التحقق...' : 'VERIFYING...'}</h3>
                     <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">{isAr ? 'نفحص بياناتك بأمان' : 'Securely checking your credentials'}</p>
-                    <div className="relative h-24 w-24 mt-3">
+                    <div className="relative h-24 w-24 mt-3 mx-auto shrink-0">
                       <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90"><circle cx="50" cy="50" r="44" fill="none" stroke="rgba(194,163,120,0.2)" strokeWidth="6" /><circle cx="50" cy="50" r="44" fill="none" stroke="#C2A378" strokeWidth="6" strokeLinecap="round" strokeDasharray="276.46" strokeDashoffset={276.46 * (1 - progress / 100)} style={{ transition: 'stroke-dashoffset 120ms linear' }} /></svg>
                       <span className={`absolute inset-0 flex items-center justify-center text-lg font-black ${isDark ? 'text-white' : 'text-[#001F3F]'}`}>{Math.round(progress)}</span>
                     </div>
                   </div>
                 ) : stage === 'granted' ? (
-                  <div className="space-y-4">
+                  <div className="w-full flex flex-col items-center justify-center space-y-4 text-center">
                     <h3 className={`text-2xl font-black uppercase italic tracking-tighter ${isDark ? 'text-white' : 'text-[#001F3F]'}`}>{isAr ? 'تم منح الوصول' : 'ACCESS GRANTED'}</h3>
                     <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">{isAr ? 'مرحباً بعودتك' : 'Welcome back'}</p>
                     <div className="relative h-24 w-24 mt-3 flex items-center justify-center">
@@ -375,7 +406,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     <button type="button" onClick={enterWelcome} className="mt-3 px-8 min-h-10 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-full uppercase tracking-[0.3em] text-[9px] transition-all active:scale-[0.97]">{isAr ? 'متابعة' : 'CONTINUE'}</button>
                   </div>
                 ) : (
-                  <div className="w-full min-h-[380px] flex flex-col items-center justify-center text-center relative overflow-hidden">
+                  <div className="w-full flex-1 min-h-[390px] flex flex-col items-center justify-center text-center relative overflow-hidden">
                     <div className={`relative z-10 w-full max-w-sm ${welcomeAnimationClass}`}>
                       <div className="relative">
                         <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-20 [perspective:900px] pointer-events-none">
@@ -390,8 +421,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         <p className="relative z-10 max-w-xs mx-auto mt-4 text-slate-300 text-[10px] sm:text-xs font-bold leading-relaxed tracking-wide">{welcomeQuote}</p>
                       </div>
                       <button type="button" onClick={enterApp} className="mt-5 px-9 py-3 bg-[#001F3F] hover:bg-[#002b57] border border-[#C2A378]/40 text-white font-black rounded-full uppercase tracking-[0.3em] text-[9px] transition-all active:scale-[0.97] shadow-[0_0_30px_rgba(194,163,120,.12)]">{isAr ? 'دخول إلى النظام' : 'ENTER SYSTEM'}</button>
-                      <div className="mt-3 relative signature-stage">
-                        <div className={`signature-scene welcome-anim-${welcomeStyle}`} aria-hidden="true">
+                      <div className={`mt-3 relative signature-stage welcome-anim-${welcomeStyle}`}>
+                        <div className="relative z-10 signature-word text-[9px] sm:text-[10px] font-black uppercase tracking-[0.22em] text-[#C2A378] whitespace-nowrap" aria-label="Powered by Bebito">
+                          <span>POWERED</span><span className="signature-letter-space" aria-hidden="true"></span><span className="text-white">BY</span><span className="signature-letter-space" aria-hidden="true"></span>
+                          <span className="signature-letter text-[#C2A378]">B</span><span className="signature-letter text-white">E</span><span className="signature-letter text-[#C2A378]">B</span><span className="signature-letter text-white">I</span><span className="signature-letter text-[#C2A378]">T</span><span className="signature-letter text-white">O</span>
+                        </div>
+                        <div className="signature-scene" aria-hidden="true">
                           <svg viewBox="0 0 290 88" role="presentation">
                             <path className="stick-white signature-guide" d="M12 72 H278" />
 
@@ -445,7 +480,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                             </g>
                           </svg>
                         </div>
-                        <p className="relative z-10 text-[#C2A378] text-[7px] sm:text-[8px] font-black uppercase tracking-[0.3em] whitespace-nowrap">POWERED BY <span className="text-white">BEBITO</span></p>
                       </div>
                     </div>
                   </div>
