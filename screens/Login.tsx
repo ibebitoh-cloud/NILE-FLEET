@@ -233,13 +233,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         .welcome-letter-3d { animation: welcomeLetter3d 2.8s ease-in-out infinite; transform-style:preserve-3d; }
 
         /* BEBITO signature — one SVG coordinate system: exact letter targets + physical worker interaction. */
-        .signature-stage{position:relative;width:min(100%,520px);height:122px;margin:0 auto;overflow:visible}
-        .signature-svg{display:block;width:100%;height:122px;overflow:visible}
+        .signature-stage{position:relative;width:min(100%,430px);height:92px;margin:0 auto;overflow:visible}
+        .signature-svg{display:block;width:100%;height:92px;overflow:visible}
         .signature-svg text{font-family:Arial,Helvetica,sans-serif;font-weight:900;letter-spacing:1px}
         .signature-letter{transform-box:fill-box;transform-origin:50% 88%;will-change:transform}
         .sig-worker{transform-box:fill-box;transform-origin:0 0;will-change:transform}
         .sig-worker *{vector-effect:non-scaling-stroke}
-        .sig-line{fill:none;stroke:rgba(255,255,255,.96);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+        .sig-line{fill:none;stroke:rgba(255,255,255,.96);stroke-width:2.15;stroke-linecap:round;stroke-linejoin:round}
         .sig-gold{fill:none;stroke:#C2A378;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
         .sig-dot{fill:#C2A378}
         .sig-ground{fill:none;stroke:rgba(194,163,120,.2);stroke-width:1}
@@ -291,12 +291,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         .signature-stage .sig-target-letter{animation:none}
         .signature-stage .sig-impact{transform-box:fill-box;transform-origin:center;animation:sigImpact 5.6s ease-out infinite}
         /* Exact SVG target: worker's hand is aligned to each letter's left edge. */
-        .signature-stage.welcome-anim-0{--tx:100px;--sx:-80px}
-        .signature-stage.welcome-anim-1{--tx:157px;--sx:-60px}
-        .signature-stage.welcome-anim-2{--tx:214px;--sx:-40px}
-        .signature-stage.welcome-anim-3{--tx:271px;--sx:-20px}
-        .signature-stage.welcome-anim-4{--tx:314px;--sx:0px}
-        .signature-stage.welcome-anim-5{--tx:371px;--sx:20px}
+        .signature-stage.welcome-anim-0{--tx:86px;--sx:-52px}
+        .signature-stage.welcome-anim-1{--tx:134px;--sx:-42px}
+        .signature-stage.welcome-anim-2{--tx:182px;--sx:-32px}
+        .signature-stage.welcome-anim-3{--tx:230px;--sx:-22px}
+        .signature-stage.welcome-anim-4{--tx:266px;--sx:-10px}
+        .signature-stage.welcome-anim-5{--tx:310px;--sx:0px}
         .signature-stage.welcome-anim-0 .sig-target-letter:nth-of-type(1),
         .signature-stage.welcome-anim-1 .sig-target-letter:nth-of-type(2),
         .signature-stage.welcome-anim-2 .sig-target-letter:nth-of-type(3),
@@ -399,17 +399,17 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       <div className={`mt-3 signature-stage welcome-anim-${welcomeStyle}`} aria-label="Powered by Bebito">
                         <svg className="signature-svg" viewBox="0 0 520 122" role="img" aria-labelledby="bebito-signature-title">
                           <title id="bebito-signature-title">Powered by Bebito</title>
-                          <text x="8" y="27" fontSize="12" fill="#C2A378">POWERED</text>
-                          <text x="112" y="27" fontSize="12" fill="#FFFFFF">BY</text>
+                          <text x="42" y="22" fontSize="8.5" fill="#C2A378">POWERED</text>
+                          <text x="112" y="22" fontSize="8.5" fill="#FFFFFF">BY</text>
                           <g aria-hidden="true">
-                            <text className="sig-target-letter" x="158" y="78" fontSize="48" fill="#C2A378">B</text>
-                            <text className="sig-target-letter" x="215" y="78" fontSize="48" fill="#FFFFFF">E</text>
-                            <text className="sig-target-letter" x="272" y="78" fontSize="48" fill="#C2A378">B</text>
-                            <text className="sig-target-letter" x="329" y="78" fontSize="48" fill="#FFFFFF">I</text>
-                            <text className="sig-target-letter" x="372" y="78" fontSize="48" fill="#C2A378">T</text>
-                            <text className="sig-target-letter" x="429" y="78" fontSize="48" fill="#FFFFFF">O</text>
+                            <text className="sig-target-letter" x="150" y="67" fontSize="34" fill="#C2A378">B</text>
+                            <text className="sig-target-letter" x="198" y="67" fontSize="34" fill="#FFFFFF">E</text>
+                            <text className="sig-target-letter" x="246" y="67" fontSize="34" fill="#C2A378">B</text>
+                            <text className="sig-target-letter" x="294" y="67" fontSize="34" fill="#FFFFFF">I</text>
+                            <text className="sig-target-letter" x="330" y="67" fontSize="34" fill="#C2A378">T</text>
+                            <text className="sig-target-letter" x="374" y="67" fontSize="34" fill="#FFFFFF">O</text>
                           </g>
-                          <path className="sig-ground" d="M145 92 H490"/>
+                          <path className="sig-ground" d="M138 78 H405"/>
                           <g className="sig-worker" aria-hidden="true">
                             <circle className="sig-line" cx="31" cy="18" r="7"/>
                             <circle className="sig-dot" cx="34" cy="17" r="1.2"/>
@@ -419,26 +419,26 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                               <path className="sig-line" d="M31 31 L44 28 L58 27"/>
                               <circle className="sig-dot" cx="58" cy="27" r="2.2"/>
                             </g>
-                            <g className="sig-step-a"><path className="sig-line" d="M31 49 L20 62 L12 68"/></g>
-                            <g className="sig-step-b"><path className="sig-line" d="M31 49 L42 62 L51 68"/></g>
+                            <g className="sig-step-a"><path className="sig-line" d="M31 49 L25 61 L20 72"/></g>
+                            <g className="sig-step-b"><path className="sig-line" d="M31 49 L37 61 L42 72"/></g>
                           </g>
                           <g className="sig-impact sig-impact-0" aria-hidden="true">
-                            <circle className="sig-gold" cx="158" cy="55" r="6"/>
+                            <circle className="sig-gold" cx="150" cy="47" r="6"/>
                           </g>
                           <g className="sig-impact sig-impact-1" aria-hidden="true">
-                            <circle className="sig-gold" cx="215" cy="55" r="6"/>
+                            <circle className="sig-gold" cx="198" cy="47" r="6"/>
                           </g>
                           <g className="sig-impact sig-impact-2" aria-hidden="true">
-                            <circle className="sig-gold" cx="272" cy="55" r="6"/>
+                            <circle className="sig-gold" cx="246" cy="47" r="6"/>
                           </g>
                           <g className="sig-impact sig-impact-3" aria-hidden="true">
-                            <circle className="sig-gold" cx="329" cy="55" r="6"/>
+                            <circle className="sig-gold" cx="294" cy="47" r="6"/>
                           </g>
                           <g className="sig-impact sig-impact-4" aria-hidden="true">
-                            <circle className="sig-gold" cx="372" cy="55" r="6"/>
+                            <circle className="sig-gold" cx="330" cy="47" r="6"/>
                           </g>
                           <g className="sig-impact sig-impact-5" aria-hidden="true">
-                            <circle className="sig-gold" cx="429" cy="55" r="6"/>
+                            <circle className="sig-gold" cx="374" cy="47" r="6"/>
                           </g>
                         </svg>
                       </div>
