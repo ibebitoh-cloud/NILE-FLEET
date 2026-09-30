@@ -821,6 +821,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     const step = (dt: number) => {
       sim.t += dt;
       sim.smx += (sim.mx - sim.smx) * Math.min(1, dt * 6);
+      const sN = clamp((sim.speed - 160) / 1340, 0, 1);
 
       // Interactive truck sequence: drag it anywhere, release it, let it fall,
       // then reveal a replacement truck after the visitor scrolls onward.
