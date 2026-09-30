@@ -588,9 +588,25 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     const onUp = () => {
       if (!sim.drag) return;
       const mode=sim.dragMode; sim.drag=false; sim.dragMode='';
-      sim.falling=true; sim.fallV=Math.max(260,sim.dragDY*8+260);
-      sim.wreckX=sim.dragX; sim.wreckY=sim.dragY; sim.wreckRot=sim.dragDX*.02;
-      sim.wreckParts=mode==='truck'; sim.wrecked=false; sim.wreckTimer=0;
+      if (mode === 'container') {
+        // Throw only the container; keep the tractor active and driving.
+        sim.impact = true;
+        sim.falling = false;
+        sim.wrecked = false;
+        sim.wreckParts = false;
+        sim.wreckTimer = 0;
+        sim.worldX += 220;
+      } else {
+        // Throw the complete truck. It returns automatically after the crash sequence.
+        sim.falling = true;
+        sim.fallV = Math.max(260, sim.dragDY * 8 + 260);
+        sim.wreckX = sim.dragX;
+        sim.wreckY = sim.dragY;
+        sim.wreckRot = sim.dragDX * 0.02;
+        sim.wreckParts = false;
+        sim.wrecked = false;
+        sim.wreckTimer = 0;
+      }
       if (wrapRef.current) wrapRef.current.style.cursor='';
     };
     window.addEventListener('resize', resize);
@@ -830,8 +846,18 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       if (sim.wrecked) {
         sim.wreckTimer += dt;
         if (sim.wreckTimer >= 2) {
-          sim.wrecked=false; sim.falling=false; sim.wreckParts=false;
-          sim.worldX=-W*.9; sim.speed=260; sim.wreckX=0; sim.wreckY=0; sim.wreckRot=0; sim.wreckTimer=0;
+          sim.wrecked = false;
+          sim.falling = false;
+          sim.wreckParts = false;
+          sim.drag = false;
+          sim.dragMode = '';
+          sim.worldX = -W * 0.9;
+          sim.speed = 260;
+          sim.wreckX = 0;
+          sim.wreckY = 0;
+          sim.wreckRot = 0;
+          sim.wreckTimer = 0;
+          sim.impact = false;
         }
         sim.worldX += 260*dt; sim.wheel += (260*dt)/32;
         return;
