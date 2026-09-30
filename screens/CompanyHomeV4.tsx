@@ -1044,7 +1044,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         <section id="partners" className="relative overflow-hidden border-y bg-[#050b12] text-white">
           <Reveal>
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
-              <div className="text-[9px] font-black uppercase tracking-[.42em] text-[#c2a378]">07 / {ar ? 'الشركاء' : 'PARTNERS'}</div>
+              <div className="text-[9px] font-black uppercase tracking-[.42em] text-[#c2a378]">07 / {ar ? 'شبكة الشحن والنقل' : 'SHIPPING & TRUCKING NETWORK'}</div>
               <div className="mt-5 flex flex-col justify-between gap-6 md:flex-row md:items-end">
                 <h2 className="text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{tx.partnersTitle}</h2>
                 <p className="max-w-sm text-xs leading-6 text-slate-400">{tx.partnersDesc}</p>
@@ -1067,8 +1067,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                 </div>
               </div>
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-                <div className="text-[8px] font-black uppercase tracking-[.18em] text-slate-600">{ar ? 'شعارات جهات في قطاع الشحن واللوجستيات — ليست قائمة عملاء.' : 'Brands from the Egyptian shipping & logistics ecosystem — not a customer list.'}</div>
-                <div className="text-[8px] font-black uppercase tracking-[.18em] text-slate-600">{ar ? 'اضغط على الشعار لزيارة الموقع.' : 'Click a logo to visit its website.'}</div>
+                <div className="text-[8px] font-black uppercase tracking-[.18em] text-slate-600">{ar ? 'خطوط ملاحية · وكلاء شحن · لوجستيات · شركات نقل بري' : 'Shipping lines · freight forwarders · logistics operators · trucking companies'}</div>
+                <div className="text-[8px] font-black uppercase tracking-[.18em] text-slate-600">{ar ? 'اضغط على أي شركة لزيارة موقعها.' : 'Click any company to visit its website.'}</div>
               </div>
               <div className="mt-6 text-[8px] font-black uppercase tracking-[.2em] text-slate-600">{tx.globalTitle} · {tx.globalDesc}</div>
             </div>
