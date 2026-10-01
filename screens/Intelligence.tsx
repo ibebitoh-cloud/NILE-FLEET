@@ -205,8 +205,46 @@ ${JSON.stringify(viewData)}`;
     try {
       const memory = await getDaliRecentMemory(18).catch(() => []);
       const lessons = await searchDaliKnowledge(question, 8).catch(() => []);
-      const live = { fleet: { total: analytics.fleetTotal, inStock: analytics.fleetInStock, clippedOn: analytics.fleetActive, maintenance: analytics.fleetMaintenance, retired: analytics.fleetRetired }, operations: { total: ops.length, active: analytics.activeOps.length, completed: analytics.completedOps.length, underOperate: analytics.underOperate.length, hold: analytics.holdOps.length, cancelled: analytics.cancelledOps.length }, ports: analytics.portStats, fuelByPort: gasByPort, fuelByGenset: gasByUnit, invoices: { outstanding: analytics.outstanding, overdue: analytics.overdueInvoices.length }, maintenance: { due: analytics.dueMaintenance, inProgress: analytics.maintenanceInProgress }, reservations: analytics.pendingReservations };
-      const prompt = 'You are DALI, the NILE FLEET Fleet Intelligence coworker. Answer naturally and directly. Continue the conversation from memory when relevant. LANGUAGE: ' + (responseIsAr ? 'Arabic' : 'English') + '. Use live data as the source of truth. Never invent values. Preserve IDs, dates and numbers exactly. You can discuss fleet, gensets, ports, operations, fuel, maintenance, invoices, reservations, company rules and workflows.\nCOMPANY KNOWLEDGE:\n' + (lessons.length ? lessons.map((x:any) => '[' + x.category + '] ' + x.title + ': ' + x.content).join('\\n') : 'No matching lesson.') + '\nRECENT MEMORY:\n' + (memory.length ? memory.map((m:any) => '[' + m.role + '] ' + m.message).join('\\n') : 'No recent memory.') + '\nLIVE DATABASE:\n' + JSON.stringify(live) + '\nUSER QUESTION:\n' + question;
+      const allReservations = db.getReservations();
+      const todayKey = new Date().toISOString().slice(0, 10);
+      const tomorrowDate = new Date();
+      tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+      const tomorrowKey = tomorrowDate.toISOString().slice(0, 10);
+      const reservationOperationIds = new Set(ops.map(o => o.reservationId).filter(Boolean));
+      const pendingWork = allReservations
+        .filter(r => (r.status === 'PENDING' || r.status === 'APPROVED') && !reservationOperationIds.has(r.id))
+        .map(r => ({
+          customer: r.customerName || 'UNKNOWN',
+          booking: r.bookingNumber || '',
+          containersRequested: Number(r.gensetsNeeded) || 0,
+          date: r.reservationDate || '',
+          portIn: r.portIn || '',
+          portOut: r.portOut || '',
+          status: r.status,
+          shipper: r.shipper || '',
+          beneficiary: r.beneficiaryName || ''
+        }));
+      const requestedToday = pendingWork.filter(r => r.date === todayKey);
+      const requestedTomorrow = pendingWork.filter(r => r.date === tomorrowKey);
+      const requestedAll = pendingWork;
+      const sumRequested = (rows:any[]) => rows.reduce((sum, r) => sum + (Number(r.containersRequested) || 0), 0);
+      const live = {
+        fleet: { total: analytics.fleetTotal, inStock: analytics.fleetInStock, clippedOn: analytics.fleetActive, maintenance: analytics.fleetMaintenance, retired: analytics.fleetRetired },
+        operations: { total: ops.length, active: analytics.activeOps.length, completed: analytics.completedOps.length, underOperate: analytics.underOperate.length, hold: analytics.holdOps.length, cancelled: analytics.cancelledOps.length },
+        ports: analytics.portStats,
+        fuelByPort: gasByPort,
+        fuelByGenset: gasByUnit,
+        invoices: { outstanding: analytics.outstanding, overdue: analytics.overdueInvoices.length },
+        maintenance: { due: analytics.dueMaintenance, inProgress: analytics.maintenanceInProgress },
+        reservations: {
+          totalPendingOrApproved: pendingWork.length,
+          pendingWorkNotLoadedIntoOperations: pendingWork,
+          today: { requestCount: requestedToday.length, gensetsRequested: sumRequested(requestedToday), requests: requestedToday },
+          tomorrow: { requestCount: requestedTomorrow.length, gensetsRequested: sumRequested(requestedTomorrow), requests: requestedTomorrow },
+          allPending: { requestCount: requestedAll.length, gensetsRequested: sumRequested(requestedAll), requests: requestedAll }
+        }
+      };
+      const prompt = 'You are DALI, the NILE FLEET Fleet Intelligence coworker. Answer naturally and directly. Continue the conversation from memory when relevant. LANGUAGE: ' + (responseIsAr ? 'Arabic' : 'English') + '. Use live data as the source of truth. Never invent values. Preserve IDs, dates and numbers exactly. You can discuss fleet, gensets, ports, operations, fuel, maintenance, invoices, reservations, company rules and workflows. IMPORTANT RESERVATION RULE: When the user asks what work is still requested/not loaded for a customer, or asks how many containers/gensets are requested today, tomorrow, or all upcoming requests, use reservations.pendingWorkNotLoadedIntoOperations and the today/tomorrow/all summaries. Treat PENDING and APPROVED reservations without a linked operation as requested work that has not yet been loaded into operations. Group matching customer requests, show booking/date/ports and requested quantity when useful. Do not count a request as loaded merely because its reservation is APPROVED; it is loaded only when a linked operation exists.\nCOMPANY KNOWLEDGE:\n' + (lessons.length ? lessons.map((x:any) => '[' + x.category + '] ' + x.title + ': ' + x.content).join('\\n') : 'No matching lesson.') + '\nRECENT MEMORY:\n' + (memory.length ? memory.map((m:any) => '[' + m.role + '] ' + m.message).join('\\n') : 'No recent memory.') + '\nLIVE DATABASE:\n' + JSON.stringify(live) + '\nUSER QUESTION:\n' + question;
       const answer = await runThinkingAudit(prompt, 900);
       const finalAnswer = answer || (responseIsAr ? 'لم أجد نتيجة واضحة في البيانات الحالية.' : 'I could not find a clear result in the current live data.');
       setChatMessages(prev => [...prev, { role: 'dali', text: finalAnswer }]);
