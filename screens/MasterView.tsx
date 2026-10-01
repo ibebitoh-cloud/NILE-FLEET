@@ -1137,7 +1137,7 @@ const MasterView: React.FC = () => {
                             (op.trucker && op.trucker.toLowerCase().includes(searchStr)) ||
                             (op.beneficiaryName && op.beneficiaryName.toLowerCase().includes(searchStr));
       const matchesColumnSearches = Object.entries(columnSearches).every(([key, query]) => {
-        const normalizedQuery = query.trim().toLowerCase();
+        const normalizedQuery = String(query ?? '').trim().toLowerCase();
         if (!normalizedQuery) return true;
         return getColumnSearchValue(op, key).toLowerCase().includes(normalizedQuery);
       });
