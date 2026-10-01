@@ -679,14 +679,36 @@ class SupabaseDB {
       operationToSave.customerId = resolveCustomerId(updatedOp.customerName);
     }
 
-    const saved = await update('operations', updatedOp.id, operationToSave);
-    if (!saved) return false;
-    _operations = _operations.map(o => o.id === operationToSave.id ? operationToSave : o);
-    await this._syncGensetStatus(operationToSave, previous);
-    if (operationToSave.status === 'DONE' && !operationToSave.invoiced) {
-      await this.generateInvoiceFromBooking(operationToSave.bookingNumber, operationToSave.customerName);
+    // Cell editors pass a full row snapshot. Persist only fields that changed
+    // relative to the latest cached row so two rapid edits cannot overwrite
+    // each other with stale values.
+    const dbUpdates: Partial<Operation> = {};
+    if (previous) {
+      for (const key of Object.keys(operationToSave) as (keyof Operation)[]) {
+        if (key === 'id') continue;
+        const nextValue = operationToSave[key];
+        const previousValue = previous[key];
+        if (nextValue !== previousValue) {
+          (dbUpdates as any)[key] = nextValue;
+        }
+      }
+    } else {
+      Object.assign(dbUpdates, operationToSave);
+      delete (dbUpdates as any).id;
     }
-    await auditLog('OPS', `Updated operation ${operationToSave.bookingNumber}`);
+
+    if (Object.keys(dbUpdates).length === 0) return true;
+
+    const saved = await update('operations', updatedOp.id, dbUpdates);
+    if (!saved) return false;
+
+    const mergedOperation = previous ? { ...previous, ...operationToSave } : operationToSave;
+    _operations = _operations.map(o => o.id === mergedOperation.id ? mergedOperation : o);
+    await this._syncGensetStatus(mergedOperation, previous);
+    if (mergedOperation.status === 'DONE' && !mergedOperation.invoiced) {
+      await this.generateInvoiceFromBooking(mergedOperation.bookingNumber, mergedOperation.customerName);
+    }
+    await auditLog('OPS', `Updated operation ${mergedOperation.bookingNumber}`);
     dispatchChange();
     return true;
   }
