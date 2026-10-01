@@ -4,7 +4,18 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Content-Type": "application/json",
+};
+
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { status: 200, headers: corsHeaders });
+  }
+
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   const authHeader = req.headers.get("Authorization") ?? "";
@@ -32,12 +43,7 @@ Deno.serve(async (req) => {
     return json({ error: "Administrator access required" }, 403);
   }
 
-  let body: {
-    email?: string;
-    password?: string;
-    profile?: Record<string, unknown>;
-  };
-
+  let body: { email?: string; password?: string; profile?: Record<string, unknown> };
   try {
     body = await req.json();
   } catch {
@@ -103,6 +109,6 @@ Deno.serve(async (req) => {
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: corsHeaders,
   });
 }
