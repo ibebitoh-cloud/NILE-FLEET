@@ -10,9 +10,16 @@ const Reservations: React.FC = () => {
   const t = translations[lang];
   const [reservations, setReservations] = useState<Reservation[]>(db.getReservations());
 
-  const handleStatusChange = async (id: string, status: ReservationStatus) => {
-    await db.updateReservationStatus(id, status);
+  const handleStatusChange = async (id: string, status: ReservationStatus): Promise<boolean> => {
+    const saved = await db.updateReservationStatus(id, status);
+    if (!saved) {
+      alert(lang === 'ar'
+        ? `فشل حفظ حالة الحجز. ${db.getLastDbError() || ''}`
+        : `Failed to save reservation status. ${db.getLastDbError() || ''}`);
+      return false;
+    }
     setReservations([...db.getReservations()]);
+    return true;
   };
 
   const approveAndRelease = async (res: Reservation) => {
