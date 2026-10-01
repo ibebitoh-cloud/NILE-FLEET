@@ -4,10 +4,12 @@ const AI_ENDPOINT = '/ai-proxy';
 const OPEN_SOURCE_MODEL = '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b';
 
 function extractDaliChatData(prompt: string) {
-  const currentQuestionMarker = '\nLATEST USER QUESTION: ';
-  const currentDataMarker = '\nLIVE CONTEXT: ';
-  const questionStart = prompt.indexOf(currentQuestionMarker);
-  const dataStart = prompt.indexOf(currentDataMarker);
+  // Current prompt format puts the final machine-readable question immediately
+  // before LIVE CONTEXT. Do not depend on whitespace after the marker.
+  const currentDataMarker = '\nLIVE CONTEXT:';
+  const currentQuestionMarker = '\nLATEST QUESTION:';
+  const questionStart = prompt.lastIndexOf(currentQuestionMarker);
+  const dataStart = prompt.indexOf(currentDataMarker, Math.max(0, questionStart));
 
   if (questionStart >= 0 && dataStart > questionStart) {
     const question = prompt.slice(questionStart + currentQuestionMarker.length, dataStart).trim();
@@ -15,25 +17,53 @@ function extractDaliChatData(prompt: string) {
     try {
       const live = JSON.parse(jsonText);
       if (question) return { live, question };
-    } catch {}
+    } catch {
+      // Continue to legacy parsing below.
+    }
   }
 
-  const legacyDataMarker = '\nLIVE DATABASE:\n';
-  const legacyQuestionMarker = '\nUSER QUESTION:\n';
-  const legacyDataStart = prompt.indexOf(legacyDataMarker);
-  const legacyQuestionStart = prompt.indexOf(legacyQuestionMarker);
+  // Support the prior prompt layout as well.
+  const legacyUserQuestionMarker = '\nLATEST USER QUESTION:';
+  const legacyDataStart = prompt.indexOf(currentDataMarker);
+  const legacyQuestionStart = prompt.indexOf(legacyUserQuestionMarker);
+  if (legacyQuestionStart >= 0 && legacyDataStart > legacyQuestionStart) {
+    const questionSection = prompt.slice(
+      legacyQuestionStart + legacyUserQuestionMarker.length,
+      legacyDataStart
+    );
+    const explicitQuestion = questionSection
+      .split(/\n\nYou are DALI/i)[0]
+      .trim();
+    const jsonText = prompt.slice(legacyDataStart + currentDataMarker.length).trim();
+    try {
+      const live = JSON.parse(jsonText);
+      if (explicitQuestion) return { live, question: explicitQuestion };
+    } catch {
+      // Continue to legacy database layout.
+    }
+  }
 
-  if (legacyDataStart >= 0 && legacyQuestionStart > legacyDataStart) {
-    const question = prompt.slice(legacyQuestionStart + legacyQuestionMarker.length).trim();
-    const jsonText = prompt.slice(legacyDataStart + legacyDataMarker.length, legacyQuestionStart).trim();
+  const legacyDatabaseMarker = '\nLIVE DATABASE:\n';
+  const legacyQuestionMarker = '\nUSER QUESTION:\n';
+  const legacyDbStart = prompt.indexOf(legacyDatabaseMarker);
+  const legacyQuestionEnd = prompt.indexOf(legacyQuestionMarker);
+
+  if (legacyDbStart >= 0 && legacyQuestionEnd > legacyDbStart) {
+    const question = prompt.slice(legacyQuestionEnd + legacyQuestionMarker.length).trim();
+    const jsonText = prompt.slice(
+      legacyDbStart + legacyDatabaseMarker.length,
+      legacyQuestionEnd
+    ).trim();
     try {
       const live = JSON.parse(jsonText);
       if (question) return { live, question };
-    } catch {}
+    } catch {
+      // Not a machine-readable DALI prompt.
+    }
   }
+
   return null;
 }
-
 function normalizeText(value: unknown): string {
   return String(value ?? '').toLowerCase().normalize('NFKC').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/[ى]/g, 'ي').replace(/[\u064B-\u065F\u0670]/g, '').replace(/[^a-z0-9\u0600-\u06ff]+/gi, ' ').trim();
 }
