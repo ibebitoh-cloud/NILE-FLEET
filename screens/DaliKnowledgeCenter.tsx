@@ -51,8 +51,9 @@ const DaliKnowledgeCenter: React.FC = () => {
       ]);
       setItems(knowledge);
       setAliases(dictionary);
-      setCustomers(db.getUsers().filter((u: User) => String(u.role).toUpperCase() === UserRole.CUSTOMER));
-      if (!selectedCustomerId && customers.length) setSelectedCustomerId(customers[0].id);
+      const customerRows = db.getUsers().filter((u: User) => String(u.role).toUpperCase() === UserRole.CUSTOMER);
+      setCustomers(customerRows);
+      if (!selectedCustomerId && customerRows.length) setSelectedCustomerId(customerRows[0].id);
     } catch (e) {
       setNotice(String(e));
     } finally {
