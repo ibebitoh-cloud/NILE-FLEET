@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nile Fleet Command</title>
+    <title>Nile Fleet</title>
     <meta name="description" content="Premium Clip-On Genset Management Platform">
-    <meta property="og:title" content="Nile Fleet Command">
+    <meta property="og:title" content="Nile Fleet">
     <meta property="og:description" content="Premium Clip-On Genset Management Platform">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="icon" href="/nile-fleet-logo.png" type="image/png">
@@ -229,14 +229,14 @@
 
         /* NILE FLEET THEME PACK — high-contrast, operational palettes */
         body.theme-nile {
-            --bg-primary: #061a16; --text-primary: #f4fbf8; --text-secondary: #9dd7c2;
-            --border-primary: #17483b; --card-bg: #0b241f; --accent: #4fd1a5; --input-bg: #102f28;
-            --rail-bg: #04120f; --row-bg: #081f1a;
+            --bg-primary: #061a16; --text-primary: #f5fbf8; --text-secondary: #9ac8bb;
+            --border-primary: #1a4037; --card-bg: #0c2822; --accent: #d4ad62; --input-bg: #102f29;
+            --rail-bg: #04110e; --row-bg: #09221d;
         }
         body.theme-carbon {
-            --bg-primary: #101214; --text-primary: #f5f7fa; --text-secondary: #aab2bd;
-            --border-primary: #30363d; --card-bg: #181b1f; --accent: #60a5fa; --input-bg: #20242a;
-            --rail-bg: #0b0d0f; --row-bg: #15181c;
+            --bg-primary: #11161b; --text-primary: #f2f5f7; --text-secondary: #9aa7b3;
+            --border-primary: #303a44; --card-bg: #1a222a; --accent: #58a6d9; --input-bg: #222c35;
+            --rail-bg: #0b1015; --row-bg: #151d24;
         }
         body.theme-royal {
             --bg-primary: #11152f; --text-primary: #f8f9ff; --text-secondary: #b9c0ed;
@@ -244,14 +244,14 @@
             --rail-bg: #0a0d21; --row-bg: #151a38;
         }
         body.theme-sandstorm {
-            --bg-primary: #f7f0e3; --text-primary: #33281d; --text-secondary: #705d49;
-            --border-primary: #ddcbb0; --card-bg: #fffaf2; --accent: #b7791f; --input-bg: #f2e7d4;
-            --rail-bg: #eadbc4; --row-bg: #fffaf2;
+            --bg-primary: #f3ecdf; --text-primary: #2e2923; --text-secondary: #6d6255;
+            --border-primary: #d9ccb9; --card-bg: #fffaf2; --accent: #b7791f; --input-bg: #eee2d1;
+            --rail-bg: #e7dac7; --row-bg: #fffaf2;
         }
         body.theme-corporate {
-            --bg-primary: #eef3f7; --text-primary: #102a43; --text-secondary: #486581;
-            --border-primary: #cbd5e1; --card-bg: #ffffff; --accent: #0077b6; --input-bg: #f8fafc;
-            --rail-bg: #e2eaf1; --row-bg: #ffffff;
+            --bg-primary: #f4f7fa; --text-primary: #102a43; --text-secondary: #526b80;
+            --border-primary: #d0dae3; --card-bg: #ffffff; --accent: #0b7fab; --input-bg: #eef3f7;
+            --rail-bg: #e3eaf0; --row-bg: #ffffff;
         }
         body.theme-crimson {
             --bg-primary: #190b10; --text-primary: #fff5f7; --text-secondary: #e6a8b5;
@@ -470,59 +470,59 @@
         }
         /* Mobile Genset readability: prevent compressed labels and stacked text */
         @media (max-width: 767px) {
-            .nile-command-layout main {
+            .nile-fleet-layout main {
                 width: 100%;
                 min-width: 0;
                 overflow-x: hidden;
             }
-            .nile-command-layout main > * {
+            .nile-fleet-layout main > * {
                 min-width: 0;
                 max-width: 100%;
             }
-            .nile-command-layout main .grid > *,
-            .nile-command-layout main .flex > * {
+            .nile-fleet-layout main .grid > *,
+            .nile-fleet-layout main .flex > * {
                 min-width: 0;
             }
-            .nile-command-layout main h1,
-            .nile-command-layout main h2,
-            .nile-command-layout main h3,
-            .nile-command-layout main h4,
-            .nile-command-layout main h5,
-            .nile-command-layout main h6,
-            .nile-command-layout main p,
-            .nile-command-layout main label {
+            .nile-fleet-layout main h1,
+            .nile-fleet-layout main h2,
+            .nile-fleet-layout main h3,
+            .nile-fleet-layout main h4,
+            .nile-fleet-layout main h5,
+            .nile-fleet-layout main h6,
+            .nile-fleet-layout main p,
+            .nile-fleet-layout main label {
                 max-width: 100%;
                 overflow-wrap: anywhere;
                 word-break: normal;
                 line-height: 1.28;
             }
-            .nile-command-layout main button {
+            .nile-fleet-layout main button {
                 min-width: 0;
                 max-width: 100%;
             }
-            .nile-command-layout main button span,
-            .nile-command-layout main button p {
+            .nile-fleet-layout main button span,
+            .nile-fleet-layout main button p {
                 min-width: 0;
                 max-width: 100%;
                 overflow-wrap: anywhere;
                 line-height: 1.25;
             }
-            .nile-command-layout main input,
-            .nile-command-layout main select,
-            .nile-command-layout main textarea {
+            .nile-fleet-layout main input,
+            .nile-fleet-layout main select,
+            .nile-fleet-layout main textarea {
                 min-width: 0;
                 max-width: 100%;
             }
-            .nile-command-layout main table {
+            .nile-fleet-layout main table {
                 white-space: nowrap;
             }
-            .nile-command-layout main .overflow-x-auto {
+            .nile-fleet-layout main .overflow-x-auto {
                 max-width: 100%;
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
             }
-            .nile-command-layout main .flex.items-center.justify-between,
-            .nile-command-layout main .flex.items-end.justify-between {
+            .nile-fleet-layout main .flex.items-center.justify-between,
+            .nile-fleet-layout main .flex.items-end.justify-between {
                 flex-wrap: wrap;
                 row-gap: .65rem;
             }

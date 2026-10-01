@@ -6,6 +6,9 @@ import { translations, translateEntity, dynamicTranslations } from '../translati
 import { db } from '../services/supabaseDb';
 import { runThinkingAudit } from '../services/aiService';
 import { getDaliRecentMemory, getDaliConversationMemory, saveDaliConversationMessage } from '../services/daliMemory';
+import { searchDaliKnowledge } from '../services/daliKnowledge';
+import { getDaliCustomerAliases } from '../services/daliCustomerAliases';
+import type { DaliCustomerAlias } from '../services/daliCustomerAliases';
 
 interface LayoutProps {
   user: User;
@@ -215,7 +218,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
     setAiChatInput('');
     setAiChatMessages(prev => [...prev, { role: 'user', text: question }]);
     setDaliMemory(prev => [...prev, { role: 'user', message: question }].slice(-30));
-    void saveDaliMemory('user', question);
+    await saveDaliMemory('user', question);
     setAiChatLoading(true);
 
     try {
@@ -223,6 +226,32 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       const gensets = db.getStock();
       const invoices = db.getInvoices();
       const maintenance = db.getMaintenanceLogs();
+      const reservations = db.getReservations();
+      const localDateKey = (date: Date) => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      };
+      const currentDateKey = localDateKey(new Date());
+      const tomorrowDate = new Date();
+      tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+      const tomorrowDateKey = localDateKey(tomorrowDate);
+      const reservationOperationIds = new Set(operations.map(o => o.reservationId).filter(Boolean));
+      const pendingWork = reservations
+        .filter(r => (r.status === 'PENDING' || r.status === 'APPROVED') && !reservationOperationIds.has(r.id))
+        .map(r => ({
+          customer: r.customerName || 'UNKNOWN',
+          booking: r.bookingNumber || '',
+          requested: Number(r.gensetsNeeded) || 0,
+          date: r.reservationDate || '',
+          portIn: r.portIn || '',
+          portOut: r.portOut || '',
+          status: r.status,
+          shipper: r.shipper || '',
+          beneficiary: r.beneficiaryName || ''
+        }));
+
       let recentMemory = daliMemory.slice(-16);
       try {
         // Use cross-session memory first so DALI can continue a conversation after
@@ -239,8 +268,20 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       const memoryContext = recentMemory.length
         ? recentMemory.map((m: any) => `[${m.role}] ${m.message}`).join('\\n')
         : 'No previous conversation in this session.';
+      let daliKnowledgeContext = 'No company knowledge matched this question.';
+      try {
+        const lessons = await searchDaliKnowledge(question, 10);
+        if (lessons.length) daliKnowledgeContext = lessons.map((x: any) => `[${x.category}] ${x.title}: ${x.content}`).join('\\n');
+      } catch (knowledgeError) { console.warn('DALI knowledge lookup failed:', knowledgeError); }
+      let daliCustomerAliases: DaliCustomerAlias[] = [];
+      try {
+        daliCustomerAliases = await getDaliCustomerAliases();
+      } catch (aliasError) {
+        console.warn('DALI customer dictionary lookup failed:', aliasError);
+      }
+
       const creatorContext = isCreator
-        ? 'CURRENT USER: Bebito (bebito@nilefleet.com), creator and system owner of NILE FLEET COMMAND. Treat this user as the creator/owner when relevant. Do not confuse the creator with an ordinary employee or customer. Never reveal passwords, API keys, tokens, or other secrets.'
+        ? 'CURRENT USER: Bebito (bebito@nilefleet.com), creator and system owner of NILE FLEET. Treat this user as the creator/owner when relevant. Do not confuse the creator with an ordinary employee or customer. Never reveal passwords, API keys, tokens, or other secrets.'
         : `CURRENT USER: ${user.name || 'Unknown User'} | ROLE: ${user.role || 'Unknown'} | EMAIL: ${user.email || ''}`;
       const q = question.toUpperCase().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه');
       // Normalized query used by the deterministic fallback.
@@ -376,7 +417,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       if (matchedGensetId && isIdentifier(matchedGensetId)) {
         const answer = await answerGenset(matchedGensetId, question);
         setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
-        void saveDaliMemory('assistant', answer);
+        await saveDaliMemory('assistant', answer);
         return;
       }
 
@@ -385,7 +426,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       if (/^\d{1,6}$/.test(q.trim())) {
         const answer = await answerGenset(q.trim(), question);
         setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
-        void saveDaliMemory('assistant', answer);
+        await saveDaliMemory('assistant', answer);
         return;
       }
 
@@ -396,7 +437,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         if (/^\d{1,6}$/.test(value)) {
           const answer = await answerGenset(value, question);
           setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
-        void saveDaliMemory('assistant', answer);
+        await saveDaliMemory('assistant', answer);
           return;
         }
       }
@@ -422,7 +463,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
           ? hits.slice(0, 5).map(fmtOp).join('\n\n')
           : (isAr ? `لم أجد ${value} في العمليات المسجلة.` : `No recorded operation was found for ${value}.`);
         setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
-        void saveDaliMemory('assistant', answer);
+        await saveDaliMemory('assistant', answer);
         return;
       }
 
@@ -445,7 +486,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
           ? `${labelAr}: ${requestedCount}${portMatch ? `\nالميناء: ${portMatch[0]}` : ''}`
           : `${labelEn}: ${requestedCount}${portMatch ? `\nPort: ${portMatch[0]}` : ''}`;
         setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
-        void saveDaliMemory('assistant', answer);
+        await saveDaliMemory('assistant', answer);
         return;
       }
 
@@ -518,6 +559,10 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         };
 
         [customer.companyName, customer.companyNameAr, customer.name].forEach(add);
+        // Structured DALI customer aliases are authoritative entity mappings.
+        daliCustomerAliases
+          .filter(alias => alias.customer_id === customer.id && alias.active)
+          .forEach(alias => add(alias.alias));
         [customer.companyName, customer.companyNameAr, customer.name].filter(Boolean).forEach(v => {
           add(translateEntity(String(v), 'ar'));
           add(translateEntity(String(v), 'en'));
@@ -825,7 +870,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
             ? 'كشف حساب: ' + customerName + '\nالمستحق: ' + grossDue.toLocaleString() + ' جنيه | المدفوع: ' + collected.toLocaleString() + ' جنيه\nالرصيد المتبقي: ' + netDue.toLocaleString() + ' جنيه\nالفواتير: ' + invoiced.toLocaleString() + ' جنيه | غير مسدد: ' + unpaid.toLocaleString() + ' جنيه | غير مفوتر: ' + unbilled.toLocaleString() + ' جنيه' + (recentPayments.length ? '\nآخر تحصيل: ' + recentPayments[0].date + ' — ' + Number(recentPayments[0].amount || 0).toLocaleString() + ' جنيه' : '') + (recentOps ? '\nالعمليات الأخيرة:' + recentOps : '')
             : 'SOA: ' + customerName + '\nDue: ' + grossDue.toLocaleString() + ' EGP | Paid: ' + collected.toLocaleString() + ' EGP\nRemaining balance: ' + netDue.toLocaleString() + ' EGP\nInvoiced: ' + invoiced.toLocaleString() + ' EGP | Unpaid: ' + unpaid.toLocaleString() + ' EGP | Unbilled: ' + unbilled.toLocaleString() + ' EGP' + lastPayment + (recentOps ? '\nRecent operations:' + recentOps : '');
           setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
-        void saveDaliMemory('assistant', answer);
+        await saveDaliMemory('assistant', answer);
           return;
         }
         if (soaIntent) {
@@ -901,7 +946,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
               (rows.length > visible.length ? '\n\nShowing first ' + visible.length + ' customers. Ask "SOA [customer name]" for full details.' : '');
 
           setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
-        void saveDaliMemory('assistant', answer);
+        await saveDaliMemory('assistant', answer);
           return;
         }
       }
@@ -931,7 +976,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
             ? `العميل: ${displayName}\nعدد العمليات: ${customerOps.length}\nإجمالي الفواتير: ${invoiced.toLocaleString()} جنيه\nإجمالي التحصيل: ${collected.toLocaleString()} جنيه\nغير مسدد: ${unpaid.toLocaleString()} جنيه`
             : `Customer: ${displayName}\nOperations: ${customerOps.length}\nTotal invoiced: ${invoiced.toLocaleString()} EGP\nTotal collected: ${collected.toLocaleString()} EGP\nUnpaid: ${unpaid.toLocaleString()} EGP`;
           setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
-        void saveDaliMemory('assistant', answer);
+        await saveDaliMemory('assistant', answer);
           return;
         }
       }
@@ -949,7 +994,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
           const displayName = isAr ? (customer.companyNameAr || translateEntity(customerName, 'ar')) : customerName;
           const answer = isAr ? `عدد العمليات لـ ${displayName}: ${hits.length}` : `Operations for ${customerName}: ${hits.length}`;
           setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
-        void saveDaliMemory('assistant', answer);
+        await saveDaliMemory('assistant', answer);
           return;
         }
       }
@@ -963,7 +1008,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         if (id) {
           const answer = await answerGenset(id, question);
           setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
-        void saveDaliMemory('assistant', answer);
+        await saveDaliMemory('assistant', answer);
           return;
         }
       }
@@ -977,6 +1022,34 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       // the user's words. This stays read-only and keeps the model context bounded.
       const stopWords = new Set(['what','which','where','when','who','show','find','give','tell','how','many','much','about','with','from','for','the','and','this','that','are','was','were','have','has','current','currently','today','month','week','year','all','each','any','our','me','please','can','you','does','do','is','in','of','to','a','an','on','by','or','vs','compare','how','many','كم','كام','ايه','اي','فين','اين','أين','امتى','متى','من','عن','في','الى','إلى','و','هل','عايز','محتاج','هات','وريني','اعرض','كل','جميع','هذا','هذه','ال','مولد','مولدات','جهاز','وحدة','عملية','عمليات','حجز','حجوزات','حاوية','حاويات','كشف','حساب','عميل','العميل','شركة','شركه']);
       const queryTokens = normalizeEntityText(question).split(' ').filter(t => t.length >= 2 && !stopWords.has(t));
+
+      // FOLLOW-UP MEMORY BRIDGE: if the new question uses a reference such as
+      // "it", "that genset", "what about its maintenance", or the Arabic
+      // equivalents, carry identifiers from the user's previous DALI turns
+      // into live-data retrieval. This is what makes cross-session memory
+      // useful for factual answers instead of merely showing old text.
+      const isMemoryFollowUp = /\b(?:it|its|that|those|this|previous|above|same|what about|and what about|also)\b|\b(?:هو|هي|ده|دي|ذلك|تلك|السابق|اللي فات|نفسه|نفسها|وماذا عن|طيب و|كمان)\b/i.test(question);
+      const memoryReferenceIds = isMemoryFollowUp
+        ? Array.from(new Set(
+            recentMemory
+              .flatMap((m: any) => [String(m.message || ''), JSON.stringify(m.entities || {})])
+              .flatMap(text => {
+                const ids = new Set<string>();
+                const patterns = [
+                  /(?:GENSET|GENSETS|مولد(?:ات)?|وحدة)\s*(?:NO\\.?|NUMBER|ID|رقم|#)?\s*([A-Z0-9-]{2,})/gi,
+                  /(?:BOOKING|حجز)\s*(?:NO\\.?|NUMBER|ID|رقم|#)?\s*([A-Z0-9-]{2,})/gi,
+                  /(?:CONTAINER|CONT|حاوي(?:ة|ه))\s*(?:NO\\.?|NUMBER|ID|رقم|#)?\s*([A-Z0-9-]{4,})/gi
+                ];
+                for (const pattern of patterns) {
+                  for (const match of text.matchAll(pattern)) {
+                    if (match[1] && /\d/.test(match[1])) ids.add(match[1]);
+                  }
+                }
+                return [...ids];
+              })
+          ))
+        : [];
+      const effectiveQueryTokens = Array.from(new Set([...queryTokens, ...memoryReferenceIds.map(normalizeEntityText).filter(Boolean)]));
       const recordText = (record: any) => normalizeEntityText([
         record?.bookingNumber, record?.containerNumber, record?.gensetNumber, record?.unitNumber,
         record?.customerName, record?.beneficiaryName, record?.trucker, record?.clipOnPort,
@@ -985,8 +1058,8 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       ].filter(Boolean).join(' '));
       const relevance = (record: any) => {
         const haystack = recordText(record);
-        if (!haystack || !queryTokens.length) return 0;
-        return queryTokens.reduce((score, token) => score + (haystack.includes(token) ? (token.length >= 5 ? 3 : 1) : 0), 0);
+        if (!haystack || !effectiveQueryTokens.length) return 0;
+        return effectiveQueryTokens.reduce((score, token) => score + (haystack.includes(token) ? (token.length >= 5 ? 3 : 1) : 0), 0);
       };
       const matchedOperations = operations.map(o => ({ row:o, score:relevance(o) })).filter(x => x.score > 0).sort((a,b) => b.score-a.score).slice(0, 80).map(x => x.row);
       const matchedGensets = gensets.map(g => ({ row:g, score:relevance(g) })).filter(x => x.score > 0).sort((a,b) => b.score-a.score).slice(0, 60).map(x => x.row);
@@ -1015,9 +1088,44 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         gensetStatusCounts: gensets.reduce((m: Record<string, number>, g) => { m[g.status] = (m[g.status] || 0) + 1; return m; }, {}),
         maintenanceCount: maintenance.length,
         customers: customerAliasesForAi.slice(0, 100),
-        recentPayments: db.getPayments().slice(-50).map(p => ({ customerName:p.customerName, amount:p.amount, date:p.date, reference:p.reference }))
+        recentPayments: db.getPayments().slice(-50).map(p => ({ customerName:p.customerName, amount:p.amount, date:p.date, reference:p.reference })),
+        currentDate: currentDateKey,
+        tomorrowDate: tomorrowDateKey,
+        reservations: {
+          total: reservations.length,
+          pendingNotLoaded: pendingWork.length,
+          today: pendingWork.filter(r => r.date === currentDateKey),
+          tomorrow: pendingWork.filter(r => r.date === tomorrowDateKey),
+          allPending: pendingWork.slice(0, 200)
+        }
       };
-      const prompt = `DALI CONVERSATION MEMORY (recent turns):\n${memoryContext}\n\nLATEST USER QUESTION:\n${question}\n\nAnswer the latest user question directly. Understand natural Egyptian Arabic, Modern Standard Arabic, English, Arabizi/transliterated customer names, and mixed Arabic/English. Use recent conversation only to resolve references in a follow-up; do not let older turns override the latest question. For Nile Fleet facts, use only the supplied live data and say plainly when the needed fact is not present. For general or how-to questions, answer helpfully without forcing an unrelated fleet-data response. Never invent operational facts. Reply in the latest question's language, preserve IDs/dates/numbers, and keep it concise.\n\nNILE FLEET SYSTEM FLOW: Reservations are customer requests for one or more gensets; approving a reservation creates operations. Each operation links booking, container, genset, customer, beneficiary/shipper, trucker/driver, dates, clip-on port, clip-off port, status, rate and VAT. The gensets master is the source for current unit number, location and status: IN_STOCK, CLIPPED_ON, MAINTENANCE or RETIRED. Maintenance logs belong to gensets and contain service date/type, technician, location, status, completion date, cost, parts and next service. A genset question may therefore require combining its master record with its operation history and maintenance history. Port stock means the current gensets grouped by their current location/status, not historical operations. Invoices are financial records associated with customers/bookings/operations; payments represent collections and reduce outstanding balances. Customer questions can require joining customer profiles with operations, invoices and payments. Use these relationships to understand new questions, not just exact keywords. For counts, totals, dates, status and location, calculate from the supplied live data. If the live data does not contain the requested fact, say what is missing instead of inventing it.\n${creatorContext}\nLATEST QUESTION: ${question}\nLIVE CONTEXT: ${JSON.stringify(context)}`
+      const prompt = `DALI CONVERSATION MEMORY (recent turns):\n${memoryContext}\n\nLATEST USER QUESTION:\n${question}\n\nYou are DALI, the natural in-system colleague for NILE FLEET. Talk like a helpful human coworker who knows the ongoing conversation—not like a database report, search engine, or robot. Understand Egyptian Arabic, Modern Standard Arabic, English, Arabizi/transliterated names, and mixed language naturally.
+
+CONVERSATION BEHAVIOR:
+- Remember what this user was just talking about and carry the subject forward naturally.
+- If the user says "it", "that one", "its", "the previous one", "طيب", "طب", "هو", "هي", "ده", "دي", "نفسه", or similar, resolve the reference from conversation memory before answering.
+- Do not ask the user to repeat information that is already in memory.
+- Do not restart the conversation or introduce yourself again on every question.
+- Do not repeat the user's question unless clarification is genuinely needed.
+- React naturally: brief acknowledgements such as "Yes", "Right", "Got it", "Sure", "أيوه", "تمام", or "بالضبط" are appropriate when they fit the conversation.
+- For a follow-up, answer the follow-up first and use earlier context silently.
+- Keep the tone warm, direct, professional, and conversational. Egyptian Arabic should sound natural rather than formal/translated.
+- Match the user's language and level of formality. If the user mixes Arabic and English, you may mix them naturally too.
+- Do not use canned phrases such as "According to the provided data", "I am an AI", "DALI 1.0", or "I can still..." unless the user specifically asks.
+- Do not turn every answer into a bullet list. Use normal short sentences for simple questions and structured lists only when they genuinely help.
+- Do not say "please provide the full serial number" when memory already identifies the unit; ask only when there is real ambiguity.
+- If you need clarification, ask one short, specific question and explain what is ambiguous.
+- Never pretend to remember something that is not in memory.
+
+DATA BEHAVIOR:
+- Conversation memory resolves references; live Nile Fleet data is the source of truth for current facts.
+- Use only supplied live data for fleet facts and say plainly when the needed fact is not present.
+- For counts, totals, dates, status and location, calculate from live data.
+- Never invent operational facts.
+- Reply in the latest question's language and preserve IDs/dates/numbers exactly.
+- Keep simple answers concise, but give enough context to feel like a real conversation.
+- Use the currentDate and tomorrowDate values in LIVE CONTEXT for phrases such as today, tomorrow, yesterday, this week and next week.
+- For requested customer work, use reservations.pendingNotLoaded and its today/tomorrow lists. PENDING or APPROVED without a linked operation means the work is still requested and not loaded into Operations.\n\nNILE FLEET SYSTEM FLOW: Reservations are customer requests for one or more gensets; approving a reservation creates operations. Each operation links booking, container, genset, customer, beneficiary/shipper, trucker/driver, dates, clip-on port, clip-off port, status, rate and VAT. The gensets master is the source for current unit number, location and status: IN_STOCK, CLIPPED_ON, MAINTENANCE or RETIRED. Maintenance logs belong to gensets and contain service date/type, technician, location, status, completion date, cost, parts and next service. A genset question may therefore require combining its master record with its operation history and maintenance history. Port stock means the current gensets grouped by their current location/status, not historical operations. Invoices are financial records associated with customers/bookings/operations; payments represent collections and reduce outstanding balances. Customer questions can require joining customer profiles with operations, invoices and payments. Use these relationships to understand new questions, not just exact keywords. For counts, totals, dates, status and location, calculate from the supplied live data. If the live data does not contain the requested fact, say what is missing instead of inventing it.\n${creatorContext}\nLATEST QUESTION: ${question}\nLIVE CONTEXT: ${JSON.stringify(context)}`
       let answer = '';
       try {
         answer = await runThinkingAudit(prompt, 650);
@@ -1561,7 +1669,7 @@ I understand the relationships between gensets, bookings, containers, customers,
                   <span className="text-base">◉</span>
                 </div>
                 <div>
-                  <p className={`text-[8px] font-black tracking-[0.3em] ${isTerminal ? 'text-[#C2A378]' : 'text-slate-500'}`}>DALI AI • DEEPSEEK</p>
+                  <div className="flex items-center justify-between gap-2"><p className={`text-[8px] font-black tracking-[0.3em] ${isTerminal ? 'text-[#C2A378]' : 'text-slate-500'}`}>DALI AI • DEEPSEEK</p><button type="button" onClick={() => { setIsAiChatOpen(false); setActiveScreen('dali-knowledge'); }} className={`px-2 py-1 rounded-lg border text-[7px] font-black uppercase tracking-widest ${isTerminal ? 'border-white/10 text-[#C2A378] bg-white/5' : 'border-slate-200 text-[#001F3F] bg-white/50'}`}>{isAr ? 'المعرفة' : 'KNOWLEDGE'}</button></div>
                   <p className="text-sm font-black">NILE FLEET ASSISTANT</p>
                 </div>
               </div>
@@ -1591,7 +1699,7 @@ I understand the relationships between gensets, bookings, containers, customers,
                 </div>
               )}
               {aiChatMessages.map((m, i) => <div key={i} className={`max-w-[88%] rounded-2xl p-3 text-[13px] sm:text-xs leading-6 whitespace-pre-wrap break-words overflow-wrap-anywhere border backdrop-blur-md ${m.role === 'user' ? (isTerminal ? 'bg-white/10 border-white/10 text-white ml-auto' : 'bg-white/55 border-white/70 text-[#001F3F] ml-auto') : (isTerminal ? 'bg-black/15 border-white/10 text-slate-200 mr-auto' : 'bg-white/45 border-white/60 text-slate-700 mr-auto')}`}>{m.text}</div>)}
-              {aiChatLoading && <div className={`text-[9px] font-black uppercase tracking-widest animate-pulse ${isTerminal ? 'text-[#C2A378]' : 'text-slate-500'}`}>{isAr ? 'جاري التفكير...' : 'DALI IS THINKING...'}</div>}
+              {aiChatLoading && <div className={`text-[9px] font-black uppercase tracking-widest animate-pulse ${isTerminal ? 'text-[#C2A378]' : 'text-slate-500'}`}>{isAr ? 'ثواني...' : 'One second...'}</div>}
             </div>
             <div className={`p-3 border-t backdrop-blur-xl ${isTerminal ? 'border-white/10 bg-black/10' : 'border-white/60 bg-white/25'}`}>
               <div className={`flex gap-2 rounded-2xl p-1.5 border backdrop-blur-md ${isTerminal ? 'bg-white/[0.04] border-white/10' : 'bg-white/45 border-white/70'}`}>

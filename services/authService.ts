@@ -151,7 +151,36 @@ export async function createRealAccount(email: string, password: string, profile
   headers: { Authorization: `Bearer ${accessToken}` },
   body: { email, password, profile },
 });
-if (error) return { error: error.message || 'Create-user service failed' };
+if (error) {
+      // Supabase's FunctionsHttpError often exposes the function's JSON response
+      // on error.context, while error.message only says "non-2xx status code".
+      let detailed = error.message || 'Create-user service failed';
+      try {
+        const context = (error as any).context;
+        if (context && typeof context.clone === 'function') {
+          const response = context.clone();
+          const contentType = response.headers?.get?.('content-type') || '';
+          if (contentType.includes('application/json')) {
+            const body = await response.json();
+            if (body?.error) detailed = String(body.error);
+          } else {
+            const bodyText = await response.text();
+            if (bodyText) {
+              try {
+                const body = JSON.parse(bodyText);
+                if (body?.error) detailed = String(body.error);
+                else detailed = bodyText;
+              } catch {
+                detailed = bodyText;
+              }
+            }
+          }
+        }
+      } catch (detailError) {
+        console.warn('Could not read create-user error response:', detailError);
+      }
+      return { error: detailed };
+    }
 if (!data?.ok || !data?.userId) return { error: data?.error || 'Account service did not return a user ID' };
 return { userId: data.userId };
   } catch (e: any) {

@@ -1,10 +1,11 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "nile-1-v2-fixes",
+  "name": "nile-fleet",
   "compatibility_date": "2026-09-18",
   "pages_build_output_dir": "./dist",
   "vars": {
-    "SUPABASE_URL": "https://mlxsafyubdsssugyiarx.supabase.co"
+    "SUPABASE_URL": "https://mlxsafyubdsssugyiarx.supabase.co",
+    "SUPABASE_ANON_KEY": "sb_publishable_A6Mc79suLAirBb1mo3L_Vg_NnUXiB1F"
   },
   "ai": {
     "binding": "AI"

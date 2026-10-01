@@ -5,6 +5,9 @@ import { LanguageContext, ThemeContext } from '../App';
 import { translations } from '../translations';
 import { Operation } from '../types';
 import { runThinkingAudit, getSafeApiKey } from '../services/aiService';
+import { getDaliRecentMemory, saveDaliConversationMessage } from '../services/daliMemory';
+import { searchDaliKnowledge } from '../services/daliKnowledge';
+import { getDaliCustomerAliases } from '../services/daliCustomerAliases';
 
 const Intelligence: React.FC = () => {
   const { lang } = useContext(LanguageContext);
@@ -18,6 +21,11 @@ const Intelligence: React.FC = () => {
   const [thinkingPhase, setThinkingPhase] = useState(0);
   const [advice, setAdvice] = useState<string>('');
   const [linkError, setLinkError] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'dali'; text: string }[]>([]);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatPhase, setChatPhase] = useState(0);
+  const [fleetDaliSessionId] = useState(() => crypto.randomUUID());
   const apiKeySet = true; // DALI 1.0 uses the server-side Cloudflare AI binding; no browser key is required.
 
   const phases = isAr 
@@ -153,7 +161,7 @@ const Intelligence: React.FC = () => {
         ? { gasByPort, gasByGenset: gasByUnit, gasBalance: db.getGasBalance(), oktan }
         : { operations: ops, summary: { total: ops.length, active: analytics.activeOps.length, completed: analytics.completedOps.length, underOperate: analytics.underOperate.length, hold: analytics.holdOps.length, cancelled: analytics.cancelledOps.length, completionRate: analytics.completionRate, cancellationRate: analytics.cancellationRate, completedRevenue: analytics.totalRevenue, activeExposure: analytics.activeRevenue, missingData: analytics.missingData } };
 
-      const prompt = `You are DALI 1.0, NILE FLEET Command Intelligence.
+      const prompt = `You are DALI 1.0, NILE FLEET Intelligence.
 
 CURRENT VIEW: ${viewConfig.en}
 SCOPE: ${viewConfig.instruction}
@@ -179,6 +187,88 @@ ${JSON.stringify(viewData)}`;
       setIsThinking(false);
     }
   };
+
+  const chatPhases = isAr
+    ? ["جاري قراءة سؤالك...", "جاري ربط سياق المحادثة...", "جاري فحص البيانات المباشرة...", "جاري مطابقة معرفة نايل فليت...", "جاري ترتيب النتيجة...", "دالي يجهز الرد..."]
+    : ["READING YOUR REQUEST...", "CONNECTING CONVERSATION CONTEXT...", "CHECKING LIVE DATA...", "MATCHING NILE FLEET KNOWLEDGE...", "CROSS-CHECKING THE RESULT...", "DALI IS PREPARING THE ANSWER..."];
+
+  const askFleetDali = async () => {
+    const question = chatInput.trim();
+    if (!question || chatLoading) return;
+    const responseIsAr = /[\u0600-\u06FF]/.test(question) || isAr;
+    setChatInput('');
+    setChatMessages(prev => [...prev, { role: 'user', text: question }]);
+    setChatLoading(true);
+    setChatPhase(0);
+    const chatPhaseInterval = window.setInterval(() => {
+      setChatPhase(prev => (prev + 1) % chatPhases.length);
+    }, 900);
+    try {
+      const memory = await getDaliRecentMemory(18).catch(() => []);
+      const lessons = await searchDaliKnowledge(question, 8).catch(() => []);
+      const customerAliases = await getDaliCustomerAliases().catch(() => []);
+      const customerProfiles = db.getUsers().filter((u:any) => String(u.role || '').toUpperCase() === 'CUSTOMER');
+      const customerNameById = new Map(customerProfiles.map((u:any) => [String(u.id), String(u.companyName || u.name || 'UNKNOWN')]));
+      const customerDictionary = customerAliases.map((a:any) => ({
+        customer: customerNameById.get(String(a.customer_id)) || String(a.customer_id),
+        alias: a.alias,
+        type: a.alias_type
+      }));
+      const allReservations = db.getReservations();
+      const todayKey = new Date().toISOString().slice(0, 10);
+      const tomorrowDate = new Date();
+      tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+      const tomorrowKey = tomorrowDate.toISOString().slice(0, 10);
+      const reservationOperationIds = new Set(ops.map(o => o.reservationId).filter(Boolean));
+      const pendingWork = allReservations
+        .filter(r => (r.status === 'PENDING' || r.status === 'APPROVED') && !reservationOperationIds.has(r.id))
+        .map(r => ({
+          customer: r.customerName || 'UNKNOWN',
+          booking: r.bookingNumber || '',
+          containersRequested: Number(r.gensetsNeeded) || 0,
+          date: r.reservationDate || '',
+          portIn: r.portIn || '',
+          portOut: r.portOut || '',
+          status: r.status,
+          shipper: r.shipper || '',
+          beneficiary: r.beneficiaryName || ''
+        }));
+      const requestedToday = pendingWork.filter(r => r.date === todayKey);
+      const requestedTomorrow = pendingWork.filter(r => r.date === tomorrowKey);
+      const requestedAll = pendingWork;
+      const sumRequested = (rows:any[]) => rows.reduce((sum, r) => sum + (Number(r.containersRequested) || 0), 0);
+      const live = {
+        fleet: { total: analytics.fleetTotal, inStock: analytics.fleetInStock, clippedOn: analytics.fleetActive, maintenance: analytics.fleetMaintenance, retired: analytics.fleetRetired },
+        operations: { total: ops.length, active: analytics.activeOps.length, completed: analytics.completedOps.length, underOperate: analytics.underOperate.length, hold: analytics.holdOps.length, cancelled: analytics.cancelledOps.length },
+        ports: analytics.portStats,
+        fuelByPort: gasByPort,
+        fuelByGenset: gasByUnit,
+        invoices: { outstanding: analytics.outstanding, overdue: analytics.overdueInvoices.length },
+        maintenance: { due: analytics.dueMaintenance, inProgress: analytics.maintenanceInProgress },
+        reservations: {
+          totalPendingOrApproved: pendingWork.length,
+          pendingWorkNotLoadedIntoOperations: pendingWork,
+          today: { requestCount: requestedToday.length, gensetsRequested: sumRequested(requestedToday), requests: requestedToday },
+          tomorrow: { requestCount: requestedTomorrow.length, gensetsRequested: sumRequested(requestedTomorrow), requests: requestedTomorrow },
+          allPending: { requestCount: requestedAll.length, gensetsRequested: sumRequested(requestedAll), requests: requestedAll }
+        }
+      };
+      const prompt = 'You are DALI, the NILE FLEET Fleet Intelligence coworker. Answer naturally and directly. Continue the conversation from memory when relevant. LANGUAGE: ' + (responseIsAr ? 'Arabic' : 'English') + '. Use live data as the source of truth. Never invent values. Preserve IDs, dates and numbers exactly. You can discuss fleet, gensets, ports, operations, fuel, maintenance, invoices, reservations, company rules and workflows. IMPORTANT RESERVATION RULE: When the user asks what work is still requested/not loaded for a customer, or asks how many containers/gensets are requested today, tomorrow, or all upcoming requests, use reservations.pendingWorkNotLoadedIntoOperations and the today/tomorrow/all summaries. Treat PENDING and APPROVED reservations without a linked operation as requested work that has not yet been loaded into operations. Group matching customer requests, show booking/date/ports and requested quantity when useful. Do not count a request as loaded merely because its reservation is APPROVED; it is loaded only when a linked operation exists.\nCOMPANY KNOWLEDGE:\n' + (lessons.length ? lessons.map((x:any) => '[' + x.category + '] ' + x.title + ': ' + x.content).join('\\n') : 'No matching lesson.') + '\nCUSTOMER DICTIONARY (Arabic/alias -> real customer):\n' + (customerDictionary.length ? customerDictionary.map((x:any) => x.alias + ' -> ' + x.customer + ' [' + x.type + ']').join('\\n') : 'No trained customer aliases.') + '\nRECENT MEMORY:\n' + (memory.length ? memory.map((m:any) => '[' + m.role + '] ' + m.message).join('\\n') : 'No recent memory.') + '\nLIVE DATABASE:\n' + JSON.stringify(live) + '\nUSER QUESTION:\n' + question;
+      const answer = await runThinkingAudit(prompt, 900);
+      const finalAnswer = answer || (responseIsAr ? 'لم أجد نتيجة واضحة في البيانات الحالية.' : 'I could not find a clear result in the current live data.');
+      setChatMessages(prev => [...prev, { role: 'dali', text: finalAnswer }]);
+      await saveDaliConversationMessage({ sessionId: fleetDaliSessionId, role: 'user', message: question, entities: { screen: 'intelligence' } }).catch(()=>{});
+      await saveDaliConversationMessage({ sessionId: 'fleet-intelligence', role: 'assistant', message: finalAnswer, entities: { screen: 'intelligence' } }).catch(()=>{});
+    } catch (err) {
+      setChatMessages(prev => [...prev, { role: 'dali', text: responseIsAr ? 'تعذر الاتصال بدالي حالياً. أعد المحاولة.' : 'DALI is temporarily unavailable. Please retry.' }]);
+    } finally {
+      window.clearInterval(chatPhaseInterval);
+      setChatLoading(false);
+      setChatPhase(0);
+    }
+  };
+
+  const clearFleetChat = () => { if (chatLoading) return; setChatMessages([]); setChatInput(''); };
 
   const NavButton = ({ id, label }: { id: typeof activeView, label: string }) => (
     <button 
@@ -268,7 +358,6 @@ ${JSON.stringify(viewData)}`;
     };
     return labels[id];
   };
-
   const cardClass = isDark
     ? 'bg-slate-900/80 border-white/10'
     : 'bg-white border-slate-200';
@@ -276,6 +365,11 @@ ${JSON.stringify(viewData)}`;
   const primaryClass = isDark ? 'text-white' : 'text-[#001F3F]';
 
   return (
+    <>
+      <style>{`
+      @keyframes daliScan { 0% { transform: translateX(-120%); } 100% { transform: translateX(420%); } }
+      @keyframes daliWave { 0%, 100% { transform: scaleY(.45); opacity: .35; } 50% { transform: scaleY(1.25); opacity: 1; } }
+    `}</style>
     <div className={`min-h-screen pb-32 text-start ${isAr ? 'rtl font-cairo' : 'ltr'}`}>
       <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#001F3F] shadow-2xl">
         <div className="absolute -top-28 -right-28 h-72 w-72 rounded-full bg-blue-500/10 blur-3xl"></div>
@@ -538,64 +632,121 @@ ${JSON.stringify(viewData)}`;
         </div>
 
         <aside className="xl:col-span-4">
-          <div className="sticky top-5 rounded-[2rem] bg-[#001F3F] p-5 md:p-6 shadow-2xl border border-white/10">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">🧠</span>
-                  <h2 className="text-sm font-black uppercase tracking-widest text-white">{isAr ? 'DALI 1.0' : 'DALI 1.0'}</h2>
-                </div>
-                <p className="mt-1 text-[8px] font-black uppercase tracking-[0.2em] text-blue-300">{isAr ? activeConfig.ar : activeConfig.en}</p>
-              </div>
-              <span className="rounded-full bg-emerald-400/10 px-2.5 py-1 text-[7px] font-black uppercase text-emerald-300">READY</span>
-            </div>
-
-            <div className="mt-5 rounded-2xl border border-white/10 bg-black/30 p-4 min-h-[420px] max-h-[560px] overflow-y-auto">
-              {isThinking ? (
-                <div className="flex min-h-[380px] items-center justify-center text-center">
+          <div className="sticky top-5 overflow-hidden rounded-[2rem] border border-white/10 bg-[#071522] shadow-2xl">
+            <div className="relative overflow-hidden border-b border-white/10 bg-white/[0.03] p-5">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#C2A378] to-transparent opacity-70"></div>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-[#C2A378]/30 bg-[#C2A378]/5 text-2xl text-[#C2A378]">
+                    <span className="absolute inset-1 animate-spin rounded-xl border border-[#C2A378]/20"></span>
+                    <span className="animate-pulse">◉</span>
+                  </div>
                   <div>
-                    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-blue-400/20 border-t-blue-400"></div>
-                    <p className="mt-4 text-[9px] font-black uppercase tracking-widest text-blue-300">{phases[thinkingPhase]}</p>
-                    <p className="mt-2 text-[8px] font-bold text-slate-500">{isAr ? 'جاري تحليل هذا القسم فقط...' : 'Analyzing this section only...'}</p>
+                    <p className="text-[8px] font-black uppercase tracking-[0.35em] text-[#C2A378]">DALI AI</p>
+                    <h2 className="text-sm font-black uppercase tracking-widest text-white">NILE FLEET</h2>
+                    <div className="mt-1 flex items-center gap-2 text-[7px] font-black uppercase tracking-widest text-emerald-300">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400"></span>
+                      {chatLoading ? (isAr ? 'جاري العمل' : 'WORKING') : 'ONLINE'}
+                    </div>
                   </div>
                 </div>
-              ) : linkError ? (
-                <div className="flex min-h-[380px] flex-col items-center justify-center text-center">
-                  <span className="text-4xl">📡</span>
-                  <p className="mt-3 text-[10px] font-black uppercase text-rose-400">{isAr ? 'فشل اتصال DALI 1.0' : 'DALI 1.0 CONNECTION FAILED'}</p>
-                  <p className="mt-2 max-w-xs text-[9px] font-bold leading-relaxed text-slate-400">{advice}</p>
-                  <button type="button" onClick={runStrategicAdvisor} className="mt-5 rounded-xl bg-white/10 px-5 py-2.5 text-[8px] font-black uppercase tracking-widest text-white hover:bg-white/15">
-                    {isAr ? 'إعادة المحاولة' : 'RETRY'}
-                  </button>
+                <button type="button" onClick={clearFleetChat} disabled={chatLoading || chatMessages.length===0} className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[7px] font-black uppercase tracking-widest text-[#C2A378] transition hover:bg-white/10 disabled:opacity-30">CLEAR</button>
+              </div>
+              <div className="mt-4 grid grid-cols-3 gap-1.5">
+                {["LIVE DATABASE","COMPANY KNOWLEDGE","MEMORY"].map((x,i)=>
+                  <div key={x} className="relative overflow-hidden rounded-lg border border-white/10 bg-black/20 px-2 py-2 text-center text-[6px] font-black uppercase tracking-wider text-slate-400">
+                    <span className="mr-1 text-emerald-400">●</span>{x}
+                    {chatLoading && <span className="absolute inset-y-0 left-0 w-1/3 animate-pulse bg-white/10" style={{animationDelay: i * 180 + 'ms'}}></span>}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="dali-intel-chat min-h-[360px] max-h-[540px] overflow-y-auto p-4">
+              {chatMessages.length===0 ? (
+                <div className="flex min-h-[320px] items-center justify-center text-center">
+                  <div className="w-full">
+                    <div className="relative mx-auto flex h-24 w-24 items-center justify-center">
+                      <div className="absolute inset-0 animate-ping rounded-[2rem] border border-[#C2A378]/10"></div>
+                      <div className="absolute inset-2 animate-pulse rounded-[1.5rem] border border-[#C2A378]/20"></div>
+                      <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl border border-[#C2A378]/30 bg-[#C2A378]/5 text-3xl text-[#C2A378]">◉</div>
+                    </div>
+                    <p className="mt-4 text-[9px] font-black uppercase tracking-[0.3em] text-white">DALI AI</p>
+                    <p className="mx-auto mt-2 max-w-xs text-[9px] font-bold leading-relaxed text-slate-500">{isAr ? "اسأل دالي عن الأسطول أو الموانئ أو العمليات أو أي شيء يعرفه." : "Ask DALI about the fleet, ports, operations, or anything it knows."}</p>
+                    <div className="mx-auto mt-5 max-w-sm overflow-hidden rounded-xl border border-white/5 bg-black/20 p-3 text-left">
+                      <div className="flex items-center justify-between text-[6px] font-black uppercase tracking-widest text-slate-600">
+                        <span>{isAr ? 'حالة دالي' : 'DALI STATUS'}</span><span className="text-emerald-400">● {isAr ? 'جاهز' : 'READY'}</span>
+                      </div>
+                      <div className="mt-3 flex gap-1">
+                        {[0,1,2,3,4,5,6,7,8,9,10,11].map(i=><span key={i} className="h-1 flex-1 animate-pulse rounded-full bg-[#C2A378]/30" style={{animationDelay: i * 90 + 'ms'}}></span>)}
+                      </div>
+                    </div>
+                    <div className="mt-5 flex flex-wrap justify-center gap-2">
+                      {(isAr ? ["كم مولد في المخزون؟","أين المولد؟","ماذا تعرف؟"] : ["How many gensets are in stock?","Where is genset 123?","What does DALI know?"]).map(q=><button key={q} type="button" onClick={()=>setChatInput(q)} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-[8px] font-bold text-[#C2A378] transition hover:-translate-y-0.5 hover:bg-white/10">{q}</button>)}
+                    </div>
+                  </div>
                 </div>
-              ) : advice ? (
-                <div className="whitespace-pre-wrap text-[11px] font-bold leading-7 text-slate-200">{advice}</div>
               ) : (
-                <div className="flex min-h-[380px] flex-col items-center justify-center text-center">
-                  <span className="text-5xl opacity-30">{activeConfig.icon}</span>
-                  <p className="mt-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-300">{isAr ? activeConfig.ar : activeConfig.en}</p>
-                  <p className="mt-2 max-w-xs text-[8px] font-bold leading-relaxed text-slate-500">{isAr ? 'اضغط تحليل القسم للحصول على قراءة مركزة لهذا القسم فقط.' : 'Run analysis to get a focused reading of this section only.'}</p>
-                </div>
+                <>
+                  {chatMessages.map((m,i)=>
+                    <div key={i} className={m.role==="user" ? "mb-4 text-right animate-in fade-in slide-in-from-bottom-2 duration-300" : "mb-4 text-left animate-in fade-in slide-in-from-bottom-2 duration-300"}>
+                      <div className="mb-1 text-[7px] font-black uppercase tracking-[0.25em] text-slate-500">{m.role==="user" ? (isAr ? "أنت" : "YOU") : "DALI"}</div>
+                      <div className={m.role==="user" ? "inline-block max-w-[94%] rounded-2xl border border-[#C2A378]/20 bg-[#C2A378]/10 px-3 py-3 text-[10px] font-bold leading-6 whitespace-pre-wrap text-white" : "inline-block max-w-[94%] rounded-2xl border border-white/10 bg-black/20 px-3 py-3 text-[10px] font-bold leading-6 whitespace-pre-wrap text-slate-200"}>{m.text}</div>
+                      {m.role==="dali" && <div className="mt-1 flex flex-wrap gap-1"><span className="rounded-full bg-emerald-400/10 px-2 py-0.5 text-[6px] font-black text-emerald-300">LIVE DATA</span><span className="rounded-full bg-white/5 px-2 py-0.5 text-[6px] font-black text-slate-500">FLEET</span></div>}
+                    </div>
+                  )}
+                  {chatLoading && (
+                    <div className="mt-2 overflow-hidden rounded-2xl border border-[#C2A378]/15 bg-[#C2A378]/5 p-4 animate-in fade-in duration-300">
+                      <div className="flex items-center gap-3">
+                        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#C2A378]/30 bg-black/20 text-[#C2A378]">
+                          <span className="absolute inset-1 animate-spin rounded-lg border border-[#C2A378]/20"></span>
+                          <span className="animate-pulse">◉</span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[7px] font-black uppercase tracking-[0.25em] text-[#C2A378]">{isAr ? 'دالي يعمل' : 'DALI IS WORKING'}</span>
+                            <span className="text-[6px] font-black text-slate-600">{chatPhase + 1}/{chatPhases.length}</span>
+                          </div>
+                          <p className="mt-1 truncate text-[9px] font-bold text-slate-300">{chatPhases[chatPhase]}</p>
+                        </div>
+                      </div>
+                      <div className="relative mt-4 h-1 overflow-hidden rounded-full bg-white/5">
+                        <div className="absolute inset-y-0 left-0 w-1/3 animate-[daliScan_1.1s_ease-in-out_infinite] rounded-full bg-[#C2A378]"></div>
+                      </div>
+                      <div className="mt-3 flex items-end gap-1">
+                        {[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].map(i=><span key={i} className="w-full animate-[daliWave_0.9s_ease-in-out_infinite] rounded-full bg-[#C2A378]/30" style={{height: 6 + ((i * 7) % 15) + 'px', animationDelay: i * 55 + 'ms'}}></span>)}
+                      </div>
+                      <div className="mt-3 grid grid-cols-3 gap-2 text-[6px] font-black uppercase tracking-widest">
+                        <span className="rounded-lg bg-black/20 px-2 py-2 text-center text-emerald-300">● {isAr ? 'بيانات' : 'DATA'}</span>
+                        <span className="rounded-lg bg-black/20 px-2 py-2 text-center text-emerald-300">● {isAr ? 'معرفة' : 'KNOWLEDGE'}</span>
+                        <span className="rounded-lg bg-black/20 px-2 py-2 text-center text-emerald-300">● {isAr ? 'ذاكرة' : 'MEMORY'}</span>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
-            <button
-              type="button"
-              onClick={runStrategicAdvisor}
-              disabled={isThinking}
-              className="mt-4 w-full rounded-2xl bg-[#C2A378] py-4 text-[9px] font-black uppercase tracking-[0.3em] text-[#001F3F] shadow-lg transition-all hover:brightness-105 disabled:opacity-40"
-            >
-              {isThinking ? (isAr ? 'جاري التحليل...' : 'ANALYZING...') : (isAr ? `حلل ${activeConfig.ar}` : `ANALYZE ${activeConfig.en}`)}
-            </button>
+            <div className="border-t border-white/10 bg-black/10 p-3">
+              <div className="flex gap-2 rounded-2xl border border-white/10 bg-white/[0.04] p-1.5 transition focus-within:border-[#C2A378]/40">
+                <textarea value={chatInput} onChange={e=>setChatInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();askFleetDali();}}} placeholder={isAr ? "اكتب سؤالك..." : "Ask DALI anything..."} className="min-h-[46px] max-h-28 flex-1 resize-none rounded-xl border-0 bg-transparent px-3 py-2 text-[16px] leading-5 text-white outline-none placeholder:text-white/30 sm:text-xs"/>
+                <button type="button" onClick={askFleetDali} disabled={chatLoading||!chatInput.trim()} className="self-end h-11 w-11 rounded-xl border border-[#C2A378]/30 bg-[#C2A378] text-[#001F3F] transition hover:scale-105 disabled:opacity-30">➤</button>
+              </div>
+              <div className="mt-2 flex items-center justify-between text-[7px] font-black uppercase tracking-widest text-slate-600">
+                <span>＋ Teach</span><span>📎 Attach</span><span>⌕ Search</span><span className={chatLoading ? "animate-pulse text-[#C2A378]" : ""}>{chatLoading ? (isAr ? "● معالجة" : "● PROCESSING") : "● READY"}</span>
+              </div>
+            </div>
 
-            <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3">
-              <span className="text-[7px] font-black uppercase tracking-widest text-slate-500">{isAr ? 'مصدر البيانات' : 'DATA SOURCE'}</span>
-              <span className="text-[8px] font-black text-emerald-300">NILE FLEET • LIVE</span>
+            <div className="border-t border-white/10 p-3">
+              <button type="button" onClick={runStrategicAdvisor} disabled={isThinking} className="w-full rounded-xl border border-[#C2A378]/30 bg-white/5 py-3 text-[8px] font-black uppercase tracking-[0.2em] text-[#C2A378] transition hover:bg-white/10 disabled:opacity-40">
+                {isThinking ? (isAr?"جاري التحليل...":"ANALYZING...") : (isAr?"تحليل القسم الحالي":"ANALYZE CURRENT VIEW")}
+              </button>
             </div>
           </div>
         </aside>
       </section>
     </div>
+    </>
   );
 };
 
