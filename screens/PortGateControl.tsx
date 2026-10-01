@@ -271,14 +271,21 @@ const PortGateControl: React.FC = () => {
     setShowDoubleConfirm(false);
   };
 
-  const finalizeClipOff = () => {
+  const finalizeClipOff = async () => {
     if (!clipOffCandidate) return;
-    db.updateOperation({ 
-      ...clipOffCandidate, 
-      status: 'DONE', 
-      clipOffDate: new Date().toISOString().split('T')[0], 
-      clipOffPort: selectedPort 
+    const saved = await db.updateOperation({
+      ...clipOffCandidate,
+      status: 'DONE',
+      clipOffDate: new Date().toISOString().split('T')[0],
+      clipOffPort: selectedPort
     });
+    if (!saved) {
+      addNotification(isAr
+        ? `❌ فشل حفظ الاستلام: ${db.getLastDbError() || 'خطأ غير محدد'}`
+        : `❌ RELEASE FAILED: ${db.getLastDbError() || 'Unknown database error'}`);
+      return;
+    }
+    await db.reloadOperations();
     addNotification(isAr ? `تم الاستلام: ${clipOffCandidate.gensetNumber}` : `RELEASED: ${clipOffCandidate.gensetNumber}`);
     setClipOffCandidate(null);
   };
