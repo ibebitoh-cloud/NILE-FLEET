@@ -4,18 +4,29 @@ const AI_ENDPOINT = '/ai-proxy';
 const OPEN_SOURCE_MODEL = '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b';
 
 function extractDaliChatData(prompt: string) {
-  const marker = '\nLIVE DATABASE:\n';
-  const qMarker = '\nUSER QUESTION:\n';
-  const start = prompt.indexOf(marker);
-  const end = prompt.indexOf(qMarker, start + marker.length);
-  if (start < 0 || end < 0) return null;
-  try {
-    const live = JSON.parse(prompt.slice(start + marker.length, end));
-    const question = prompt.slice(end + qMarker.length).trim();
-    return { live, question };
-  } catch {
-    return null;
+  // Layout currently sends DALI data as LIVE CONTEXT + LATEST USER QUESTION.
+  // Keep compatibility with the older LIVE DATABASE + USER QUESTION format too.
+  const formats = [
+    { dataMarker: '\nLIVE CONTEXT: ', questionMarker: '\nLATEST USER QUESTION: ' },
+    { dataMarker: '\nLIVE DATABASE:\n', questionMarker: '\nUSER QUESTION:\n' },
+  ];
+
+  for (const format of formats) {
+    const dataStart = prompt.indexOf(format.dataMarker);
+    const questionStart = prompt.indexOf(format.questionMarker);
+    if (dataStart < 0 || questionStart < 0) continue;
+
+    const jsonStart = dataStart + format.dataMarker.length;
+    const jsonEnd = questionStart;
+    try {
+      const live = JSON.parse(prompt.slice(jsonStart, jsonEnd).trim());
+      const question = prompt.slice(questionStart + format.questionMarker.length).trim();
+      if (question) return { live, question };
+    } catch {
+      // Try the next supported prompt format.
+    }
   }
+  return null;
 }
 
 function normalizeText(value: unknown): string {
