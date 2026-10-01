@@ -206,7 +206,7 @@ const App: React.FC = () => {
   // behind the auth gate below, including direct navigation and refreshes.
   useEffect(() => {
     const allScreens = new Set([
-      'dashboard', 'dashboard-analytics', 'analytics', 'master-view', 'operations', 'operations-master', 'port-gate',
+      'dali-knowledge', 'dashboard', 'dashboard-analytics', 'analytics', 'master-view', 'operations', 'operations-master', 'port-gate',
       'booking-invoices', 'booking-reservations', 'intelligence', 'reports', 'stock', 'reservations',
       'customers', 'customers-prices', 'user-mgmt', 'customer-prices', 'support', 'administration',
       'notifications', 'system-log', 'user-settings', 'cust-reservations',
@@ -694,7 +694,11 @@ const App: React.FC = () => {
           { id: 'reservations', label: lang === 'ar' ? 'الحجوزات' : 'Bookings', icon: '📅', content: <Reservations /> },
         ]} />;
       case 'financials': return <Financials />;
-      case 'intelligence': return <Intelligence />;
+      case 'intelligence':
+        return <ScreenHub title={lang === 'ar' ? 'مركز دالي' : 'DALI COMMAND CENTER'} tabs={[
+          { id: 'intelligence', label: lang === 'ar' ? 'الاستخبارات' : 'Intelligence', icon: '🧠', content: <Intelligence /> },
+          { id: 'dali-knowledge', label: lang === 'ar' ? 'قاعدة المعرفة' : 'Knowledge', icon: '📚', content: <DaliKnowledgeCenter /> },
+        ]} />;
       case 'reports': return <Reports />;
       case 'stock': return <StockManagement />;
       case 'reservations': return <Reservations />;
