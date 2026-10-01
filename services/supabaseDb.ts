@@ -327,22 +327,33 @@ class SupabaseDB {
       isCustomer = String(profile?.role || '').toUpperCase() === 'CUSTOMER' && !profile?.revoked;
     }
 
-    const common = [
-      query<Reservation>('reservations', { order: 'created_at' }),
-      query<Operation>('operations', { order: 'created_at' }),
-      query<Invoice>('invoices', { order: 'created_at' }),
-      query<Payment>('payments', { order: 'created_at' }),
-      query<PaymentAllocation>('payment_allocations', { order: 'created_at' }),
-      query<User>('profiles', { order: 'created_at' }),
-      query<SystemNotification>('system_notifications', { order: 'timestamp' }),
-      query<SupportContact>('support_contacts'),
-      query<FAQItem>('faqs'),
-      query<PortInfo>('ports_info'),
-    ];
+    // Keep these promises in a named object so TypeScript preserves each
+    // result type. A heterogeneous array loses the tuple types when spread.
+    const common = {
+      reservations: query<Reservation>('reservations', { order: 'created_at' }),
+      operations: query<Operation>('operations', { order: 'created_at' }),
+      invoices: query<Invoice>('invoices', { order: 'created_at' }),
+      payments: query<Payment>('payments', { order: 'created_at' }),
+      paymentAllocations: query<PaymentAllocation>('payment_allocations', { order: 'created_at' }),
+      users: query<User>('profiles', { order: 'created_at' }),
+      notifications: query<SystemNotification>('system_notifications', { order: 'timestamp' }),
+      supportContacts: query<SupportContact>('support_contacts'),
+      faqs: query<FAQItem>('faqs'),
+      portsInfo: query<PortInfo>('ports_info'),
+    };
 
     if (isCustomer) {
       const [reservations, operations, invoices, payments, paymentAllocations, users, notifications, supportContacts, faqs, portsInfo, customerPrices] = await Promise.all([
-        ...common,
+        common.reservations,
+        common.operations,
+        common.invoices,
+        common.payments,
+        common.paymentAllocations,
+        common.users,
+        common.notifications,
+        common.supportContacts,
+        common.faqs,
+        common.portsInfo,
         query<CustomerPrice>('customer_prices'),
       ]);
       _stock = [];
