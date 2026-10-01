@@ -84,20 +84,46 @@ function resolveCustomerId(customerName: string): string | undefined {
   return customer?.id;
 }
 
-function prepareOperationsDbRow(row: any): any {
+function prepareOperationsDbRow(row: any, partial = false): any {
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo' }).format(new Date());
-  const opDate = normalizeDateForDb(row.operationDate, today);
-  const clipOffDate = normalizeDateForDb(row.clipOffDate, '');
-  return {
-    ...row,
-    operationDate: opDate,
-    dateReceived: normalizeDateForDb(row.dateReceived, opDate),
-    clipOnDate: normalizeDateForDb(row.clipOnDate, opDate),
-    // PostgreSQL DATE columns reject an empty string. An operation that has
-    // not been clipped off yet must be stored as NULL, not "".
-    clipOffDate: clipOffDate || null,
-    customerId: row.customerId || resolveCustomerId(row.customerName) || null
-  };
+  const prepared = { ...row };
+
+  // Inserts need normalized/defaulted dates. Partial updates must only touch
+  // fields explicitly supplied by the caller; otherwise updating an unrelated
+  // field (for example invoiced/reviewedByManager) could silently overwrite
+  // operation dates and customer_id.
+  if (!partial || Object.prototype.hasOwnProperty.call(row, 'operationDate')) {
+    const fallback = partial ? undefined : today;
+    const normalized = normalizeDateForDb(row.operationDate, fallback as any);
+    if (normalized) prepared.operationDate = normalized;
+    else if (partial) delete prepared.operationDate;
+  }
+  if (!partial || Object.prototype.hasOwnProperty.call(row, 'dateReceived')) {
+    const fallback = partial
+      ? (Object.prototype.hasOwnProperty.call(row, 'operationDate') ? prepared.operationDate : undefined)
+      : (prepared.operationDate || today);
+    const normalized = normalizeDateForDb(row.dateReceived, fallback as any);
+    if (normalized) prepared.dateReceived = normalized;
+    else if (partial) delete prepared.dateReceived;
+  }
+  if (!partial || Object.prototype.hasOwnProperty.call(row, 'clipOnDate')) {
+    const fallback = partial
+      ? (Object.prototype.hasOwnProperty.call(row, 'operationDate') ? prepared.operationDate : undefined)
+      : (prepared.operationDate || today);
+    const normalized = normalizeDateForDb(row.clipOnDate, fallback as any);
+    if (normalized) prepared.clipOnDate = normalized;
+    else if (partial) delete prepared.clipOnDate;
+  }
+  if (!partial || Object.prototype.hasOwnProperty.call(row, 'clipOffDate')) {
+    const normalized = normalizeDateForDb(row.clipOffDate, '');
+    prepared.clipOffDate = normalized || null;
+  }
+
+  if (!partial || Object.prototype.hasOwnProperty.call(row, 'customerId') || Object.prototype.hasOwnProperty.call(row, 'customerName')) {
+    prepared.customerId = row.customerId || resolveCustomerId(row.customerName) || null;
+  }
+
+  return prepared;
 }
 
 async function insert<T>(table: string, row: Partial<T>): Promise<T | null> {
@@ -116,7 +142,7 @@ async function upsert<T>(table: string, row: Partial<T>): Promise<T | null> {
 }
 
 async function update<T>(table: string, id: string, updates: Partial<T>): Promise<boolean> {
-  const prepared = table === 'operations' ? prepareOperationsDbRow(updates) : updates;
+  const prepared = table === 'operations' ? prepareOperationsDbRow(updates, true) : updates;
   const { data, error } = await supabase
     .from(table)
     .update(camelToSnake(prepared))
