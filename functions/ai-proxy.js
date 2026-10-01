@@ -1,4 +1,4 @@
-// Cloudflare Pages Function: runs all AI features on Cloudflare Workers AI.
+// Cloudflare Pages Function: DALI 4.0 runs AI features on Cloudflare Workers AI.
 // DALI uses the open-source DeepSeek-R1-Distill-Qwen-32B model for interactive
 // reasoning, with Qwen3-30B-A3B as the open-source fallback.
 // OCR remains on the dedicated vision models below.
@@ -49,7 +49,7 @@ export async function onRequestPost(context) {
   if (request.method === 'GET') {
     return json({
       ok: !!env.AI,
-      service: 'DALI 3.0',
+      service: 'DALI 4.0 - DeepSeek R1',
       textModel: TEXT_MODEL,
       fallbackTextModel: TEXT_FALLBACK_MODEL,
       visionModel: VISION_MODEL,
