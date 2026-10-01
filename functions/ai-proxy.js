@@ -1,11 +1,11 @@
 // Cloudflare Pages Function: runs all AI features on Cloudflare Workers AI.
 // DALI uses the open-source DeepSeek-R1-Distill-Qwen-32B model for interactive
-// reasoning, with DeepSeek V4 Flash as the DeepSeek-native fallback.
+// reasoning, with Qwen3-30B-A3B as the open-source fallback.
 // OCR remains on the dedicated vision models below.
 const TEXT_MODEL = '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b';
 const VISION_MODEL = '@cf/qwen/qwen3.8-27b';
 const VISION_FALLBACK_MODEL = '@cf/meta/llama-3.2-11b-vision-instruct';
-const TEXT_FALLBACK_MODEL = '@cf/deepseek-ai/deepseek-v4-flash-0731';
+const TEXT_FALLBACK_MODEL = '@cf/qwen/qwen3-30b-a3b-fp8';
 
 // Open models are less reliable than Claude/GPT at strictly following
 // "return only JSON" instructions — strip code fences and grab the first
@@ -186,14 +186,14 @@ function cleanModelText(text) {
 }
 
 async function runTextModel(env, options) {
-  // Primary: open-source DeepSeek-R1 distilled model. Fallback: newer DeepSeek V4 Flash.
+  // Primary: open-source DeepSeek-R1 distilled model. Fallback: open-source Qwen3-30B-A3B.
   // Both run inside Cloudflare Workers AI; no external API key is exposed to the browser.
   try {
     const result = await env.AI.run(TEXT_MODEL, options);
     if (extractText(result)) return result;
     console.error('Primary DeepSeek R1 model returned an empty text response:', result);
   } catch (primaryError) {
-    console.error('Primary DeepSeek R1 model failed, trying DeepSeek V4 Flash:', primaryError);
+    console.error('Primary DeepSeek R1 model failed, trying Qwen3-30B-A3B:', primaryError);
   }
 
   try {
@@ -202,10 +202,10 @@ async function runTextModel(env, options) {
       temperature: Math.min(Number(options.temperature ?? 0.6), 0.4),
     });
     if (extractText(result)) return result;
-    throw new Error('DeepSeek V4 Flash fallback returned an empty text response.');
+    throw new Error('Qwen3-30B-A3B fallback returned an empty text response.');
   } catch (fallbackError) {
     throw new Error(
-      `DeepSeek R1 Distill failed; DeepSeek V4 Flash fallback failed: ${fallbackError?.message || fallbackError}`
+      `DeepSeek R1 Distill failed; Qwen3-30B-A3B fallback failed: ${fallbackError?.message || fallbackError}`
     );
   }
 }
