@@ -23,6 +23,7 @@ const Intelligence: React.FC = () => {
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'dali'; text: string }[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
+  const [fleetDaliSessionId] = useState(() => crypto.randomUUID());
   const apiKeySet = true; // DALI 1.0 uses the server-side Cloudflare AI binding; no browser key is required.
 
   const phases = isAr 
@@ -200,7 +201,7 @@ ${JSON.stringify(viewData)}`;
       const answer = await runThinkingAudit(prompt, 900);
       const finalAnswer = answer || (responseIsAr ? 'لم أجد نتيجة واضحة في البيانات الحالية.' : 'I could not find a clear result in the current live data.');
       setChatMessages(prev => [...prev, { role: 'dali', text: finalAnswer }]);
-      await saveDaliConversationMessage({ sessionId: 'fleet-intelligence', role: 'user', message: question, entities: { screen: 'intelligence' } }).catch(()=>{});
+      await saveDaliConversationMessage({ sessionId: fleetDaliSessionId, role: 'user', message: question, entities: { screen: 'intelligence' } }).catch(()=>{});
       await saveDaliConversationMessage({ sessionId: 'fleet-intelligence', role: 'assistant', message: finalAnswer, entities: { screen: 'intelligence' } }).catch(()=>{});
     } catch (err) {
       setChatMessages(prev => [...prev, { role: 'dali', text: responseIsAr ? 'تعذر الاتصال بدالي حالياً. أعد المحاولة.' : 'DALI is temporarily unavailable. Please retry.' }]);
