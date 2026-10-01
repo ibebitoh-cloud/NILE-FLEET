@@ -6,8 +6,5 @@
   "vars": {
     "SUPABASE_URL": "https://mlxsafyubdsssugyiarx.supabase.co",
     "SUPABASE_ANON_KEY": "sb_publishable_A6Mc79suLAirBb1mo3L_Vg_NnUXiB1F"
-  },
-  "ai": {
-    "binding": "AI"
   }
 }
