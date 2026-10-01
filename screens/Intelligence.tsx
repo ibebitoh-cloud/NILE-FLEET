@@ -365,7 +365,8 @@ ${JSON.stringify(viewData)}`;
   const primaryClass = isDark ? 'text-white' : 'text-[#001F3F]';
 
   return (
-    <style>{`
+    <>
+      <style>{`
       @keyframes daliScan { 0% { transform: translateX(-120%); } 100% { transform: translateX(420%); } }
       @keyframes daliWave { 0%, 100% { transform: scaleY(.45); opacity: .35; } 50% { transform: scaleY(1.25); opacity: 1; } }
     `}</style>
@@ -745,6 +746,7 @@ ${JSON.stringify(viewData)}`;
         </aside>
       </section>
     </div>
+    </>
   );
 };
 
