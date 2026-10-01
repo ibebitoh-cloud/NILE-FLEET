@@ -212,6 +212,66 @@ let _maintenanceLogs: GensetMaintenanceLog[] = [];
 let _loaded = false;
 let _lastDbError = '';
 
+// Realtime keeps the shared in-memory cache aligned with Supabase when another
+// tab, device, or user changes an operation/invoice/reservation/genset.
+let _realtimeChannel: ReturnType<typeof supabase.channel> | null = null;
+let _realtimeRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+const _realtimeRefreshKinds = new Set<string>();
+
+function scheduleRealtimeRefresh(kind: string) {
+  _realtimeRefreshKinds.add(kind);
+  if (_realtimeRefreshTimer) clearTimeout(_realtimeRefreshTimer);
+  _realtimeRefreshTimer = setTimeout(async () => {
+    _realtimeRefreshTimer = null;
+    const kinds = new Set(_realtimeRefreshKinds);
+    _realtimeRefreshKinds.clear();
+
+    let changed = false;
+    const reload = async <T,>(table: string, assign: (rows: T[]) => void, order?: string) => {
+      try {
+        const rows = await query<T>(table, order ? { order } : undefined);
+        assign(rows);
+        changed = true;
+      } catch (error) {
+        console.error(`[supabaseDb] realtime reload ${table}:`, error);
+      }
+    };
+
+    if (kinds.has('operations')) {
+      await reload<Operation>('operations', rows => { _operations = rows; }, 'created_at');
+      await reload<Genset>('gensets', rows => { _stock = rows; }, 'created_at');
+      await reload<Invoice>('invoices', rows => { _invoices = rows; }, 'created_at');
+    }
+    if (kinds.has('gensets')) {
+      await reload<Genset>('gensets', rows => { _stock = rows; }, 'created_at');
+    }
+    if (kinds.has('invoices')) {
+      await reload<Invoice>('invoices', rows => { _invoices = rows; }, 'created_at');
+    }
+    if (kinds.has('reservations')) {
+      await reload<Reservation>('reservations', rows => { _reservations = rows; }, 'created_at');
+    }
+
+    if (changed) dispatchChange();
+  }, 150);
+}
+
+function startRealtimeSync() {
+  if (_realtimeChannel) return;
+
+  _realtimeChannel = supabase
+    .channel('nile-fleet-shared-data-sync')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'operations' }, () => scheduleRealtimeRefresh('operations'))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'invoices' }, () => scheduleRealtimeRefresh('invoices'))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, () => scheduleRealtimeRefresh('reservations'))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'gensets' }, () => scheduleRealtimeRefresh('gensets'))
+    .subscribe(status => {
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        console.error('[supabaseDb] realtime subscription status:', status);
+      }
+    });
+}
+
 class SupabaseDB {
 
   // ─── bootstrap ─────────────────────────────────────────────────────────────
@@ -307,6 +367,7 @@ class SupabaseDB {
     }
     _loaded = true;
     dispatchChange();
+    startRealtimeSync();
   }
 
   // ─── synchronous getters (return cached data) ───────────────────────────────
