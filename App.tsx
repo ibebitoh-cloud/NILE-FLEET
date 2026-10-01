@@ -181,7 +181,7 @@ const App: React.FC = () => {
       // While the login screen is verifying/celebrating, don't open the app early.
       if (loggingInRef.current && event !== 'SIGNED_OUT') return;
 
-      window.setTimeout(() => {
+      window.setTimeout(async () => {
         if (cancelled) return;
 
         if (event === 'SIGNED_OUT') {
