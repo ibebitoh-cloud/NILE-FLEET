@@ -147,24 +147,13 @@ export async function createRealAccount(email: string, password: string, profile
     const accessToken = sessionData.session?.access_token;
     if (!accessToken) return { error: 'No active administrator session' };
 
-    const res = await fetch('/create-user', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({ email, password, profile }),
-    });
-    const responseText = await res.text();
-    let data: any;
-    try {
-      data = responseText ? JSON.parse(responseText) : {};
-    } catch {
-      return { error: `Create-user service returned HTTP ${res.status}: ${responseText.slice(0, 300) || 'non-JSON response'}` };
-    }
-    if (!res.ok || data.error) return { error: data.error || `Failed to create account (HTTP ${res.status})` };
-    if (!data.userId) return { error: 'Account service did not return a user ID' };
-    return { userId: data.userId };
+    const { data, error } = await supabase.functions.invoke('create-user', {
+  headers: { Authorization: `Bearer ${accessToken}` },
+  body: { email, password, profile },
+});
+if (error) return { error: error.message || 'Create-user service failed' };
+if (!data?.ok || !data?.userId) return { error: data?.error || 'Account service did not return a user ID' };
+return { userId: data.userId };
   } catch (e: any) {
     return { error: e?.message || 'Network error creating account' };
   }
