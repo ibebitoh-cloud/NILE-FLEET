@@ -23,6 +23,7 @@ const BookingInvoices = lazy(() => import('./screens/BookingInvoices'));
 const DaliKnowledgeCenter = lazy(() => import('./screens/DaliKnowledgeCenter'));
 const Notifications = lazy(() => import('./screens/Notifications'));
 import Layout from './components/Layout';
+import ScreenHub from './components/ScreenHub';
 import { User, UserRole } from './types';
 import { db } from './services/supabaseDb';
 import { supabase } from './services/supabaseClient';
@@ -32,9 +33,9 @@ import { translateBusinessEntities, getSafeApiKey } from './services/aiService';
 
 type Language = 'en' | 'ar';
 const getDefaultAllowedScreens = (role: UserRole): string[] => {
-  if (role === UserRole.ADMIN) return ['dali-knowledge', 'dashboard', 'analytics', 'master-view', 'port-gate', 'operations', 'booking-invoices', 'financials', 'intelligence', 'reports', 'stock', 'reservations', 'customers', 'user-mgmt', 'customer-prices', 'financials', 'support', 'notifications', 'system-log', 'user-settings'];
-  if (role === UserRole.MANAGER) return ['dali-knowledge', 'dashboard', 'master-view', 'operations', 'stock', 'reservations', 'customers', 'customer-prices', 'booking-invoices', 'financials', 'intelligence', 'reports', 'notifications', 'system-log', 'support', 'user-settings'];
-  if (role === UserRole.VIEWER) return ['dali-knowledge', 'dashboard', 'master-view', 'reports', 'intelligence', 'notifications', 'support', 'system-log'];
+  if (role === UserRole.ADMIN) return ['dali-knowledge', 'dashboard', 'dashboard-analytics', 'operations', 'operations-master', 'port-gate', 'booking-invoices', 'booking-reservations', 'financials', 'intelligence', 'reports', 'stock', 'customers', 'customers-prices', 'administration', 'user-mgmt', 'customer-prices', 'support', 'notifications', 'system-log', 'user-settings'];
+  if (role === UserRole.MANAGER) return ['dali-knowledge', 'dashboard', 'operations', 'operations-master', 'stock', 'customers', 'customers-prices', 'booking-invoices', 'booking-reservations', 'financials', 'intelligence', 'reports', 'notifications', 'system-log', 'support', 'user-settings', 'administration'];
+  if (role === UserRole.VIEWER) return ['dali-knowledge', 'dashboard', 'operations', 'operations-master', 'reports', 'intelligence', 'notifications', 'support', 'system-log'];
   if (role === UserRole.GATE_OPERATOR) return ['port-gate', 'notifications', 'support', 'user-settings'];
   return ['cust-reservations', 'cust-invoices', 'notifications', 'support', 'user-settings'];
 };
@@ -205,9 +206,9 @@ const App: React.FC = () => {
   // behind the auth gate below, including direct navigation and refreshes.
   useEffect(() => {
     const allScreens = new Set([
-      'dashboard', 'analytics', 'master-view', 'port-gate', 'operations',
-      'booking-invoices', 'intelligence', 'reports', 'stock', 'reservations',
-      'customers', 'user-mgmt', 'customer-prices', 'support',
+      'dashboard', 'dashboard-analytics', 'analytics', 'master-view', 'operations', 'operations-master', 'port-gate',
+      'booking-invoices', 'booking-reservations', 'intelligence', 'reports', 'stock', 'reservations',
+      'customers', 'customers-prices', 'user-mgmt', 'customer-prices', 'support', 'administration',
       'notifications', 'system-log', 'user-settings', 'cust-reservations',
       'cust-invoices'
     ]);
@@ -636,11 +637,26 @@ const App: React.FC = () => {
 
   const canAccessScreen = (screen: string): boolean => {
     if (screen === 'no-access') return true;
-    // DALI/Fleet Intelligence is an internal staff capability and must never be available to customer accounts,
-    // even if an administrator accidentally leaves the screen in the customer's custom allowedScreens list.
+    // Customers stay isolated from all internal staff screens.
     if (user.role === UserRole.CUSTOMER) return ['cust-reservations', 'cust-invoices', 'notifications', 'support'].includes(screen);
-    if (Array.isArray(user.allowedScreens)) return user.allowedScreens.includes(screen);
-    return getDefaultAllowedScreens(user.role).includes(screen);
+
+    const groupedAccess: Record<string, string[]> = {
+      'dashboard-analytics': ['dashboard', 'analytics'],
+      'operations-master': ['operations', 'master-view'],
+      'booking-reservations': ['booking-invoices', 'reservations'],
+      'customers-prices': ['customers', 'customer-prices'],
+      'administration': ['user-mgmt', 'notifications', 'system-log', 'support', 'user-settings'],
+    };
+
+    if (Array.isArray(user.allowedScreens)) {
+      if (user.allowedScreens.includes(screen)) return true;
+      const children = groupedAccess[screen];
+      return Boolean(children?.some(child => user.allowedScreens?.includes(child)));
+    }
+
+    if (getDefaultAllowedScreens(user.role).includes(screen)) return true;
+    const children = groupedAccess[screen];
+    return Boolean(children?.some(child => getDefaultAllowedScreens(user.role).includes(child)));
   };
 
   const renderScreen = (screen: string) => {
@@ -652,22 +668,54 @@ const App: React.FC = () => {
       case 'no-access': return <div role="status" className="mx-auto mt-16 max-w-lg rounded-2xl border border-amber-300 bg-amber-50 p-8 text-center text-sm font-bold text-amber-900">{lang === 'ar' ? 'لم يتم تعيين أي شاشات لهذا الحساب. تواصل مع مسؤول النظام.' : 'No screens are assigned to this account. Contact your administrator.'}</div>;
       case 'dali-knowledge': return <DaliKnowledgeCenter />;
       case 'dashboard': return <Dashboard onNavigate={navigateTo} />;
+      case 'dashboard-analytics':
+        return <ScreenHub title={lang === 'ar' ? 'لوحة التحكم' : 'DASHBOARD'} tabs={[
+          { id: 'dashboard', label: lang === 'ar' ? 'لوحة التحكم' : 'Dashboard', icon: '📊', content: <Dashboard onNavigate={navigateTo} /> },
+          { id: 'analytics', label: lang === 'ar' ? 'التحليلات' : 'Analytics', icon: '📈', content: <Analytics /> },
+        ]} />;
       case 'analytics': return <Analytics />;
+      case 'operations-master':
+        return <ScreenHub title={lang === 'ar' ? 'العمليات' : 'OPERATIONS'} tabs={[
+          { id: 'operations', label: lang === 'ar' ? 'العمليات الحية' : 'Live Operations', icon: '🚛', content: <Operations highlightId={highlightId} clearHighlight={() => setHighlightId(null)} /> },
+          { id: 'master-view', label: lang === 'ar' ? 'العرض الرئيسي' : 'Master View', icon: '📑', content: <MasterView /> },
+        ]} />;
       case 'master-view': return <MasterView />;
       case 'port-gate': return <PortGateControl />;
       case 'operations': return <Operations highlightId={highlightId} clearHighlight={() => setHighlightId(null)} />;
       case 'booking-invoices': return <BookingInvoices />;
+      case 'booking-reservations':
+        return <ScreenHub title={lang === 'ar' ? 'الحجوزات والفواتير' : 'BOOKINGS & INVOICES'} tabs={[
+          { id: 'booking-invoices', label: lang === 'ar' ? 'الفواتير' : 'Invoices', icon: '🧾', content: <BookingInvoices /> },
+          { id: 'reservations', label: lang === 'ar' ? 'الحجوزات' : 'Bookings', icon: '📅', content: <Reservations /> },
+        ]} />;
       case 'financials': return <Financials />;
       case 'intelligence': return <Intelligence />;
       case 'reports': return <Reports />;
       case 'stock': return <StockManagement />;
       case 'reservations': return <Reservations />;
       case 'customers': return <Customers />;
+      case 'customers-prices':
+        return <ScreenHub title={lang === 'ar' ? 'العملاء' : 'CUSTOMERS'} tabs={[
+          { id: 'customers', label: lang === 'ar' ? 'العملاء' : 'Customers', icon: '🤝', content: <Customers /> },
+          { id: 'customer-prices', label: lang === 'ar' ? 'الأسعار' : 'Rates', icon: '💰', content: <CustomerPrices /> },
+        ]} />;
       case 'user-mgmt': return <UserMgmt />;
       case 'customer-prices': return <CustomerPrices />;
             case 'support': return <CustomerService />;
       case 'notifications': return <Notifications />;
       case 'system-log': return <HistoryLog />;
+      case 'administration':
+        return <ScreenHub title={lang === 'ar' ? 'الإدارة' : 'ADMINISTRATION'} tabs={[
+          { id: 'user-mgmt', label: lang === 'ar' ? 'المستخدمون' : 'Users', icon: '👤', content: <UserMgmt /> },
+          { id: 'notifications', label: lang === 'ar' ? 'التنبيهات' : 'Notifications', icon: '🔔', content: <Notifications /> },
+          { id: 'system-log', label: lang === 'ar' ? 'سجل النظام' : 'System Log', icon: '🕒', content: <HistoryLog /> },
+          { id: 'support', label: lang === 'ar' ? 'الدعم' : 'Support', icon: '🎧', content: <CustomerService /> },
+          { id: 'user-settings', label: lang === 'ar' ? 'الإعدادات' : 'Settings', icon: '⚙️', content: <UserSettings user={user} onUpdate={(updates) => {
+            const updated = { ...user, ...updates };
+            setUser(updated);
+            localStorage.setItem('user', JSON.stringify(updated));
+          }} /> },
+        ]} />;
       case 'user-settings': return <UserSettings user={user} onUpdate={(updates) => {
         const updated = { ...user, ...updates };
         setUser(updated);
