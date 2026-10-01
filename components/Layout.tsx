@@ -1339,46 +1339,44 @@ I understand the relationships between gensets, bookings, containers, customers,
 
   const allPossibleMenuItems = [
     { id: 'dashboard', label: t.dashboard, icon: '📊' },
+    { id: 'dashboard-analytics', label: isAr ? 'لوحة التحكم والتحليلات' : 'DASHBOARD & ANALYTICS', icon: '📊' },
     { id: 'port-gate', label: t.portGate, icon: '🚧' },
-    { id: 'master-view', label: t.masterView, icon: '📑' },
+    { id: 'operations-master', label: isAr ? 'العمليات والعرض الرئيسي' : 'OPERATIONS & MASTER', icon: '🚛' },
     { id: 'operations', label: t.operations, icon: '🚛' },
-    { id: 'notifications', label: isAr ? 'التنبيهات' : 'NOTIFICATIONS', icon: '🔔' },
+    { id: 'master-view', label: t.masterView, icon: '📑' },
+    { id: 'booking-reservations', label: isAr ? 'الحجوزات والفواتير' : 'BOOKINGS & INVOICES', icon: '🧾' },
     { id: 'booking-invoices', label: lang === 'ar' ? 'فواتير الحجوزات' : 'BOOKING INVOICES', icon: '🧾' },
+    { id: 'reservations', label: t.reservations, icon: '📅' },
     { id: 'financials', label: lang === 'ar' ? 'المالية' : 'FINANCE', icon: '🏦' },
-    { id: 'analytics', label: t.analytics, icon: '📈' },
     { id: 'intelligence', label: t.intelligence, icon: '🧠' },
     { id: 'reports', label: t.reports, icon: '📝' },
     { id: 'stock', label: t.gensetStock, icon: '⚡' },
-    { id: 'reservations', label: t.reservations, icon: '📅' },
+    { id: 'customers-prices', label: isAr ? 'العملاء والأسعار' : 'CUSTOMERS & RATES', icon: '🤝' },
     { id: 'customers', label: t.customers, icon: '🤝' },
-    { id: 'user-mgmt', label: t.userMgmt, icon: '👤' },
     { id: 'customer-prices', label: t.customerPrices, icon: '💰' },
-    { id: 'support', label: t.support, icon: '🎧' },
+    { id: 'administration', label: isAr ? 'الإدارة' : 'ADMINISTRATION', icon: '⚙️' },
+    { id: 'user-mgmt', label: t.userMgmt, icon: '👤' },
+    { id: 'notifications', label: isAr ? 'التنبيهات' : 'NOTIFICATIONS', icon: '🔔' },
     { id: 'system-log', label: t.systemLog, icon: '🕒' },
+    { id: 'support', label: t.support, icon: '🎧' },
+    { id: 'user-settings', label: t.userSettings, icon: '⚙️' },
     { id: 'cust-reservations', label: t.reservations, icon: '📅' },
     { id: 'cust-invoices', label: t.financials, icon: '🏦' },
-    { id: 'user-settings', label: t.userSettings, icon: '⚙️' },
   ];
 
   const defaultMenu = isInternal ? [
-    { id: 'dashboard', label: t.dashboard, icon: '📊' },
+    { id: 'dashboard-analytics', label: isAr ? 'لوحة التحكم والتحليلات' : 'DASHBOARD & ANALYTICS', icon: '📊' },
     { id: 'port-gate', label: t.portGate, icon: '🚧' },
-    { id: 'master-view', label: t.masterView, icon: '📑' },
-    { id: 'operations', label: t.operations, icon: '🚛' },
-    { id: 'notifications', label: isAr ? 'التنبيهات' : 'NOTIFICATIONS', icon: '🔔' },
-    { id: 'booking-invoices', label: lang === 'ar' ? 'فواتير الحجوزات' : 'BOOKING INVOICES', icon: '🧾' },
+    { id: 'operations-master', label: isAr ? 'العمليات والعرض الرئيسي' : 'OPERATIONS & MASTER', icon: '🚛' },
+    { id: 'booking-reservations', label: isAr ? 'الحجوزات والفواتير' : 'BOOKINGS & INVOICES', icon: '🧾' },
     { id: 'financials', label: lang === 'ar' ? 'المالية' : 'FINANCE', icon: '🏦' },
-    { id: 'analytics', label: t.analytics, icon: '📈' },
     { id: 'intelligence', label: t.intelligence, icon: '🧠' },
     { id: 'reports', label: t.reports, icon: '📝' },
     { id: 'stock', label: t.gensetStock, icon: '⚡' },
-    { id: 'reservations', label: t.reservations, icon: '📅' },
-    { id: 'customers', label: t.customers, icon: '🤝' },
-    { id: 'user-mgmt', label: t.userMgmt, icon: '👤' },
-    { id: 'customer-prices', label: t.customerPrices, icon: '💰' },
-    { id: 'support', label: t.support, icon: '🎧' },
-    { id: 'system-log', label: t.systemLog, icon: '🕒' },
-  ] : (isGate ? [    { id: 'port-gate', label: t.portGate, icon: '🚧' },
+    { id: 'customers-prices', label: isAr ? 'العملاء والأسعار' : 'CUSTOMERS & RATES', icon: '🤝' },
+    { id: 'administration', label: isAr ? 'الإدارة' : 'ADMINISTRATION', icon: '⚙️' },
+  ] : (isGate ? [
+    { id: 'port-gate', label: t.portGate, icon: '🚧' },
     { id: 'notifications', label: isAr ? 'التنبيهات' : 'NOTIFICATIONS', icon: '🔔' },
     { id: 'support', label: t.support, icon: '🎧' },
     { id: 'user-settings', label: t.userSettings, icon: '⚙️' },
@@ -1390,18 +1388,32 @@ I understand the relationships between gensets, bookings, containers, customers,
   ]);
 
   const roleDefaultScreenIds = user.role === UserRole.MANAGER
-    ? ['dashboard', 'master-view', 'operations', 'stock', 'reservations', 'customers', 'customer-prices', 'booking-invoices', 'financials', 'intelligence', 'reports', 'notifications', 'system-log']
+    ? ['dashboard-analytics', 'port-gate', 'operations-master', 'booking-reservations', 'financials', 'stock', 'customers-prices', 'intelligence', 'reports', 'administration']
     : user.role === UserRole.VIEWER
-      ? ['dashboard', 'master-view', 'reports', 'intelligence', 'notifications', 'support', 'system-log']
+      ? ['dashboard-analytics', 'operations-master', 'reports', 'intelligence', 'administration']
       : null;
+
+  const groupedMenuChildren: Record<string, string[]> = {
+    'dashboard-analytics': ['dashboard', 'analytics'],
+    'operations-master': ['operations', 'master-view'],
+    'booking-reservations': ['booking-invoices', 'reservations'],
+    'customers-prices': ['customers', 'customer-prices'],
+    'administration': ['user-mgmt', 'notifications', 'system-log', 'support', 'user-settings'],
+  };
+
+  const hasMenuAccess = (id: string) => {
+    if (!Array.isArray(user.allowedScreens)) return true;
+    if (user.allowedScreens.includes(id)) return true;
+    return Boolean(groupedMenuChildren[id]?.some(child => user.allowedScreens?.includes(child)));
+  };
+
   const menu = user.role === UserRole.CUSTOMER
     ? allPossibleMenuItems.filter(item => ['cust-reservations', 'cust-invoices', 'notifications', 'support'].includes(item.id))
     : Array.isArray(user.allowedScreens)
-      ? allPossibleMenuItems.filter(item => user.allowedScreens?.includes(item.id))
-    : roleDefaultScreenIds
-      ? allPossibleMenuItems.filter(item => roleDefaultScreenIds.includes(item.id))
-      : defaultMenu;
-
+      ? allPossibleMenuItems.filter(item => hasMenuAccess(item.id))
+      : roleDefaultScreenIds
+        ? allPossibleMenuItems.filter(item => roleDefaultScreenIds.includes(item.id))
+        : defaultMenu;
   const isTerminal = isDark;
   
   const sidebarBg = isTerminal ? 'bg-[#001224]' : 'bg-white shadow-xl';
