@@ -26,3 +26,5 @@ create or replace function public.set_dali_knowledge_updated_at() returns trigge
 begin new.updated_at=now(); return new; end; $$;
 drop trigger if exists trg_dali_knowledge_updated_at on public.dali_knowledge;
 create trigger trg_dali_knowledge_updated_at before update on public.dali_knowledge for each row execute function public.set_dali_knowledge_updated_at();
+alter function public.set_dali_knowledge_updated_at() set search_path = public;
+create index if not exists idx_dali_knowledge_created_by on public.dali_knowledge(created_by);
