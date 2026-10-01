@@ -216,9 +216,15 @@ const App: React.FC = () => {
     const homeScreen = roleScreens.includes('dashboard') ? 'dashboard' : roleScreens.includes('port-gate') ? 'port-gate' : 'cust-reservations';
     const permittedScreens = user?.role === UserRole.CUSTOMER
       ? new Set(['cust-reservations', 'cust-invoices', 'notifications', 'support'])
-      : Array.isArray(user?.allowedScreens)
-        ? new Set(user.allowedScreens.filter(screen => allScreens.has(screen)))
-        : new Set(roleScreens);
+      : new Set(
+          (Array.isArray(user?.allowedScreens) ? user.allowedScreens : roleScreens)
+            .filter(screen => allScreens.has(screen))
+            .concat(
+              user?.role === UserRole.ADMIN || user?.role === UserRole.MANAGER
+                ? ['financials']
+                : []
+            )
+        );
     const syncFromUrl = () => {
       const screen = window.location.hash.slice(1).split('?')[0];
       if (!user) return;
@@ -640,6 +646,11 @@ const App: React.FC = () => {
     if (user.role === UserRole.CUSTOMER) return ['cust-reservations', 'cust-invoices', 'notifications', 'support'].includes(screen);
 
     if (Array.isArray(user.allowedScreens)) {
+      // Finance is an internal financial-control screen and must remain reachable
+      // for Admin/Manager accounts even when an older allowedScreens profile is stale.
+      if (screen === 'financials' && (user.role === UserRole.ADMIN || user.role === UserRole.MANAGER)) {
+        return true;
+      }
       return user.allowedScreens.includes(screen);
     }
 
