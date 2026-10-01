@@ -1,7 +1,7 @@
 import { supabase } from './supabaseClient';
 
 const AI_ENDPOINT = '/ai-proxy';
-// DALI's primary model is the open-source DeepSeek-R1 Distill model hosted by Cloudflare Workers AI.
+// DALI 4.0 uses the open-source DeepSeek-R1 Distill model hosted by Cloudflare Workers AI.
 const OPEN_SOURCE_MODEL = '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b';
 
 async function callAi(action: string, payload: any) {
@@ -60,7 +60,7 @@ export const runThinkingAudit = async (prompt: string, budget: number = 1200) =>
     if (error) throw new Error(detail || error);
     return text || '';
   } catch (e) {
-    console.error('DALI 3.0 failed', e);
+    console.error('DALI 4.0 DeepSeek route failed', e);
     throw e;
   }
 };
