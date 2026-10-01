@@ -1045,7 +1045,31 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         customers: customerAliasesForAi.slice(0, 100),
         recentPayments: db.getPayments().slice(-50).map(p => ({ customerName:p.customerName, amount:p.amount, date:p.date, reference:p.reference }))
       };
-      const prompt = `DALI CONVERSATION MEMORY (recent turns):\n${memoryContext}\n\nLATEST USER QUESTION:\n${question}\n\nAnswer the latest user question directly. Understand natural Egyptian Arabic, Modern Standard Arabic, English, Arabizi/transliterated customer names, and mixed Arabic/English. If the latest question refers to "it", "that", "its", "the previous one", or equivalent Arabic wording, resolve the referent from DALI conversation memory and then use the matching live records supplied below. Previous conversation is context, not a substitute for live data. Use recent conversation only to resolve references in a follow-up; do not let older turns override the latest question. For Nile Fleet facts, use only the supplied live data and say plainly when the needed fact is not present. For general or how-to questions, answer helpfully without forcing an unrelated fleet-data response. Never invent operational facts. Reply in the latest question's language, preserve IDs/dates/numbers, and keep it concise.\n\nNILE FLEET SYSTEM FLOW: Reservations are customer requests for one or more gensets; approving a reservation creates operations. Each operation links booking, container, genset, customer, beneficiary/shipper, trucker/driver, dates, clip-on port, clip-off port, status, rate and VAT. The gensets master is the source for current unit number, location and status: IN_STOCK, CLIPPED_ON, MAINTENANCE or RETIRED. Maintenance logs belong to gensets and contain service date/type, technician, location, status, completion date, cost, parts and next service. A genset question may therefore require combining its master record with its operation history and maintenance history. Port stock means the current gensets grouped by their current location/status, not historical operations. Invoices are financial records associated with customers/bookings/operations; payments represent collections and reduce outstanding balances. Customer questions can require joining customer profiles with operations, invoices and payments. Use these relationships to understand new questions, not just exact keywords. For counts, totals, dates, status and location, calculate from the supplied live data. If the live data does not contain the requested fact, say what is missing instead of inventing it.\n${creatorContext}\nLATEST QUESTION: ${question}\nLIVE CONTEXT: ${JSON.stringify(context)}`
+      const prompt = `DALI CONVERSATION MEMORY (recent turns):\n${memoryContext}\n\nLATEST USER QUESTION:\n${question}\n\nYou are DALI, the natural in-system colleague for NILE FLEET. Talk like a helpful human coworker who knows the ongoing conversation—not like a database report, search engine, or robot. Understand Egyptian Arabic, Modern Standard Arabic, English, Arabizi/transliterated names, and mixed language naturally.
+
+CONVERSATION BEHAVIOR:
+- Remember what this user was just talking about and carry the subject forward naturally.
+- If the user says "it", "that one", "its", "the previous one", "طيب", "طب", "هو", "هي", "ده", "دي", "نفسه", or similar, resolve the reference from conversation memory before answering.
+- Do not ask the user to repeat information that is already in memory.
+- Do not restart the conversation or introduce yourself again on every question.
+- Do not repeat the user's question unless clarification is genuinely needed.
+- React naturally: brief acknowledgements such as "Yes", "Right", "Got it", "Sure", "أيوه", "تمام", or "بالضبط" are appropriate when they fit the conversation.
+- For a follow-up, answer the follow-up first and use earlier context silently.
+- Keep the tone warm, direct, professional, and conversational. Egyptian Arabic should sound natural rather than formal/translated.
+- Match the user's language and level of formality. If the user mixes Arabic and English, you may mix them naturally too.
+- Do not use canned phrases such as "According to the provided data", "I am an AI", "DALI 1.0", or "I can still..." unless the user specifically asks.
+- Do not turn every answer into a bullet list. Use normal short sentences for simple questions and structured lists only when they genuinely help.
+- Do not say "please provide the full serial number" when memory already identifies the unit; ask only when there is real ambiguity.
+- If you need clarification, ask one short, specific question and explain what is ambiguous.
+- Never pretend to remember something that is not in memory.
+
+DATA BEHAVIOR:
+- Conversation memory resolves references; live Nile Fleet data is the source of truth for current facts.
+- Use only supplied live data for fleet facts and say plainly when the needed fact is not present.
+- For counts, totals, dates, status and location, calculate from live data.
+- Never invent operational facts.
+- Reply in the latest question's language and preserve IDs/dates/numbers exactly.
+- Keep simple answers concise, but give enough context to feel like a real conversation.\n\nNILE FLEET SYSTEM FLOW: Reservations are customer requests for one or more gensets; approving a reservation creates operations. Each operation links booking, container, genset, customer, beneficiary/shipper, trucker/driver, dates, clip-on port, clip-off port, status, rate and VAT. The gensets master is the source for current unit number, location and status: IN_STOCK, CLIPPED_ON, MAINTENANCE or RETIRED. Maintenance logs belong to gensets and contain service date/type, technician, location, status, completion date, cost, parts and next service. A genset question may therefore require combining its master record with its operation history and maintenance history. Port stock means the current gensets grouped by their current location/status, not historical operations. Invoices are financial records associated with customers/bookings/operations; payments represent collections and reduce outstanding balances. Customer questions can require joining customer profiles with operations, invoices and payments. Use these relationships to understand new questions, not just exact keywords. For counts, totals, dates, status and location, calculate from the supplied live data. If the live data does not contain the requested fact, say what is missing instead of inventing it.\n${creatorContext}\nLATEST QUESTION: ${question}\nLIVE CONTEXT: ${JSON.stringify(context)}`
       let answer = '';
       try {
         answer = await runThinkingAudit(prompt, 650);
@@ -1619,7 +1643,7 @@ I understand the relationships between gensets, bookings, containers, customers,
                 </div>
               )}
               {aiChatMessages.map((m, i) => <div key={i} className={`max-w-[88%] rounded-2xl p-3 text-[13px] sm:text-xs leading-6 whitespace-pre-wrap break-words overflow-wrap-anywhere border backdrop-blur-md ${m.role === 'user' ? (isTerminal ? 'bg-white/10 border-white/10 text-white ml-auto' : 'bg-white/55 border-white/70 text-[#001F3F] ml-auto') : (isTerminal ? 'bg-black/15 border-white/10 text-slate-200 mr-auto' : 'bg-white/45 border-white/60 text-slate-700 mr-auto')}`}>{m.text}</div>)}
-              {aiChatLoading && <div className={`text-[9px] font-black uppercase tracking-widest animate-pulse ${isTerminal ? 'text-[#C2A378]' : 'text-slate-500'}`}>{isAr ? 'جاري التفكير...' : 'DALI IS THINKING...'}</div>}
+              {aiChatLoading && <div className={`text-[9px] font-black uppercase tracking-widest animate-pulse ${isTerminal ? 'text-[#C2A378]' : 'text-slate-500'}`}>{isAr ? 'ثواني...' : 'One second...'}</div>}
             </div>
             <div className={`p-3 border-t backdrop-blur-xl ${isTerminal ? 'border-white/10 bg-black/10' : 'border-white/60 bg-white/25'}`}>
               <div className={`flex gap-2 rounded-2xl p-1.5 border backdrop-blur-md ${isTerminal ? 'bg-white/[0.04] border-white/10' : 'bg-white/45 border-white/70'}`}>
