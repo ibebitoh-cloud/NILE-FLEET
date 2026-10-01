@@ -1,3 +1,4 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2/cors";
 
@@ -58,8 +59,11 @@ Deno.serve(async (req) => {
     if (!email.includes("@")) return json({ ok: false, error: "Valid email required" }, 400);
     if (password.length < 8) return json({ ok: false, error: "Password must be at least 8 characters" }, 400);
 
-    const requestedRole = String(input.role || "VIEWER").toUpperCase();
+    const requestedRole = String(input.role || "VIEWER").trim().toUpperCase();
     if (!VALID_ROLES.has(requestedRole)) return json({ ok: false, error: "Invalid user role: " + requestedRole }, 400);
+    if (role === "MANAGER" && !["CUSTOMER","VIEWER","GATE_OPERATOR"].includes(requestedRole)) {
+      return json({ ok: false, error: "Managers may only create CUSTOMER, VIEWER, or GATE_OPERATOR accounts" }, 403);
+    }
 
     const rawPorts = Array.isArray(input.assignedPorts) ? input.assignedPorts : [];
     const assignedPorts = rawPorts
@@ -105,11 +109,12 @@ Deno.serve(async (req) => {
       is_service_account: Boolean(input.isServiceAccount ?? false),
     };
 
-    const { error: insertError } = await adminClient.from("profiles").insert(profile);
+    const { error: profileError2 } = await adminClient.from("profiles").upsert(profile, { onConflict: "id" });
 
-    if (insertError) {
-      await adminClient.auth.admin.deleteUser(created.user.id);
-      return json({ ok: false, error: "Profile creation failed: " + insertError.message }, 400);
+    if (profileError2) {
+      const { error: rollbackError } = await adminClient.auth.admin.deleteUser(created.user.id);
+      const note = rollbackError ? " Account cleanup also failed: " + rollbackError.message : "";
+      return json({ ok: false, error: "Profile creation failed: " + profileError2.message + "." + note }, 500);
     }
 
     return json({ ok: true, userId: created.user.id });
