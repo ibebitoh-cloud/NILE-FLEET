@@ -532,7 +532,16 @@ class SupabaseDB {
   getPayments(): Payment[] { return _payments; }
   getPaymentAllocations(): PaymentAllocation[] { return _paymentAllocations; }
   getInvoicePaidAmount(invoiceId: string): number {
-    return _paymentAllocations.filter(a => a.invoiceId === invoiceId).reduce((sum, a) => sum + Number(a.amount || 0), 0);
+    const allocated = _paymentAllocations
+      .filter(a => a.invoiceId === invoiceId)
+      .reduce((sum, a) => sum + Number(a.amount || 0), 0);
+    const invoice = _invoices.find(i => i.id === invoiceId);
+
+    // The invoice editor has an explicit PAID/UNPAID control. Keep dashboard
+    // and Financials consistent with that authoritative settlement status while
+    // still honoring any recorded payment allocations for partial payments.
+    if (invoice?.status === 'PAID') return Math.max(allocated, Number(invoice.amount || 0));
+    return allocated;
   }
   getUsers(): User[] { return _users; }
 
