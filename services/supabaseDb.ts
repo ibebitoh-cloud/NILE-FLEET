@@ -1432,11 +1432,21 @@ class SupabaseDB {
   // ─── audit / history ───────────────────────────────────────────────────────
 
   async totalSystemWipe(): Promise<void> {
-    // Destructive wipe is enforced by a SECURITY DEFINER database function.
-    // Never trust the browser's cached role for this operation.
-    const { data, error } = await supabase.rpc('admin_total_system_wipe');
+    // Destructive wipe runs through a JWT-protected Supabase Edge Function.
+    // The browser never gets direct EXECUTE access to the SECURITY DEFINER RPC.
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) {
+      _lastDbError = 'Administrator authentication required for total system wipe.';
+      throw new Error(_lastDbError);
+    }
+
+    const { data, error } = await supabase.functions.invoke('system-wipe', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: {},
+    });
     if (error || !data?.ok) {
-      _lastDbError = error?.message || 'Administrator access required for total system wipe.';
+      _lastDbError = error?.message || data?.error || 'Administrator access required for total system wipe.';
       throw new Error(_lastDbError);
     }
 
