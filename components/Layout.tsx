@@ -215,7 +215,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
     setAiChatInput('');
     setAiChatMessages(prev => [...prev, { role: 'user', text: question }]);
     setDaliMemory(prev => [...prev, { role: 'user', message: question }].slice(-30));
-    void saveDaliMemory('user', question);
+    await saveDaliMemory('user', question);
     setAiChatLoading(true);
 
     try {
@@ -376,7 +376,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       if (matchedGensetId && isIdentifier(matchedGensetId)) {
         const answer = await answerGenset(matchedGensetId, question);
         setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
-        void saveDaliMemory('assistant', answer);
+        await saveDaliMemory('assistant', answer);
         return;
       }
 
@@ -385,7 +385,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       if (/^\d{1,6}$/.test(q.trim())) {
         const answer = await answerGenset(q.trim(), question);
         setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
-        void saveDaliMemory('assistant', answer);
+        await saveDaliMemory('assistant', answer);
         return;
       }
 
@@ -396,7 +396,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         if (/^\d{1,6}$/.test(value)) {
           const answer = await answerGenset(value, question);
           setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
-        void saveDaliMemory('assistant', answer);
+        await saveDaliMemory('assistant', answer);
           return;
         }
       }
@@ -422,7 +422,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
           ? hits.slice(0, 5).map(fmtOp).join('\n\n')
           : (isAr ? `لم أجد ${value} في العمليات المسجلة.` : `No recorded operation was found for ${value}.`);
         setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
-        void saveDaliMemory('assistant', answer);
+        await saveDaliMemory('assistant', answer);
         return;
       }
 
@@ -445,7 +445,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
           ? `${labelAr}: ${requestedCount}${portMatch ? `\nالميناء: ${portMatch[0]}` : ''}`
           : `${labelEn}: ${requestedCount}${portMatch ? `\nPort: ${portMatch[0]}` : ''}`;
         setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
-        void saveDaliMemory('assistant', answer);
+        await saveDaliMemory('assistant', answer);
         return;
       }
 
@@ -825,7 +825,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
             ? 'كشف حساب: ' + customerName + '\nالمستحق: ' + grossDue.toLocaleString() + ' جنيه | المدفوع: ' + collected.toLocaleString() + ' جنيه\nالرصيد المتبقي: ' + netDue.toLocaleString() + ' جنيه\nالفواتير: ' + invoiced.toLocaleString() + ' جنيه | غير مسدد: ' + unpaid.toLocaleString() + ' جنيه | غير مفوتر: ' + unbilled.toLocaleString() + ' جنيه' + (recentPayments.length ? '\nآخر تحصيل: ' + recentPayments[0].date + ' — ' + Number(recentPayments[0].amount || 0).toLocaleString() + ' جنيه' : '') + (recentOps ? '\nالعمليات الأخيرة:' + recentOps : '')
             : 'SOA: ' + customerName + '\nDue: ' + grossDue.toLocaleString() + ' EGP | Paid: ' + collected.toLocaleString() + ' EGP\nRemaining balance: ' + netDue.toLocaleString() + ' EGP\nInvoiced: ' + invoiced.toLocaleString() + ' EGP | Unpaid: ' + unpaid.toLocaleString() + ' EGP | Unbilled: ' + unbilled.toLocaleString() + ' EGP' + lastPayment + (recentOps ? '\nRecent operations:' + recentOps : '');
           setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
-        void saveDaliMemory('assistant', answer);
+        await saveDaliMemory('assistant', answer);
           return;
         }
         if (soaIntent) {
@@ -901,7 +901,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
               (rows.length > visible.length ? '\n\nShowing first ' + visible.length + ' customers. Ask "SOA [customer name]" for full details.' : '');
 
           setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
-        void saveDaliMemory('assistant', answer);
+        await saveDaliMemory('assistant', answer);
           return;
         }
       }
@@ -931,7 +931,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
             ? `العميل: ${displayName}\nعدد العمليات: ${customerOps.length}\nإجمالي الفواتير: ${invoiced.toLocaleString()} جنيه\nإجمالي التحصيل: ${collected.toLocaleString()} جنيه\nغير مسدد: ${unpaid.toLocaleString()} جنيه`
             : `Customer: ${displayName}\nOperations: ${customerOps.length}\nTotal invoiced: ${invoiced.toLocaleString()} EGP\nTotal collected: ${collected.toLocaleString()} EGP\nUnpaid: ${unpaid.toLocaleString()} EGP`;
           setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
-        void saveDaliMemory('assistant', answer);
+        await saveDaliMemory('assistant', answer);
           return;
         }
       }
@@ -949,7 +949,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
           const displayName = isAr ? (customer.companyNameAr || translateEntity(customerName, 'ar')) : customerName;
           const answer = isAr ? `عدد العمليات لـ ${displayName}: ${hits.length}` : `Operations for ${customerName}: ${hits.length}`;
           setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
-        void saveDaliMemory('assistant', answer);
+        await saveDaliMemory('assistant', answer);
           return;
         }
       }
@@ -963,7 +963,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         if (id) {
           const answer = await answerGenset(id, question);
           setAiChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
-        void saveDaliMemory('assistant', answer);
+        await saveDaliMemory('assistant', answer);
           return;
         }
       }
