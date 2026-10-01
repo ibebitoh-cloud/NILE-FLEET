@@ -6,6 +6,8 @@ const TEXT_MODEL = '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b';
 const VISION_MODEL = '@cf/qwen/qwen3.8-27b';
 const VISION_FALLBACK_MODEL = '@cf/meta/llama-3.2-11b-vision-instruct';
 const TEXT_FALLBACK_MODEL = '@cf/qwen/qwen3-30b-a3b-fp8';
+const AI_RETRY_DELAY_MS = 120;
+const AI_MAX_RETRIES_PER_MODEL = 2;
 
 // Open models are less reliable than Claude/GPT at strictly following
 // "return only JSON" instructions — strip code fences and grab the first
@@ -91,12 +93,12 @@ export async function onRequestPost(context) {
         if (!prompt?.trim()) return json({ error: 'Empty AI prompt' }, 400);
         const result = await runTextModel(env, {
           messages: [
-            { role: 'system', content: 'You are DALI, Nile Fleet’s operations assistant. Answer the latest question directly before adding context. Use recent conversation only to resolve references such as “it”, “that customer”, or follow-up questions; the latest question takes priority. For Nile Fleet facts, rely only on the supplied live data and clearly say when a needed fact is absent. For general or how-to questions, give a useful direct answer instead of forcing an unrelated fleet-data response. Never invent operational facts. Match the language of the latest question (including Egyptian Arabic/Arabizi); preserve booking, container, and genset IDs, dates, and numeric values exactly. Be concise and use relevant data only. The system creator is Bebito (bebito@nilefleet.com); treat him as owner when current-user context identifies him. Never reveal credentials, keys, tokens, or secrets. SYSTEM KNOWLEDGE: Understand the application as a connected logistics workflow, not a list of isolated screens. Reservations are customer requests for gensets; approved reservations create operations. Operations connect booking/container/genset/customer/beneficiary/trucker/driver, dates, clip-on and clip-off ports, status, rate and VAT. The gensets master is the current fleet truth for unit number, current location and status (IN_STOCK, CLIPPED_ON, MAINTENANCE, RETIRED). Maintenance logs belong to gensets and contain service date/type, technician, location, status, completion date, cost, parts and next-service information. A genset question may require combining its master record, operations history and maintenance history. Port stock is based on current genset location and status, not the number of historical operations. Invoices represent billing and are associated with customers/bookings/operations; payments represent collections and outstanding balances. Customer questions may require joining profiles, operations, invoices and payments. Use these relationships to answer novel wording and follow-up questions. For numerical answers, calculate from live context; never invent missing data. Think through relationships, dates, status transitions, and distinct-vs-record counts before answering. Do not expose private chain-of-thought; return the concise conclusion and the evidence needed to understand it.' },
+            { role: 'system', content: 'You are DALI, Nile Fleet’s operations assistant. Answer the latest question directly before adding context. Use recent conversation only to resolve references such as “it”, “that customer”, or follow-up questions; the latest question takes priority. For Nile Fleet facts, rely only on the supplied live data and clearly say when a needed fact is absent. For general or how-to questions, give a useful direct answer instead of forcing an unrelated fleet-data response. Never invent operational facts. Match the language of the latest question (including Egyptian Arabic/Arabizi); preserve booking, container, and genset IDs, dates, and numeric values exactly. Be concise and use relevant data only. Interpret paraphrases by meaning, not exact keywords: “need / needs / required / asking for / requested / عايز / محتاج / مطلوب / محتاجين” can mean a genset request; “operations / jobs / work / شغل / عمليات” can mean recorded operations; “where / location / فين / موجود فين / موقع” can mean location; “how many / count / كام / عدد” means a quantity question. If a question contains both a customer and an operational subject, resolve the customer first and answer that subject. Distinguish fleet-total questions from customer, port, status, reservation, operation, maintenance, invoice, and payment questions. A customer or port qualifier must never be ignored just because the question also contains “how many”. The system creator is Bebito (bebito@nilefleet.com); treat him as owner when current-user context identifies him. Never reveal credentials, keys, tokens, or secrets. SYSTEM KNOWLEDGE: Understand the application as a connected logistics workflow, not a list of isolated screens. Reservations are customer requests for gensets; approved reservations create operations. Operations connect booking/container/genset/customer/beneficiary/trucker/driver, dates, clip-on and clip-off ports, status, rate and VAT. The gensets master is the current fleet truth for unit number, current location and status (IN_STOCK, CLIPPED_ON, MAINTENANCE, RETIRED). Maintenance logs belong to gensets and contain service date/type, technician, location, status, completion date, cost, parts and next-service information. A genset question may require combining its master record, operations history and maintenance history. Customer requests are represented by reservations; when counting requested gensets, use the reservation quantity field (gensetsNeeded) and do not substitute the total fleet count. A recorded operation is an operation row even when its genset_number is blank; do not assume it is a reservation. Port stock is based on current genset location and status, not the number of historical operations. Invoices represent billing and are associated with customers/bookings/operations; payments represent collections and outstanding balances. Customer questions may require joining profiles, operations, invoices and payments. Use these relationships to answer novel wording and follow-up questions. For numerical answers, calculate from live context; never invent missing data. Think through relationships, dates, status transitions, and distinct-vs-record counts before answering. Do not expose private chain-of-thought; return the concise conclusion and the evidence needed to understand it.' },
             { role: 'user', content: prompt },
           ],
-          max_tokens: Math.min(Math.max(payload?.maxTokens || 1600, 200), 3000),
-          temperature: 0.6,
-          top_p: 0.95,
+          max_tokens: Math.min(Math.max(payload?.maxTokens || 1200, 200), 2200),
+          temperature: 0.45,
+          top_p: 0.9,
         });
         const text = extractText(result);
         if (!text) {
@@ -186,28 +188,38 @@ function cleanModelText(text) {
 }
 
 async function runTextModel(env, options) {
-  // Primary: open-source DeepSeek-R1 distilled model. Fallback: open-source Qwen3-30B-A3B.
-  // Both run inside Cloudflare Workers AI; no external API key is exposed to the browser.
-  try {
-    const result = await env.AI.run(TEXT_MODEL, options);
-    if (extractText(result)) return result;
-    console.error('Primary DeepSeek R1 model returned an empty text response:', result);
-  } catch (primaryError) {
-    console.error('Primary DeepSeek R1 model failed, trying Qwen3-30B-A3B:', primaryError);
+  // Use the primary reasoning model first, then automatically fail over to Qwen.
+  // Each model gets one controlled retry for transient Workers AI failures.
+  const attempts = [
+    { model: TEXT_MODEL, label: 'DeepSeek R1 Distill' },
+    { model: TEXT_FALLBACK_MODEL, label: 'Qwen3 30B A3B' },
+  ];
+  let lastError = null;
+
+  for (const { model, label } of attempts) {
+    for (let attempt = 1; attempt <= AI_MAX_RETRIES_PER_MODEL; attempt++) {
+      try {
+        const result = await env.AI.run(model, options);
+        const text = extractText(result);
+        if (text) return result;
+        lastError = new Error(`${label} returned an empty response`);
+        console.error(`${label} returned an empty response (attempt ${attempt}/${AI_MAX_RETRIES_PER_MODEL})`, result);
+      } catch (error) {
+        lastError = error;
+        console.error(`${label} failed (attempt ${attempt}/${AI_MAX_RETRIES_PER_MODEL})`, error);
+      }
+
+      if (attempt < AI_MAX_RETRIES_PER_MODEL) {
+        await new Promise(resolve => setTimeout(resolve, AI_RETRY_DELAY_MS));
+      }
+    }
+
+    console.warn(`${label} unavailable after ${AI_MAX_RETRIES_PER_MODEL} attempts; switching model.`);
   }
 
-  try {
-    const result = await env.AI.run(TEXT_FALLBACK_MODEL, {
-      ...options,
-      temperature: Math.min(Number(options.temperature ?? 0.6), 0.4),
-    });
-    if (extractText(result)) return result;
-    throw new Error('Qwen3-30B-A3B fallback returned an empty text response.');
-  } catch (fallbackError) {
-    throw new Error(
-      `DeepSeek R1 Distill failed; Qwen3-30B-A3B fallback failed: ${fallbackError?.message || fallbackError}`
-    );
-  }
+  throw new Error(
+    `DALI AI models unavailable after retries. Primary: ${TEXT_MODEL}. Fallback: ${TEXT_FALLBACK_MODEL}. Last error: ${lastError?.message || lastError || 'unknown'}`
+  );
 }
 
 function json(data, status = 200) {

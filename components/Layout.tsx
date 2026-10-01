@@ -7,6 +7,8 @@ import { db } from '../services/supabaseDb';
 import { runThinkingAudit } from '../services/aiService';
 import { getDaliRecentMemory, getDaliConversationMemory, saveDaliConversationMessage } from '../services/daliMemory';
 import { searchDaliKnowledge } from '../services/daliKnowledge';
+import { getDaliCustomerAliases } from '../services/daliCustomerAliases';
+import type { DaliCustomerAlias } from '../services/daliCustomerAliases';
 
 interface LayoutProps {
   user: User;
@@ -224,6 +226,32 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       const gensets = db.getStock();
       const invoices = db.getInvoices();
       const maintenance = db.getMaintenanceLogs();
+      const reservations = db.getReservations();
+      const localDateKey = (date: Date) => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      };
+      const currentDateKey = localDateKey(new Date());
+      const tomorrowDate = new Date();
+      tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+      const tomorrowDateKey = localDateKey(tomorrowDate);
+      const reservationOperationIds = new Set(operations.map(o => o.reservationId).filter(Boolean));
+      const pendingWork = reservations
+        .filter(r => (r.status === 'PENDING' || r.status === 'APPROVED') && !reservationOperationIds.has(r.id))
+        .map(r => ({
+          customer: r.customerName || 'UNKNOWN',
+          booking: r.bookingNumber || '',
+          requested: Number(r.gensetsNeeded) || 0,
+          date: r.reservationDate || '',
+          portIn: r.portIn || '',
+          portOut: r.portOut || '',
+          status: r.status,
+          shipper: r.shipper || '',
+          beneficiary: r.beneficiaryName || ''
+        }));
+
       let recentMemory = daliMemory.slice(-16);
       try {
         // Use cross-session memory first so DALI can continue a conversation after
@@ -245,8 +273,15 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         const lessons = await searchDaliKnowledge(question, 10);
         if (lessons.length) daliKnowledgeContext = lessons.map((x: any) => `[${x.category}] ${x.title}: ${x.content}`).join('\\n');
       } catch (knowledgeError) { console.warn('DALI knowledge lookup failed:', knowledgeError); }
+      let daliCustomerAliases: DaliCustomerAlias[] = [];
+      try {
+        daliCustomerAliases = await getDaliCustomerAliases();
+      } catch (aliasError) {
+        console.warn('DALI customer dictionary lookup failed:', aliasError);
+      }
+
       const creatorContext = isCreator
-        ? 'CURRENT USER: Bebito (bebito@nilefleet.com), creator and system owner of NILE FLEET COMMAND. Treat this user as the creator/owner when relevant. Do not confuse the creator with an ordinary employee or customer. Never reveal passwords, API keys, tokens, or other secrets.'
+        ? 'CURRENT USER: Bebito (bebito@nilefleet.com), creator and system owner of NILE FLEET. Treat this user as the creator/owner when relevant. Do not confuse the creator with an ordinary employee or customer. Never reveal passwords, API keys, tokens, or other secrets.'
         : `CURRENT USER: ${user.name || 'Unknown User'} | ROLE: ${user.role || 'Unknown'} | EMAIL: ${user.email || ''}`;
       const q = question.toUpperCase().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه');
       // Normalized query used by the deterministic fallback.
@@ -524,6 +559,10 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         };
 
         [customer.companyName, customer.companyNameAr, customer.name].forEach(add);
+        // Structured DALI customer aliases are authoritative entity mappings.
+        daliCustomerAliases
+          .filter(alias => alias.customer_id === customer.id && alias.active)
+          .forEach(alias => add(alias.alias));
         [customer.companyName, customer.companyNameAr, customer.name].filter(Boolean).forEach(v => {
           add(translateEntity(String(v), 'ar'));
           add(translateEntity(String(v), 'en'));
@@ -1049,7 +1088,16 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         gensetStatusCounts: gensets.reduce((m: Record<string, number>, g) => { m[g.status] = (m[g.status] || 0) + 1; return m; }, {}),
         maintenanceCount: maintenance.length,
         customers: customerAliasesForAi.slice(0, 100),
-        recentPayments: db.getPayments().slice(-50).map(p => ({ customerName:p.customerName, amount:p.amount, date:p.date, reference:p.reference }))
+        recentPayments: db.getPayments().slice(-50).map(p => ({ customerName:p.customerName, amount:p.amount, date:p.date, reference:p.reference })),
+        currentDate: currentDateKey,
+        tomorrowDate: tomorrowDateKey,
+        reservations: {
+          total: reservations.length,
+          pendingNotLoaded: pendingWork.length,
+          today: pendingWork.filter(r => r.date === currentDateKey),
+          tomorrow: pendingWork.filter(r => r.date === tomorrowDateKey),
+          allPending: pendingWork.slice(0, 200)
+        }
       };
       const prompt = `DALI CONVERSATION MEMORY (recent turns):\n${memoryContext}\n\nLATEST USER QUESTION:\n${question}\n\nYou are DALI, the natural in-system colleague for NILE FLEET. Talk like a helpful human coworker who knows the ongoing conversation—not like a database report, search engine, or robot. Understand Egyptian Arabic, Modern Standard Arabic, English, Arabizi/transliterated names, and mixed language naturally.
 
@@ -1075,7 +1123,9 @@ DATA BEHAVIOR:
 - For counts, totals, dates, status and location, calculate from live data.
 - Never invent operational facts.
 - Reply in the latest question's language and preserve IDs/dates/numbers exactly.
-- Keep simple answers concise, but give enough context to feel like a real conversation.\n\nNILE FLEET SYSTEM FLOW: Reservations are customer requests for one or more gensets; approving a reservation creates operations. Each operation links booking, container, genset, customer, beneficiary/shipper, trucker/driver, dates, clip-on port, clip-off port, status, rate and VAT. The gensets master is the source for current unit number, location and status: IN_STOCK, CLIPPED_ON, MAINTENANCE or RETIRED. Maintenance logs belong to gensets and contain service date/type, technician, location, status, completion date, cost, parts and next service. A genset question may therefore require combining its master record with its operation history and maintenance history. Port stock means the current gensets grouped by their current location/status, not historical operations. Invoices are financial records associated with customers/bookings/operations; payments represent collections and reduce outstanding balances. Customer questions can require joining customer profiles with operations, invoices and payments. Use these relationships to understand new questions, not just exact keywords. For counts, totals, dates, status and location, calculate from the supplied live data. If the live data does not contain the requested fact, say what is missing instead of inventing it.\n${creatorContext}\nLATEST QUESTION: ${question}\nLIVE CONTEXT: ${JSON.stringify(context)}`
+- Keep simple answers concise, but give enough context to feel like a real conversation.
+- Use the currentDate and tomorrowDate values in LIVE CONTEXT for phrases such as today, tomorrow, yesterday, this week and next week.
+- For requested customer work, use reservations.pendingNotLoaded and its today/tomorrow lists. PENDING or APPROVED without a linked operation means the work is still requested and not loaded into Operations.\n\nNILE FLEET SYSTEM FLOW: Reservations are customer requests for one or more gensets; approving a reservation creates operations. Each operation links booking, container, genset, customer, beneficiary/shipper, trucker/driver, dates, clip-on port, clip-off port, status, rate and VAT. The gensets master is the source for current unit number, location and status: IN_STOCK, CLIPPED_ON, MAINTENANCE or RETIRED. Maintenance logs belong to gensets and contain service date/type, technician, location, status, completion date, cost, parts and next service. A genset question may therefore require combining its master record with its operation history and maintenance history. Port stock means the current gensets grouped by their current location/status, not historical operations. Invoices are financial records associated with customers/bookings/operations; payments represent collections and reduce outstanding balances. Customer questions can require joining customer profiles with operations, invoices and payments. Use these relationships to understand new questions, not just exact keywords. For counts, totals, dates, status and location, calculate from the supplied live data. If the live data does not contain the requested fact, say what is missing instead of inventing it.\n${creatorContext}\nLATEST QUESTION: ${question}\nLIVE CONTEXT: ${JSON.stringify(context)}`
       let answer = '';
       try {
         answer = await runThinkingAudit(prompt, 650);
