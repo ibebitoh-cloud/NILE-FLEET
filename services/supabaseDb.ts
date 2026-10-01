@@ -1268,7 +1268,7 @@ class SupabaseDB {
 
   // ─── maintenance logs ──────────────────────────────────────────────────────
 
-  async addMaintenanceLog(log: GensetMaintenanceLog): Promise<void> {
+  async addMaintenanceLog(log: GensetMaintenanceLog): Promise<boolean> {
     const saved = await insert<GensetMaintenanceLog>('genset_maintenance_logs', log);
     if (saved) {
       _maintenanceLogs = [saved, ..._maintenanceLogs];
@@ -1285,7 +1285,9 @@ class SupabaseDB {
       }
       await auditLog('MAINTENANCE', `Logged ${log.serviceType} for ${log.gensetNumber}`);
       dispatchChange();
+      return true;
     }
+    return false;
   }
 
   private async _syncMaintenanceState(unitNumber: string): Promise<void> {
