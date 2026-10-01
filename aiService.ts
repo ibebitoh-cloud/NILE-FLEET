@@ -8,8 +8,8 @@
  *   4. Container photos         -> Tesseract OCR + ISO 6346 check digit (containerScan)
  * Everything runs in the browser; nothing is sent to an AI provider.
  */
-import { db } from './supabaseDb';
-import { getDaliCustomerAliases } from './daliCustomerAliases';
+import { db } from './services/supabaseDb';
+import { getDaliCustomerAliases } from './services/daliCustomerAliases';
 import { answerDali, DaliData } from './daliEngine';
 import { auditFromPrompt } from './daliAudits';
 import { askLocalModel, warmUpLocalModel, getLocalModelStatus } from './daliLocalModel';
@@ -69,7 +69,7 @@ async function trainedAliases(customerNameById: Map<string, string>) {
 async function snapshot(prompt: string): Promise<DaliData> {
   const users = db.getUsers().filter((u: any) => String(u.role || '').toUpperCase() === 'CUSTOMER');
   const customers = users.map((u: any) => ({ id: String(u.id), name: String(u.companyName || u.name || ''), nameAr: u.companyNameAr, pastOutstanding: Number(u.pastOutstandingAmount) || 0 }));
-  const byId = new Map(customers.map(c => [c.id, c.name]));
+  const byId = new Map<string, string>(customers.map(c => [c.id, c.name] as [string, string]));
   const trained = await trainedAliases(byId);
   return {
     gensets: db.getStock(),
