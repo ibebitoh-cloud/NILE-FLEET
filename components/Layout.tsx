@@ -1088,7 +1088,16 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         gensetStatusCounts: gensets.reduce((m: Record<string, number>, g) => { m[g.status] = (m[g.status] || 0) + 1; return m; }, {}),
         maintenanceCount: maintenance.length,
         customers: customerAliasesForAi.slice(0, 100),
-        recentPayments: db.getPayments().slice(-50).map(p => ({ customerName:p.customerName, amount:p.amount, date:p.date, reference:p.reference }))
+        recentPayments: db.getPayments().slice(-50).map(p => ({ customerName:p.customerName, amount:p.amount, date:p.date, reference:p.reference })),
+        currentDate: currentDateKey,
+        tomorrowDate: tomorrowDateKey,
+        reservations: {
+          total: reservations.length,
+          pendingNotLoaded: pendingWork.length,
+          today: pendingWork.filter(r => r.date === currentDateKey),
+          tomorrow: pendingWork.filter(r => r.date === tomorrowDateKey),
+          allPending: pendingWork.slice(0, 200)
+        }
       };
       const prompt = `DALI CONVERSATION MEMORY (recent turns):\n${memoryContext}\n\nLATEST USER QUESTION:\n${question}\n\nYou are DALI, the natural in-system colleague for NILE FLEET. Talk like a helpful human coworker who knows the ongoing conversation—not like a database report, search engine, or robot. Understand Egyptian Arabic, Modern Standard Arabic, English, Arabizi/transliterated names, and mixed language naturally.
 
