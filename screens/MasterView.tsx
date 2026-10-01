@@ -1115,12 +1115,9 @@ const MasterView: React.FC = () => {
       case 'commodity': return op.commodity || '';
       case 'clipperName': return `${op.clipperName || ''} ${translateEntity(op.clipperName || '', lang)}`;
       case 'notes': return op.notes || '';
-      case 'gas': {
-        const unit = op.gensetNumber
-          ? db.getStock().find(g => g.unitNumber.trim().toUpperCase() === op.gensetNumber.trim().toUpperCase())
-          : undefined;
-        return unit ? String(unit.gasLiters ?? '') : '';
-      }
+      case 'gas':
+        return String(op.gaz ?? '');
+
       case 'invoice': {
         const invoice = invoices.find(inv => inv.bookingNumber === op.bookingNumber);
         return invoice ? `${invoice.id} ${invoice.status} ${invoice.etaStatus || ''} ${invoice.amount ?? ''}` : '';
@@ -1254,7 +1251,7 @@ const MasterView: React.FC = () => {
         op.commodity || '',
         translateEntity(op.clipperName || '', lang),
         op.notes || '',
-        op.gensetNumber ? (db.getStock().find(g => g.unitNumber.trim().toUpperCase() === op.gensetNumber.trim().toUpperCase())?.gasLiters ?? 50) : '',
+        op.gaz ?? '',
         invoice ? `${invoice.id} | ${translateEntity(invoice.status, lang)} | ${Number(invoice.amount || 0).toLocaleString()} EGP` : (isAr ? 'غير مفوترة' : 'Not invoiced')
       ];
     });
@@ -1690,20 +1687,15 @@ const MasterView: React.FC = () => {
                             <EditableCell value={op.notes || ''} onSave={(val) => handleUpdateCell(op, 'notes', val)} disabled={isReadOnly} isDark={isDark} className={`${isSelected ? 'text-white/60' : 'text-slate-400'} italic`} />
                           </td>
                           <td style={{ ...dynamicCellStyle, ...getColStyle('gas') }} className={`px-2 border-r text-center ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
-                            {(() => {
-                              const genset = db.getStock().find(item => item.unitNumber.trim().toUpperCase() === (op.gensetNumber || '').trim().toUpperCase());
-                              return genset ? (
-                                <EditableCell
-                                  value={String(genset.gasLiters ?? 50)}
-                                  type="number"
-                                  onSave={value => handleUpdateGensetGas(genset.unitNumber, value)}
-                                  disabled={isReadOnly}
-                                  isDark={isDark}
-                                  className={`font-black ${isSelected ? 'text-white' : 'text-cyan-600 dark:text-cyan-300'}`}
-                                  placeholder="50"
-                                />
-                              ) : <span className="text-slate-400" title={isAr ? 'المولد غير مسجل في مخزون المولدات' : 'Genset is not registered in Genset Stock'}>—</span>;
-                            })()}
+                            <EditableCell
+                              value={String(op.gaz ?? '')}
+                              type="number"
+                              onSave={(value) => handleUpdateCell(op, 'gaz', value)}
+                              disabled={isReadOnly}
+                              isDark={isDark}
+                              className={`font-black ${isSelected ? 'text-white' : 'text-cyan-600 dark:text-cyan-300'}`}
+                              placeholder="0"
+                            />
                           </td>
                           <td style={{ ...dynamicCellStyle, ...getColStyle('invoice') }} className={`px-2 border-r text-center ${isDark ? 'border-slate-800 border-white/5' : 'border-slate-100'} text-xs font-bold`}>
                             {(() => {
