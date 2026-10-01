@@ -68,7 +68,7 @@ interface ThemeContextType {
   }) => void;
 }
 export const ThemeContext = createContext<ThemeContextType>({ 
-  theme: 'rose', 
+  theme: 'nile', 
   setTheme: () => {},
   scale: 0.85,
   setScale: () => {},
@@ -85,7 +85,7 @@ const App: React.FC = () => {
   const loggingInRef = useRef(false);
   
   const [theme, setTheme] = useState<ThemeMode>(() => {
-    return (localStorage.getItem('theme') as ThemeMode) || 'phantom';
+    return (localStorage.getItem('theme') as ThemeMode) || 'nile';
   });
 
   const [scale, setScale] = useState<number>(() => {
