@@ -168,7 +168,7 @@ const StockManagement: React.FC = () => {
     setDbVersion(v => v + 1);
   };
 
-  const handleAddGenset = (e: React.FormEvent) => {
+  const handleAddGenset = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isReadOnly || !newGenset.unitNumber) return;
     
@@ -183,14 +183,14 @@ const StockManagement: React.FC = () => {
     setNewGenset({ unitNumber: '', location: Location.ALEX, status: GensetStatus.IN_STOCK });
   };
 
-  const handleDeleteGenset = (id: string) => {
+  const handleDeleteGenset = async (id: string) => {
     if (!isAdmin) return;
     if (confirm(isAr ? 'هل أنت متأكد من حذف هذه الوحدة؟' : 'Are you sure you want to delete this asset?')) {
       db.deleteGenset(id);
     }
   };
 
-  const handleBulkTransfer = (targetLoc: Location) => {
+  const handleBulkTransfer = async (targetLoc: Location) => {
     if (isReadOnly) return;
     const ids = Array.from(selectedIds);
     ids.forEach(id => {
@@ -258,7 +258,7 @@ const StockManagement: React.FC = () => {
     });
   };
 
-  const handleSaveMaintenanceLog = (e: React.FormEvent) => {
+  const handleSaveMaintenanceLog = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isReadOnly) return;
     const { log, mode } = maintModalState;
@@ -290,7 +290,7 @@ const StockManagement: React.FC = () => {
     setMaintModalState({ isOpen: false, mode: 'add', log: {} });
   };
 
-  const handleDeleteMaintenanceLog = (id: string) => {
+  const handleDeleteMaintenanceLog = async (id: string) => {
     if (!isAdmin) return;
     if (confirm(isAr ? 'هل أنت متأكد من حذف هذا السجل للصيانة؟' : 'Are you sure you want to delete this maintenance record?')) {
       db.deleteMaintenanceLog(id);
