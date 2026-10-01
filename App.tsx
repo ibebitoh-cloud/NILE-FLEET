@@ -646,28 +646,11 @@ const App: React.FC = () => {
     // Customers stay isolated from all internal staff screens.
     if (user.role === UserRole.CUSTOMER) return ['cust-reservations', 'cust-invoices', 'notifications', 'support'].includes(screen);
 
-    const groupedAccess: Record<string, string[]> = {
-      'dashboard-analytics': ['dashboard', 'analytics'],
-      'operations-master': ['operations', 'master-view'],
-      'booking-reservations': ['booking-invoices', 'reservations'],
-      'customers-prices': ['customers', 'customer-prices'],
-      'administration': ['user-mgmt', 'notifications', 'system-log', 'support', 'user-settings'],
-    };
-
     if (Array.isArray(user.allowedScreens)) {
-      if (user.allowedScreens.includes(screen)) return true;
-      const children = groupedAccess[screen];
-      return Boolean(children?.some(child => user.allowedScreens?.includes(child)));
+      return user.allowedScreens.includes(screen);
     }
 
-    const defaultAllowed = getDefaultAllowedScreens(user.role);
-    if (defaultAllowed.includes(screen)) return true;
-    const children = groupedAccess[screen];
-    if (children?.some(child => defaultAllowed.includes(child))) return true;
-    // Preserve direct access to legacy child routes when their new group is enabled.
-    return Object.entries(groupedAccess).some(([group, groupChildren]) =>
-      groupChildren.includes(screen) && defaultAllowed.includes(group)
-    );
+    return getDefaultAllowedScreens(user.role).includes(screen);
   };
 
   const renderScreen = (screen: string) => {
@@ -704,6 +687,8 @@ const App: React.FC = () => {
       case 'cust-invoices': return <CustomerPortal user={user} type="invoices" />;
       default: return <Dashboard onNavigate={navigateTo} />;
     }
+  };
+
   const setScreenFromLayout = (screen: string) => {
     setHighlightId(null);
     setActiveScreen(screen);
