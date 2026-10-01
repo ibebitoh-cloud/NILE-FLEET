@@ -33,7 +33,7 @@ import { translateBusinessEntities, getSafeApiKey } from './services/aiService';
 
 type Language = 'en' | 'ar';
 const getDefaultAllowedScreens = (role: UserRole): string[] => {
-  if (role === UserRole.ADMIN) return ['dali-knowledge', 'dashboard', 'dashboard-analytics', 'operations', 'operations-master', 'port-gate', 'booking-invoices', 'booking-reservations', 'financials', 'intelligence', 'reports', 'stock', 'customers', 'customers-prices', 'administration', 'user-mgmt', 'customer-prices', 'support', 'notifications', 'system-log', 'user-settings'];
+  if (role === UserRole.ADMIN) return ['dali-knowledge', 'dashboard', 'dashboard-analytics', 'operations', 'operations-master', 'port-gate', 'financials', 'booking-invoices', 'booking-reservations', 'financials', 'intelligence', 'reports', 'stock', 'customers', 'customers-prices', 'administration', 'user-mgmt', 'customer-prices', 'support', 'notifications', 'system-log', 'user-settings'];
   if (role === UserRole.MANAGER) return ['dali-knowledge', 'dashboard', 'operations', 'operations-master', 'stock', 'customers', 'customers-prices', 'booking-invoices', 'booking-reservations', 'financials', 'intelligence', 'reports', 'notifications', 'system-log', 'support', 'user-settings', 'administration'];
   if (role === UserRole.VIEWER) return ['dali-knowledge', 'dashboard', 'operations', 'operations-master', 'reports', 'intelligence', 'notifications', 'support', 'system-log'];
   if (role === UserRole.GATE_OPERATOR) return ['port-gate', 'notifications', 'support', 'user-settings'];
