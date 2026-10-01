@@ -2,7 +2,7 @@
 // DALI uses the open-source DeepSeek-R1-Distill-Qwen-32B model for interactive
 // reasoning, with Qwen3-30B-A3B as the open-source fallback.
 // OCR remains on the dedicated vision models below.
-const TEXT_MODEL = '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b';
+const TEXT_MODEL = '@cf/moonshotai/kimi-k2.6';
 const VISION_MODEL = '@cf/qwen/qwen3.8-27b';
 const VISION_FALLBACK_MODEL = '@cf/meta/llama-3.2-11b-vision-instruct';
 const TEXT_FALLBACK_MODEL = '@cf/qwen/qwen3-30b-a3b-fp8';
