@@ -7,6 +7,7 @@ import { Operation } from '../types';
 import { runThinkingAudit, getSafeApiKey } from '../services/aiService';
 import { getDaliRecentMemory, saveDaliConversationMessage } from '../services/daliMemory';
 import { searchDaliKnowledge } from '../services/daliKnowledge';
+import { getDaliCustomerAliases } from '../services/daliCustomerAliases';
 
 const Intelligence: React.FC = () => {
   const { lang } = useContext(LanguageContext);
@@ -205,6 +206,14 @@ ${JSON.stringify(viewData)}`;
     try {
       const memory = await getDaliRecentMemory(18).catch(() => []);
       const lessons = await searchDaliKnowledge(question, 8).catch(() => []);
+      const customerAliases = await getDaliCustomerAliases().catch(() => []);
+      const customerProfiles = db.getUsers().filter((u:any) => String(u.role || '').toUpperCase() === 'CUSTOMER');
+      const customerNameById = new Map(customerProfiles.map((u:any) => [String(u.id), String(u.companyName || u.name || 'UNKNOWN')]));
+      const customerDictionary = customerAliases.map((a:any) => ({
+        customer: customerNameById.get(String(a.customer_id)) || String(a.customer_id),
+        alias: a.alias,
+        type: a.alias_type
+      }));
       const allReservations = db.getReservations();
       const todayKey = new Date().toISOString().slice(0, 10);
       const tomorrowDate = new Date();
@@ -244,7 +253,7 @@ ${JSON.stringify(viewData)}`;
           allPending: { requestCount: requestedAll.length, gensetsRequested: sumRequested(requestedAll), requests: requestedAll }
         }
       };
-      const prompt = 'You are DALI, the NILE FLEET Fleet Intelligence coworker. Answer naturally and directly. Continue the conversation from memory when relevant. LANGUAGE: ' + (responseIsAr ? 'Arabic' : 'English') + '. Use live data as the source of truth. Never invent values. Preserve IDs, dates and numbers exactly. You can discuss fleet, gensets, ports, operations, fuel, maintenance, invoices, reservations, company rules and workflows. IMPORTANT RESERVATION RULE: When the user asks what work is still requested/not loaded for a customer, or asks how many containers/gensets are requested today, tomorrow, or all upcoming requests, use reservations.pendingWorkNotLoadedIntoOperations and the today/tomorrow/all summaries. Treat PENDING and APPROVED reservations without a linked operation as requested work that has not yet been loaded into operations. Group matching customer requests, show booking/date/ports and requested quantity when useful. Do not count a request as loaded merely because its reservation is APPROVED; it is loaded only when a linked operation exists.\nCOMPANY KNOWLEDGE:\n' + (lessons.length ? lessons.map((x:any) => '[' + x.category + '] ' + x.title + ': ' + x.content).join('\\n') : 'No matching lesson.') + '\nRECENT MEMORY:\n' + (memory.length ? memory.map((m:any) => '[' + m.role + '] ' + m.message).join('\\n') : 'No recent memory.') + '\nLIVE DATABASE:\n' + JSON.stringify(live) + '\nUSER QUESTION:\n' + question;
+      const prompt = 'You are DALI, the NILE FLEET Fleet Intelligence coworker. Answer naturally and directly. Continue the conversation from memory when relevant. LANGUAGE: ' + (responseIsAr ? 'Arabic' : 'English') + '. Use live data as the source of truth. Never invent values. Preserve IDs, dates and numbers exactly. You can discuss fleet, gensets, ports, operations, fuel, maintenance, invoices, reservations, company rules and workflows. IMPORTANT RESERVATION RULE: When the user asks what work is still requested/not loaded for a customer, or asks how many containers/gensets are requested today, tomorrow, or all upcoming requests, use reservations.pendingWorkNotLoadedIntoOperations and the today/tomorrow/all summaries. Treat PENDING and APPROVED reservations without a linked operation as requested work that has not yet been loaded into operations. Group matching customer requests, show booking/date/ports and requested quantity when useful. Do not count a request as loaded merely because its reservation is APPROVED; it is loaded only when a linked operation exists.\nCOMPANY KNOWLEDGE:\n' + (lessons.length ? lessons.map((x:any) => '[' + x.category + '] ' + x.title + ': ' + x.content).join('\\n') : 'No matching lesson.') + '\nCUSTOMER DICTIONARY (Arabic/alias -> real customer):\n' + (customerDictionary.length ? customerDictionary.map((x:any) => x.alias + ' -> ' + x.customer + ' [' + x.type + ']').join('\\n') : 'No trained customer aliases.') + '\nRECENT MEMORY:\n + (memory.length ? memory.map((m:any) => '[' + m.role + '] ' + m.message).join('\\n') : 'No recent memory.') + '\nLIVE DATABASE:\n' + JSON.stringify(live) + '\nUSER QUESTION:\n' + question;
       const answer = await runThinkingAudit(prompt, 900);
       const finalAnswer = answer || (responseIsAr ? 'لم أجد نتيجة واضحة في البيانات الحالية.' : 'I could not find a clear result in the current live data.');
       setChatMessages(prev => [...prev, { role: 'dali', text: finalAnswer }]);
