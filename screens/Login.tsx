@@ -201,9 +201,25 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBackToHome }) => {
     );
   };
 
-  const welcomeQuote = isAr
-    ? 'الدقة في التفاصيل تحافظ على سير كل عملية في الاتجاه الصحيح.'
-    : 'Sharp details keep every operation moving in the right direction.';
+  const welcomeQuotes = isAr
+    ? [
+        'الدقة في التفاصيل تحافظ على سير كل عملية في الاتجاه الصحيح.',
+        'كل تفصيلة مهمة. وكل عملية تصنع فرقاً.',
+        'ابقَ مركزاً. حافظ على حركة الأسطول.',
+        'التشغيل القوي يبدأ ببيانات دقيقة.',
+        'خطوة صحيحة اليوم تعني عملية أفضل غداً.',
+        'خطط بذكاء. تحرك بسرعة. نفّذ بدقة.',
+      ]
+    : [
+        'Every detail matters. Every operation counts.',
+        'Stay sharp. Keep the fleet moving.',
+        'Precision today keeps tomorrow running smoothly.',
+        'Great operations start with accurate data.',
+        'One operation at a time. Done right.',
+        'Plan smart. Move fast. Deliver right.',
+      ];
+
+  const welcomeQuote = welcomeQuotes[welcomeStyle % welcomeQuotes.length];
 
   return (
     <div className={`min-h-screen flex items-center justify-center p-0 m-0 relative overflow-hidden font-sans transition-colors duration-1000 ${isDark ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'} ${isAr ? 'rtl font-cairo' : 'ltr'}`}>
