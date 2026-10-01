@@ -208,6 +208,10 @@ export type MaintenanceServiceType =
 export interface GensetMaintenanceLog {
   id: string;
   gensetNumber: string;
+  /** Legacy alias used by older search UI. */
+  unitNumber?: string;
+  /** Legacy maintenance label alias; serviceType is canonical. */
+  maintenanceType?: string;
   serviceDate: string;
   serviceType: MaintenanceServiceType;
   technician: string;
@@ -226,6 +230,10 @@ export interface GensetMaintenanceLog {
 export interface Genset {
   id: string;
   unitNumber: string;
+  /** Legacy UI alias retained for compatibility with the DALI search panel. */
+  gensetNumber?: string;
+  /** Optional model label used by legacy search/inspection views. */
+  model?: string;
   gasLiters?: number;
   location: Location;
   status: GensetStatus;
@@ -287,6 +295,8 @@ export interface Operation {
 
 export interface Invoice {
   id: string;
+  /** Legacy invoice display alias; invoice_no is the database field. */
+  invoiceNumber?: string | number;
   customerId: string;
   customerName: string;
   bookingNumber: string;
