@@ -396,7 +396,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
             {[
               { id: 'IDENTITY', label: isAr ? 'الهوية' : 'Identity', icon: '👤' },
               { id: 'CONTACT', label: isAr ? 'بيانات العمل' : 'Logistics', icon: '📍' },
-              { id: 'DISPLAY', label: isAr ? 'المظهر' : 'Interface', icon: '🎨' },
+              { id: 'DISPLAY', label: isAr ? 'المظهر' : 'Appearance', icon: '◐' },
               { id: 'BUSINESS', label: isAr ? 'الفواتير والشركة' : 'Branding', icon: '🏢' },
               { id: 'LINGUISTICS', label: isAr ? 'اللغة والذكاء' : 'Linguistics', icon: '🗣️' },
               isSuperOwner ? { id: 'COMMAND', label: isAr ? 'التحكم الحرج' : 'Command', icon: '☢️' } : null,
