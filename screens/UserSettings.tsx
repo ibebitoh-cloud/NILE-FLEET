@@ -396,7 +396,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
             {[
               { id: 'IDENTITY', label: isAr ? 'الهوية' : 'Identity', icon: '👤' },
               { id: 'CONTACT', label: isAr ? 'بيانات العمل' : 'Logistics', icon: '📍' },
-              { id: 'DISPLAY', label: isAr ? 'المظهر' : 'Interface', icon: '🎨' },
+              { id: 'DISPLAY', label: isAr ? 'المظهر' : 'Appearance', icon: '◐' },
               { id: 'BUSINESS', label: isAr ? 'الفواتير والشركة' : 'Branding', icon: '🏢' },
               { id: 'LINGUISTICS', label: isAr ? 'اللغة والذكاء' : 'Linguistics', icon: '🗣️' },
               isSuperOwner ? { id: 'COMMAND', label: isAr ? 'التحكم الحرج' : 'Command', icon: '☢️' } : null,
@@ -566,218 +566,125 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
         )}
 
         {activeTab === 'DISPLAY' && (
-          <div className="p-8 lg:p-12 space-y-12 animate-in slide-in-from-bottom-4">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-               <div className="space-y-8">
-                  <h3 className="text-lg font-black uppercase italic tracking-tighter text-[#001F3F] dark:text-white">Interface Personalization</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {[
-                      { id: 'rose', label: isAr ? 'كلاسيكي' : 'Classic', bg: 'bg-rose-500' },
-                      { id: 'nile', label: isAr ? 'النيل' : 'Nile Command', bg: 'bg-emerald-800' },
-                      { id: 'corporate', label: isAr ? 'مؤسسي' : 'Corporate', bg: 'bg-sky-600' },
-                      { id: 'carbon', label: isAr ? 'كربون' : 'Carbon', bg: 'bg-zinc-900' },
-                      { id: 'royal', label: isAr ? 'ملكي' : 'Royal', bg: 'bg-violet-700' },
-                      { id: 'sandstorm', label: isAr ? 'رملي' : 'Sandstorm', bg: 'bg-amber-600' },
-                      { id: 'crimson', label: isAr ? 'قرمزي' : 'Crimson', bg: 'bg-rose-700' },
-                      { id: 'black', label: isAr ? 'طرفية' : 'Terminal', bg: 'bg-black' },
-                      { id: 'navy', label: isAr ? 'كحلي' : 'Navy', bg: 'bg-blue-900' },
-                      { id: 'forest', label: isAr ? 'غابة' : 'Forest', bg: 'bg-emerald-900' },
-                      { id: 'lava', label: isAr ? 'حمم' : 'Magma', bg: 'bg-red-900' },
-                      { id: 'arctic', label: isAr ? 'جليدي' : 'Arctic', bg: 'bg-sky-100' },
-                      { id: 'emerald-vibrant', label: isAr ? 'زمردي' : 'Emerald', bg: 'bg-emerald-500' },
-                      { id: 'phantom', label: isAr ? 'شبح' : 'Phantom', bg: 'bg-zinc-800' },
-                      { id: 'custom', label: isAr ? 'مخصص' : 'Custom', bg: 'bg-gradient-to-tr from-rose-500 via-green-500 to-blue-500' }                    ].map(t => (
-                      <button 
-                        key={t.id}
-                        onClick={() => setTheme(t.id as any)}
-                        className={`p-3 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 min-h-[82px] ${theme === t.id ? 'border-[var(--accent)] scale-[1.03] shadow-xl' : 'border-slate-100 dark:border-white/5 hover:border-[var(--accent)]/50'}`}
-                      >
-                        <div className={`w-8 h-8 rounded-full ${t.bg} shadow-inner`}></div>
-                        <span className="text-[8px] font-black uppercase" style={{ color: "var(--text-secondary)" }}>{t.label}</span>
-                      </button>
-                    ))}
+          <div className="p-6 lg:p-10 space-y-8 animate-in fade-in duration-300">
+            <div className="rounded-[2rem] p-6 lg:p-8 bg-[var(--surface-1)] border border-[var(--border-primary)] relative overflow-hidden">
+              <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-[var(--accent)]/10 blur-3xl pointer-events-none"></div>
+              <div className="relative z-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5">
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-[0.28em] text-[var(--accent)] mb-2">
+                    {isAr ? 'مظهر النظام' : 'SYSTEM APPEARANCE'}
+                  </p>
+                  <h3 className="text-2xl font-black tracking-tight text-[var(--text-primary)]">
+                    {isAr ? 'اختر بيئة العمل الخاصة بك' : 'Choose your workspace environment'}
+                  </h3>
+                  <p className="mt-2 max-w-2xl text-xs font-semibold leading-6 text-[var(--text-secondary)]">
+                    {isAr ? 'خمسة أنظمة جاهزة مصممة للعمل اليومي، مع مساحة مخصصة بالكامل عند الحاجة.' : 'Five purpose-built environments for daily operations, plus a fully custom palette when you need it.'}
+                  </p>
+                </div>
+                <div className="px-4 py-2 rounded-xl bg-[var(--surface-2)] border border-[var(--border-primary)] text-[9px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
+                  {isAr ? 'يحفظ تلقائياً' : 'AUTO SAVED'}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+              {[
+                { id: 'nile', name: isAr ? 'نايل كومانـد' : 'Nile Command', desc: isAr ? 'هوية نايل فليت التشغيلية' : 'Nile Fleet operational identity', preview: ['#061a16','#0b241f','#4fd1a5'] },
+                { id: 'navy', name: isAr ? 'ليلي الميناء' : 'Port Night', desc: isAr ? 'واضح للعمل الليلي والموانئ' : 'High-clarity night operations', preview: ['#07111f','#101c2e','#5ec8ff'] },
+                { id: 'corporate', name: isAr ? 'تنفيذي فاتح' : 'Executive Light', desc: isAr ? 'نظيف للاجتماعات والتقارير' : 'Clean for reports and office work', preview: ['#f4f7fa','#ffffff','#0b7fab'] },
+                { id: 'carbon', name: isAr ? 'فولاذ صناعي' : 'Industrial Steel', desc: isAr ? 'تقني وهادئ للشاشات الثقيلة' : 'Technical and restrained', preview: ['#11161b','#1b2229','#58a6d9'] },
+                { id: 'sandstorm', name: isAr ? 'صحراء تشغيلية' : 'Desert Operations', desc: isAr ? 'دافئ وواضح للعمليات الميدانية' : 'Warm field-operations workspace', preview: ['#f3ecdf','#fffaf2','#b7791f'] }
+              ].map(p => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setTheme(p.id as ThemeMode)}
+                  className={`group text-start rounded-[1.5rem] overflow-hidden border-2 transition-all duration-200 ${theme === p.id ? 'border-[var(--accent)] shadow-xl -translate-y-1' : 'border-[var(--border-primary)] hover:border-[var(--accent)]/60'}`}
+                >
+                  <div className="h-24 p-3 flex items-end gap-2" style={{ background: p.preview[0] }}>
+                    <div className="h-10 flex-1 rounded-lg" style={{ background: p.preview[1] }}></div>
+                    <div className="h-7 w-7 rounded-lg" style={{ background: p.preview[2] }}></div>
                   </div>
+                  <div className="p-4 bg-[var(--surface-1)]">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-wide text-[var(--text-primary)]">{p.name}</span>
+                      {theme === p.id && <span className="text-[9px] font-black text-[var(--accent)]">✓</span>}
+                    </div>
+                    <p className="mt-1 text-[9px] font-semibold leading-4 text-[var(--text-secondary)]">{p.desc}</p>
+                  </div>
+                </button>
+              ))}
 
-                  {theme === 'custom' && (
-                    <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-3xl border border-dashed border-rose-500/50 space-y-6 animate-in slide-in-from-top-4 duration-300">
-                      <div>
-                        <h4 className="text-xs font-black text-rose-500 uppercase tracking-widest mb-1">
-                          {isAr ? 'لوحة الألوان المخصصة' : 'Custom Palette Builder'}
-                        </h4>
-                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
-                          {isAr ? 'صمم نظام الألوان الخاص بك لتسهيل القراءة التامة.' : 'Design your own custom high-contrast environment.'}
-                        </p>
-                      </div>
+              <button
+                type="button"
+                onClick={() => setTheme('custom')}
+                className={`group text-start rounded-[1.5rem] overflow-hidden border-2 transition-all duration-200 ${theme === 'custom' ? 'border-[var(--accent)] shadow-xl -translate-y-1' : 'border-dashed border-[var(--border-primary)] hover:border-[var(--accent)]/60'}`}
+              >
+                <div className="h-24 p-3 grid grid-cols-3 gap-2" style={{ background: 'linear-gradient(135deg,#101827,#17243b)' }}>
+                  <div className="rounded-lg" style={{ background: customBg }}></div>
+                  <div className="rounded-lg" style={{ background: customCard }}></div>
+                  <div className="rounded-lg" style={{ background: customAccent }}></div>
+                </div>
+                <div className="p-4 bg-[var(--surface-1)]">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-wide text-[var(--text-primary)]">{isAr ? 'مخصص' : 'Custom'}</span>
+                    {theme === 'custom' && <span className="text-[9px] font-black text-[var(--accent)]">✓</span>}
+                  </div>
+                  <p className="mt-1 text-[9px] font-semibold leading-4 text-[var(--text-secondary)]">{isAr ? 'تحكم كامل في الألوان' : 'Full control over your colors'}</p>
+                </div>
+              </button>
+            </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-bold uppercase tracking-wider text-slate-400">{isAr ? 'الخلفية الأساسية' : 'Primary BG'}</label>
-                          <div className="flex gap-2 items-center">
-                            <input type="color" className="w-8 h-8 rounded border-0 cursor-pointer" value={customBg} onChange={e => handleCustomThemeChange({ bg: e.target.value })} />
-                            <span className="text-[10px] font-mono font-bold uppercase">{customBg}</span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-bold uppercase tracking-wider text-slate-400">{isAr ? 'لون البطاقات' : 'Card BG'}</label>
-                          <div className="flex gap-2 items-center">
-                            <input type="color" className="w-8 h-8 rounded border-0 cursor-pointer" value={customCard} onChange={e => handleCustomThemeChange({ card: e.target.value })} />
-                            <span className="text-[10px] font-mono font-bold uppercase">{customCard}</span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-bold uppercase tracking-wider text-slate-400">{isAr ? 'النص الرئيسي' : 'Primary Text'}</label>
-                          <div className="flex gap-2 items-center">
-                            <input type="color" className="w-8 h-8 rounded border-0 cursor-pointer" value={customText} onChange={e => handleCustomThemeChange({ text: e.target.value })} />
-                            <span className="text-[10px] font-mono font-bold uppercase">{customText}</span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-bold uppercase tracking-wider text-slate-400">{isAr ? 'النص الثانوي' : 'Secondary Text'}</label>
-                          <div className="flex gap-2 items-center">
-                            <input type="color" className="w-8 h-8 rounded border-0 cursor-pointer" value={customSec} onChange={e => handleCustomThemeChange({ textSec: e.target.value })} />
-                            <span className="text-[10px] font-mono font-bold uppercase">{customSec}</span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-bold uppercase tracking-wider text-slate-400">{isAr ? 'العنصر المميز' : 'Accent Color'}</label>
-                          <div className="flex gap-2 items-center">
-                            <input type="color" className="w-8 h-8 rounded border-0 cursor-pointer" value={customAccent} onChange={e => handleCustomThemeChange({ accent: e.target.value })} />
-                            <span className="text-[10px] font-mono font-bold uppercase">{customAccent}</span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-bold uppercase tracking-wider text-slate-400">{isAr ? 'خلفية الإدخال' : 'Input BG'}</label>
-                          <div className="flex gap-2 items-center">
-                            <input type="color" className="w-8 h-8 rounded border-0 cursor-pointer" value={customInput} onChange={e => handleCustomThemeChange({ input: e.target.value })} />
-                            <span className="text-[10px] font-mono font-bold uppercase">{customInput}</span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-bold uppercase tracking-wider text-slate-400">{isAr ? 'لون الحدود' : 'Border'}</label>
-                          <div className="flex gap-2 items-center">
-                            <input type="color" className="w-8 h-8 rounded border-0 cursor-pointer" value={customBorder} onChange={e => handleCustomThemeChange({ border: e.target.value })} />
-                            <span className="text-[10px] font-mono font-bold uppercase">{customBorder}</span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-bold uppercase tracking-wider text-slate-400">{isAr ? 'خلفية صفوف الجداول' : 'Main Table Rows BG'}</label>
-                          <div className="flex gap-2 items-center">
-                            <input type="color" className="w-8 h-8 rounded border-0 cursor-pointer" value={customRowBg} onChange={e => handleCustomThemeChange({ rowBg: e.target.value })} />
-                            <span className="text-[10px] font-mono font-bold uppercase">{customRowBg}</span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-bold uppercase tracking-wider text-slate-400">{isAr ? 'خلفية القائمة الجانبية' : 'Sidebar Rail BG'}</label>
-                          <div className="flex gap-2 items-center">
-                            <input type="color" className="w-8 h-8 rounded border-0 cursor-pointer" value={customRailBg} onChange={e => handleCustomThemeChange({ railBg: e.target.value })} />
-                            <span className="text-[10px] font-mono font-bold uppercase">{customRailBg}</span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-bold uppercase tracking-wider text-slate-400">{isAr ? 'نمط التباين' : 'Dark Mode Base'}</label>
-                          <div className="flex items-center h-8 gap-2">
-                            <input type="checkbox" id="custom-is-dark" checked={customIsDark} onChange={e => handleCustomThemeChange({ isDark: e.target.checked })} className="rounded cursor-pointer border-slate-300" />
-                            <label htmlFor="custom-is-dark" className="text-[9px] font-black uppercase text-slate-500 select-none cursor-pointer">
-                              {isAr ? 'تفعيل الوضع الداكن' : 'Enable Dark Mode'}
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2 justify-end">
-                        <button 
-                          onClick={() => {
-                            handleCustomThemeChange({
-                              bg: '#ffffff',
-                              text: '#0f172a',
-                              textSec: '#475569',
-                              card: '#ffffff',
-                              accent: '#3b82f6',
-                              border: '#e2e8f0',
-                              input: '#f8fafc',
-                              isDark: false,
-                              rowBg: '#ffffff',
-                              railBg: '#ffffff'
-                            });
-                          }} 
-                          type="button"
-                          className="px-3 py-1 bg-rose-500/10 hover:bg-rose-500/25 text-rose-500 text-[8px] font-black uppercase tracking-wider rounded-lg transition-all"
-                        >
-                          {isAr ? 'إعادة ضبط للنظام الفاتح' : 'Reset to Light Theme'}
-                        </button>
-                        <button 
-                          onClick={() => {
-                            handleCustomThemeChange({
-                              bg: '#121212',
-                              text: '#f8fafc',
-                              textSec: '#94a3b8',
-                              card: '#1e293b',
-                              accent: '#38bdf8',
-                              border: '#334155',
-                              input: '#0f172a',
-                              isDark: true,
-                              rowBg: '#1e293b',
-                              railBg: '#0f172a'
-                            });
-                          }} 
-                          type="button"
-                          className="px-3 py-1 bg-slate-500/10 hover:bg-slate-500/25 text-slate-400 text-[8px] font-black uppercase tracking-wider rounded-lg transition-all"
-                        >
-                          {isAr ? 'إعادة ضبط للنظام الداكن' : 'Reset to Dark Theme'}
-                        </button>
+            {theme === 'custom' && (
+              <div className="rounded-[2rem] border border-[var(--border-primary)] bg-[var(--surface-1)] p-6 lg:p-8 space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+                  <div>
+                    <h4 className="text-sm font-black uppercase tracking-widest text-[var(--text-primary)]">{isAr ? 'لوحة مخصصة' : 'Custom palette'}</h4>
+                    <p className="mt-1 text-[9px] font-semibold text-[var(--text-secondary)]">{isAr ? 'عدّل الألوان وشاهد النتيجة فوراً.' : 'Adjust the system colors and see the result instantly.'}</p>
+                  </div>
+                  <button type="button" onClick={() => handleCustomThemeChange({ bg:'#07111f', text:'#f8fafc', textSec:'#9fb0c2', card:'#101c2e', accent:'#5ec8ff', border:'#26384b', input:'#0b1624', isDark:true, rowBg:'#0d1927', railBg:'#050d16' })} className="px-4 py-2 rounded-xl bg-[var(--surface-2)] border border-[var(--border-primary)] text-[8px] font-black uppercase tracking-widest text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+                    {isAr ? 'إعادة ضبط' : 'Reset'}
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    ['bg','Background',customBg],['card','Cards',customCard],['text','Primary text',customText],['textSec','Secondary text',customSec],
+                    ['accent','Accent',customAccent],['input','Inputs',customInput],['border','Borders',customBorder],['rowBg','Table rows',customRowBg]
+                  ].map(([key,label,value]) => (
+                    <div key={key} className="rounded-xl bg-[var(--surface-2)] border border-[var(--border-primary)] p-3">
+                      <label className="text-[8px] font-black uppercase tracking-wider">{isAr ? ({Background:'الخلفية',Cards:'البطاقات','Primary text':'النص الرئيسي','Secondary text':'النص الثانوي',Accent:'اللون المميز',Inputs:'حقول الإدخال',Borders:'الحدود','Table rows':'صفوف الجداول'} as any)[label] || label : label}</label>
+                      <div className="mt-2 flex items-center gap-2">
+                        <input type="color" className="w-9 h-9 rounded-lg border-0 p-0 cursor-pointer" value={value as string} onChange={e => handleCustomThemeChange({ [key]: e.target.value } as any)} />
+                        <span className="text-[9px] font-mono font-bold text-[var(--text-secondary)]">{value}</span>
                       </div>
                     </div>
-                  )}
-               </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-               <div className="space-y-8">
-                  <h3 className="text-lg font-black uppercase italic tracking-tighter text-[#001F3F] dark:text-white">UI Density & Scaling</h3>
-                  <div className="bg-slate-50 dark:bg-slate-800 p-8 rounded-[2rem] border border-slate-100 dark:border-white/5 space-y-8">
-                     <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                           <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Global Zoom</label>
-                           <span className="text-xs font-black text-blue-600">{(scale * 100).toFixed(0)}%</span>
-                        </div>
-                        <input 
-                           type="range" 
-                           min="0.7" 
-                           max="1.2" 
-                           step="0.05" 
-                           value={scale} 
-                           onChange={(e) => setScale(parseFloat(e.target.value))} 
-                           className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                        />
-                        <div className="flex justify-between text-[8px] font-black text-slate-400 uppercase">
-                           <span>Tiny</span>
-                           <span>Default</span>
-                           <span>Large</span>
-                        </div>
-                     </div>
-
-                     <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
-                        <p className="text-[10px] font-bold text-slate-500 leading-relaxed italic">
-                           "Adjusting the scale changes the root font size, making icons, text, and spacing smaller or larger across the entire system instantly."
-                        </p>
-                     </div>
-
-                     <button 
-                        onClick={() => setScale(0.85)}
-                        className="w-full py-3 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-[9px] font-black uppercase text-slate-400 hover:text-[#001F3F] transition-all"
-                     >
-                        Reset to Optimal Density
-                     </button>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2 rounded-[1.5rem] bg-[var(--surface-1)] border border-[var(--border-primary)] p-5">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-[var(--text-primary)]">{isAr ? 'حجم الواجهة' : 'Interface scale'}</p>
+                    <p className="mt-1 text-[9px] font-semibold text-[var(--text-secondary)]">{isAr ? 'يضبط حجم النص والمسافات فقط.' : 'Adjusts text and spacing without changing functionality.'}</p>
                   </div>
-               </div>
-             </div>
+                  <span className="text-sm font-black text-[var(--accent)]">{(scale * 100).toFixed(0)}%</span>
+                </div>
+                <input type="range" min="0.75" max="1.1" step="0.05" value={scale} onChange={e => setScale(parseFloat(e.target.value))} className="mt-5 w-full accent-[var(--accent)]" />
+                <div className="mt-2 flex justify-between text-[8px] font-black uppercase text-[var(--text-secondary)]"><span>Compact</span><span>Standard</span><span>Large</span></div>
+              </div>
+              <div className="rounded-[1.5rem] bg-[var(--surface-1)] border border-[var(--border-primary)] p-5 flex flex-col justify-between">
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[var(--text-primary)]">{isAr ? 'الوضع الحالي' : 'Current environment'}</p>
+                  <p className="mt-2 text-lg font-black text-[var(--accent)]">{theme === 'custom' ? (isAr ? 'مخصص' : 'Custom') : theme === 'nile' ? 'Nile Command' : theme === 'navy' ? 'Port Night' : theme === 'corporate' ? 'Executive Light' : theme === 'carbon' ? 'Industrial Steel' : 'Desert Operations'}</p>
+                </div>
+                <button type="button" onClick={() => setScale(0.85)} className="mt-4 w-full py-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-primary)] text-[8px] font-black uppercase tracking-widest text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+                  {isAr ? 'الحجم القياسي' : 'Set standard size'}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
