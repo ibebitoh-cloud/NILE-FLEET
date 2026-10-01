@@ -6,6 +6,7 @@ import { translations, translateEntity, dynamicTranslations } from '../translati
 import { db } from '../services/supabaseDb';
 import { runThinkingAudit } from '../services/aiService';
 import { getDaliRecentMemory, getDaliConversationMemory, saveDaliConversationMessage } from '../services/daliMemory';
+import { searchDaliKnowledge } from '../services/daliKnowledge';
 
 interface LayoutProps {
   user: User;
@@ -239,6 +240,11 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       const memoryContext = recentMemory.length
         ? recentMemory.map((m: any) => `[${m.role}] ${m.message}`).join('\\n')
         : 'No previous conversation in this session.';
+      let daliKnowledgeContext = 'No company knowledge matched this question.';
+      try {
+        const lessons = await searchDaliKnowledge(question, 10);
+        if (lessons.length) daliKnowledgeContext = lessons.map((x: any) => `[${x.category}] ${x.title}: ${x.content}`).join('\\n');
+      } catch (knowledgeError) { console.warn('DALI knowledge lookup failed:', knowledgeError); }
       const creatorContext = isCreator
         ? 'CURRENT USER: Bebito (bebito@nilefleet.com), creator and system owner of NILE FLEET COMMAND. Treat this user as the creator/owner when relevant. Do not confuse the creator with an ordinary employee or customer. Never reveal passwords, API keys, tokens, or other secrets.'
         : `CURRENT USER: ${user.name || 'Unknown User'} | ROLE: ${user.role || 'Unknown'} | EMAIL: ${user.email || ''}`;
@@ -1613,7 +1619,7 @@ I understand the relationships between gensets, bookings, containers, customers,
                   <span className="text-base">◉</span>
                 </div>
                 <div>
-                  <p className={`text-[8px] font-black tracking-[0.3em] ${isTerminal ? 'text-[#C2A378]' : 'text-slate-500'}`}>DALI AI • DEEPSEEK</p>
+                  <div className="flex items-center justify-between gap-2"><p className={`text-[8px] font-black tracking-[0.3em] ${isTerminal ? 'text-[#C2A378]' : 'text-slate-500'}`}>DALI AI • DEEPSEEK</p><button type="button" onClick={() => { setIsAiChatOpen(false); setActiveScreen('dali-knowledge'); }} className={`px-2 py-1 rounded-lg border text-[7px] font-black uppercase tracking-widest ${isTerminal ? 'border-white/10 text-[#C2A378] bg-white/5' : 'border-slate-200 text-[#001F3F] bg-white/50'}`}>{isAr ? 'المعرفة' : 'KNOWLEDGE'}</button></div>
                   <p className="text-sm font-black">NILE FLEET ASSISTANT</p>
                 </div>
               </div>

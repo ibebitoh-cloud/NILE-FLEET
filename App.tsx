@@ -20,6 +20,7 @@ const PortGateControl = lazy(() => import('./screens/PortGateControl'));
 const UserMgmt = lazy(() => import('./screens/UserMgmt'));
 const CustomerService = lazy(() => import('./screens/CustomerService'));
 const BookingInvoices = lazy(() => import('./screens/BookingInvoices'));
+const DaliKnowledgeCenter = lazy(() => import('./screens/DaliKnowledgeCenter'));
 const Notifications = lazy(() => import('./screens/Notifications'));
 import Layout from './components/Layout';
 import { User, UserRole } from './types';
@@ -31,9 +32,9 @@ import { translateBusinessEntities, getSafeApiKey } from './services/aiService';
 
 type Language = 'en' | 'ar';
 const getDefaultAllowedScreens = (role: UserRole): string[] => {
-  if (role === UserRole.ADMIN) return ['dashboard', 'analytics', 'master-view', 'port-gate', 'operations', 'booking-invoices', 'intelligence', 'reports', 'stock', 'reservations', 'customers', 'user-mgmt', 'customer-prices', 'financials', 'support', 'notifications', 'system-log', 'user-settings'];
-  if (role === UserRole.MANAGER) return ['dashboard', 'master-view', 'operations', 'stock', 'reservations', 'customers', 'customer-prices', 'booking-invoices', 'financials', 'intelligence', 'reports', 'notifications', 'system-log', 'support', 'user-settings'];
-  if (role === UserRole.VIEWER) return ['dashboard', 'master-view', 'reports', 'intelligence', 'notifications', 'support', 'system-log'];
+  if (role === UserRole.ADMIN) return ['dali-knowledge', 'dashboard', 'analytics', 'master-view', 'port-gate', 'operations', 'booking-invoices', 'intelligence', 'reports', 'stock', 'reservations', 'customers', 'user-mgmt', 'customer-prices', 'financials', 'support', 'notifications', 'system-log', 'user-settings'];
+  if (role === UserRole.MANAGER) return ['dali-knowledge', 'dashboard', 'master-view', 'operations', 'stock', 'reservations', 'customers', 'customer-prices', 'booking-invoices', 'financials', 'intelligence', 'reports', 'notifications', 'system-log', 'support', 'user-settings'];
+  if (role === UserRole.VIEWER) return ['dali-knowledge', 'dashboard', 'master-view', 'reports', 'intelligence', 'notifications', 'support', 'system-log'];
   if (role === UserRole.GATE_OPERATOR) return ['port-gate', 'notifications', 'support', 'user-settings'];
   return ['cust-reservations', 'cust-invoices', 'notifications', 'support', 'user-settings'];
 };
@@ -634,6 +635,7 @@ const App: React.FC = () => {
 
     switch (screen) {
       case 'no-access': return <div role="status" className="mx-auto mt-16 max-w-lg rounded-2xl border border-amber-300 bg-amber-50 p-8 text-center text-sm font-bold text-amber-900">{lang === 'ar' ? 'لم يتم تعيين أي شاشات لهذا الحساب. تواصل مع مسؤول النظام.' : 'No screens are assigned to this account. Contact your administrator.'}</div>;
+      case 'dali-knowledge': return <DaliKnowledgeCenter />;
       case 'dashboard': return <Dashboard onNavigate={navigateTo} />;
       case 'analytics': return <Analytics />;
       case 'master-view': return <MasterView />;
