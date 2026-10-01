@@ -28,15 +28,15 @@ export async function onRequestPost(context) {
   // Every AI request must come from an authenticated Supabase user.
   // The service-role key is server-side only and is never exposed to the browser.
   const supabaseUrl = env.SUPABASE_URL || env.VITE_SUPABASE_URL;
-  const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseAnonKey = env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_PUBLISHABLE_KEY || env.VITE_SUPABASE_ANON_KEY;
   const authHeader = request.headers.get('Authorization') || '';
   const accessToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
-  if (!supabaseUrl || !serviceRoleKey || !accessToken) {
+  if (!supabaseUrl || !supabaseAnonKey || !accessToken) {
     return json({ error: 'Authenticated Supabase session required' }, 401);
   }
 
   const authResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
-    headers: { Authorization: `Bearer ${accessToken}`, apikey: serviceRoleKey },
+    headers: { Authorization: `Bearer ${accessToken}`, apikey: supabaseAnonKey },
   });
   if (!authResponse.ok) {
     return json({ error: 'Invalid or expired Supabase session' }, 401);
