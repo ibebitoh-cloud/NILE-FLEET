@@ -1,13 +1,13 @@
 
 import React, { useState, useContext, useMemo, useEffect } from 'react';
-import { db } from '../services/supabaseDb';
-import { LanguageContext, ThemeContext } from '../App';
-import { translations } from '../translations';
-import { Operation } from '../types';
-import { runThinkingAudit, getSafeApiKey } from '../services/aiService';
-import { getDaliRecentMemory, saveDaliConversationMessage } from '../services/daliMemory';
-import { searchDaliKnowledge } from '../services/daliKnowledge';
-import { getDaliCustomerAliases } from '../services/daliCustomerAliases';
+import { db } from './services/supabaseDb';
+import { LanguageContext, ThemeContext } from './App';
+import { translations } from './translations';
+import { Operation } from './types';
+import { runThinkingAudit, getSafeApiKey } from './services/aiService';
+import { getDaliRecentMemory, saveDaliConversationMessage } from './services/daliMemory';
+import { searchDaliKnowledge } from './services/daliKnowledge';
+import { getDaliCustomerAliases } from './services/daliCustomerAliases';
 
 const Intelligence: React.FC = () => {
   const { lang } = useContext(LanguageContext);
