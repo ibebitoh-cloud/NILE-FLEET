@@ -654,9 +654,14 @@ const App: React.FC = () => {
       return Boolean(children?.some(child => user.allowedScreens?.includes(child)));
     }
 
-    if (getDefaultAllowedScreens(user.role).includes(screen)) return true;
+    const defaultAllowed = getDefaultAllowedScreens(user.role);
+    if (defaultAllowed.includes(screen)) return true;
     const children = groupedAccess[screen];
-    return Boolean(children?.some(child => getDefaultAllowedScreens(user.role).includes(child)));
+    if (children?.some(child => defaultAllowed.includes(child))) return true;
+    // Preserve direct access to legacy child routes when their new group is enabled.
+    return Object.entries(groupedAccess).some(([group, groupChildren]) =>
+      groupChildren.includes(screen) && defaultAllowed.includes(group)
+    );
   };
 
   const renderScreen = (screen: string) => {
