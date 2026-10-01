@@ -226,6 +226,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       const gensets = db.getStock();
       const invoices = db.getInvoices();
       const maintenance = db.getMaintenanceLogs();
+      const reservations = db.getReservations();
       let recentMemory = daliMemory.slice(-16);
       try {
         // Use cross-session memory first so DALI can continue a conversation after
