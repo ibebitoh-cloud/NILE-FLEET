@@ -110,6 +110,19 @@ const App: React.FC = () => {
     }
   });
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  // All screens read business data from the shared SupabaseDB cache. Bump this
+  // version whenever that cache changes so mounted screens (including hidden
+  // tabs) re-render from the same current source of truth.
+  const [, setDataVersion] = useState(0);
+  useEffect(() => {
+    const refreshAllScreens = () => setDataVersion(v => v + 1);
+    window.addEventListener('db-change', refreshAllScreens);
+    window.addEventListener('db-undo-success', refreshAllScreens);
+    return () => {
+      window.removeEventListener('db-change', refreshAllScreens);
+      window.removeEventListener('db-undo-success', refreshAllScreens);
+    };
+  }, []);
   const [lang, setLang] = useState<Language>(() => {
     const saved = localStorage.getItem('app_lang');
     return (saved === 'ar' || saved === 'en') ? saved : 'en';
