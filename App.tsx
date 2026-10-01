@@ -113,7 +113,7 @@ const App: React.FC = () => {
   // All screens read business data from the shared SupabaseDB cache. Bump this
   // version whenever that cache changes so mounted screens (including hidden
   // tabs) re-render from the same current source of truth.
-  const [, setDataVersion] = useState(0);
+  const [dataVersion, setDataVersion] = useState(0);
   useEffect(() => {
     const refreshAllScreens = () => setDataVersion(v => v + 1);
     window.addEventListener('db-change', refreshAllScreens);
@@ -717,7 +717,7 @@ const App: React.FC = () => {
         >
           <Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center text-slate-500">Loading…</div>}>
             {(openScreens.length ? openScreens : ['no-access']).map(screen => (
-              <div key={screen} hidden={screen !== activeScreen} className="min-h-full">
+              <div key={`${screen}-${dataVersion}`} hidden={screen !== activeScreen} className="min-h-full">
                 {renderScreen(screen)}
               </div>
             ))}
