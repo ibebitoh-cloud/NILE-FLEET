@@ -1407,13 +1407,12 @@ I understand the relationships between gensets, bookings, containers, customers,
     return Boolean(groupedMenuChildren[id]?.some(child => user.allowedScreens?.includes(child)));
   };
 
+  const internalGroupIds = ['dashboard', 'port-gate', 'operations-master', 'booking-reservations', 'financials', 'intelligence', 'reports', 'stock', 'customers-prices', 'administration'];
   const menu = user.role === UserRole.CUSTOMER
     ? allPossibleMenuItems.filter(item => ['cust-reservations', 'cust-invoices', 'notifications', 'support'].includes(item.id))
-    : Array.isArray(user.allowedScreens)
-      ? allPossibleMenuItems.filter(item => hasMenuAccess(item.id))
-      : roleDefaultScreenIds
-        ? allPossibleMenuItems.filter(item => roleDefaultScreenIds.includes(item.id))
-        : defaultMenu;
+    : user.role === UserRole.GATE_OPERATOR
+      ? allPossibleMenuItems.filter(item => ['port-gate', 'notifications', 'support', 'user-settings'].includes(item.id))
+      : allPossibleMenuItems.filter(item => internalGroupIds.includes(item.id) && hasMenuAccess(item.id));
   const isTerminal = isDark;
   
   const sidebarBg = isTerminal ? 'bg-[#001224]' : 'bg-white shadow-xl';
