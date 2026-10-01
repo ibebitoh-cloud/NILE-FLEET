@@ -221,6 +221,32 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
     await saveDaliMemory('user', question);
     setAiChatLoading(true);
 
+    // HARD DATA-FIRST ROUTES: never send simple operational counts to the AI model.
+    // This guarantees questions such as "Gensets in maintenance?" always use live stock data.
+    const normalizedEarlyQuestion = question
+      .toLowerCase()
+      .replace(/[أإآٱ]/g, 'ا')
+      .replace(/[ةه]/g, 'ه')
+      .replace(/[ى]/g, 'ي')
+      .replace(/[^\\p{L}\\p{N}]+/gu, ' ')
+      .trim()
+      .replace(/\\s+/g, ' ');
+    const asksMaintenanceEarly = /\\b(?:which|what|list|show)?\\s*(?:the\\s*)?(?:gensets?|generators?|units?)\\s*(?:are\\s+|in\\s+|under\\s+)?maintenance\\b|\\bmaintenance\\b.*\\b(?:gensets?|generators?|units?)\\b|في\\s*الصيانة|بالصيانة|صيانة.*المولدات|المولدات.*صيانة|مولدات.*صيانة|مين.*محتاج.*صيانة|محتاج.*صيانة/.test(normalizedEarlyQuestion);
+    if (asksMaintenanceEarly) {
+      const maintenanceUnits = db.getStock()
+        .filter((g: any) => String(g.status || '').toUpperCase() === 'MAINTENANCE')
+        .map((g: any) => String(g.unitNumber || g.gensetNumber || '').trim())
+        .filter(Boolean);
+      const directAnswer = responseIsAr
+        ? 'المولدات الموجودة في الصيانة: ' + maintenanceUnits.length + '\\n' + (maintenanceUnits.length ? maintenanceUnits.join('، ') : 'لا يوجد')
+        : 'Gensets in maintenance: ' + maintenanceUnits.length + '\\n' + (maintenanceUnits.length ? maintenanceUnits.join(', ') : 'None');
+      setAiChatMessages(prev => [...prev, { role: 'ai', text: directAnswer }]);
+      setDaliMemory(prev => [...prev, { role: 'assistant', message: directAnswer }].slice(-30));
+      void saveDaliMemory('assistant', directAnswer);
+      setAiChatLoading(false);
+      return;
+    }
+
     try {
       const operations = db.getOperations();
       const gensets = db.getStock();
