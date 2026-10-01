@@ -227,6 +227,17 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       const invoices = db.getInvoices();
       const maintenance = db.getMaintenanceLogs();
       const reservations = db.getReservations();
+      const localDateKey = (date: Date) => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      };
+      const currentDateKey = localDateKey(new Date());
+      const tomorrowDate = new Date();
+      tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+      const tomorrowDateKey = localDateKey(tomorrowDate);
+
       let recentMemory = daliMemory.slice(-16);
       try {
         // Use cross-session memory first so DALI can continue a conversation after
