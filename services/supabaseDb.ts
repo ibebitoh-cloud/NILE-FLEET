@@ -713,18 +713,23 @@ class SupabaseDB {
     return true;
   }
 
-  async confirmOperation(id: string): Promise<void> {
-    await update('operations', id, { reviewedByManager: true });
+  async confirmOperation(id: string): Promise<boolean> {
+    const saved = await update('operations', id, { reviewedByManager: true });
+    if (!saved) return false;
     _operations = _operations.map(o => o.id === id ? { ...o, reviewedByManager: true } : o);
     await auditLog('BOSS', `Verified record ${id}`);
     dispatchChange();
+    return true;
   }
 
-  async confirmOperationsBulk(ids: string[]): Promise<void> {
-    await Promise.all(ids.map(id => update('operations', id, { reviewedByManager: true })));
-    _operations = _operations.map(o => ids.includes(o.id) ? { ...o, reviewedByManager: true } : o);
-    await auditLog('BOSS', `Force Verified ${ids.length} records`);
+  async confirmOperationsBulk(ids: string[]): Promise<boolean> {
+    const results = await Promise.all(ids.map(id => update('operations', id, { reviewedByManager: true })));
+    const savedIds = ids.filter((_, index) => results[index]);
+    if (!savedIds.length) return false;
+    _operations = _operations.map(o => savedIds.includes(o.id) ? { ...o, reviewedByManager: true } : o);
+    await auditLog('BOSS', `Force Verified ${savedIds.length} records`);
     dispatchChange();
+    return savedIds.length === ids.length;
   }
 
   async addOperationsBulk(ops: Operation[]): Promise<boolean> {
@@ -1283,18 +1288,52 @@ class SupabaseDB {
     }
   }
 
-  async updateMaintenanceLog(log: GensetMaintenanceLog): Promise<void> {
-    await update('genset_maintenance_logs', log.id, log);
-    _maintenanceLogs = _maintenanceLogs.map(l => l.id === log.id ? log : l);
-    await auditLog('MAINTENANCE', `Updated record for ${log.gensetNumber}`);
-    dispatchChange();
+  private async _syncMaintenanceState(unitNumber: string): Promise<void> {
+    const normalized = String(unitNumber || '').trim().toUpperCase();
+    if (!normalized) return;
+    const unit = _stock.find(s => s.unitNumber.trim().toUpperCase() === normalized);
+    if (!unit) return;
+
+    const activeMaintenance = _maintenanceLogs.some(l =>
+      l.gensetNumber?.trim().toUpperCase() === normalized &&
+      l.status === 'IN_PROGRESS'
+    );
+
+    let updates: Partial<Genset> = {};
+    if (activeMaintenance) {
+      updates = { status: GensetStatus.MAINTENANCE };
+    } else if (unit.status === GensetStatus.MAINTENANCE) {
+      updates = { status: GensetStatus.IN_STOCK };
+    }
+
+    if (Object.keys(updates).length === 0) return;
+    const saved = await update('gensets', unit.id, updates);
+    if (saved) _stock = _stock.map(s => s.id === unit.id ? { ...s, ...updates } : s);
   }
 
-  async deleteMaintenanceLog(id: string): Promise<void> {
-    await remove('genset_maintenance_logs', id);
+  async updateMaintenanceLog(log: GensetMaintenanceLog): Promise<boolean> {
+    const previous = _maintenanceLogs.find(l => l.id === log.id);
+    const saved = await update('genset_maintenance_logs', log.id, log);
+    if (!saved) return false;
+    _maintenanceLogs = _maintenanceLogs.map(l => l.id === log.id ? log : l);
+    if (previous?.gensetNumber && previous.gensetNumber !== log.gensetNumber) {
+      await this._syncMaintenanceState(previous.gensetNumber);
+    }
+    await this._syncMaintenanceState(log.gensetNumber);
+    await auditLog('MAINTENANCE', `Updated record for ${log.gensetNumber}`);
+    dispatchChange();
+    return true;
+  }
+
+  async deleteMaintenanceLog(id: string): Promise<boolean> {
+    const previous = _maintenanceLogs.find(l => l.id === id);
+    const removed = await remove('genset_maintenance_logs', id);
+    if (!removed) return false;
     _maintenanceLogs = _maintenanceLogs.filter(l => l.id !== id);
+    if (previous?.gensetNumber) await this._syncMaintenanceState(previous.gensetNumber);
     await auditLog('MAINTENANCE', `Deleted record ${id}`);
     dispatchChange();
+    return true;
   }
 
   // ─── notifications ─────────────────────────────────────────────────────────
