@@ -1846,6 +1846,7 @@ I understand the relationships between gensets, bookings, containers, customers,
           { id: dashboardId, label: isAr ? 'الرئيسية' : 'DASHBOARD', icon: '📊' },
           { id: 'port-gate', label: isAr ? 'البوابة' : 'GATE', icon: '🚧' },
           { id: 'master-view', label: isAr ? 'الرئيسية الموحدة' : 'MASTER', icon: '📑' },
+          { id: 'financials', label: isAr ? 'المالية' : 'FINANCE', icon: '💰' },
         ].map(item => {
           const available = item.id === dashboardId || menu.some(m => m.id === item.id);
           const active = activeScreen === item.id;
