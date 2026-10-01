@@ -1613,7 +1613,7 @@ I understand the relationships between gensets, bookings, containers, customers,
                   <span className="text-base">◉</span>
                 </div>
                 <div>
-                  <p className={`text-[8px] font-black tracking-[0.3em] ${isTerminal ? 'text-[#C2A378]' : 'text-slate-500'}`}>DALI AI • DEEPSEEK</p>
+                  <div className="flex items-center justify-between gap-2"><p className={`text-[8px] font-black tracking-[0.3em] ${isTerminal ? 'text-[#C2A378]' : 'text-slate-500'}`}>DALI AI • DEEPSEEK</p><button type="button" onClick={() => { setIsAiChatOpen(false); setActiveScreen('dali-knowledge'); }} className={`px-2 py-1 rounded-lg border text-[7px] font-black uppercase tracking-widest ${isTerminal ? 'border-white/10 text-[#C2A378] bg-white/5' : 'border-slate-200 text-[#001F3F] bg-white/50'}`}>{isAr ? 'المعرفة' : 'KNOWLEDGE'}</button></div>
                   <p className="text-sm font-black">NILE FLEET ASSISTANT</p>
                 </div>
               </div>
