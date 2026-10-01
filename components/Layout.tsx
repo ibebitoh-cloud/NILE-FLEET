@@ -1134,7 +1134,7 @@ DATA BEHAVIOR:
 
         // DETERMINISTIC OPERATIONAL ANSWERS
         // These questions must never depend on the LLM. The database/cache is the source of truth.
-        const asksMaintenanceList = /which gensets|what gensets|list.*gensets|gensets.*maintenance|maintenance.*gensets|في الصيانة|بالصيانة|مولدات.*صيانة|المولدات.*صيانة/.test(normalizedQuestion);
+        const asksMaintenanceList = /\\b(?:which|what|list|show)?\\s*(?:the\\s*)?(?:gensets?|generators?|units?)\\s*(?:are\\s+|in\\s+|under\\s+)?maintenance\\b|\\bmaintenance\\b.*\\b(?:gensets?|generators?|units?)\\b|في\\s*الصيانة|بالصيانة|صيانة\\s*المولدات|المولدات.*صيانة|مولدات.*صيانة|مين.*محتاج.*صيانة|محتاج.*صيانة/.test(normalizedQuestion);
         const asksPortStock = /stock in each port|stock.*each port|each port.*stock|stock by port|port stock|المخزون.*كل.*ميناء|كل.*ميناء.*المخزون|رصيد.*ميناء|مخزون.*ميناء/.test(normalizedQuestion);
         const asksPortSaid = /how many gensets.*port said|gensets.*port said|port said.*gensets|مولدات.*بورسعيد|مولدات.*بورسعيد|كم.*مولد.*بورسعيد/.test(normalizedQuestion);
 
@@ -1163,6 +1163,14 @@ DATA BEHAVIOR:
           answer = responseIsAr
             ? 'المخزون حسب الموقع:\n' + portRows + (workshop ? '\n\nWORKSHOP: ' + workshop.total + ' (منها ' + workshop.maintenance + ' صيانة و' + (workshop.total - workshop.maintenance) + ' متقاعد)' : '')
             : 'Stock by port/location:\n' + portRows + (workshop ? '\n\nWORKSHOP: ' + workshop.total + ' (' + workshop.maintenance + ' maintenance, ' + (workshop.total - workshop.maintenance) + ' retired)' : '');
+        } else if (/maintenance|maintain|service|repair|صيانة/.test(normalizedQuestion)) {
+          const maintenanceUnits = gensets
+            .filter(g => String(g.status || '').toUpperCase() === 'MAINTENANCE')
+            .map(g => String(g.unitNumber || g.gensetNumber || '').trim())
+            .filter(Boolean);
+          answer = responseIsAr
+            ? 'المولدات الموجودة في الصيانة: ' + maintenanceUnits.length + '\\n' + (maintenanceUnits.length ? maintenanceUnits.join('، ') : 'لا يوجد')
+            : 'Gensets in maintenance: ' + maintenanceUnits.length + '\\n' + (maintenanceUnits.length ? maintenanceUnits.join(', ') : 'None');
         } else if (/stock|genset|generator|مولد|مولدات|مخزون|ميناء|port/.test(normalizedQuestion)) {
           const total = gensets.length;
           const maintenanceCount = gensets.filter(g => String(g.status || '').toUpperCase() === 'MAINTENANCE').length;
@@ -1214,8 +1222,8 @@ DATA BEHAVIOR:
 I understand the relationships between gensets, bookings, containers, customers, ports, maintenance and invoices. I can also keep context across follow-ups — for example, “Where is genset 125?” followed by “What about its maintenance?”.`;
         } else {
           answer = responseIsAr
-            ? 'أنا دالي. حتى لو خدمة الذكاء الاصطناعي غير متاحة الآن، أقدر أجاوب مباشرة من بيانات النظام على أسئلة المولدات والمخزون والموانئ والعمليات والفواتير. لو سؤالك يحتاج فهم لغة مفتوحة أو موضوع عام، سأحتاج عودة محرك الذكاء الاصطناعي.'
-            : 'I’m Dali. Even if the AI service is temporarily unavailable, I can still answer directly from live system data about gensets, stock, ports, operations and invoices. Open-ended language and general questions need the AI model to be online.'; 
+            ? 'لم أجد إجابة مباشرة لهذا السؤال في البيانات الحالية. جرّب ذكر المولد أو العميل أو الميناء أو رقم الحجز.'
+            : 'I could not find a direct answer in the current data. Try giving me the genset, customer, port, or booking number.';
         }
       }
       const finalAnswer = answer || (isAr ? 'لم يصل رد من DALI 1.0.' : 'No response from DALI 1.0.');
