@@ -983,7 +983,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       // equivalents, carry identifiers from the user's previous DALI turns
       // into live-data retrieval. This is what makes cross-session memory
       // useful for factual answers instead of merely showing old text.
-      const isMemoryFollowUp = /\\b(?:it|its|that|those|this|previous|above|same|what about|and what about|also)\\b|\\b(?:هو|هي|ده|دي|ذلك|تلك|السابق|اللي فات|نفسه|نفسها|وماذا عن|طيب و|كمان)\\b/i.test(question);
+      const isMemoryFollowUp = /\b(?:it|its|that|those|this|previous|above|same|what about|and what about|also)\b|\b(?:هو|هي|ده|دي|ذلك|تلك|السابق|اللي فات|نفسه|نفسها|وماذا عن|طيب و|كمان)\b/i.test(question);
       const memoryReferenceIds = isMemoryFollowUp
         ? Array.from(new Set(
             recentMemory
@@ -991,13 +991,13 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
               .flatMap(text => {
                 const ids = new Set<string>();
                 const patterns = [
-                  /(?:GENSET|GENSETS|مولد(?:ات)?|وحدة)\\s*(?:NO\\.?|NUMBER|ID|رقم|#)?\\s*([A-Z0-9-]{2,})/gi,
-                  /(?:BOOKING|حجز)\\s*(?:NO\\.?|NUMBER|ID|رقم|#)?\\s*([A-Z0-9-]{2,})/gi,
-                  /(?:CONTAINER|CONT|حاوي(?:ة|ه))\\s*(?:NO\\.?|NUMBER|ID|رقم|#)?\\s*([A-Z0-9-]{4,})/gi
+                  /(?:GENSET|GENSETS|مولد(?:ات)?|وحدة)\s*(?:NO\\.?|NUMBER|ID|رقم|#)?\s*([A-Z0-9-]{2,})/gi,
+                  /(?:BOOKING|حجز)\s*(?:NO\\.?|NUMBER|ID|رقم|#)?\s*([A-Z0-9-]{2,})/gi,
+                  /(?:CONTAINER|CONT|حاوي(?:ة|ه))\s*(?:NO\\.?|NUMBER|ID|رقم|#)?\s*([A-Z0-9-]{4,})/gi
                 ];
                 for (const pattern of patterns) {
                   for (const match of text.matchAll(pattern)) {
-                    if (match[1] && /\\d/.test(match[1])) ids.add(match[1]);
+                    if (match[1] && /\d/.test(match[1])) ids.add(match[1]);
                   }
                 }
                 return [...ids];
