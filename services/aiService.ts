@@ -125,7 +125,7 @@ function deterministicDaliAnswer(prompt: string): string | null {
     const matches = customer
       ? rows.filter((r: any) => normalizeText(r.customer) === normalizeText(customer))
       : rows.filter((r: any) => normalizeText(r.customer).includes(normalizeText(extractCustomerName(question))));
-    const total = matches.reduce((sum: number, r: any) => sum + (Number(r.containersRequested) || 0), 0);
+    const total = matches.reduce((sum: number, r: any) => sum + (Number(r.gensetsNeeded ?? r.containersRequested) || 0), 0);
     const display = customer || extractCustomerName(question) || 'العميل';
     if (ar) {
       return total
