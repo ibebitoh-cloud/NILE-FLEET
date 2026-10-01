@@ -105,8 +105,7 @@ function deterministicDaliAnswer(prompt: string): string | null {
   if (isGreeting(question)) return ar ? 'أهلاً 👋 قولّي عايز تعرف إيه.' : 'Hi 👋 What do you need?';
 
   const totalFleetIntent =
-    /(?:total|overall|all|how many|count|number of).*(?:genset|gensets|مولد|مولدات).*(?:fleet|we have|لدينا|الاسطول|الأسطول)?$/i.test(q) ||
-    /^(?:total gensets?|عدد المولدات|كام مولد عندنا|كام مولد لدينا|اجمالي المولدات|إجمالي المولدات)$/i.test(q);
+    /^(?:total gensets?|how many gensets(?: do we have| are there)?(?: in total)?|how many gensets are in (?:the )?fleet|عدد المولدات|كام مولد عندنا|كام مولد لدينا|اجمالي المولدات|إجمالي المولدات)$/i.test(q);
 
   const customerOpsIntent =
     /(?:operations?|jobs?|work)\s+(?:for|of)\s+.+/i.test(question) ||
