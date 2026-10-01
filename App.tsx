@@ -32,8 +32,8 @@ import { translateBusinessEntities, getSafeApiKey } from './services/aiService';
 
 type Language = 'en' | 'ar';
 const getDefaultAllowedScreens = (role: UserRole): string[] => {
-  if (role === UserRole.ADMIN) return ['dali-knowledge', 'dashboard', 'analytics', 'master-view', 'port-gate', 'operations', 'booking-invoices', 'intelligence', 'reports', 'stock', 'reservations', 'customers', 'user-mgmt', 'customer-prices', 'support', 'notifications', 'system-log', 'user-settings'];
-  if (role === UserRole.MANAGER) return ['dali-knowledge', 'dashboard', 'master-view', 'operations', 'stock', 'reservations', 'customers', 'customer-prices', 'booking-invoices', 'intelligence', 'reports', 'notifications', 'system-log', 'support', 'user-settings'];
+  if (role === UserRole.ADMIN) return ['dali-knowledge', 'dashboard', 'analytics', 'master-view', 'port-gate', 'operations', 'booking-invoices', 'financials', 'intelligence', 'reports', 'stock', 'reservations', 'customers', 'user-mgmt', 'customer-prices', 'financials', 'support', 'notifications', 'system-log', 'user-settings'];
+  if (role === UserRole.MANAGER) return ['dali-knowledge', 'dashboard', 'master-view', 'operations', 'stock', 'reservations', 'customers', 'customer-prices', 'booking-invoices', 'financials', 'intelligence', 'reports', 'notifications', 'system-log', 'support', 'user-settings'];
   if (role === UserRole.VIEWER) return ['dali-knowledge', 'dashboard', 'master-view', 'reports', 'intelligence', 'notifications', 'support', 'system-log'];
   if (role === UserRole.GATE_OPERATOR) return ['port-gate', 'notifications', 'support', 'user-settings'];
   return ['cust-reservations', 'cust-invoices', 'notifications', 'support', 'user-settings'];
@@ -657,6 +657,7 @@ const App: React.FC = () => {
       case 'port-gate': return <PortGateControl />;
       case 'operations': return <Operations highlightId={highlightId} clearHighlight={() => setHighlightId(null)} />;
       case 'booking-invoices': return <BookingInvoices />;
+      case 'financials': return <Financials />;
       case 'intelligence': return <Intelligence />;
       case 'reports': return <Reports />;
       case 'stock': return <StockManagement />;
