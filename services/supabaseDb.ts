@@ -229,7 +229,7 @@ function scheduleRealtimeRefresh(kind: string) {
     let changed = false;
     const reload = async <T,>(table: string, assign: (rows: T[]) => void, order?: string) => {
       try {
-        const rows = await query<T>(table, order ? { order } : undefined);
+        const rows = await query<T>(table, order ? { order } : undefined) as T[];
         assign(rows);
         changed = true;
       } catch (error) {
