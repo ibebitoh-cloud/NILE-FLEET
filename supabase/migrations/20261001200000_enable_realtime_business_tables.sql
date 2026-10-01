@@ -1,3 +1,18 @@
 -- Keep the operational data tables available to Supabase Realtime.
--- This lets the web app synchronize changes made by another tab/device/user.
-alter publication supabase_realtime add table public.operations, public.invoices, public.reservations, public.gensets;
+-- Idempotent because production may already have these tables enabled manually.
+do $$
+declare
+  t text;
+begin
+  foreach t in array array['operations','invoices','reservations','gensets'] loop
+    if not exists (
+      select 1
+      from pg_publication_tables
+      where pubname = 'supabase_realtime'
+        and schemaname = 'public'
+        and tablename = t
+    ) then
+      execute format('alter publication supabase_realtime add table public.%I', t);
+    end if;
+  end loop;
+end $$;
