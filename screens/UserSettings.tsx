@@ -589,7 +589,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
               {[
-                { id: 'nile', name: isAr ? 'نايل فليت' : 'Nile Fleet', desc: isAr ? 'هوية نايل فليت التشغيلية' : 'Nile Fleet operational identity', preview: ['#061a16','#0b241f','#4fd1a5'] },
+                { id: 'nile', name: isAr ? 'نايل كومانـد' : 'Nile Command', desc: isAr ? 'هوية نايل فليت التشغيلية' : 'Nile Fleet operational identity', preview: ['#061a16','#0b241f','#4fd1a5'] },
                 { id: 'navy', name: isAr ? 'ليلي الميناء' : 'Port Night', desc: isAr ? 'واضح للعمل الليلي والموانئ' : 'High-clarity night operations', preview: ['#07111f','#101c2e','#5ec8ff'] },
                 { id: 'corporate', name: isAr ? 'تنفيذي فاتح' : 'Executive Light', desc: isAr ? 'نظيف للاجتماعات والتقارير' : 'Clean for reports and office work', preview: ['#f4f7fa','#ffffff','#0b7fab'] },
                 { id: 'carbon', name: isAr ? 'فولاذ صناعي' : 'Industrial Steel', desc: isAr ? 'تقني وهادئ للشاشات الثقيلة' : 'Technical and restrained', preview: ['#11161b','#1b2229','#58a6d9'] },
