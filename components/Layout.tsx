@@ -977,6 +977,34 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       // the user's words. This stays read-only and keeps the model context bounded.
       const stopWords = new Set(['what','which','where','when','who','show','find','give','tell','how','many','much','about','with','from','for','the','and','this','that','are','was','were','have','has','current','currently','today','month','week','year','all','each','any','our','me','please','can','you','does','do','is','in','of','to','a','an','on','by','or','vs','compare','how','many','كم','كام','ايه','اي','فين','اين','أين','امتى','متى','من','عن','في','الى','إلى','و','هل','عايز','محتاج','هات','وريني','اعرض','كل','جميع','هذا','هذه','ال','مولد','مولدات','جهاز','وحدة','عملية','عمليات','حجز','حجوزات','حاوية','حاويات','كشف','حساب','عميل','العميل','شركة','شركه']);
       const queryTokens = normalizeEntityText(question).split(' ').filter(t => t.length >= 2 && !stopWords.has(t));
+
+      // FOLLOW-UP MEMORY BRIDGE: if the new question uses a reference such as
+      // "it", "that genset", "what about its maintenance", or the Arabic
+      // equivalents, carry identifiers from the user's previous DALI turns
+      // into live-data retrieval. This is what makes cross-session memory
+      // useful for factual answers instead of merely showing old text.
+      const isMemoryFollowUp = /\\b(?:it|its|that|those|this|previous|above|same|what about|and what about|also)\\b|\\b(?:هو|هي|ده|دي|ذلك|تلك|السابق|اللي فات|نفسه|نفسها|وماذا عن|طيب و|كمان)\\b/i.test(question);
+      const memoryReferenceIds = isMemoryFollowUp
+        ? Array.from(new Set(
+            recentMemory
+              .flatMap((m: any) => [String(m.message || ''), JSON.stringify(m.entities || {})])
+              .flatMap(text => {
+                const ids = new Set<string>();
+                const patterns = [
+                  /(?:GENSET|GENSETS|مولد(?:ات)?|وحدة)\\s*(?:NO\\.?|NUMBER|ID|رقم|#)?\\s*([A-Z0-9-]{2,})/gi,
+                  /(?:BOOKING|حجز)\\s*(?:NO\\.?|NUMBER|ID|رقم|#)?\\s*([A-Z0-9-]{2,})/gi,
+                  /(?:CONTAINER|CONT|حاوي(?:ة|ه))\\s*(?:NO\\.?|NUMBER|ID|رقم|#)?\\s*([A-Z0-9-]{4,})/gi
+                ];
+                for (const pattern of patterns) {
+                  for (const match of text.matchAll(pattern)) {
+                    if (match[1] && /\\d/.test(match[1])) ids.add(match[1]);
+                  }
+                }
+                return [...ids];
+              })
+          ))
+        : [];
+      const effectiveQueryTokens = Array.from(new Set([...queryTokens, ...memoryReferenceIds.map(normalizeEntityText).filter(Boolean)]));
       const recordText = (record: any) => normalizeEntityText([
         record?.bookingNumber, record?.containerNumber, record?.gensetNumber, record?.unitNumber,
         record?.customerName, record?.beneficiaryName, record?.trucker, record?.clipOnPort,
@@ -985,8 +1013,8 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       ].filter(Boolean).join(' '));
       const relevance = (record: any) => {
         const haystack = recordText(record);
-        if (!haystack || !queryTokens.length) return 0;
-        return queryTokens.reduce((score, token) => score + (haystack.includes(token) ? (token.length >= 5 ? 3 : 1) : 0), 0);
+        if (!haystack || !effectiveQueryTokens.length) return 0;
+        return effectiveQueryTokens.reduce((score, token) => score + (haystack.includes(token) ? (token.length >= 5 ? 3 : 1) : 0), 0);
       };
       const matchedOperations = operations.map(o => ({ row:o, score:relevance(o) })).filter(x => x.score > 0).sort((a,b) => b.score-a.score).slice(0, 80).map(x => x.row);
       const matchedGensets = gensets.map(g => ({ row:g, score:relevance(g) })).filter(x => x.score > 0).sort((a,b) => b.score-a.score).slice(0, 60).map(x => x.row);
@@ -1017,7 +1045,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         customers: customerAliasesForAi.slice(0, 100),
         recentPayments: db.getPayments().slice(-50).map(p => ({ customerName:p.customerName, amount:p.amount, date:p.date, reference:p.reference }))
       };
-      const prompt = `DALI CONVERSATION MEMORY (recent turns):\n${memoryContext}\n\nLATEST USER QUESTION:\n${question}\n\nAnswer the latest user question directly. Understand natural Egyptian Arabic, Modern Standard Arabic, English, Arabizi/transliterated customer names, and mixed Arabic/English. Use recent conversation only to resolve references in a follow-up; do not let older turns override the latest question. For Nile Fleet facts, use only the supplied live data and say plainly when the needed fact is not present. For general or how-to questions, answer helpfully without forcing an unrelated fleet-data response. Never invent operational facts. Reply in the latest question's language, preserve IDs/dates/numbers, and keep it concise.\n\nNILE FLEET SYSTEM FLOW: Reservations are customer requests for one or more gensets; approving a reservation creates operations. Each operation links booking, container, genset, customer, beneficiary/shipper, trucker/driver, dates, clip-on port, clip-off port, status, rate and VAT. The gensets master is the source for current unit number, location and status: IN_STOCK, CLIPPED_ON, MAINTENANCE or RETIRED. Maintenance logs belong to gensets and contain service date/type, technician, location, status, completion date, cost, parts and next service. A genset question may therefore require combining its master record with its operation history and maintenance history. Port stock means the current gensets grouped by their current location/status, not historical operations. Invoices are financial records associated with customers/bookings/operations; payments represent collections and reduce outstanding balances. Customer questions can require joining customer profiles with operations, invoices and payments. Use these relationships to understand new questions, not just exact keywords. For counts, totals, dates, status and location, calculate from the supplied live data. If the live data does not contain the requested fact, say what is missing instead of inventing it.\n${creatorContext}\nLATEST QUESTION: ${question}\nLIVE CONTEXT: ${JSON.stringify(context)}`
+      const prompt = `DALI CONVERSATION MEMORY (recent turns):\n${memoryContext}\n\nLATEST USER QUESTION:\n${question}\n\nAnswer the latest user question directly. Understand natural Egyptian Arabic, Modern Standard Arabic, English, Arabizi/transliterated customer names, and mixed Arabic/English. If the latest question refers to "it", "that", "its", "the previous one", or equivalent Arabic wording, resolve the referent from DALI conversation memory and then use the matching live records supplied below. Previous conversation is context, not a substitute for live data. Use recent conversation only to resolve references in a follow-up; do not let older turns override the latest question. For Nile Fleet facts, use only the supplied live data and say plainly when the needed fact is not present. For general or how-to questions, answer helpfully without forcing an unrelated fleet-data response. Never invent operational facts. Reply in the latest question's language, preserve IDs/dates/numbers, and keep it concise.\n\nNILE FLEET SYSTEM FLOW: Reservations are customer requests for one or more gensets; approving a reservation creates operations. Each operation links booking, container, genset, customer, beneficiary/shipper, trucker/driver, dates, clip-on port, clip-off port, status, rate and VAT. The gensets master is the source for current unit number, location and status: IN_STOCK, CLIPPED_ON, MAINTENANCE or RETIRED. Maintenance logs belong to gensets and contain service date/type, technician, location, status, completion date, cost, parts and next service. A genset question may therefore require combining its master record with its operation history and maintenance history. Port stock means the current gensets grouped by their current location/status, not historical operations. Invoices are financial records associated with customers/bookings/operations; payments represent collections and reduce outstanding balances. Customer questions can require joining customer profiles with operations, invoices and payments. Use these relationships to understand new questions, not just exact keywords. For counts, totals, dates, status and location, calculate from the supplied live data. If the live data does not contain the requested fact, say what is missing instead of inventing it.\n${creatorContext}\nLATEST QUESTION: ${question}\nLIVE CONTEXT: ${JSON.stringify(context)}`
       let answer = '';
       try {
         answer = await runThinkingAudit(prompt, 650);
