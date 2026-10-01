@@ -575,15 +575,21 @@ const MasterView: React.FC = () => {
     setEditEtaStatus(inv.etaStatus || 'DRAFT');
   };
 
-  const handleSaveEditInvoice = () => {
+  const handleSaveEditInvoice = async () => {
     if (!editingInvoice) return;
-    db.updateInvoice(editingInvoice.id, {
+    const saved = await db.updateInvoice(editingInvoice.id, {
       amount: editAmount,
       date: editDate,
       dueDate: editDueDate || undefined,
       status: editStatus,
       etaStatus: editEtaStatus
     });
+    if (!saved) {
+      window.alert(isAr
+        ? `فشل حفظ الفاتورة: ${db.getLastDbError() || ''}`
+        : `Invoice save failed: ${db.getLastDbError() || ''}`);
+      return;
+    }
     setEditingInvoice(null);
     refresh();
   };
@@ -1187,9 +1193,15 @@ const MasterView: React.FC = () => {
     return result;
   }, [operations, searchTerm, columnSearches, selectedPorts, selectedStatuses, dateFilter, sortConfig, invoices, lang]);
 
-  const handleUpdateCell = (op: Operation, field: keyof Operation, val: any) => {
+  const handleUpdateCell = async (op: Operation, field: keyof Operation, val: any) => {
     if (isReadOnly) return;
-    db.updateOperation({ ...op, [field]: val });
+    const saved = await db.updateOperation({ ...op, [field]: val });
+    if (!saved) {
+      window.alert(isAr
+        ? `فشل حفظ التعديل: ${db.getLastDbError() || ''}`
+        : `Failed to save change: ${db.getLastDbError() || ''}`);
+      return;
+    }
     refresh();
   };
 
