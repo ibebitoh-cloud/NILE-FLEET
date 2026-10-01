@@ -1407,7 +1407,7 @@ I understand the relationships between gensets, bookings, containers, customers,
     return Boolean(groupedMenuChildren[id]?.some(child => user.allowedScreens?.includes(child)));
   };
 
-  const internalGroupIds = ['dashboard', 'port-gate', 'operations-master', 'booking-reservations', 'financials', 'intelligence', 'reports', 'stock', 'customers-prices', 'administration'];
+  const internalGroupIds = ['dashboard-analytics', 'port-gate', 'operations-master', 'booking-reservations', 'financials', 'intelligence', 'reports', 'stock', 'customers-prices', 'administration'];
   const menu = user.role === UserRole.CUSTOMER
     ? allPossibleMenuItems.filter(item => ['cust-reservations', 'cust-invoices', 'notifications', 'support'].includes(item.id))
     : user.role === UserRole.GATE_OPERATOR
