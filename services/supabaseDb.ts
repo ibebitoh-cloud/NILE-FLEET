@@ -274,6 +274,40 @@ function startRealtimeSync() {
 
 class SupabaseDB {
 
+  async resetSessionCache(): Promise<void> {
+    if (_realtimeChannel) {
+      await supabase.removeChannel(_realtimeChannel);
+      _realtimeChannel = null;
+    }
+    if (_realtimeRefreshTimer) {
+      clearTimeout(_realtimeRefreshTimer);
+      _realtimeRefreshTimer = null;
+    }
+    _realtimeRefreshKinds.clear();
+    _loaded = false;
+    _stock = [];
+    _reservations = [];
+    _operations = [];
+    _invoices = [];
+    _payments = [];
+    _paymentAllocations = [];
+    _users = [];
+    _auditLogs = [];
+    _customerPrices = [];
+    _procurements = [];
+    _gasTransactions = [];
+    _employees = [];
+    _payrollTransactions = [];
+    _foodExpenses = [];
+    _transportExpenses = [];
+    _portRents = [];
+    _notifications = [];
+    _supportContacts = [];
+    _faqs = [];
+    _portsInfo = [];
+    _maintenanceLogs = [];
+  }
+
   // ─── bootstrap ─────────────────────────────────────────────────────────────
 
   async loadAll(): Promise<void> {
