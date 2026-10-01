@@ -32,9 +32,9 @@ import { translateBusinessEntities, getSafeApiKey } from './services/aiService';
 
 type Language = 'en' | 'ar';
 const getDefaultAllowedScreens = (role: UserRole): string[] => {
-  if (role === UserRole.ADMIN) return ['dali-knowledge', 'dashboard', 'dashboard-analytics', 'operations', 'operations-master', 'port-gate', 'financials', 'booking-invoices', 'booking-reservations', 'financials', 'intelligence', 'reports', 'stock', 'customers', 'customers-prices', 'administration', 'user-mgmt', 'customer-prices', 'support', 'notifications', 'system-log', 'user-settings'];
-  if (role === UserRole.MANAGER) return ['dali-knowledge', 'dashboard', 'operations', 'operations-master', 'stock', 'customers', 'customers-prices', 'booking-invoices', 'booking-reservations', 'financials', 'intelligence', 'reports', 'notifications', 'system-log', 'support', 'user-settings', 'administration'];
-  if (role === UserRole.VIEWER) return ['dali-knowledge', 'dashboard', 'operations', 'operations-master', 'reports', 'intelligence', 'notifications', 'support', 'system-log'];
+  if (role === UserRole.ADMIN) return ['dali-knowledge', 'dashboard', 'analytics', 'master-view', 'port-gate', 'operations', 'booking-invoices', 'intelligence', 'reports', 'stock', 'reservations', 'customers', 'user-mgmt', 'customer-prices', 'financials', 'support', 'notifications', 'system-log', 'user-settings'];
+  if (role === UserRole.MANAGER) return ['dali-knowledge', 'dashboard', 'master-view', 'operations', 'stock', 'reservations', 'customers', 'customer-prices', 'booking-invoices', 'financials', 'intelligence', 'reports', 'notifications', 'system-log', 'support', 'user-settings'];
+  if (role === UserRole.VIEWER) return ['dali-knowledge', 'dashboard', 'master-view', 'reports', 'intelligence', 'notifications', 'support', 'system-log'];
   if (role === UserRole.GATE_OPERATOR) return ['port-gate', 'notifications', 'support', 'user-settings'];
   return ['cust-reservations', 'cust-invoices', 'notifications', 'support', 'user-settings'];
 };
@@ -205,9 +205,9 @@ const App: React.FC = () => {
   // behind the auth gate below, including direct navigation and refreshes.
   useEffect(() => {
     const allScreens = new Set([
-      'dali-knowledge', 'dashboard', 'dashboard-analytics', 'analytics', 'master-view', 'operations', 'operations-master', 'port-gate',
-      'booking-invoices', 'booking-reservations', 'intelligence', 'reports', 'stock', 'reservations',
-      'customers', 'customers-prices', 'user-mgmt', 'customer-prices', 'support', 'administration',
+      'dali-knowledge', 'dashboard', 'analytics', 'master-view', 'operations', 'port-gate',
+      'booking-invoices', 'intelligence', 'reports', 'stock', 'reservations',
+      'customers', 'user-mgmt', 'customer-prices', 'support',
       'notifications', 'system-log', 'user-settings', 'cust-reservations',
       'cust-invoices'
     ]);
