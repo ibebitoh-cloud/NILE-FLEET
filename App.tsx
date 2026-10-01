@@ -679,52 +679,22 @@ const App: React.FC = () => {
       case 'no-access': return <div role="status" className="mx-auto mt-16 max-w-lg rounded-2xl border border-amber-300 bg-amber-50 p-8 text-center text-sm font-bold text-amber-900">{lang === 'ar' ? 'لم يتم تعيين أي شاشات لهذا الحساب. تواصل مع مسؤول النظام.' : 'No screens are assigned to this account. Contact your administrator.'}</div>;
       case 'dali-knowledge': return <DaliKnowledgeCenter />;
       case 'dashboard': return <Dashboard onNavigate={navigateTo} />;
-      case 'dashboard-analytics':
-        return  },
-          { id: 'analytics', label: lang === 'ar' ? 'التحليلات' : 'Analytics', icon: '📈', content: <Analytics /> },
-        ]} />;
       case 'analytics': return <Analytics />;
-      case 'operations-master':
-        return  },
-          { id: 'master-view', label: lang === 'ar' ? 'العرض الرئيسي' : 'Master View', icon: '📑', content: <MasterView /> },
-        ]} />;
       case 'master-view': return <MasterView />;
       case 'port-gate': return <PortGateControl />;
       case 'operations': return <Operations highlightId={highlightId} clearHighlight={() => setHighlightId(null)} />;
       case 'booking-invoices': return <BookingInvoices />;
-      case 'booking-reservations':
-        return  },
-          { id: 'reservations', label: lang === 'ar' ? 'الحجوزات' : 'Bookings', icon: '📅', content: <Reservations /> },
-        ]} />;
       case 'financials': return <Financials />;
-      case 'intelligence':
-        return  },
-          { id: 'dali-knowledge', label: lang === 'ar' ? 'قاعدة المعرفة' : 'Knowledge', icon: '📚', content: <DaliKnowledgeCenter /> },
-        ]} />;
+      case 'intelligence': return <Intelligence />;
       case 'reports': return <Reports />;
       case 'stock': return <StockManagement />;
       case 'reservations': return <Reservations />;
       case 'customers': return <Customers />;
-      case 'customers-prices':
-        return  },
-          { id: 'customer-prices', label: lang === 'ar' ? 'الأسعار' : 'Rates', icon: '💰', content: <CustomerPrices /> },
-        ]} />;
       case 'user-mgmt': return <UserMgmt />;
       case 'customer-prices': return <CustomerPrices />;
-            case 'support': return <CustomerService />;
+      case 'support': return <CustomerService />;
       case 'notifications': return <Notifications />;
       case 'system-log': return <HistoryLog />;
-      case 'administration':
-        return  },
-          { id: 'notifications', label: lang === 'ar' ? 'التنبيهات' : 'Notifications', icon: '🔔', content: <Notifications /> },
-          { id: 'system-log', label: lang === 'ar' ? 'سجل النظام' : 'System Log', icon: '🕒', content: <HistoryLog /> },
-          { id: 'support', label: lang === 'ar' ? 'الدعم' : 'Support', icon: '🎧', content: <CustomerService /> },
-          { id: 'user-settings', label: lang === 'ar' ? 'الإعدادات' : 'Settings', icon: '⚙️', content: <UserSettings user={user} onUpdate={(updates) => {
-            const updated = { ...user, ...updates };
-            setUser(updated);
-            localStorage.setItem('user', JSON.stringify(updated));
-          }} /> },
-        ]} />;
       case 'user-settings': return <UserSettings user={user} onUpdate={(updates) => {
         const updated = { ...user, ...updates };
         setUser(updated);
@@ -734,8 +704,6 @@ const App: React.FC = () => {
       case 'cust-invoices': return <CustomerPortal user={user} type="invoices" />;
       default: return <Dashboard onNavigate={navigateTo} />;
     }
-  };
-
   const setScreenFromLayout = (screen: string) => {
     setHighlightId(null);
     setActiveScreen(screen);
