@@ -7,6 +7,8 @@ import { db } from '../services/supabaseDb';
 import { runThinkingAudit } from '../services/aiService';
 import { getDaliRecentMemory, getDaliConversationMemory, saveDaliConversationMessage } from '../services/daliMemory';
 import { searchDaliKnowledge } from '../services/daliKnowledge';
+import { getDaliCustomerAliases } from '../services/daliCustomerAliases';
+import type { DaliCustomerAlias } from '../services/daliCustomerAliases';
 
 interface LayoutProps {
   user: User;
@@ -245,6 +247,13 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         const lessons = await searchDaliKnowledge(question, 10);
         if (lessons.length) daliKnowledgeContext = lessons.map((x: any) => `[${x.category}] ${x.title}: ${x.content}`).join('\\n');
       } catch (knowledgeError) { console.warn('DALI knowledge lookup failed:', knowledgeError); }
+      let daliCustomerAliases: DaliCustomerAlias[] = [];
+      try {
+        daliCustomerAliases = await getDaliCustomerAliases();
+      } catch (aliasError) {
+        console.warn('DALI customer dictionary lookup failed:', aliasError);
+      }
+
       const creatorContext = isCreator
         ? 'CURRENT USER: Bebito (bebito@nilefleet.com), creator and system owner of NILE FLEET. Treat this user as the creator/owner when relevant. Do not confuse the creator with an ordinary employee or customer. Never reveal passwords, API keys, tokens, or other secrets.'
         : `CURRENT USER: ${user.name || 'Unknown User'} | ROLE: ${user.role || 'Unknown'} | EMAIL: ${user.email || ''}`;
@@ -524,6 +533,10 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         };
 
         [customer.companyName, customer.companyNameAr, customer.name].forEach(add);
+        // Structured DALI customer aliases are authoritative entity mappings.
+        daliCustomerAliases
+          .filter(alias => alias.customer_id === customer.id && alias.active)
+          .forEach(alias => add(alias.alias));
         [customer.companyName, customer.companyNameAr, customer.name].filter(Boolean).forEach(v => {
           add(translateEntity(String(v), 'ar'));
           add(translateEntity(String(v), 'en'));
