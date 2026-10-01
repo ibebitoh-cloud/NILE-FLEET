@@ -23,7 +23,6 @@ const BookingInvoices = lazy(() => import('./screens/BookingInvoices'));
 const DaliKnowledgeCenter = lazy(() => import('./screens/DaliKnowledgeCenter'));
 const Notifications = lazy(() => import('./screens/Notifications'));
 import Layout from './components/Layout';
-import ScreenHub from './components/ScreenHub';
 import { User, UserRole } from './types';
 import { db } from './services/supabaseDb';
 import { supabase } from './services/supabaseClient';
@@ -215,14 +214,6 @@ const App: React.FC = () => {
     const role = user?.role || UserRole.CUSTOMER;
     const roleScreens = getDefaultAllowedScreens(role);
     const homeScreen = roleScreens.includes('dashboard') ? 'dashboard' : roleScreens.includes('port-gate') ? 'port-gate' : 'cust-reservations';
-    const groupedAccessForRouting: Record<string, string[]> = {
-      'dashboard-analytics': ['dashboard', 'analytics'],
-      'operations-master': ['operations', 'master-view'],
-      'booking-reservations': ['booking-invoices', 'reservations'],
-      'customers-prices': ['customers', 'customer-prices'],
-      'administration': ['user-mgmt', 'notifications', 'system-log', 'support', 'user-settings'],
-      'intelligence': ['intelligence', 'dali-knowledge'],
-    };
     const expandAllowedScreens = (screens: string[]) => {
       const expanded = new Set(screens.filter(screen => allScreens.has(screen)));
       Object.entries(groupedAccessForRouting).forEach(([group, children]) => {
@@ -689,14 +680,12 @@ const App: React.FC = () => {
       case 'dali-knowledge': return <DaliKnowledgeCenter />;
       case 'dashboard': return <Dashboard onNavigate={navigateTo} />;
       case 'dashboard-analytics':
-        return <ScreenHub title={lang === 'ar' ? 'لوحة التحكم' : 'DASHBOARD'} tabs={[
-          { id: 'dashboard', label: lang === 'ar' ? 'لوحة التحكم' : 'Dashboard', icon: '📊', content: <Dashboard onNavigate={navigateTo} /> },
+        return  },
           { id: 'analytics', label: lang === 'ar' ? 'التحليلات' : 'Analytics', icon: '📈', content: <Analytics /> },
         ]} />;
       case 'analytics': return <Analytics />;
       case 'operations-master':
-        return <ScreenHub title={lang === 'ar' ? 'العمليات' : 'OPERATIONS'} tabs={[
-          { id: 'operations', label: lang === 'ar' ? 'العمليات الحية' : 'Live Operations', icon: '🚛', content: <Operations highlightId={highlightId} clearHighlight={() => setHighlightId(null)} /> },
+        return  },
           { id: 'master-view', label: lang === 'ar' ? 'العرض الرئيسي' : 'Master View', icon: '📑', content: <MasterView /> },
         ]} />;
       case 'master-view': return <MasterView />;
@@ -704,14 +693,12 @@ const App: React.FC = () => {
       case 'operations': return <Operations highlightId={highlightId} clearHighlight={() => setHighlightId(null)} />;
       case 'booking-invoices': return <BookingInvoices />;
       case 'booking-reservations':
-        return <ScreenHub title={lang === 'ar' ? 'الحجوزات والفواتير' : 'BOOKINGS & INVOICES'} tabs={[
-          { id: 'booking-invoices', label: lang === 'ar' ? 'الفواتير' : 'Invoices', icon: '🧾', content: <BookingInvoices /> },
+        return  },
           { id: 'reservations', label: lang === 'ar' ? 'الحجوزات' : 'Bookings', icon: '📅', content: <Reservations /> },
         ]} />;
       case 'financials': return <Financials />;
       case 'intelligence':
-        return <ScreenHub title={lang === 'ar' ? 'مركز دالي' : 'DALI COMMAND CENTER'} tabs={[
-          { id: 'intelligence', label: lang === 'ar' ? 'الاستخبارات' : 'Intelligence', icon: '🧠', content: <Intelligence /> },
+        return  },
           { id: 'dali-knowledge', label: lang === 'ar' ? 'قاعدة المعرفة' : 'Knowledge', icon: '📚', content: <DaliKnowledgeCenter /> },
         ]} />;
       case 'reports': return <Reports />;
@@ -719,8 +706,7 @@ const App: React.FC = () => {
       case 'reservations': return <Reservations />;
       case 'customers': return <Customers />;
       case 'customers-prices':
-        return <ScreenHub title={lang === 'ar' ? 'العملاء' : 'CUSTOMERS'} tabs={[
-          { id: 'customers', label: lang === 'ar' ? 'العملاء' : 'Customers', icon: '🤝', content: <Customers /> },
+        return  },
           { id: 'customer-prices', label: lang === 'ar' ? 'الأسعار' : 'Rates', icon: '💰', content: <CustomerPrices /> },
         ]} />;
       case 'user-mgmt': return <UserMgmt />;
@@ -729,8 +715,7 @@ const App: React.FC = () => {
       case 'notifications': return <Notifications />;
       case 'system-log': return <HistoryLog />;
       case 'administration':
-        return <ScreenHub title={lang === 'ar' ? 'الإدارة' : 'ADMINISTRATION'} tabs={[
-          { id: 'user-mgmt', label: lang === 'ar' ? 'المستخدمون' : 'Users', icon: '👤', content: <UserMgmt /> },
+        return  },
           { id: 'notifications', label: lang === 'ar' ? 'التنبيهات' : 'Notifications', icon: '🔔', content: <Notifications /> },
           { id: 'system-log', label: lang === 'ar' ? 'سجل النظام' : 'System Log', icon: '🕒', content: <HistoryLog /> },
           { id: 'support', label: lang === 'ar' ? 'الدعم' : 'Support', icon: '🎧', content: <CustomerService /> },
