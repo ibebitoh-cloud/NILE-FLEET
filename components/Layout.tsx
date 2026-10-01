@@ -237,6 +237,20 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       const tomorrowDate = new Date();
       tomorrowDate.setDate(tomorrowDate.getDate() + 1);
       const tomorrowDateKey = localDateKey(tomorrowDate);
+      const reservationOperationIds = new Set(operations.map(o => o.reservationId).filter(Boolean));
+      const pendingWork = reservations
+        .filter(r => (r.status === 'PENDING' || r.status === 'APPROVED') && !reservationOperationIds.has(r.id))
+        .map(r => ({
+          customer: r.customerName || 'UNKNOWN',
+          booking: r.bookingNumber || '',
+          requested: Number(r.gensetsNeeded) || 0,
+          date: r.reservationDate || '',
+          portIn: r.portIn || '',
+          portOut: r.portOut || '',
+          status: r.status,
+          shipper: r.shipper || '',
+          beneficiary: r.beneficiaryName || ''
+        }));
 
       let recentMemory = daliMemory.slice(-16);
       try {
