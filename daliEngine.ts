@@ -8,7 +8,7 @@
  */
 import type {
   Genset, Operation, Reservation, Invoice, Payment, GensetMaintenanceLog,
-} from '../types';
+} from './types';
 
 export interface DaliData {
   gensets: Genset[];
