@@ -215,10 +215,25 @@ const App: React.FC = () => {
     const role = user?.role || UserRole.CUSTOMER;
     const roleScreens = getDefaultAllowedScreens(role);
     const homeScreen = roleScreens.includes('dashboard') ? 'dashboard' : roleScreens.includes('port-gate') ? 'port-gate' : 'cust-reservations';
+    const groupedAccessForRouting: Record<string, string[]> = {
+      'dashboard-analytics': ['dashboard', 'analytics'],
+      'operations-master': ['operations', 'master-view'],
+      'booking-reservations': ['booking-invoices', 'reservations'],
+      'customers-prices': ['customers', 'customer-prices'],
+      'administration': ['user-mgmt', 'notifications', 'system-log', 'support', 'user-settings'],
+      'intelligence': ['intelligence', 'dali-knowledge'],
+    };
+    const expandAllowedScreens = (screens: string[]) => {
+      const expanded = new Set(screens.filter(screen => allScreens.has(screen)));
+      Object.entries(groupedAccessForRouting).forEach(([group, children]) => {
+        if (children.some(child => expanded.has(child))) expanded.add(group);
+      });
+      return expanded;
+    };
     const permittedScreens = user?.role === UserRole.CUSTOMER
       ? new Set(['cust-reservations', 'cust-invoices', 'notifications', 'support'])
       : Array.isArray(user?.allowedScreens)
-        ? new Set(user.allowedScreens.filter(screen => allScreens.has(screen)))
+        ? expandAllowedScreens(user.allowedScreens)
         : new Set(roleScreens);
     const syncFromUrl = () => {
       const screen = window.location.hash.slice(1).split('?')[0];
