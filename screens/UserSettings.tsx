@@ -589,7 +589,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
               {[
-                { id: 'nile', name: isAr ? 'نايل كومانـد' : 'Nile Command', desc: isAr ? 'هوية نايل فليت التشغيلية' : 'Nile Fleet operational identity', preview: ['#061a16','#0b241f','#4fd1a5'] },
+                { id: 'nile', name: isAr ? 'نايل فليت' : 'Nile Fleet', desc: isAr ? 'هوية نايل فليت التشغيلية' : 'Nile Fleet operational identity', preview: ['#061a16','#0b241f','#4fd1a5'] },
                 { id: 'navy', name: isAr ? 'ليلي الميناء' : 'Port Night', desc: isAr ? 'واضح للعمل الليلي والموانئ' : 'High-clarity night operations', preview: ['#07111f','#101c2e','#5ec8ff'] },
                 { id: 'corporate', name: isAr ? 'تنفيذي فاتح' : 'Executive Light', desc: isAr ? 'نظيف للاجتماعات والتقارير' : 'Clean for reports and office work', preview: ['#f4f7fa','#ffffff','#0b7fab'] },
                 { id: 'carbon', name: isAr ? 'فولاذ صناعي' : 'Industrial Steel', desc: isAr ? 'تقني وهادئ للشاشات الثقيلة' : 'Technical and restrained', preview: ['#11161b','#1b2229','#58a6d9'] },
@@ -678,7 +678,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
               <div className="rounded-[1.5rem] bg-[var(--surface-1)] border border-[var(--border-primary)] p-5 flex flex-col justify-between">
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-widest text-[var(--text-primary)]">{isAr ? 'الوضع الحالي' : 'Current environment'}</p>
-                  <p className="mt-2 text-lg font-black text-[var(--accent)]">{theme === 'custom' ? (isAr ? 'مخصص' : 'Custom') : theme === 'nile' ? 'Nile Command' : theme === 'navy' ? 'Port Night' : theme === 'corporate' ? 'Executive Light' : theme === 'carbon' ? 'Industrial Steel' : 'Desert Operations'}</p>
+                  <p className="mt-2 text-lg font-black text-[var(--accent)]">{theme === 'custom' ? (isAr ? 'مخصص' : 'Custom') : theme === 'nile' ? 'Nile Fleet' : theme === 'navy' ? 'Port Night' : theme === 'corporate' ? 'Executive Light' : theme === 'carbon' ? 'Industrial Steel' : 'Desert Operations'}</p>
                 </div>
                 <button type="button" onClick={() => setScale(0.85)} className="mt-4 w-full py-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-primary)] text-[8px] font-black uppercase tracking-widest text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
                   {isAr ? 'الحجم القياسي' : 'Set standard size'}
@@ -947,7 +947,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
                       ) : (
                         <div className="py-20 text-center opacity-20 grayscale select-none">
                            <p className="text-6xl mb-6">🔒</p>
-                           <p className="text-xs font-black uppercase tracking-[0.5em]">Command Inputs Locked</p>
+                           <p className="text-xs font-black uppercase tracking-[0.5em]">Critical Controls Locked</p>
                         </div>
                       )}
                    </div>
@@ -970,7 +970,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
 
                    <div className="p-8 bg-[#C2A378] rounded-[3rem] shadow-xl text-[#001F3F] space-y-4">
                       <h5 className="text-xs font-black uppercase tracking-widest italic">Root Access Authenticated</h5>
-                      <p className="text-[10px] font-bold leading-relaxed opacity-80 uppercase">Strategic Ownership verification complete. Bebito Command Node has full administrative reach over the Nile Fleet data lifecycle.</p>
+                      <p className="text-[10px] font-bold leading-relaxed opacity-80 uppercase">Strategic Ownership verification complete. Bebito Nile Fleet Owner has full administrative reach over the Nile Fleet data lifecycle.</p>
                       <div className="h-1 w-20 bg-[#001F3F] opacity-20"></div>
                    </div>
                 </div>
