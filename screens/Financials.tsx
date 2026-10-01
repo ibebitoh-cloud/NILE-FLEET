@@ -35,7 +35,7 @@ export const ProLedger: React.FC<{
     .filter(allocation => invoices.some(invoice => invoice.id === allocation.invoiceId))
     .reduce((sum, allocation) => sum + Number(allocation.amount || 0), 0);
   const historicalPayments = Math.max(0, payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0) - allocatedPayments);
-  const historicalOpeningBalance = Number(partner.pastOutstandingAmount || 0) + historicalPayments;
+  const historicalOpeningBalance = Number(partner.pastOutstandingAmount || 0);
   
   const netDue = Number(partner.pastOutstandingAmount || 0) + unpaidInvoicesTotal + unbilledTotal;
 
@@ -277,7 +277,7 @@ const Financials: React.FC = () => {
     const historicalPayments = Math.max(0, userPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0) - db.getPaymentAllocations()
       .filter(allocation => userInvoices.some(invoice => invoice.id === allocation.invoiceId))
       .reduce((sum, allocation) => sum + Number(allocation.amount || 0), 0));
-    const historicalOpeningBalance = Number(selectedUser.pastOutstandingAmount || 0) + historicalPayments;
+    const historicalOpeningBalance = Number(selectedUser.pastOutstandingAmount || 0);
     return { totalExposure, payableBalance, historicalOpeningBalance, unbilledTotal, unpaidInvoicesTotal, userInvoices, userPayments, unbilledOperations };
   }, [selectedUser, operations, invoices]);
 
@@ -388,7 +388,7 @@ const Financials: React.FC = () => {
             const uO = db.getCustomerOperations(c.id, c.companyName || c.name).filter(o => !o.invoiced).reduce((s,o)=>s+money(o.rate)+money(o.vat), 0);
             return acc + (c.pastOutstandingAmount || 0) + uI + uO;
           }, 0), color: 'text-rose-600', icon: '🏦', bg: 'bg-rose-50/30' },
-          { label: t.liveUnbilled, value: operations.filter(o=>o.status==='DONE'&&!o.invoiced).reduce((s,o)=>s+(parseFloat(o.rate) || 0), 0), color: 'text-blue-600', icon: '🚛', bg: 'bg-blue-50/30' },
+          { label: t.liveUnbilled, value: operations.filter(o=>o.status==='DONE'&&!o.invoiced).reduce((s,o)=>s+money(o.rate)+money(o.vat), 0), color: 'text-blue-600', icon: '🚛', bg: 'bg-blue-50/30' },
           { label: t.historicalLoad, value: customers.reduce((a,b)=>a+(b.pastOutstandingAmount||0),0), color: 'text-[#C2A378]', icon: '📜', bg: 'bg-amber-50/30' },
           { label: 'Settled Month-to-Date', value: db.getPayments().filter(p => p.date.startsWith(new Date().toISOString().slice(0, 7))).reduce((s,p)=>s+p.amount,0), color: 'text-emerald-600', icon: '💰', bg: 'bg-emerald-50/30' },
         ].map((stat, i) => (
