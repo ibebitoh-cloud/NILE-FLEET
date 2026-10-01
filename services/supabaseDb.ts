@@ -670,14 +670,23 @@ class SupabaseDB {
 
   async updateOperation(updatedOp: Operation): Promise<boolean> {
     const previous = _operations.find(o => o.id === updatedOp.id);
-    const saved = await update('operations', updatedOp.id, updatedOp);
-    if (!saved) return false;
-    _operations = _operations.map(o => o.id === updatedOp.id ? updatedOp : o);
-    await this._syncGensetStatus(updatedOp, previous);
-    if (updatedOp.status === 'DONE' && !updatedOp.invoiced) {
-      await this.generateInvoiceFromBooking(updatedOp.bookingNumber, updatedOp.customerName);
+    const operationToSave = { ...updatedOp };
+
+    // Customer name and customer_id are one relationship. When the name is
+    // edited from Master View/Operations, re-resolve the foreign key instead
+    // of silently keeping the previous customer's id.
+    if (!previous || previous.customerName !== updatedOp.customerName) {
+      operationToSave.customerId = resolveCustomerId(updatedOp.customerName);
     }
-    await auditLog('OPS', `Updated operation ${updatedOp.bookingNumber}`);
+
+    const saved = await update('operations', updatedOp.id, operationToSave);
+    if (!saved) return false;
+    _operations = _operations.map(o => o.id === operationToSave.id ? operationToSave : o);
+    await this._syncGensetStatus(operationToSave, previous);
+    if (operationToSave.status === 'DONE' && !operationToSave.invoiced) {
+      await this.generateInvoiceFromBooking(operationToSave.bookingNumber, operationToSave.customerName);
+    }
+    await auditLog('OPS', `Updated operation ${operationToSave.bookingNumber}`);
     dispatchChange();
     return true;
   }
