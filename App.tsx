@@ -185,6 +185,7 @@ const App: React.FC = () => {
         if (cancelled) return;
 
         if (event === 'SIGNED_OUT') {
+          await db.resetSessionCache();
           setUser(null);
           localStorage.removeItem('user');
           setAuthChecked(true);
@@ -586,6 +587,7 @@ const App: React.FC = () => {
 
   const handleLogout = useCallback(async () => {
     await supabaseLogout();
+    await db.resetSessionCache();
     setUser(null);
     setShowCompanyHome(true);
     localStorage.removeItem('user');
