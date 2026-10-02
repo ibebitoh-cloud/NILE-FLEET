@@ -45,6 +45,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   const [daliArchiveOpen, setDaliArchiveOpen] = useState(false);
   const [daliArchivedChats, setDaliArchivedChats] = useState<any[]>([]);
   const [daliHistoryLoading, setDaliHistoryLoading] = useState(false);
+  const [daliThinkingPhase, setDaliThinkingPhase] = useState(0);
   const daliSessionIdRef = useRef<string>(crypto.randomUUID());
   const [daliMemory, setDaliMemory] = useState<{ role: 'user' | 'assistant'; message: string; entities?: any; created_at?: string }[]>([]);
   const [daliButtonPosition, setDaliButtonPosition] = useState(() => {
@@ -109,6 +110,18 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       window.removeEventListener('invoices-tab-change', handleInvoicesTabChange);
     };
   }, []);
+
+  useEffect(() => {
+    if (!aiChatLoading) {
+      setDaliThinkingPhase(0);
+      return;
+    }
+    const phases = ['READING REQUEST', 'CHECKING LIVE DATA', 'MATCHING KNOWLEDGE', 'FORMING ANSWER'];
+    const timer = window.setInterval(() => {
+      setDaliThinkingPhase(prev => (prev + 1) % phases.length);
+    }, 850);
+    return () => window.clearInterval(timer);
+  }, [aiChatLoading]);
 
   useEffect(() => {
     const handleDaliAsk = (event: Event) => {
@@ -1730,18 +1743,56 @@ I understand the relationships between gensets, bookings, containers, customers,
                   <p className="text-sm font-black">NILE FLEET ASSISTANT</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <button
                   onClick={clearDaliChat}
+                  disabled={aiChatLoading}
+                  className={`h-8 px-2.5 rounded-xl border text-[7px] font-black uppercase tracking-widest transition-all disabled:opacity-30 ${isTerminal ? 'bg-white/5 border-white/10 text-[#C2A378] hover:bg-white/10' : 'bg-white/40 border-white/60 text-[#001F3F] hover:bg-white/70'}`}
+                  title={isAr ? 'محادثة جديدة — تبدأ فارغة' : 'New chat — always starts blank'}
+                >{isAr ? 'جديد' : 'NEW'}</button>
+                <button
+                  onClick={archiveCurrentDaliChat}
                   disabled={aiChatLoading || aiChatMessages.length === 0}
-                  className={`h-8 px-3 rounded-xl border text-[8px] font-black uppercase tracking-widest transition-all disabled:opacity-30 ${isTerminal ? 'bg-white/5 border-white/10 text-[#C2A378] hover:bg-white/10' : 'bg-white/40 border-white/60 text-[#001F3F] hover:bg-white/70'}`}
-                  title={isAr ? 'مسح المحادثة الحالية وبدء محادثة جديدة' : 'Clear this chat and start a new conversation'}
-                >{isAr ? 'مسح' : 'CLEAR'}</button>
+                  className={`h-8 px-2.5 rounded-xl border text-[7px] font-black uppercase tracking-widest transition-all disabled:opacity-30 ${isTerminal ? 'bg-[#C2A378]/10 border-[#C2A378]/20 text-[#C2A378] hover:bg-[#C2A378]/20' : 'bg-white/40 border-white/60 text-[#001F3F] hover:bg-white/70'}`}
+                  title={isAr ? 'أرشفة المحادثة للرجوع إليها لاحقاً' : 'Archive this chat for later follow-up'}
+                >{isAr ? 'أرشيف' : 'ARCHIVE'}</button>
+                <button
+                  onClick={loadDaliArchive}
+                  disabled={daliHistoryLoading}
+                  className={`h-8 px-2.5 rounded-xl border text-[7px] font-black uppercase tracking-widest transition-all disabled:opacity-30 ${isTerminal ? 'bg-white/5 border-white/10 text-[#C2A378] hover:bg-white/10' : 'bg-white/40 border-white/60 text-[#001F3F] hover:bg-white/70'}`}
+                  title={isAr ? 'المحادثات المؤرشفة' : 'Archived chats'}
+                >{daliHistoryLoading ? '…' : (isAr ? 'المحفوظات' : 'ARCHIVE')}</button>
                 <button onClick={() => setIsAiChatOpen(false)} className={`w-8 h-8 rounded-xl border transition-all ${isTerminal ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white/40 border-white/60 text-slate-700 hover:bg-white/70'}`}>✕</button>
               </div>
             </div>
             <div className={`relative flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-4 space-y-3 dali-chat-surface ${isTerminal ? 'dali-chat-surface-dark' : 'dali-chat-surface-light'}`}>
-              {aiChatMessages.length === 0 && (
+              {daliArchiveOpen && (
+                <div className={`absolute inset-0 z-20 overflow-y-auto p-3 sm:p-4 backdrop-blur-xl ${isTerminal ? 'bg-[#071522]/95' : 'bg-white/95'}`}>
+                  <div className="mb-3 flex items-center justify-between">
+                    <div>
+                      <p className={`text-[8px] font-black uppercase tracking-[0.25em] ${isTerminal ? 'text-[#C2A378]' : 'text-[#001F3F]'}`}>{isAr ? 'المحادثات المؤرشفة' : 'ARCHIVED CHATS'}</p>
+                      <p className="mt-1 text-[8px] text-slate-500">{isAr ? 'اختر محادثة للمتابعة من نفس السياق.' : 'Open a saved conversation to continue from its context.'}</p>
+                    </div>
+                    <button type="button" onClick={() => setDaliArchiveOpen(false)} className="h-8 w-8 rounded-xl border border-white/10">✕</button>
+                  </div>
+                  {daliArchivedChats.length === 0 ? (
+                    <div className="rounded-2xl border border-white/10 bg-black/10 p-5 text-center text-[9px] text-slate-500">{isAr ? 'لا توجد محادثات مؤرشفة بعد.' : 'No archived chats yet.'}</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {daliArchivedChats.map((chat: any) => (
+                        <button key={chat.session_id} type="button" onClick={() => restoreDaliArchivedChat(chat.session_id)} className={`w-full rounded-2xl border p-3 text-left transition hover:scale-[1.01] ${isTerminal ? 'border-white/10 bg-white/[0.04] hover:bg-white/[0.07]' : 'border-slate-200 bg-white/60 hover:bg-white'}`}>
+                          <div className="flex items-start justify-between gap-2">
+                            <span className={`line-clamp-2 text-[10px] font-black leading-5 ${isTerminal ? 'text-white' : 'text-[#001F3F]'}`}>{chat.title}</span>
+                            <span className="shrink-0 text-[7px] font-black text-[#C2A378]">{chat.message_count}</span>
+                          </div>
+                          <p className="mt-1 line-clamp-2 text-[8px] leading-4 text-slate-500">{chat.preview}</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              {aiChatMessages.length === 0 && !daliArchiveOpen && (
                 <div className="absolute inset-0 flex items-center justify-center p-6 pointer-events-none">
                   <div className="text-center">
                     <p className={`text-[10px] font-black tracking-[0.38em] uppercase ${isTerminal ? 'text-white/35' : 'text-[#001F3F]/35'}`}>WELCOME BACK</p>
@@ -1756,7 +1807,28 @@ I understand the relationships between gensets, bookings, containers, customers,
                 </div>
               )}
               {aiChatMessages.map((m, i) => <div key={i} className={`max-w-[88%] rounded-2xl p-3 text-[13px] sm:text-xs leading-6 whitespace-pre-wrap break-words overflow-wrap-anywhere border backdrop-blur-md ${m.role === 'user' ? (isTerminal ? 'bg-white/10 border-white/10 text-white ml-auto' : 'bg-white/55 border-white/70 text-[#001F3F] ml-auto') : (isTerminal ? 'bg-black/15 border-white/10 text-slate-200 mr-auto' : 'bg-white/45 border-white/60 text-slate-700 mr-auto')}`}>{m.text}</div>)}
-              {aiChatLoading && <div className={`text-[9px] font-black uppercase tracking-widest animate-pulse ${isTerminal ? 'text-[#C2A378]' : 'text-slate-500'}`}>{isAr ? 'ثواني...' : 'One second...'}</div>}
+              {aiChatLoading && (
+                <div className={`mr-auto w-full max-w-[92%] rounded-2xl border p-3 ${isTerminal ? 'border-[#C2A378]/15 bg-[#C2A378]/5' : 'border-slate-200 bg-white/60'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#C2A378]/30 bg-[#001F3F]/20 text-[#C2A378]">
+                      <span className="absolute inset-1 animate-spin rounded-lg border border-[#C2A378]/20 border-t-[#C2A378]/70" />
+                      <span className="absolute inset-0 animate-ping rounded-xl border border-[#C2A378]/10" />
+                      <span className="relative text-xs animate-pulse">◉</span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[7px] font-black uppercase tracking-[0.22em] text-[#C2A378]">{isAr ? 'دالي يفكر' : 'DALI IS THINKING'}</span>
+                        <span className="text-[6px] font-black text-slate-500">{daliThinkingPhase + 1}/4</span>
+                      </div>
+                      <p className="mt-1 truncate text-[9px] font-bold text-slate-300">{(['READING REQUEST','CHECKING LIVE DATA','MATCHING KNOWLEDGE','FORMING ANSWER'][daliThinkingPhase])}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-end gap-1 h-5">
+                    {[0,1,2,3,4,5,6,7,8,9,10,11,12].map(i => <span key={i} className="w-full rounded-full bg-[#C2A378]/35 animate-pulse" style={{height: (5 + ((i + daliThinkingPhase) % 4) * 4) + 'px', animationDelay: (i * 70) + 'ms'}} />)}
+                  </div>
+                  <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/5"><span className="block h-full w-1/3 animate-[daliScan_1.1s_ease-in-out_infinite] rounded-full bg-[#C2A378]" /></div>
+                </div>
+              )}
             </div>
             <div className={`p-3 border-t backdrop-blur-xl ${isTerminal ? 'border-white/10 bg-black/10' : 'border-white/60 bg-white/25'}`}>
               <div className={`flex gap-2 rounded-2xl p-1.5 border backdrop-blur-md ${isTerminal ? 'bg-white/[0.04] border-white/10' : 'bg-white/45 border-white/70'}`}>
