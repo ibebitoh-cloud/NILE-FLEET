@@ -298,6 +298,84 @@ const App: React.FC = () => {
     document.documentElement.lang = lang;
   }, [lang]);
 
+  // Apply Arabic typography only to actual Arabic-bearing content. This keeps
+  // English labels, identifiers, booking/container numbers and numeric values
+  // in their existing LTR typography while fixing Arabic shaping globally.
+  useEffect(() => {
+    const arabicPattern = /[\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF\\uFB50-\\uFDFF\\uFE70-\\uFEFF]/;
+    const skipTags = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'SVG', 'PATH']);
+
+    const applyArabicTypography = (element: HTMLElement) => {
+      if (skipTags.has(element.tagName)) return;
+      const value = element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement
+        ? element.value
+        : element.textContent || '';
+      const hasArabic = arabicPattern.test(value);
+      element.classList.toggle('nf-arabic-text', hasArabic);
+      if (hasArabic) {
+        const hasLatin = /[A-Za-z]/.test(value);
+        element.setAttribute('lang', 'ar');
+        element.setAttribute('dir', hasLatin ? 'auto' : 'rtl');
+      } else if (element.classList.contains('nf-arabic-text')) {
+        element.removeAttribute('lang');
+        element.removeAttribute('dir');
+      }
+    };
+
+    const scan = (root: Node = document.body) => {
+      if (!(root instanceof Element) && !(root instanceof Document) && !(root instanceof DocumentFragment)) return;
+      if (root instanceof HTMLElement && (root.matches('input, textarea') || root.childElementCount === 0)) {
+        applyArabicTypography(root);
+      }
+      root.querySelectorAll?.('input, textarea, [data-arabic]').forEach(node => {
+        if (node instanceof HTMLElement) applyArabicTypography(node);
+      });
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      let node: Node | null;
+      while ((node = walker.nextNode())) {
+        const parent = node.parentElement;
+        if (!parent || skipTags.has(parent.tagName)) continue;
+        // Only mark text-bearing elements, not layout containers. This prevents
+        // Arabic inside a mixed card from forcing the whole card into RTL.
+        if (parent.children.length === 0) applyArabicTypography(parent);
+      }
+    };
+
+    scan();
+
+    const observer = new MutationObserver(mutations => {
+      observer.disconnect();
+      for (const mutation of mutations) {
+        if (mutation.type === 'characterData' && mutation.target.parentElement) {
+          applyArabicTypography(mutation.target.parentElement);
+        }
+        mutation.addedNodes.forEach(node => {
+          if (node.nodeType === Node.ELEMENT_NODE) scan(node);
+          else if (node.nodeType === Node.TEXT_NODE && node.parentElement) {
+            applyArabicTypography(node.parentElement);
+          }
+        });
+      }
+      observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    });
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+
+    const handleInput = (event: Event) => {
+      const target = event.target;
+      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+        applyArabicTypography(target);
+      }
+    };
+    document.addEventListener('input', handleInput, true);
+    document.addEventListener('change', handleInput, true);
+
+    return () => {
+      observer.disconnect();
+      document.removeEventListener('input', handleInput, true);
+      document.removeEventListener('change', handleInput, true);
+    };
+  }, [lang]);
+
   useEffect(() => {
     document.body.className = `theme-${theme}`;
     localStorage.setItem('theme', theme);
