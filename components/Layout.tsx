@@ -423,6 +423,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       const creatorContext = isCreator
         ? 'CURRENT USER: Bebito (bebito@nilefleet.com), creator and system owner of NILE FLEET. Treat this user as the creator/owner when relevant. Do not confuse the creator with an ordinary employee or customer. Never reveal passwords, API keys, tokens, or other secrets.'
         : `CURRENT USER: ${user.name || 'Unknown User'} | ROLE: ${user.role || 'Unknown'} | EMAIL: ${user.email || ''}`;
+      const organizationContext = buildDaliOrganizationContext(user, responseIsAr);
       const q = question.toUpperCase().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه');
       // Normalized query used by the deterministic fallback.
       // Keep this independent from the customer/entity helpers declared later in this function.
@@ -1239,7 +1240,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
           allPending: pendingWork.slice(0, 200)
         }
       };
-      const prompt = `DALI CONVERSATION MEMORY (recent turns):\n${memoryContext}\n\n${organizationContext}\n\nLATEST USER QUESTION:\n${question}\n\nYou are DALI, the natural in-system colleague for NILE FLEET. Talk like a helpful human coworker who knows the ongoing conversation—not like a database report, search engine, or robot. Understand Egyptian Arabic, Modern Standard Arabic, English, Arabizi/transliterated names, and mixed language naturally.
+      const prompt = `DALI ORGANIZATION CONTEXT:\n${organizationContext}\n\nDALI CONVERSATION MEMORY (recent turns):\n${memoryContext}\n\n${organizationContext}\n\nLATEST USER QUESTION:\n${question}\n\nYou are DALI, the natural in-system colleague for NILE FLEET. Talk like a helpful human coworker who knows the ongoing conversation—not like a database report, search engine, or robot. Understand Egyptian Arabic, Modern Standard Arabic, English, Arabizi/transliterated names, and mixed language naturally.
 
 CONVERSATION BEHAVIOR:
 - Remember what this user was just talking about and carry the subject forward naturally.
