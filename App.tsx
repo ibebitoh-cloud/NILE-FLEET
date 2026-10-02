@@ -21,6 +21,7 @@ const UserMgmt = lazy(() => import('./screens/UserMgmt'));
 const CustomerService = lazy(() => import('./screens/CustomerService'));
 const BookingInvoices = lazy(() => import('./screens/BookingInvoices'));
 const DaliKnowledgeCenter = lazy(() => import('./screens/DaliKnowledgeCenter'));
+const Organization = lazy(() => import('./screens/Organization'));
 const Notifications = lazy(() => import('./screens/Notifications'));
 import Layout from './components/Layout';
 import { User, UserRole } from './types';
@@ -32,7 +33,7 @@ import { translateBusinessEntities, getSafeApiKey } from './services/aiService';
 
 type Language = 'en' | 'ar';
 const getDefaultAllowedScreens = (role: UserRole): string[] => {
-  if (role === UserRole.ADMIN) return ['dali-knowledge', 'dashboard', 'analytics', 'master-view', 'port-gate', 'operations', 'booking-invoices', 'financials', 'intelligence', 'reports', 'stock', 'reservations', 'customers', 'user-mgmt', 'customer-prices', 'financials', 'support', 'notifications', 'system-log', 'user-settings'];
+  if (role === UserRole.ADMIN) return ['dali-knowledge', 'dashboard', 'analytics', 'master-view', 'port-gate', 'operations', 'booking-invoices', 'financials', 'intelligence', 'reports', 'stock', 'reservations', 'customers', 'user-mgmt', 'organization', 'customer-prices', 'financials', 'support', 'notifications', 'system-log', 'user-settings'];
   if (role === UserRole.MANAGER) return ['dali-knowledge', 'dashboard', 'master-view', 'operations', 'stock', 'reservations', 'customers', 'customer-prices', 'booking-invoices', 'financials', 'intelligence', 'reports', 'notifications', 'system-log', 'support', 'user-settings'];
   if (role === UserRole.VIEWER) return ['dali-knowledge', 'dashboard', 'master-view', 'reports', 'intelligence', 'notifications', 'support', 'system-log'];
   if (role === UserRole.GATE_OPERATOR) return ['port-gate', 'notifications', 'support', 'user-settings'];
@@ -207,7 +208,7 @@ const App: React.FC = () => {
     const allScreens = new Set([
       'dali-knowledge', 'dashboard', 'analytics', 'master-view', 'operations', 'port-gate',
       'booking-invoices', 'intelligence', 'reports', 'stock', 'reservations',
-      'customers', 'user-mgmt', 'customer-prices', 'support',
+      'customers', 'user-mgmt', 'organization', 'customer-prices', 'support',
       'notifications', 'system-log', 'user-settings', 'cust-reservations',
       'cust-invoices'
     ]);
@@ -756,6 +757,7 @@ const App: React.FC = () => {
       case 'reservations': return <Reservations />;
       case 'customers': return <Customers />;
       case 'user-mgmt': return <UserMgmt />;
+      case 'organization': return <Organization />;
       case 'customer-prices': return <CustomerPrices />;
       case 'support': return <CustomerService />;
       case 'notifications': return <Notifications />;
