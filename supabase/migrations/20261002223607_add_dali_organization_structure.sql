@@ -56,3 +56,5 @@ update public.organization_structure child
 set manager_id = parent.id
 from public.organization_structure parent
 where child.reports_to = parent.employee_name;
+revoke all on table public.organization_structure from anon;
+grant select on table public.organization_structure to authenticated;
