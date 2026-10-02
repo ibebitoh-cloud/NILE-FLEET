@@ -21,13 +21,12 @@
             --card-bg: #ffffff;
             --accent: #3b82f6;
             --input-bg: #f8fafc;
-            --app-scale: 0.85; /* Defaulting to a smaller scale */
+            --app-scale: 1;
         }
 
         html {
-            /* Tailwind rem values are relative to this. 
-               By scaling this, the entire app scales perfectly. */
-            font-size: calc(16px * var(--app-scale));
+            font-size: 16px;
+            min-width: 320px;
         }
 
         body { 
@@ -515,64 +514,65 @@
             main { padding-bottom: 76px; }
         }
         /* Mobile Genset readability: prevent compressed labels and stacked text */
+        /* Production responsive system: mobile is a deliberate layout, not a scaled desktop. */
+        html, body, #root { max-width: 100%; }
+        html, body { overflow-x: clip; }
+        img, svg, video, canvas { max-width: 100%; }
+        button, input, select, textarea { touch-action: manipulation; }
+        button, [role="button"], a { min-height: 44px; }
+        input, select, textarea { min-height: 44px; }
+        .nile-fleet-layout { min-width: 0; width: 100%; }
+        .nile-fleet-layout main { min-width: 0; }
+        .nile-fleet-layout table { max-width: 100%; }
+        .nile-fleet-layout .overflow-x-auto { max-width: 100%; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+        .nf-mobile-card-grid { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: .75rem; }
+
+        @media (max-width: 1023px) {
+            main { padding-bottom: env(safe-area-inset-bottom); }
+            .nile-fleet-layout { padding-top: env(safe-area-inset-top); }
+        }
+
         @media (max-width: 767px) {
             .nile-fleet-layout main {
                 width: 100%;
                 min-width: 0;
-                overflow-x: hidden;
+                overflow-x: clip;
             }
-            .nile-fleet-layout main > * {
-                min-width: 0;
-                max-width: 100%;
-            }
-            .nile-fleet-layout main .grid > *,
-            .nile-fleet-layout main .flex > * {
-                min-width: 0;
-            }
-            .nile-fleet-layout main h1,
-            .nile-fleet-layout main h2,
-            .nile-fleet-layout main h3,
-            .nile-fleet-layout main h4,
-            .nile-fleet-layout main h5,
-            .nile-fleet-layout main h6,
-            .nile-fleet-layout main p,
-            .nile-fleet-layout main label {
-                max-width: 100%;
-                overflow-wrap: anywhere;
-                word-break: normal;
-                line-height: 1.28;
-            }
-            .nile-fleet-layout main button {
-                min-width: 0;
-                max-width: 100%;
-            }
-            .nile-fleet-layout main button span,
-            .nile-fleet-layout main button p {
-                min-width: 0;
-                max-width: 100%;
-                overflow-wrap: anywhere;
-                line-height: 1.25;
-            }
-            .nile-fleet-layout main input,
-            .nile-fleet-layout main select,
-            .nile-fleet-layout main textarea {
-                min-width: 0;
-                max-width: 100%;
-            }
-            .nile-fleet-layout main table {
-                white-space: nowrap;
-            }
-            .nile-fleet-layout main .overflow-x-auto {
-                max-width: 100%;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
+            .nile-fleet-layout main > * { min-width: 0; max-width: 100%; }
+            .nile-fleet-layout main .grid > *, .nile-fleet-layout main .flex > * { min-width: 0; }
+            .nile-fleet-layout main h1, .nile-fleet-layout main h2, .nile-fleet-layout main h3,
+            .nile-fleet-layout main h4, .nile-fleet-layout main h5, .nile-fleet-layout main h6,
+            .nile-fleet-layout main p, .nile-fleet-layout main label { max-width: 100%; overflow-wrap: anywhere; word-break: normal; }
+            .nile-fleet-layout main button { min-width: 44px; max-width: 100%; }
+            .nile-fleet-layout main input, .nile-fleet-layout main select, .nile-fleet-layout main textarea { min-width: 0; max-width: 100%; }
+            .nile-fleet-layout main table { width: max-content; min-width: 100%; white-space: nowrap; }
+            .nile-fleet-layout main .overflow-x-auto { max-width: 100%; overflow-x: auto; }
             .nile-fleet-layout main .flex.items-center.justify-between,
-            .nile-fleet-layout main .flex.items-end.justify-between {
-                flex-wrap: wrap;
-                row-gap: .65rem;
-            }
+            .nile-fleet-layout main .flex.items-end.justify-between { flex-wrap: wrap; row-gap: .75rem; }
+            .nile-fleet-layout main [class*="rounded-[3.5rem]"],
+            .nile-fleet-layout main [class*="rounded-[3rem]"] { border-radius: 1.25rem; }
+            .nile-fleet-layout main [class*="p-8"] { padding: 1.25rem; }
+            .nile-fleet-layout main [class*="p-10"] { padding: 1.25rem; }
+            .nile-fleet-layout main [class*="gap-8"] { gap: 1rem; }
+            .nile-fleet-layout main [class*="gap-10"] { gap: 1rem; }
+            .nile-fleet-layout main [class*="min-w-["] { min-width: 0 !important; }
+            .nf-mobile-full { width: 100% !important; }
         }
+
+        @media (max-width: 430px) {
+            .nile-fleet-layout main { padding-left: .75rem; padding-right: .75rem; }
+            .nile-fleet-layout main .text-2xl { font-size: 1.35rem; line-height: 1.2; }
+            .nile-fleet-layout main .text-3xl { font-size: 1.55rem; line-height: 1.2; }
+        }
+
+        @media (max-width: 374px) {
+            .nile-fleet-layout main { padding-left: .625rem; padding-right: .625rem; }
+        }
+
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .nile-fleet-layout main { padding-left: 1rem; padding-right: 1rem; }
+        }
+
 
         /* Scrollbars */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
