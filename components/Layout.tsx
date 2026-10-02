@@ -120,11 +120,8 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       setDaliThinkingPhase(0);
       return;
     }
-    const phases = ['READING REQUEST', 'CHECKING LIVE DATA', 'MATCHING KNOWLEDGE', 'FORMING ANSWER'];
-    const timer = window.setInterval(() => {
-      setDaliThinkingPhase(prev => (prev + 1) % phases.length);
-    }, 850);
-    return () => window.clearInterval(timer);
+    const timer = window.setTimeout(() => setDaliThinkingPhase(1), 2000);
+    return () => window.clearTimeout(timer);
   }, [aiChatLoading]);
 
   useEffect(() => {
@@ -1854,24 +1851,11 @@ I understand the relationships between gensets, bookings, containers, customers,
               {aiChatMessages.map((m, i) => <div key={i} className={`max-w-[88%] rounded-2xl p-3 text-[13px] sm:text-xs leading-6 whitespace-pre-wrap break-words overflow-wrap-anywhere border backdrop-blur-md ${m.role === 'user' ? (isTerminal ? 'bg-white/10 border-white/10 text-white ml-auto' : 'bg-white/55 border-white/70 text-[#001F3F] ml-auto') : (isTerminal ? 'bg-black/15 border-white/10 text-slate-200 mr-auto' : 'bg-white/45 border-white/60 text-slate-700 mr-auto')}`}>{m.text}</div>)}
               {aiChatLoading && (
                 <div className={`mr-auto w-full max-w-[92%] rounded-2xl border p-3 ${isTerminal ? 'border-[#C2A378]/15 bg-[#C2A378]/5' : 'border-slate-200 bg-white/60'}`}>
-                  <div className="flex items-center gap-3">
-                    <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#C2A378]/30 bg-[#001F3F]/20 text-[#C2A378]">
-                      <span className="absolute inset-1 animate-spin rounded-lg border border-[#C2A378]/20 border-t-[#C2A378]/70" />
-                      <span className="absolute inset-0 animate-ping rounded-xl border border-[#C2A378]/10" />
-                      <span className="relative text-xs animate-pulse">◉</span>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[7px] font-black uppercase tracking-[0.22em] text-[#C2A378]">{isAr ? 'دالي يفكر' : 'DALI IS THINKING'}</span>
-                        <span className="text-[6px] font-black text-slate-500">{daliThinkingPhase + 1}/4</span>
-                      </div>
-                      <p className="mt-1 truncate text-[9px] font-bold text-slate-300">{(['READING REQUEST','CHECKING LIVE DATA','MATCHING KNOWLEDGE','FORMING ANSWER'][daliThinkingPhase])}</p>
-                    </div>
+                  <div className="min-h-[24px] flex items-center">
+                    <p className="text-[10px] font-bold leading-5 text-slate-400">
+                      {daliThinkingPhase === 0 ? '•••' : (isAr ? 'براجع البيانات المرتبطة…' : 'Reviewing the relevant system data…')}
+                    </p>
                   </div>
-                  <div className="mt-3 flex items-end gap-1 h-5">
-                    {[0,1,2,3,4,5,6,7,8,9,10,11,12].map(i => <span key={i} className="w-full rounded-full bg-[#C2A378]/35 animate-pulse" style={{height: (5 + ((i + daliThinkingPhase) % 4) * 4) + 'px', animationDelay: (i * 70) + 'ms'}} />)}
-                  </div>
-                  <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/5"><span className="block h-full w-1/3 animate-[daliScan_1.1s_ease-in-out_infinite] rounded-full bg-[#C2A378]" /></div>
                 </div>
               )}
             </div>
