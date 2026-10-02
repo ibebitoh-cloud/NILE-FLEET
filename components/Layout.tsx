@@ -52,6 +52,10 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
     try { return JSON.parse(localStorage.getItem('nile-dali-button-position-v2') || '{"right":24,"bottom":72}'); }
     catch { return { right: 24, bottom: 72 }; }
   });
+  const [daliViewport, setDaliViewport] = useState(() => ({
+    height: typeof window !== 'undefined' ? window.visualViewport?.height || window.innerHeight : 800,
+    keyboardInset: 0
+  }));
   const daliDraggingRef = useRef(false);
   const daliDraggedRef = useRef(false);
   const daliDragStartRef = useRef({ x: 0, y: 0, right: 24, bottom: 24 });
@@ -122,6 +126,27 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
     }, 850);
     return () => window.clearInterval(timer);
   }, [aiChatLoading]);
+
+  useEffect(() => {
+    const visualViewport = window.visualViewport;
+    if (!visualViewport) return;
+    const updateDaliViewport = () => {
+      const keyboardInset = Math.max(0, window.innerHeight - (visualViewport.height + visualViewport.offsetTop));
+      setDaliViewport({
+        height: visualViewport.height,
+        keyboardInset: window.innerWidth < 640 ? keyboardInset : 0
+      });
+    };
+    updateDaliViewport();
+    visualViewport.addEventListener('resize', updateDaliViewport);
+    visualViewport.addEventListener('scroll', updateDaliViewport);
+    window.addEventListener('resize', updateDaliViewport);
+    return () => {
+      visualViewport.removeEventListener('resize', updateDaliViewport);
+      visualViewport.removeEventListener('scroll', updateDaliViewport);
+      window.removeEventListener('resize', updateDaliViewport);
+    };
+  }, []);
 
   useEffect(() => {
     const handleDaliAsk = (event: Event) => {
@@ -1740,10 +1765,19 @@ I understand the relationships between gensets, bookings, containers, customers,
       `}</style>
       <div
         className="fixed z-[100] no-print"
-        style={{ right: window.innerWidth < 640 ? 8 : daliButtonPosition.right, bottom: Math.max(8, daliButtonPosition.bottom) }}
+        style={{
+          right: window.innerWidth < 640 ? 8 : daliButtonPosition.right,
+          bottom: Math.max(8, daliButtonPosition.bottom + daliViewport.keyboardInset)
+        }}
       >
         {isAiChatOpen && (
-          <div className={`absolute bottom-16 right-0 w-[calc(100vw-16px)] sm:w-[min(92vw,420px)] h-[min(76vh,620px)] sm:h-[min(70vh,620px)] max-h-[calc(100dvh-96px)] rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border shadow-2xl backdrop-blur-2xl flex flex-col ${isTerminal ? 'bg-[#071522]/90 border-white/10' : 'bg-white/90 border-white/50'}`}>
+          <div
+            className={`absolute bottom-16 right-0 w-[calc(100vw-16px)] sm:w-[min(92vw,420px)] h-[min(76vh,620px)] sm:h-[min(70vh,620px)] max-h-[calc(100dvh-96px)] rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border shadow-2xl backdrop-blur-2xl flex flex-col ${isTerminal ? 'bg-[#071522]/90 border-white/10' : 'bg-white/90 border-white/50'}`}
+            style={window.innerWidth < 640 ? {
+              height: `${Math.min(620, Math.max(280, daliViewport.height - 96))}px`,
+              maxHeight: `${Math.max(280, daliViewport.height - 24)}px`
+            } : undefined}
+          >
             <div className={`px-4 sm:px-5 py-3 sm:py-4 flex items-center justify-between border-b backdrop-blur-xl ${isTerminal ? 'bg-white/[0.04] border-white/10 text-white' : 'bg-white/35 border-white/60 text-[#001F3F]'}`}>
               <div className="flex items-center gap-3">
                 <div className={`w-9 h-9 rounded-xl border flex items-center justify-center ${isTerminal ? 'bg-white/10 border-white/10' : 'bg-white/45 border-white/70'}`}>
@@ -1843,7 +1877,12 @@ I understand the relationships between gensets, bookings, containers, customers,
             </div>
             <div className={`p-3 border-t backdrop-blur-xl ${isTerminal ? 'border-white/10 bg-black/10' : 'border-white/60 bg-white/25'}`}>
               <div className={`flex gap-2 rounded-2xl p-1.5 border backdrop-blur-md ${isTerminal ? 'bg-white/[0.04] border-white/10' : 'bg-white/45 border-white/70'}`}>
-                <textarea value={aiChatInput} onChange={e => setAiChatInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askNileAi(); } }} placeholder={isAr ? 'اكتب سؤالك...' : 'Ask Dali anything...'} className={`flex-1 resize-none rounded-xl border-0 bg-transparent px-3 py-2 text-[16px] sm:text-xs leading-5 outline-none min-h-[46px] max-h-28 overflow-y-auto ${isTerminal ? 'text-white placeholder:text-white/35' : 'text-[#001F3F] placeholder:text-slate-500'}`} />
+                <textarea value={aiChatInput} onChange={e => setAiChatInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askNileAi(); } }} placeholder={isAr ? 'اكتب سؤالك...' : 'Ask Dali anything...'} onFocus={e => {
+                  if (window.innerWidth < 640) {
+                    window.setTimeout(() => e.currentTarget.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 80);
+                  }
+                }}
+                className={`flex-1 resize-none rounded-xl border-0 bg-transparent px-3 py-2 text-[16px] sm:text-xs leading-5 outline-none min-h-[46px] max-h-28 overflow-y-auto ${isTerminal ? 'text-white placeholder:text-white/35' : 'text-[#001F3F] placeholder:text-slate-500'}`} />
                 <button data-dali-send onClick={askNileAi} disabled={aiChatLoading || !aiChatInput.trim()} className={`self-end shrink-0 w-12 h-12 rounded-xl border transition-all disabled:opacity-35 active:scale-95 ${isTerminal ? 'bg-white/10 border-white/10 text-white hover:bg-white/15' : 'bg-white/60 border-white/70 text-[#001F3F] hover:bg-white/80'}`}>➤</button>
               </div>
             </div>
