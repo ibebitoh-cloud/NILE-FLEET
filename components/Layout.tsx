@@ -1732,7 +1732,8 @@ I understand the relationships between gensets, bookings, containers, customers,
              </button>
           </div>
         </div>
-      )}
+          </div>
+        )}
 
       {/* DALI — glass floating assistant */}
       <style>{`
