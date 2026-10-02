@@ -8,7 +8,7 @@ import { runThinkingAudit, getSafeApiKey } from '../services/aiService';
 import { getDaliRecentMemory, saveDaliConversationMessage } from '../services/daliMemory';
 import { searchDaliKnowledge } from '../services/daliKnowledge';
 import { getDaliCustomerAliases } from '../services/daliCustomerAliases';
-import { getTerminology, matchTerminology, recordTerminologyUsage } from '../services/daliTerminology';
+import { getTerminology, matchTerminology, recordTerminologyUsage, recordCorrection } from '../services/daliTerminology';
 
 const Intelligence: React.FC = () => {
   const { lang } = useContext(LanguageContext);
@@ -26,6 +26,7 @@ const Intelligence: React.FC = () => {
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'dali'; text: string }[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
   const [chatPhase, setChatPhase] = useState(0);
+  const [correctionInput, setCorrectionInput] = useState('');
   const [fleetDaliSessionId] = useState(() => crypto.randomUUID());
   const apiKeySet = true; // DALI 1.0 uses the server-side Cloudflare AI binding; no browser key is required.
 
@@ -275,7 +276,23 @@ ${JSON.stringify(viewData)}`;
     }
   };
 
-  const clearFleetChat = () => { if (chatLoading) return; setChatMessages([]); setChatInput(''); };
+  const clearFleetChat = () => { if (chatLoading) return; setChatMessages([]); setChatInput(''); setCorrectionInput(''); };
+
+  const saveExplicitCorrection = async () => {
+    const correction = correctionInput.trim();
+    const lastUser = [...chatMessages].reverse().find(m => m.role === 'user');
+    if (!correction || !lastUser) return;
+    try {
+      await recordCorrection({
+        inputText: lastUser.text,
+        correctEntity: correction,
+        previousMatch: matchTerminology(lastUser.text, await getTerminology())
+      });
+      setCorrectionInput('');
+    } catch (e) {
+      console.error('DALI correction save failed', e);
+    }
+  };
 
   const NavButton = ({ id, label }: { id: typeof activeView, label: string }) => (
     <button 
@@ -739,6 +756,17 @@ ${JSON.stringify(viewData)}`;
                 <textarea value={chatInput} onChange={e=>setChatInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();askFleetDali();}}} placeholder={isAr ? "اكتب سؤالك..." : "Ask DALI anything..."} className="min-h-[46px] max-h-28 flex-1 resize-none rounded-xl border-0 bg-transparent px-3 py-2 text-[16px] leading-5 text-white outline-none placeholder:text-white/30 sm:text-xs"/>
                 <button type="button" onClick={askFleetDali} disabled={chatLoading||!chatInput.trim()} className="self-end h-11 w-11 rounded-xl border border-[#C2A378]/30 bg-[#C2A378] text-[#001F3F] transition hover:scale-105 disabled:opacity-30">➤</button>
               </div>
+              {chatMessages.some(m => m.role === 'dali') && (
+                <div className="mt-2 flex gap-2">
+                  <input value={correctionInput} onChange={e=>setCorrectionInput(e.target.value)}
+                    placeholder={isAr ? 'صحح الفهم (مثال: Genset 125)' : 'Correct DALI (example: Genset 125)'}
+                    className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[9px] text-white outline-none" />
+                  <button type="button" onClick={saveExplicitCorrection} disabled={!correctionInput.trim()}
+                    className="rounded-xl border border-emerald-400/20 px-3 text-[7px] font-black text-emerald-300 disabled:opacity-30">
+                    {isAr ? 'تعلم' : 'LEARN'}
+                  </button>
+                </div>
+              )}
               <div className="mt-2 flex items-center justify-between text-[7px] font-black uppercase tracking-widest text-slate-600">
                 <span>＋ Teach</span><span>📎 Attach</span><span>⌕ Search</span><span className={chatLoading ? "animate-pulse text-[#C2A378]" : ""}>{chatLoading ? (isAr ? "● معالجة" : "● PROCESSING") : "● READY"}</span>
               </div>
