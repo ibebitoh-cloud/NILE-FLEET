@@ -1746,19 +1746,21 @@ I understand the relationships between gensets, bookings, containers, customers,
           onPointerMove={handleDaliPointerMove}
           onPointerUp={handleDaliPointerUp}
           onPointerCancel={handleDaliPointerUp}
-          className={`dali-floating-cell relative w-14 h-14 rounded-2xl border shadow-2xl backdrop-blur-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-grab active:cursor-grabbing touch-none ${isTerminal ? 'bg-white/[0.08] border-white/15 text-white' : 'bg-white/55 border-white/80 text-[#001F3F]'}`}
+          className={`dali-floating-cell relative flex h-14 w-14 items-center justify-center rounded-2xl border border-[#C2A378]/30 bg-[#C2A378]/5 shadow-2xl backdrop-blur-xl hover:scale-105 active:scale-95 transition-all cursor-grab active:cursor-grabbing touch-none ${isTerminal ? 'text-white' : 'text-[#C2A378]'}`}
           title={isAr ? 'مساعد دالي — اسحب لتغيير المكان' : 'DALI — drag to move'}
           aria-label={isAr ? 'فتح دالي' : 'Open DALI'}
         >
+          <span className="absolute inset-1 rounded-xl border border-[#C2A378]/20 animate-pulse pointer-events-none" aria-hidden="true" />
+          <span className="absolute inset-0 rounded-2xl border border-[#C2A378]/10 animate-ping pointer-events-none" aria-hidden="true" />
           {user.avatarUrl ? (
             <img
               src={user.avatarUrl}
               alt={user.name || 'User'}
-              className="w-11 h-11 rounded-xl object-cover border-2 border-white/70 shadow-lg"
+              className="relative z-10 h-11 w-11 rounded-xl object-cover border border-[#C2A378]/30 shadow-lg"
               onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }}
             />
           ) : null}
-          <span className={`w-11 h-11 rounded-xl border-2 border-white/70 shadow-lg items-center justify-center font-black text-sm ${user.avatarUrl ? 'hidden' : 'flex'} ${isTerminal ? 'bg-[#001F3F] text-[#C2A378]' : 'bg-[#001F3F] text-white'}`}>
+          <span className={`relative z-10 h-11 w-11 rounded-xl border border-[#C2A378]/30 shadow-lg items-center justify-center font-black text-sm ${user.avatarUrl ? 'hidden' : 'flex'} bg-[#001F3F] text-[#C2A378]`}>
             {(user.name || 'U').trim().charAt(0).toUpperCase()}
           </span>
         </button>
