@@ -9,6 +9,7 @@ import { getDaliRecentMemory, getDaliConversationMemory, saveDaliConversationMes
 import { searchDaliKnowledge } from '../services/daliKnowledge';
 import { getDaliCustomerAliases } from '../services/daliCustomerAliases';
 import type { DaliCustomerAlias } from '../services/daliCustomerAliases';
+import { buildDaliOrganizationContext, isDaliAllowedRole } from '../services/daliOrganization';
 
 interface LayoutProps {
   user: User;
@@ -26,6 +27,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   const t = translations[lang];
   const isAr = lang === 'ar';
   const isCreator = user.isCreator === true || String(user.email || '').trim().toLowerCase() === 'bebito@nilefleet.com';
+  const canUseDali = isDaliAllowedRole(user);
   
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false);
@@ -1237,7 +1239,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
           allPending: pendingWork.slice(0, 200)
         }
       };
-      const prompt = `DALI CONVERSATION MEMORY (recent turns):\n${memoryContext}\n\nLATEST USER QUESTION:\n${question}\n\nYou are DALI, the natural in-system colleague for NILE FLEET. Talk like a helpful human coworker who knows the ongoing conversation—not like a database report, search engine, or robot. Understand Egyptian Arabic, Modern Standard Arabic, English, Arabizi/transliterated names, and mixed language naturally.
+      const prompt = `DALI CONVERSATION MEMORY (recent turns):\n${memoryContext}\n\n${organizationContext}\n\nLATEST USER QUESTION:\n${question}\n\nYou are DALI, the natural in-system colleague for NILE FLEET. Talk like a helpful human coworker who knows the ongoing conversation—not like a database report, search engine, or robot. Understand Egyptian Arabic, Modern Standard Arabic, English, Arabizi/transliterated names, and mixed language naturally.
 
 CONVERSATION BEHAVIOR:
 - Remember what this user was just talking about and carry the subject forward naturally.
@@ -1830,7 +1832,7 @@ I understand the relationships between gensets, bookings, containers, customers,
           bottom: Math.max(8, daliButtonPosition.bottom + daliViewport.keyboardInset)
         }}
       >
-        {isAiChatOpen && (
+        {canUseDali && isAiChatOpen && (
           <div
             className={`absolute bottom-16 right-0 w-[calc(100vw-16px)] sm:w-[min(92vw,420px)] h-[min(76vh,620px)] sm:h-[min(70vh,620px)] max-h-[calc(100dvh-96px)] rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border shadow-2xl backdrop-blur-2xl flex flex-col ${daliVisualStyle === 'phantom' ? (isTerminal ? 'bg-[#05080d]/65 border-white/10' : 'bg-slate-950/15 border-white/35') : daliVisualStyle === 'terminal' ? 'bg-[#02070c]/70 border-[#C2A378]/20' : daliVisualStyle === 'aurora' ? (isTerminal ? 'bg-[#071522]/45 border-cyan-200/15' : 'bg-white/35 border-cyan-200/35') : daliVisualStyle === 'blueprint' ? (isTerminal ? 'bg-[#061522]/55 border-sky-200/15' : 'bg-sky-50/35 border-sky-200/40') : (isTerminal ? 'bg-[#071522]/45 border-white/10' : 'bg-white/35 border-white/50')}`}
             style={window.innerWidth < 640 ? {
