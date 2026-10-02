@@ -154,8 +154,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       <section>
         <div className="flex items-end justify-between mb-3 px-1">
           <div>
-            <h2 className="text-xl md:text-2xl font-black text-[#001F3F] dark:text-white uppercase italic tracking-tight">Port Control</h2>
-            <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.25em]">Stock • Maintenance • Preorder</p>
+            <h2 className="text-xl md:text-2xl font-black text-[#001F3F] dark:text-white uppercase italic tracking-tight">{translateEntity('Port Control', lang)}</h2>
+            <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.25em]">{translateEntity('Stock • Maintenance • Preorder', lang)}</p>
           </div>
           <button onClick={() => onNavigate('stock')} className="text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Fleet</button>
         </div>
@@ -171,12 +171,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                 <span className={`w-2 h-2 rounded-full ${port.preorderCount > port.stockCount ? 'bg-rose-500' : 'bg-emerald-500'}`}></span>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <div><span className="block text-[8px] text-slate-400 font-black uppercase">Stock</span><b className="text-xl text-blue-600 dark:text-blue-400">{port.stockCount}</b></div>
-                <div><span className="block text-[8px] text-slate-400 font-black uppercase">Maint.</span><b className="text-xl text-rose-500">{port.maintenanceCount}</b></div>
-                <div><span className="block text-[8px] text-slate-400 font-black uppercase">Preorder</span><b className="text-xl text-amber-500">{port.preorderCount}</b></div>
+                <div><span className="block text-[8px] text-slate-400 font-black uppercase">{translateEntity('Stock', lang)}</span><b className="text-xl text-blue-600 dark:text-blue-400">{port.stockCount}</b></div>
+                <div><span className="block text-[8px] text-slate-400 font-black uppercase">{translateEntity('Maint.', lang)}</span><b className="text-xl text-rose-500">{port.maintenanceCount}</b></div>
+                <div><span className="block text-[8px] text-slate-400 font-black uppercase">{translateEntity('Preorder', lang)}</span><b className="text-xl text-amber-500">{port.preorderCount}</b></div>
               </div>
               <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-700 flex justify-between text-[8px] font-black uppercase">
-                <span className="text-slate-400">Live</span><span className="text-emerald-500">{port.active}</span>
+                <span className="text-slate-400">{translateEntity('Live', lang)}</span><span className="text-emerald-500">{port.active}</span>
               </div>
             </button>
           ))}
@@ -187,8 +187,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       <section className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
           <div>
-            <h2 className="font-black text-[#001F3F] dark:text-white uppercase italic">Smart Operations Watch</h2>
-            <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Automatic exception detection</p>
+            <h2 className="font-black text-[#001F3F] dark:text-white uppercase italic">{translateEntity('Smart Operations Watch', lang)}</h2>
+            <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">{translateEntity('Automatic exception detection', lang)}</p>
           </div>
           <span className="text-[9px] font-black uppercase px-2.5 py-1 rounded-full bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400">{smartAlerts.length} Signals</span>
         </div>
@@ -210,24 +210,24 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         <section className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
           <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between gap-3">
             <div>
-              <h2 className="font-black text-[#001F3F] dark:text-white uppercase italic">Customer Financial Reports</h2>
+              <h2 className="font-black text-[#001F3F] dark:text-white uppercase italic">{translateEntity('Customer Financial Reports', lang)}</h2>
               <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Billed • Paid • Outstanding</p>
             </div>
             <button onClick={() => onNavigate('financials')} className="text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">{isReadOnly ? 'Ledger' : 'Financials'}</button>
           </div>
           <div className="grid grid-cols-3 gap-2 p-4 border-b border-slate-100 dark:border-slate-700">
-            <div><span className="block text-[8px] text-slate-400 uppercase font-black">Billed</span><b className="text-sm text-slate-700 dark:text-slate-200">{money(financialTotals.billed)}</b></div>
-            <div><span className="block text-[8px] text-slate-400 uppercase font-black">Paid</span><b className="text-sm text-emerald-500">{money(financialTotals.paid)}</b></div>
-            <div><span className="block text-[8px] text-slate-400 uppercase font-black">Outstanding</span><b className="text-sm text-rose-500">{money(financialTotals.outstanding)}</b></div>
+            <div><span className="block text-[8px] text-slate-400 uppercase font-black">{translateEntity('Billed', lang)}</span><b className="text-sm text-slate-700 dark:text-slate-200">{money(financialTotals.billed)}</b></div>
+            <div><span className="block text-[8px] text-slate-400 uppercase font-black">{translateEntity('Paid', lang)}</span><b className="text-sm text-emerald-500">{money(financialTotals.paid)}</b></div>
+            <div><span className="block text-[8px] text-slate-400 uppercase font-black">{translateEntity('Outstanding', lang)}</span><b className="text-sm text-rose-500">{money(financialTotals.outstanding)}</b></div>
           </div>
           <div className="divide-y divide-slate-100 dark:divide-slate-700">
             {customerFinancials.slice(0, 5).map(c => (
               <button key={c.id} onClick={() => onNavigate('customers')} className="w-full px-5 py-3 flex items-center justify-between gap-3 text-start hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
                 <div className="min-w-0"><p className="font-black text-xs text-[#001F3F] dark:text-slate-200 uppercase truncate">{c.name}</p><span className="text-[8px] text-slate-400 font-bold">{c.operations} operations</span></div>
-                <div className="text-right shrink-0"><span className="block text-[8px] text-slate-400 uppercase">Outstanding</span><b className={`text-xs ${c.outstanding > 0 ? 'text-rose-500' : 'text-slate-400'}`}>{money(Math.max(c.outstanding, 0))}</b></div>
+                <div className="text-right shrink-0"><span className="block text-[8px] text-slate-400 uppercase">{translateEntity('Outstanding', lang)}</span><b className={`text-xs ${c.outstanding > 0 ? 'text-rose-500' : 'text-slate-400'}`}>{money(Math.max(c.outstanding, 0))}</b></div>
               </button>
             ))}
-            {!customerFinancials.length && <div className="p-8 text-center text-[10px] font-black text-slate-400 uppercase">No customer financial data</div>}
+            {!customerFinancials.length && <div className="p-8 text-center text-[10px] font-black text-slate-400 uppercase">{translateEntity('No customer financial data', lang)}</div>}
           </div>
         </section>
 
@@ -235,16 +235,16 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         <section className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
           <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between gap-3">
             <div>
-              <h2 className="font-black text-[#001F3F] dark:text-white uppercase italic">Maintenance Performance & Log</h2>
-              <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Service execution and latest records</p>
+              <h2 className="font-black text-[#001F3F] dark:text-white uppercase italic">{translateEntity('Maintenance Performance & Log', lang)}</h2>
+              <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">{translateEntity('Service execution and latest records', lang)}</p>
             </div>
             <button onClick={() => onNavigate('maintenance')} className="text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Maintenance</button>
           </div>
           <div className="grid grid-cols-4 gap-2 p-4 border-b border-slate-100 dark:border-slate-700">
-            <div><span className="block text-[8px] text-slate-400 uppercase font-black">Rate</span><b className="text-xl text-emerald-500">{maintenanceStats.completionRate}%</b></div>
-            <div><span className="block text-[8px] text-slate-400 uppercase font-black">Done</span><b className="text-xl text-blue-500">{maintenanceStats.completed}</b></div>
-            <div><span className="block text-[8px] text-slate-400 uppercase font-black">Active</span><b className="text-xl text-amber-500">{maintenanceStats.inProgress}</b></div>
-            <div><span className="block text-[8px] text-slate-400 uppercase font-black">Due</span><b className="text-xl text-rose-500">{maintenanceStats.dueSoon}</b></div>
+            <div><span className="block text-[8px] text-slate-400 uppercase font-black">{translateEntity('Rate', lang)}</span><b className="text-xl text-emerald-500">{maintenanceStats.completionRate}%</b></div>
+            <div><span className="block text-[8px] text-slate-400 uppercase font-black">{translateEntity('Done', lang)}</span><b className="text-xl text-blue-500">{maintenanceStats.completed}</b></div>
+            <div><span className="block text-[8px] text-slate-400 uppercase font-black">{translateEntity('Active', lang)}</span><b className="text-xl text-amber-500">{maintenanceStats.inProgress}</b></div>
+            <div><span className="block text-[8px] text-slate-400 uppercase font-black">{translateEntity('Due', lang)}</span><b className="text-xl text-rose-500">{maintenanceStats.dueSoon}</b></div>
           </div>
           <div className="divide-y divide-slate-100 dark:divide-slate-700">
             {maintenanceLogs.slice(0, 5).map(log => (
@@ -253,7 +253,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                 <span className={`text-[8px] font-black uppercase px-2 py-1 rounded-lg ${log.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600' : log.status === 'IN_PROGRESS' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>{log.status.replace(/_/g, ' ')}</span>
               </button>
             ))}
-            {!maintenanceLogs.length && <div className="p-8 text-center text-[10px] font-black text-slate-400 uppercase">No maintenance logs recorded</div>}
+            {!maintenanceLogs.length && <div className="p-8 text-center text-[10px] font-black text-slate-400 uppercase">{translateEntity('No maintenance logs recorded', lang)}</div>}
           </div>
         </section>
       </div>
