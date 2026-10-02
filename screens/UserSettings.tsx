@@ -643,7 +643,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
                     <p className="mb-2 text-[8px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{label}</p>
                     <div className="flex flex-wrap gap-1.5">
                       {options.map(([option, name]) => (
-                        <button key={option} type="button" onClick={() => { setter(option as any); saveDaliStyle(label === 'Style' ? 'style' : label === 'Background' ? 'background' : label === 'Thinking' ? 'thinking' : 'animation', option); }} className={`rounded-lg border px-2 py-1.5 text-[8px] font-bold transition-all ${value === option ? 'border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]' : 'border-[var(--border-primary)] text-[var(--text-secondary)] hover:border-[var(--accent)]/60'}`}>{name}</button>
+                        <button key={option} type="button" onClick={() => { setter(option as any); updateDaliPreference(label === 'Style' ? 'style' : label === 'Background' ? 'background' : label === 'Thinking' ? 'thinking' : 'animation', option); }} className={`rounded-lg border px-2 py-1.5 text-[8px] font-bold transition-all ${value === option ? 'border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]' : 'border-[var(--border-primary)] text-[var(--text-secondary)] hover:border-[var(--accent)]/60'}`}>{name}</button>
                       ))}
                     </div>
                   </div>
