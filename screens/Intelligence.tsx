@@ -8,6 +8,7 @@ import { runThinkingAudit, getSafeApiKey } from '../services/aiService';
 import { getDaliRecentMemory, saveDaliConversationMessage } from '../services/daliMemory';
 import { searchDaliKnowledge } from '../services/daliKnowledge';
 import { getDaliCustomerAliases } from '../services/daliCustomerAliases';
+import { getTerminology, matchTerminology, recordTerminologyUsage } from '../services/daliTerminology';
 
 const Intelligence: React.FC = () => {
   const { lang } = useContext(LanguageContext);
@@ -207,6 +208,9 @@ ${JSON.stringify(viewData)}`;
       const memory = await getDaliRecentMemory(18).catch(() => []);
       const lessons = await searchDaliKnowledge(question, 8).catch(() => []);
       const customerAliases = await getDaliCustomerAliases().catch(() => []);
+      const terminology = await getTerminology().catch(() => []);
+      const terminologyMatch = matchTerminology(question, terminology);
+      recordTerminologyUsage(terminologyMatch.candidates.slice(0, 8)).catch(() => {});
       const customerProfiles = db.getUsers().filter((u:any) => String(u.role || '').toUpperCase() === 'CUSTOMER');
       const customerNameById = new Map(customerProfiles.map((u:any) => [String(u.id), String(u.companyName || u.name || 'UNKNOWN')]));
       const customerDictionary = customerAliases.map((a:any) => ({
@@ -253,7 +257,10 @@ ${JSON.stringify(viewData)}`;
           allPending: { requestCount: requestedAll.length, gensetsRequested: sumRequested(requestedAll), requests: requestedAll }
         }
       };
-      const prompt = 'You are DALI, the NILE FLEET Fleet Intelligence coworker. Answer naturally and directly. Continue the conversation from memory when relevant. LANGUAGE: ' + (responseIsAr ? 'Arabic' : 'English') + '. Use live data as the source of truth. Never invent values. Preserve IDs, dates and numbers exactly. You can discuss fleet, gensets, ports, operations, fuel, maintenance, invoices, reservations, company rules and workflows. IMPORTANT RESERVATION RULE: When the user asks what work is still requested/not loaded for a customer, or asks how many containers/gensets are requested today, tomorrow, or all upcoming requests, use reservations.pendingWorkNotLoadedIntoOperations and the today/tomorrow/all summaries. Treat PENDING and APPROVED reservations without a linked operation as requested work that has not yet been loaded into operations. Group matching customer requests, show booking/date/ports and requested quantity when useful. Do not count a request as loaded merely because its reservation is APPROVED; it is loaded only when a linked operation exists.\nCOMPANY KNOWLEDGE:\n' + (lessons.length ? lessons.map((x:any) => '[' + x.category + '] ' + x.title + ': ' + x.content).join('\\n') : 'No matching lesson.') + '\nCUSTOMER DICTIONARY (Arabic/alias -> real customer):\n' + (customerDictionary.length ? customerDictionary.map((x:any) => x.alias + ' -> ' + x.customer + ' [' + x.type + ']').join('\\n') : 'No trained customer aliases.') + '\nRECENT MEMORY:\n' + (memory.length ? memory.map((m:any) => '[' + m.role + '] ' + m.message).join('\\n') : 'No recent memory.') + '\nLIVE DATABASE:\n' + JSON.stringify(live) + '\nUSER QUESTION:\n' + question;
+      const recognizedTerms = terminologyMatch.entities.length
+        ? terminologyMatch.entities.map(e => e.type + ': ' + e.canonical + ' (from "' + e.alias + '", confidence ' + e.confidence.toFixed(2) + ')').join('\n')
+        : 'No terminology entity matched with sufficient confidence.';
+      const prompt = 'You are DALI, the NILE FLEET Fleet Intelligence coworker. Answer naturally and directly. Continue the conversation from memory when relevant. LANGUAGE: ' + (responseIsAr ? 'Arabic' : 'English') + '. Use live data as the source of truth. Never invent values. TERMINOLOGY ROUTING: use the recognized terminology below to understand aliases, Arabic/English variants and likely misspellings. Do not treat a low-confidence fuzzy match as identity. If two materially different entities remain plausible, ask a concise clarification question instead of guessing. Preserve IDs, dates and numbers exactly. You can discuss fleet, gensets, ports, operations, fuel, maintenance, invoices, reservations, company rules and workflows. IMPORTANT RESERVATION RULE: When the user asks what work is still requested/not loaded for a customer, or asks how many containers/gensets are requested today, tomorrow, or all upcoming requests, use reservations.pendingWorkNotLoadedIntoOperations and the today/tomorrow/all summaries. Treat PENDING and APPROVED reservations without a linked operation as requested work that has not yet been loaded into operations. Group matching customer requests, show booking/date/ports and requested quantity when useful. Do not count a request as loaded merely because its reservation is APPROVED; it is loaded only when a linked operation exists.\nRECOGNIZED TERMINOLOGY:\n' + recognizedTerms + '\nINTENT: ' + terminologyMatch.intent + ' (confidence ' + terminologyMatch.confidence.toFixed(2) + ')\nCOMPANY KNOWLEDGE:\n' + (lessons.length ? lessons.map((x:any) => '[' + x.category + '] ' + x.title + ': ' + x.content).join('\\n') : 'No matching lesson.') + '\nCUSTOMER DICTIONARY (Arabic/alias -> real customer):\n' + (customerDictionary.length ? customerDictionary.map((x:any) => x.alias + ' -> ' + x.customer + ' [' + x.type + ']').join('\\n') : 'No trained customer aliases.') + '\nRECENT MEMORY:\n' + (memory.length ? memory.map((m:any) => '[' + m.role + '] ' + m.message).join('\\n') : 'No recent memory.') + '\nLIVE DATABASE:\n' + JSON.stringify(live) + '\nUSER QUESTION:\n' + question;
       const answer = await runThinkingAudit(prompt, 900);
       const finalAnswer = answer || (responseIsAr ? 'لم أجد نتيجة واضحة في البيانات الحالية.' : 'I could not find a clear result in the current live data.');
       setChatMessages(prev => [...prev, { role: 'dali', text: finalAnswer }]);
