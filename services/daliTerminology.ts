@@ -81,6 +81,16 @@ function fuzzyScore(input: string, target: string): number {
   return max ? Math.max(0, 1 - distance / max) : 0;
 }
 
+const DATABASE_TERMS: Array<[string, TerminologyType, string]> = [
+  ['profiles','entity','entity'],['profiles.name','field','field'],['profiles.company_name','field','field'],['profiles.company_name_ar','field','field'],
+  ['gensets','entity','entity'],['gensets.unit_number','field','field'],['gensets.location','field','field'],['gensets.status','field','field'],
+  ['operations','entity','entity'],['operations.booking_number','field','field'],['operations.container_number','field','field'],['operations.genset_number','field','field'],['operations.customer_name','field','field'],['operations.trucker','field','field'],['operations.gaz','field','field'],['operations.clip_on_port','field','field'],['operations.clip_off_port','field','field'],['operations.status','field','field'],
+  ['reservations','entity','entity'],['reservations.booking_number','field','field'],['reservations.gensets_needed','field','field'],['reservations.port_in','field','field'],['reservations.port_out','field','field'],
+  ['invoices','entity','entity'],['invoices.invoice_no','field','field'],['invoices.customer_name','field','field'],['invoices.amount','field','field'],['invoices.status','field','field'],
+  ['payments','entity','entity'],['customer_prices','entity','entity'],['genset_maintenance_logs','entity','entity'],['audit_log','entity','entity'],
+  ['dali_knowledge','entity','entity'],['dali_customer_aliases','entity','entity'],['dali_conversations','entity','entity']
+];
+
 const BUILTIN: Array<Omit<TerminologyRecord,'id'|'normalized_alias'>> = [
   {canonical_value:'Genset',canonical_type:'entity',alias:'genset',language:'en',alias_type:'canonical',context:['fleet','operation'],confidence:1,source:'system',status:'approved'},
   {canonical_value:'Genset',canonical_type:'entity',alias:'generator',language:'en',alias_type:'equivalent',context:['fleet','operation'],confidence:.95,source:'system',status:'approved'},
@@ -223,7 +233,8 @@ export async function scanSystemTerminology(): Promise<number> {
       source:'system_scan',status:'approved'
     });
   };
-  // UI/domain terminology plus live operational values. We only read existing data.
+  // Database/UI vocabulary and live operational values. We only read existing data.
+  for (const [value,type] of DATABASE_TERMS) add(value,type,value,['database','schema']);
   ['Genset','Generator','Port','Location','Stock','Operation','Booking','Container','Customer','Shipper','Trucker','Maintenance','Workshop','Scrap','Invoice','Driver'].forEach(x=>add(x,'entity',x));
   for(const g of db.getStock()) { add(g.unitNumber,'genset',g.unitNumber,['genset','number']); add(String(g.location),'port',String(g.location),['port','location']); }
   for(const o of db.getOperations()) {
