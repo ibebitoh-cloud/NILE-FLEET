@@ -1964,25 +1964,34 @@ I understand the relationships between gensets, bookings, containers, customers,
           onPointerMove={handleDaliPointerMove}
           onPointerUp={handleDaliPointerUp}
           onPointerCancel={handleDaliPointerUp}
-          className="group relative flex h-[112px] w-[112px] sm:h-[128px] sm:w-[128px] items-center justify-center cursor-grab active:cursor-grabbing touch-none"
+          className="group relative flex h-[78px] w-[78px] sm:h-[86px] sm:w-[86px] items-center justify-center cursor-grab active:cursor-grabbing touch-none"
           title={isAr ? "مساعد دالي — اسحب لتغيير المكان" : "DALI — drag to move"}
           aria-label={isAr ? "فتح دالي" : "Open DALI"}
         >
-          <span className="absolute -inset-5 rounded-full bg-[#C2A378]/10 blur-2xl transition-all duration-700 group-hover:bg-[#C2A378]/20"></span>
-          <span className={`absolute inset-2 rounded-full border border-white/15 bg-white/[0.055] shadow-[0_20px_70px_rgba(0,0,0,.55)] backdrop-blur-2xl ${aiChatLoading ? "dali-orb-thinking" : "dali-orb-idle"}`}>
-            <span className="absolute inset-2 rounded-full border border-[#C2A378]/30 border-t-transparent dali-orb-ring"></span>
-            <span className="absolute inset-5 rounded-full border border-white/15 border-b-transparent dali-orb-ring" style={{animationDuration:"2.7s", animationDirection:"reverse"}}></span>
-            <span className="absolute inset-7 overflow-hidden rounded-full bg-gradient-to-br from-white/25 via-[#C2A378]/10 to-transparent">
+          <span className="absolute -inset-3 rounded-full bg-[#C2A378]/12 blur-xl transition-all duration-700 group-hover:bg-[#C2A378]/22"></span>
+          <span className={`absolute inset-0 rounded-full border-2 border-white/20 bg-white/[0.06] shadow-[0_16px_55px_rgba(0,0,0,.55)] backdrop-blur-2xl overflow-hidden ${aiChatLoading ? "dali-orb-thinking" : "dali-orb-idle"}`}>
+            <span className="absolute inset-1 rounded-full border border-[#C2A378]/35 border-t-transparent dali-orb-ring"></span>
+            <span className="absolute inset-3 rounded-full border border-white/15 border-b-transparent dali-orb-ring" style={{animationDuration:"2.7s", animationDirection:"reverse"}}></span>
+            <span className="absolute inset-0 rounded-full overflow-hidden">
               <span className="absolute -inset-y-10 left-0 w-1/3 rotate-[18deg] bg-white/20 blur-xl" style={{animation:"daliOrbShimmer 3.6s ease-in-out infinite"}}></span>
             </span>
-            <span className={`dali-orb-core absolute inset-[31%] rounded-full border border-[#C2A378]/45 bg-[#C2A378]/15 shadow-[0_0_38px_rgba(194,163,120,.34)] ${aiChatLoading ? "dali-orb-thinking" : ""}`}></span>
-            <span className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[12px] font-black uppercase tracking-[.34em] text-[#C2A378]">DALI</span>
-              <span className="mt-1 text-[6px] font-black uppercase tracking-[.24em] text-white/45">{aiChatLoading ? (isAr ? "يعمل" : "WORKING") : "AI"}</span>
-            </span>
+            {user.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt={user.name || "Profile"}
+                className="absolute inset-[7px] h-[calc(100%-14px)] w-[calc(100%-14px)] rounded-full object-cover"
+                draggable={false}
+              />
+            ) : (
+              <span className="absolute inset-[7px] flex items-center justify-center rounded-full bg-gradient-to-br from-[#C2A378]/80 via-[#173653] to-[#001F3F] text-lg font-black text-white">
+                {(user.name || "U").trim().charAt(0).toUpperCase()}
+              </span>
+            )}
+            <span className="absolute inset-[7px] rounded-full bg-gradient-to-t from-black/30 via-transparent to-white/20 pointer-events-none"></span>
+            <span className="absolute bottom-2 right-2 h-3.5 w-3.5 rounded-full border-2 border-[#071522] bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,.85)]"></span>
           </span>
-          <span className={`absolute -bottom-0.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border px-3 py-1 text-[6px] font-black uppercase tracking-[.22em] shadow-lg backdrop-blur-xl ${isTerminal ? "border-white/10 bg-[#001224]/90 text-[#C2A378]" : "border-white/60 bg-white/80 text-[#001F3F]"}`}>
-            {(() => { const h = new Date().getHours(); return h < 12 ? (isAr ? "صباح الخير" : "GOOD MORNING") : h < 18 ? (isAr ? "مساء الخير" : "GOOD AFTERNOON") : (isAr ? "مساء الخير" : "GOOD EVENING"); })()}
+          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-white/10 bg-[#001224]/90 px-2.5 py-1 text-[6px] font-black uppercase tracking-[.2em] text-[#C2A378] shadow-lg backdrop-blur-xl">
+            DALI
           </span>
         </button>
       </div>
