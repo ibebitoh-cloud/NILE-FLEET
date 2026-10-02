@@ -6,6 +6,8 @@ import { getDaliKnowledge, teachDaliKnowledge } from '../services/daliKnowledge'
 import type { DaliKnowledge } from '../services/daliKnowledge';
 import { getDaliCustomerAliases, saveDaliCustomerAlias, deleteDaliCustomerAlias } from '../services/daliCustomerAliases';
 import type { DaliCustomerAlias } from '../services/daliCustomerAliases';
+import { getTerminology, learnTerminology, matchTerminology, scanSystemTerminology } from '../services/daliTerminology';
+import type { TerminologyRecord } from '../services/daliTerminology';
 
 const C = [
   ['company_rule', 'Company Rules'],
@@ -41,6 +43,12 @@ const DaliKnowledgeCenter: React.FC = () => {
   const [aliasInput, setAliasInput] = useState('');
   const [aliasType, setAliasType] = useState<DaliCustomerAlias['alias_type']>('arabic');
   const [notice, setNotice] = useState('');
+  const [terminology, setTerminology] = useState<TerminologyRecord[]>([]);
+  const [termInput, setTermInput] = useState('');
+  const [termCanonical, setTermCanonical] = useState('');
+  const [termType, setTermType] = useState('entity');
+  const [termDebug, setTermDebug] = useState('');
+  const [termLoading, setTermLoading] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -61,7 +69,10 @@ const DaliKnowledgeCenter: React.FC = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    getTerminology().then(setTerminology).catch(() => {});
+  }, []);
 
   const saveLesson = async () => {
     if (!title.trim() || !content.trim()) return;
@@ -139,6 +150,54 @@ const DaliKnowledgeCenter: React.FC = () => {
         .includes(q)
     );
   }, [customers, customerSearch]);
+
+  const trainTerminology = async () => {
+    if (!termCanonical.trim() || !termInput.trim()) return;
+    setTermLoading(true); setNotice('');
+    try {
+      await learnTerminology({
+        canonical_value: termCanonical.trim(),
+        canonical_type: termType as any,
+        alias: termInput.trim(),
+        language: /[\\u0600-\\u06ff]/.test(termInput) ? 'ar' : /[A-Za-z]/.test(termInput) ? 'en' : 'mixed',
+        alias_type: 'manual',
+        context: [termType],
+        confidence: 0.98,
+        source: 'Manual Training Node',
+        status: 'approved'
+      });
+      setTermInput('');
+      setTerminology(await getTerminology());
+      setNotice(ar ? 'تم حفظ المصطلح والاسم البديل.' : 'Terminology alias saved.');
+    } catch (e) { setNotice(String(e)); }
+    finally { setTermLoading(false); }
+  };
+
+  const runTerminologyScan = async () => {
+    setTermLoading(true); setNotice('');
+    try {
+      const count = await scanSystemTerminology();
+      setTerminology(await getTerminology());
+      setNotice(ar ? `تم فحص النظام وتعلم ${count} مصطلحاً.` : `System scan learned ${count} terminology records.`);
+    } catch (e) { setNotice(String(e)); }
+    finally { setTermLoading(false); }
+  };
+
+  const debugTerminology = () => {
+    if (!termInput.trim()) return;
+    const match = matchTerminology(termInput, terminology);
+    setTermDebug(JSON.stringify({
+      user_input: termInput,
+      normalized_input: termInput ? termInput.normalize('NFKC').toLowerCase() : '',
+      detected_terms: match.entities,
+      intent: match.intent,
+      confidence: match.confidence,
+      candidates: match.candidates.slice(0, 8).map(x => ({
+        alias: x.alias, canonical_value: x.canonical_value, category: x.canonical_type,
+        confidence: x.score, match_type: x.matchType
+      }))
+    }, null, 2));
+  };
 
   const selectedAliases = aliases.filter(a => a.customer_id === selectedCustomerId);
   const activeAliasCustomers = new Set(aliases.map(a => a.customer_id));
@@ -232,6 +291,34 @@ const DaliKnowledgeCenter: React.FC = () => {
           </div>
         </section>
       </div>
+
+      <section className="rounded-3xl border p-5 bg-[var(--card-bg)] border-[var(--border-primary)]">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <div className="text-[9px] font-black uppercase tracking-widest text-[#C2A378]">{ar ? 'عقدة التدريب اليدوي • قاموس المصطلحات' : 'MANUAL TRAINING NODE • TERMINOLOGY ENGINE'}</div>
+            <p className="text-xs opacity-60 mt-1">{ar ? 'يتعلم الأسماء البديلة والأخطاء الشائعة دون تغيير أي بيانات تشغيلية.' : 'Learns aliases, Arabic/English variants and typos without modifying operational data.'}</p>
+          </div>
+          <button type="button" onClick={runTerminologyScan} disabled={termLoading} className="px-4 py-2 rounded-xl border font-black text-[9px] disabled:opacity-40">
+            {termLoading ? '…' : (ar ? 'فحص النظام' : 'SCAN SYSTEM')}
+          </button>
+        </div>
+        <div className="grid md:grid-cols-4 gap-2">
+          <input value={termCanonical} onChange={e => setTermCanonical(e.target.value)} placeholder={ar ? 'المصطلح الأساسي' : 'Canonical term'} className="rounded-xl border p-3 text-sm bg-[var(--input-bg)]" />
+          <input value={termInput} onChange={e => setTermInput(e.target.value)} placeholder={ar ? 'الاسم البديل / الخطأ' : 'Alias / typo / Arabic'} className="rounded-xl border p-3 text-sm bg-[var(--input-bg)]" />
+          <select value={termType} onChange={e => setTermType(e.target.value)} className="rounded-xl border p-3 text-xs bg-[var(--input-bg)]">
+            {['entity','field','status','port','customer','shipper','trucker','genset','booking','container','maintenance','invoice','operation','action','intent'].map(x => <option key={x}>{x}</option>)}
+          </select>
+          <button type="button" onClick={trainTerminology} disabled={termLoading || !termCanonical.trim() || !termInput.trim()} className="rounded-xl bg-[#C2A378] text-[#001F3F] font-black text-[9px] disabled:opacity-40">
+            {ar ? 'حفظ الاسم البديل' : 'SAVE ALIAS'}
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-2 mt-4 text-[9px]">
+          <span className="px-2 py-1 rounded-lg border">{terminology.length} {ar ? 'مصطلح معتمد' : 'approved terms'}</span>
+          <span className="px-2 py-1 rounded-lg border">{ar ? 'Exact → Alias → Normalized → Fuzzy' : 'Exact → Alias → Normalized → Fuzzy'}</span>
+          <button type="button" onClick={debugTerminology} className="px-2 py-1 rounded-lg border">{ar ? 'تشخيص المطابقة' : 'DEBUG MATCH'}</button>
+        </div>
+        {termDebug && <pre dir="ltr" className="mt-3 max-h-72 overflow-auto rounded-xl bg-black/90 text-emerald-300 p-3 text-[9px] whitespace-pre-wrap">{termDebug}</pre>}
+      </section>
 
       {notice && <div className="rounded-2xl border border-[#C2A37855] bg-[#C2A37810] text-[#C2A378] p-3 text-xs font-bold">{notice}</div>}
 
