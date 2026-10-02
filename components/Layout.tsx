@@ -60,6 +60,23 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   const daliDraggingRef = useRef(false);
   const daliDraggedRef = useRef(false);
   const daliDragStartRef = useRef({ x: 0, y: 0, right: 24, bottom: 24 });
+  type DaliVisualStyle = 'glass' | 'phantom' | 'terminal' | 'aurora' | 'blueprint';
+  type DaliBackgroundStyle = 'soft' | 'grid' | 'aurora' | 'blueprint' | 'clear';
+  type DaliThinkingStyle = 'clean' | 'technical' | 'friendly' | 'silent';
+  type DaliAnimationStyle = 'float' | 'pulse' | 'orb' | 'none';
+  const daliPreferenceKey = (name: string) => `nile-dali-${name}-${user.id || user.email || 'user'}`;
+  const [daliVisualStyle, setDaliVisualStyle] = useState<DaliVisualStyle>(() => {
+    try { return (localStorage.getItem(daliPreferenceKey('style')) as DaliVisualStyle) || 'glass'; } catch { return 'glass'; }
+  });
+  const [daliBackgroundStyle, setDaliBackgroundStyle] = useState<DaliBackgroundStyle>(() => {
+    try { return (localStorage.getItem(daliPreferenceKey('background')) as DaliBackgroundStyle) || 'soft'; } catch { return 'soft'; }
+  });
+  const [daliThinkingStyle, setDaliThinkingStyle] = useState<DaliThinkingStyle>(() => {
+    try { return (localStorage.getItem(daliPreferenceKey('thinking')) as DaliThinkingStyle) || 'clean'; } catch { return 'clean'; }
+  });
+  const [daliAnimationStyle, setDaliAnimationStyle] = useState<DaliAnimationStyle>(() => {
+    try { return (localStorage.getItem(daliPreferenceKey('animation')) as DaliAnimationStyle) || 'float'; } catch { return 'float'; }
+  });
   const [themeIslandOpen, setThemeIslandOpen] = useState(false);
   const themeIslandTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -1766,20 +1783,13 @@ I understand the relationships between gensets, bookings, containers, customers,
         @media (prefers-reduced-motion: reduce) {
           .dali-first-message { animation: none; }
         }
-        .dali-chat-surface {
-          background-image:
-            radial-gradient(circle at 12% 8%, rgba(194,163,120,.14), transparent 32%),
-            radial-gradient(circle at 88% 82%, rgba(0,31,63,.12), transparent 36%),
-            linear-gradient(rgba(194,163,120,.035) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(194,163,120,.035) 1px, transparent 1px);
-          background-size: auto, auto, 28px 28px, 28px 28px;
-        }
-        .dali-chat-surface-light {
-          background-color: rgba(248,250,252,.72);
-        }
-        .dali-chat-surface-dark {
-          background-color: rgba(4,14,24,.42);
-        }
+        .dali-chat-surface-light { background-color: rgba(248,250,252,.50); }
+        .dali-chat-surface-dark { background-color: rgba(4,14,24,.28); }
+        .dali-bg-soft { background-image: radial-gradient(circle at 12% 8%, rgba(194,163,120,.14), transparent 32%), radial-gradient(circle at 88% 82%, rgba(0,31,63,.12), transparent 36%); }
+        .dali-bg-grid { background-image: linear-gradient(rgba(194,163,120,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(194,163,120,.055) 1px, transparent 1px); background-size: 22px 22px; }
+        .dali-bg-aurora { background-image: radial-gradient(circle at 18% 18%, rgba(194,163,120,.20), transparent 28%), radial-gradient(circle at 82% 72%, rgba(62,128,190,.18), transparent 30%); }
+        .dali-bg-blueprint { background-image: linear-gradient(rgba(70,130,180,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(70,130,180,.07) 1px, transparent 1px), radial-gradient(circle at 50% 20%, rgba(70,130,180,.10), transparent 38%); background-size: 26px 26px, 26px 26px, auto; }
+        .dali-bg-clear { background-image: none; }
         .dali-peek-face { animation: daliPeek 3.8s ease-in-out infinite; }
         .dali-eye { animation: daliBlink 3.8s ease-in-out infinite; transform-origin: center; }
       `}</style>
@@ -1792,45 +1802,25 @@ I understand the relationships between gensets, bookings, containers, customers,
       >
         {isAiChatOpen && (
           <div
-            className={`absolute bottom-16 right-0 w-[calc(100vw-16px)] sm:w-[min(92vw,420px)] h-[min(76vh,620px)] sm:h-[min(70vh,620px)] max-h-[calc(100dvh-96px)] rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border shadow-2xl backdrop-blur-2xl flex flex-col ${isTerminal ? 'bg-[#071522]/55 border-white/10' : 'bg-white/45 border-white/55'}`}
+            className={`absolute bottom-16 right-0 w-[calc(100vw-16px)] sm:w-[min(92vw,420px)] h-[min(76vh,620px)] sm:h-[min(70vh,620px)] max-h-[calc(100dvh-96px)] rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border shadow-2xl backdrop-blur-2xl flex flex-col ${daliVisualStyle === 'phantom' ? (isTerminal ? 'bg-[#05080d]/65 border-white/10' : 'bg-slate-950/15 border-white/35') : daliVisualStyle === 'terminal' ? 'bg-[#02070c]/70 border-[#C2A378]/20' : daliVisualStyle === 'aurora' ? (isTerminal ? 'bg-[#071522]/45 border-cyan-200/15' : 'bg-white/35 border-cyan-200/35') : daliVisualStyle === 'blueprint' ? (isTerminal ? 'bg-[#061522]/55 border-sky-200/15' : 'bg-sky-50/35 border-sky-200/40') : (isTerminal ? 'bg-[#071522]/45 border-white/10' : 'bg-white/35 border-white/50')}`}
             style={window.innerWidth < 640 ? {
               height: `${Math.min(620, Math.max(280, daliViewport.height - 96))}px`,
               maxHeight: `${Math.max(280, daliViewport.height - 24)}px`
             } : undefined}
           >
-            <div className={`px-4 sm:px-5 py-3 sm:py-4 flex items-center justify-between border-b backdrop-blur-xl ${isTerminal ? 'bg-white/[0.04] border-white/10 text-white' : 'bg-white/35 border-white/60 text-[#001F3F]'}`}>
+            <div className={`px-4 sm:px-5 py-3 sm:py-4 flex items-center justify-between border-b backdrop-blur-xl ${isTerminal ? 'bg-white/[0.04] border-white/10 text-white' : 'bg-white/25 border-white/45 text-[#001F3F]'}`}>
               <div className="flex items-center gap-3">
-                <div className={`w-9 h-9 rounded-xl border flex items-center justify-center ${isTerminal ? 'bg-white/10 border-white/10' : 'bg-white/45 border-white/70'}`}>
-                  <span className="text-base">◉</span>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between gap-2"><p className={`text-[8px] font-black tracking-[0.3em] ${isTerminal ? 'text-[#C2A378]' : 'text-slate-500'}`}>DALI • NILE FLEET</p><button type="button" onClick={() => { setIsAiChatOpen(false); setActiveScreen('dali-knowledge'); }} className={`px-2 py-1 rounded-lg border text-[7px] font-black uppercase tracking-widest ${isTerminal ? 'border-white/10 text-[#C2A378] bg-white/5' : 'border-slate-200 text-[#001F3F] bg-white/50'}`}>{isAr ? 'المعرفة' : 'KNOWLEDGE'}</button></div>
-                  <p className="text-sm font-black">NILE FLEET ASSISTANT</p>
-                </div>
+                <div className={`w-9 h-9 rounded-xl border flex items-center justify-center ${isTerminal ? 'bg-white/10 border-white/10' : 'bg-white/35 border-white/60'}`}><span className="text-base text-[#C2A378]">◉</span></div>
+                <p className="text-sm font-black tracking-[0.18em]">DALI</p>
               </div>
               <div className="flex items-center gap-1.5">
-                <button
-                  onClick={clearDaliChat}
-                  disabled={aiChatLoading}
-                  className={`h-8 px-2.5 rounded-xl border text-[7px] font-black uppercase tracking-widest transition-all disabled:opacity-30 ${isTerminal ? 'bg-white/5 border-white/10 text-[#C2A378] hover:bg-white/10' : 'bg-white/40 border-white/60 text-[#001F3F] hover:bg-white/70'}`}
-                  title={isAr ? 'محادثة جديدة — تبدأ فارغة' : 'New chat — always starts blank'}
-                >{isAr ? 'جديد' : 'NEW'}</button>
-                <button
-                  onClick={archiveCurrentDaliChat}
-                  disabled={aiChatLoading || aiChatMessages.length === 0}
-                  className={`h-8 px-2.5 rounded-xl border text-[7px] font-black uppercase tracking-widest transition-all disabled:opacity-30 ${isTerminal ? 'bg-[#C2A378]/10 border-[#C2A378]/20 text-[#C2A378] hover:bg-[#C2A378]/20' : 'bg-white/40 border-white/60 text-[#001F3F] hover:bg-white/70'}`}
-                  title={isAr ? 'أرشفة المحادثة للرجوع إليها لاحقاً' : 'Archive this chat for later follow-up'}
-                >{isAr ? 'أرشيف' : 'ARCHIVE'}</button>
-                <button
-                  onClick={loadDaliArchive}
-                  disabled={daliHistoryLoading}
-                  className={`h-8 px-2.5 rounded-xl border text-[7px] font-black uppercase tracking-widest transition-all disabled:opacity-30 ${isTerminal ? 'bg-white/5 border-white/10 text-[#C2A378] hover:bg-white/10' : 'bg-white/40 border-white/60 text-[#001F3F] hover:bg-white/70'}`}
-                  title={isAr ? 'المحادثات المؤرشفة' : 'Archived chats'}
-                >{daliHistoryLoading ? '…' : (isAr ? 'المحفوظات' : 'ARCHIVE')}</button>
-                <button onClick={() => setIsAiChatOpen(false)} className={`w-8 h-8 rounded-xl border transition-all ${isTerminal ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white/40 border-white/60 text-slate-700 hover:bg-white/70'}`}>✕</button>
+                <button type="button" onClick={clearDaliChat} disabled={aiChatLoading} className={`w-8 h-8 rounded-xl border text-sm transition-all disabled:opacity-30 ${isTerminal ? 'bg-white/5 border-white/10 text-[#C2A378]' : 'bg-white/35 border-white/55 text-[#001F3F]'}`} title={isAr ? 'محادثة جديدة' : 'New chat'} aria-label={isAr ? 'محادثة جديدة' : 'New chat'}>＋</button>
+                <button type="button" onClick={loadDaliArchive} disabled={daliHistoryLoading} className={`w-8 h-8 rounded-xl border text-sm transition-all disabled:opacity-30 ${isTerminal ? 'bg-white/5 border-white/10 text-[#C2A378]' : 'bg-white/35 border-white/55 text-[#001F3F]'}`} title={isAr ? 'المحادثات المؤرشفة' : 'Archived chats'} aria-label={isAr ? 'المحادثات المؤرشفة' : 'Archived chats'}>▣</button>
+                <button type="button" onClick={archiveCurrentDaliChat} disabled={aiChatLoading || aiChatMessages.length === 0} className={`w-8 h-8 rounded-xl border text-sm transition-all disabled:opacity-30 ${isTerminal ? 'bg-[#C2A378]/10 border-[#C2A378]/20 text-[#C2A378]' : 'bg-white/35 border-white/55 text-[#001F3F]'}`} title={isAr ? 'أرشفة المحادثة الحالية' : 'Archive current chat'} aria-label={isAr ? 'أرشفة المحادثة الحالية' : 'Archive current chat'}>↧</button>
+                <button type="button" onClick={() => setIsAiChatOpen(false)} className={`w-8 h-8 rounded-xl border transition-all ${isTerminal ? 'bg-white/5 border-white/10 text-white' : 'bg-white/35 border-white/55 text-slate-700'}`} aria-label={isAr ? 'إغلاق' : 'Close'}>✕</button>
               </div>
             </div>
-            <div className={`relative flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-4 space-y-3 dali-chat-surface ${isTerminal ? 'dali-chat-surface-dark' : 'dali-chat-surface-light'}`}>
+            <div className={`relative flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-4 space-y-3 ${isTerminal ? 'dali-chat-surface-dark' : 'dali-chat-surface-light'} ${daliBackgroundStyle === 'grid' ? 'dali-bg-grid' : daliBackgroundStyle === 'aurora' ? 'dali-bg-aurora' : daliBackgroundStyle === 'blueprint' ? 'dali-bg-blueprint' : daliBackgroundStyle === 'clear' ? 'dali-bg-clear' : 'dali-bg-soft'}`}>
               {daliArchiveOpen && (
                 <div className={`absolute inset-0 z-20 overflow-y-auto p-3 sm:p-4 backdrop-blur-xl ${isTerminal ? 'bg-[#071522]/95' : 'bg-white/95'}`}>
                   <div className="mb-3 flex items-center justify-between">
@@ -1859,10 +1849,10 @@ I understand the relationships between gensets, bookings, containers, customers,
               )}
               {aiChatMessages.length === 0 && !daliArchiveOpen && (
                 <div className="absolute inset-0 flex items-center justify-center p-6 pointer-events-none">
-                  <div className="text-center">
-                    <p className={`text-[10px] font-black tracking-[0.38em] uppercase ${isTerminal ? 'text-white/35' : 'text-[#001F3F]/35'}`}>WELCOME BACK</p>
-                    <p className={`mt-1 text-4xl sm:text-5xl font-black uppercase tracking-tight break-words ${isTerminal ? 'text-white/[0.13]' : 'text-[#001F3F]/[0.13]'}`}>{user.name || 'USER'}</p>
-                    <p className={`mt-4 text-[10px] font-bold tracking-wide ${isTerminal ? 'text-white/45' : 'text-slate-500/80'}`}>{isAr ? 'أنا دالي — اسألني عن النظام.' : 'I’m Dali — ask me about the system.'}</p>
+                  <div className="text-center max-w-[310px]">
+                    <div className={`mx-auto mb-4 w-14 h-14 rounded-2xl border flex items-center justify-center ${isTerminal ? 'bg-white/5 border-[#C2A378]/30' : 'bg-white/25 border-white/55'}`}><span className="text-xl text-[#C2A378]">◉</span></div>
+                    <p className={`text-[10px] font-black tracking-[0.38em] uppercase ${isTerminal ? 'text-[#C2A378]' : 'text-[#001F3F]/55'}`}>DALI</p>
+                    <p className={`mt-2 text-sm font-bold leading-6 ${isTerminal ? 'text-white/65' : 'text-[#001F3F]/70'}`}>{isAr ? 'أهلاً 👋 أنا دالي. اسألني عن التشغيل أو المولدات أو أي حاجة في النظام.' : 'Hey 👋 I’m Dali. Ask me about operations, gensets, or anything in the system.'}</p>
                     <div className="mt-4 flex flex-wrap justify-center gap-2 pointer-events-auto">
                       {(isAr ? ['إجمالي المولدات؟', 'المولدات في الصيانة؟', 'ماذا تعرف؟'] : ['Total gensets?', 'Gensets in maintenance?', 'What do you know?']).map((prompt) => (
                         <button key={prompt} type="button" onClick={() => setAiChatInput(prompt)} className="px-3 py-2 rounded-xl border text-[10px] font-bold active:scale-95 transition-all bg-white/5 border-white/10 text-[#C2A378]">{prompt}</button>
@@ -1877,9 +1867,17 @@ I understand the relationships between gensets, bookings, containers, customers,
                   <div className="flex items-center gap-2 min-h-[24px]">
                     <span className="text-[10px] font-black tracking-widest text-[#C2A378]">DALI</span>
                     <p className="text-[10px] font-bold leading-5 text-slate-400">
-                      {isAr
-                        ? ['براجع البيانات المرتبطة…','ببحث في سجلات النظام…','براجع النتائج المرتبطة…','بجمع الإجابة…'][daliThinkingPhase]
-                        : ['Checking the relevant system data…','Searching the system records…','Reviewing the related results…','Putting the answer together…'][daliThinkingPhase]}
+                      {daliThinkingStyle === 'silent' ? '•••' : isAr
+                        ? (daliThinkingStyle === 'friendly'
+                          ? ['بشوف الموضوع 👀…','براجع البيانات…','بربط النتائج…','تمام، بجمعها لك…'][daliThinkingPhase]
+                          : daliThinkingStyle === 'technical'
+                            ? ['أحدد نوع الطلب…','أطابق المصطلحات…','أراجع السجلات المرتبطة…','أتحقق من النتيجة…'][daliThinkingPhase]
+                            : ['براجع البيانات المرتبطة…','ببحث في سجلات النظام…','براجع النتائج المرتبطة…','بجمع الإجابة…'][daliThinkingPhase])
+                        : (daliThinkingStyle === 'friendly'
+                          ? ['Taking a quick look 👀…','Checking the data…','Connecting the results…','Got it — putting it together…'][daliThinkingPhase]
+                          : daliThinkingStyle === 'technical'
+                            ? ['Classifying the request…','Matching terminology…','Reviewing related records…','Validating the result…'][daliThinkingPhase]
+                            : ['Checking the relevant system data…','Searching the system records…','Reviewing the related results…','Putting the answer together…'][daliThinkingPhase])}
                     </p>
                   </div>
                 </div>
@@ -1905,7 +1903,7 @@ I understand the relationships between gensets, bookings, containers, customers,
           onPointerMove={handleDaliPointerMove}
           onPointerUp={handleDaliPointerUp}
           onPointerCancel={handleDaliPointerUp}
-          className={`dali-floating-cell relative flex h-14 w-14 items-center justify-center rounded-2xl border border-[#C2A378]/30 bg-[#C2A378]/5 shadow-2xl backdrop-blur-xl hover:scale-105 active:scale-95 transition-all cursor-grab active:cursor-grabbing touch-none ${isTerminal ? 'text-white' : 'text-[#C2A378]'}`}
+          className={`dali-floating-cell dali-anim-${daliAnimationStyle} relative flex h-14 w-14 items-center justify-center rounded-2xl border border-[#C2A378]/30 bg-[#C2A378]/5 shadow-2xl backdrop-blur-xl hover:scale-105 active:scale-95 transition-all cursor-grab active:cursor-grabbing touch-none ${isTerminal ? 'text-white' : 'text-[#C2A378]'}`}
           title={isAr ? 'مساعد دالي — اسحب لتغيير المكان' : 'DALI — drag to move'}
           aria-label={isAr ? 'فتح دالي' : 'Open DALI'}
         >
