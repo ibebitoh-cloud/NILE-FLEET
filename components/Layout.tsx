@@ -1881,12 +1881,12 @@ I understand the relationships between gensets, bookings, containers, customers,
               {aiChatMessages.length === 0 && !daliArchiveOpen && (
                 <div className="min-h-full flex items-center justify-center text-center px-1">
                   <div className="w-full max-w-[330px]">
-                    <div className="relative mx-auto mb-5 h-24 w-24">
+                    <div className="relative mx-auto mb-5 h-52 w-52">
                       <div className="absolute inset-0 rounded-full border border-[#C2A378]/15 animate-[daliOrbRing_3.2s_linear_infinite]"></div>
-                      <div className="absolute inset-2 rounded-full border border-[#C2A378]/25"></div>
-                      <div className="dali-orb-idle absolute inset-4 rounded-full border border-[#C2A378]/45 bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,.28),rgba(194,163,120,.12)_35%,rgba(0,31,63,.55)_75%)] overflow-hidden">
+                      <div className="absolute inset-3 rounded-full border border-[#C2A378]/25"></div>
+                      <div className="dali-orb-idle absolute inset-3 rounded-full border border-[#C2A378]/45 bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,.30),rgba(194,163,120,.14)_35%,rgba(0,31,63,.62)_75%)] overflow-hidden">
                         <div className="dali-orb-ring absolute inset-[-35%] rounded-full border border-[#C2A378]/30"></div>
-                        <div className="dali-orb-core absolute inset-[31%] rounded-full bg-[#C2A378]/45 blur-[2px]"></div>
+                        <div className="dali-orb-core absolute inset-[31%] rounded-full bg-[#C2A378]/55 blur-[5px]"></div>
                       </div>
                     </div>
 
@@ -1929,10 +1929,10 @@ I understand the relationships between gensets, bookings, containers, customers,
 
               {aiChatLoading && (
                 <div className="mt-4 flex flex-col items-center justify-center text-center">
-                  <div className="relative h-16 w-16">
-                    <div className="dali-orb-thinking absolute inset-0 rounded-full border border-[#C2A378]/40 bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,.24),rgba(194,163,120,.13)_38%,rgba(0,31,63,.62)_78%)] overflow-hidden">
+                  <div className="relative h-28 w-28">
+                    <div className="dali-orb-thinking absolute inset-0 rounded-full border border-[#C2A378]/40 bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,.26),rgba(194,163,120,.14)_38%,rgba(0,31,63,.66)_78%)] overflow-hidden">
                       <div className="dali-orb-ring absolute inset-[-35%] rounded-full border border-[#C2A378]/40"></div>
-                      <div className="dali-orb-core absolute inset-[30%] rounded-full bg-[#C2A378]/60 blur-[2px]"></div>
+                      <div className="dali-orb-core absolute inset-[30%] rounded-full bg-[#C2A378]/65 blur-[4px]"></div>
                     </div>
                   </div>
                   <p className={`mt-3 text-[8px] font-black uppercase tracking-[0.28em] ${isTerminal ? 'text-[#C2A378]' : 'text-[#001F3F]/55'}`}>{isAr ? 'دالي يفكر...' : 'DALI IS THINKING...'}</p>
