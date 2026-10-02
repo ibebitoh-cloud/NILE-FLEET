@@ -423,7 +423,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       const creatorContext = isCreator
         ? 'CURRENT USER: Bebito (bebito@nilefleet.com), creator and system owner of NILE FLEET. Treat this user as the creator/owner when relevant. Do not confuse the creator with an ordinary employee or customer. Never reveal passwords, API keys, tokens, or other secrets.'
         : `CURRENT USER: ${user.name || 'Unknown User'} | ROLE: ${user.role || 'Unknown'} | EMAIL: ${user.email || ''}`;
-      const organizationContext = buildDaliOrganizationContext(user, responseIsAr);
+      const organizationContext = await buildDaliOrganizationContext(user, responseIsAr);
       const q = question.toUpperCase().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه');
       // Normalized query used by the deterministic fallback.
       // Keep this independent from the customer/entity helpers declared later in this function.
