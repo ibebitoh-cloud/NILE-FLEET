@@ -1,0 +1,86 @@
+name: DALI UI polish
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  polish:
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore: DALI UI polish') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply DALI personality and glass UI
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("components/Layout.tsx")
+          s = p.read_text()
+
+          s = s.replace(
+              "const [aiChatLoading, setAiChatLoading] = useState(false);",
+              "const [aiChatLoading, setAiChatLoading] = useState(false);\n  const [daliFirstMessageAnimation, setDaliFirstMessageAnimation] = useState(false);"
+          )
+
+          s = s.replace(
+              "setAiChatLoading(true);",
+              "setAiChatLoading(true);\n    // Give the first message of a fresh chat a small DALI reaction.\n    if (aiChatMessages.length === 0) {\n      setDaliFirstMessageAnimation(true);\n      window.setTimeout(() => setDaliFirstMessageAnimation(false), 1200);\n    }",
+              1
+          )
+
+          s = s.replace("DALI AI • DEEPSEEK", "DALI • NILE FLEET")
+
+          old_prompt = """- Keep the tone warm, direct, professional, and conversational. Egyptian Arabic should sound natural rather than formal/translated.
+- Match the user's language and level of formality. If the user mixes Arabic and English, you may mix them naturally too."""
+          new_prompt = """- Keep the tone warm, friendly, direct, professional, and conversational. DALI should feel like a helpful Nile Fleet coworker, not a machine.
+- DALI may use light, harmless humor or a short playful remark when the situation is appropriate. Never joke about accidents, safety incidents, money problems, customer disputes, missing equipment, delays, or other sensitive operational issues.
+- Humor should be occasional and subtle: one small joke or playful phrase is enough. Never force a joke into every answer.
+- Use natural Egyptian Arabic when the user speaks Arabic. Friendly expressions such as "تمام", "أيوه", "ولا يهمك", "خلينا نشوف" are welcome when they fit.
+- Match the user's language and level of formality. If the user mixes Arabic and English, you may mix them naturally too."""
+          if old_prompt in s:
+              s = s.replace(old_prompt, new_prompt)
+
+          s = s.replace(
+              "const finalAnswer = answer || (isAr ? 'لم يصل رد من DALI 1.0.' : 'No response from DALI 1.0.');",
+              "const finalAnswer = answer || (isAr ? 'مش لاقي رد واضح من البيانات الحالية.' : 'I could not get a clear answer from the current data.');"
+          )
+
+          old_surface = """className=\`absolute bottom-16 right-0 w-[calc(100vw-16px)] sm:w-[min(92vw,420px)] h-[min(76vh,620px)] sm:h-[min(70vh,620px)] max-h-[calc(100dvh-96px)] rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border shadow-2xl backdrop-blur-2xl flex flex-col \${isTerminal ? 'bg-[#071522]/90 border-white/10' : 'bg-white/90 border-white/50'}\`"""
+          new_surface = """className=\`absolute bottom-16 right-0 w-[calc(100vw-16px)] sm:w-[min(92vw,420px)] h-[min(76vh,620px)] sm:h-[min(70vh,620px)] max-h-[calc(100dvh-96px)] rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border shadow-2xl backdrop-blur-2xl flex flex-col \${isTerminal ? 'bg-[#071522]/55 border-white/10' : 'bg-white/45 border-white/55'}\`"""
+          if old_surface in s:
+              s = s.replace(old_surface, new_surface)
+
+          old_messages = """{aiChatMessages.map((m, i) => <div key={i} className={\`max-w-[88%] rounded-2xl p-3 text-[13px] sm:text-xs leading-6 whitespace-pre-wrap break-words overflow-wrap-anywhere border backdrop-blur-md \${m.role === 'user' ? (isTerminal ? 'bg-white/10 border-white/10 text-white ml-auto' : 'bg-white/55 border-white/70 text-[#001F3F] ml-auto') : (isTerminal ? 'bg-black/15 border-white/10 text-slate-200 mr-auto' : 'bg-white/45 border-white/60 text-slate-700 mr-auto')}\`}>{m.text}</div>)}"""
+          new_messages = """{aiChatMessages.map((m, i) => <div key={i} className={\`max-w-[88%] rounded-2xl p-3 text-[13px] sm:text-xs leading-6 whitespace-pre-wrap break-words overflow-wrap-anywhere border backdrop-blur-md transition-all duration-300 \${daliFirstMessageAnimation && i === 0 ? 'dali-first-message' : ''} \${m.role === 'user' ? (isTerminal ? 'bg-white/10 border-white/10 text-white ml-auto' : 'bg-white/35 border-white/60 text-[#001F3F] ml-auto') : (isTerminal ? 'bg-black/10 border-white/10 text-slate-200 mr-auto' : 'bg-white/30 border-white/50 text-slate-700 mr-auto')}\`}>{m.text}</div>)}"""
+          if old_messages in s:
+              s = s.replace(old_messages, new_messages)
+
+          marker = ".dali-chat-surface {"
+          css = """        .dali-first-message { animation: daliFirstMessage .75s cubic-bezier(.2,.8,.2,1) both; }
+        @keyframes daliFirstMessage {
+          0% { opacity: 0; transform: translateY(10px) scale(.96); }
+          55% { opacity: 1; transform: translateY(-2px) scale(1.01); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .dali-first-message { animation: none; }
+        }
+"""
+          if ".dali-first-message" not in s and marker in s:
+              s = s.replace(marker, css + marker)
+
+          p.write_text(s)
+          PY
+
+      - name: Commit DALI UI polish
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add components/Layout.tsx
+          git diff --cached --quiet || git commit -m "chore: DALI UI polish"
+          git push
