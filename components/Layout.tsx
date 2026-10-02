@@ -5,7 +5,7 @@ import { LanguageContext, ThemeContext } from '../App';
 import { translations, translateEntity, dynamicTranslations } from '../translations';
 import { db } from '../services/supabaseDb';
 import { runThinkingAudit } from '../services/aiService';
-import { getDaliRecentMemory, getDaliConversationMemory, saveDaliConversationMessage } from '../services/daliMemory';
+import { getDaliRecentMemory, getDaliConversationMemory, saveDaliConversationMessage, getDaliChatSessions, archiveDaliConversation } from '../services/daliMemory';
 import { searchDaliKnowledge } from '../services/daliKnowledge';
 import { getDaliCustomerAliases } from '../services/daliCustomerAliases';
 import type { DaliCustomerAlias } from '../services/daliCustomerAliases';
@@ -42,6 +42,9 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   const [aiChatInput, setAiChatInput] = useState('');
   const [aiChatMessages, setAiChatMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([]);
   const [aiChatLoading, setAiChatLoading] = useState(false);
+  const [daliArchiveOpen, setDaliArchiveOpen] = useState(false);
+  const [daliArchivedChats, setDaliArchivedChats] = useState<any[]>([]);
+  const [daliHistoryLoading, setDaliHistoryLoading] = useState(false);
   const daliSessionIdRef = useRef<string>(crypto.randomUUID());
   const [daliMemory, setDaliMemory] = useState<{ role: 'user' | 'assistant'; message: string; entities?: any; created_at?: string }[]>([]);
   const [daliButtonPosition, setDaliButtonPosition] = useState(() => {
@@ -162,35 +165,59 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
     if (daliDraggedRef.current) localStorage.setItem('nile-dali-button-position', JSON.stringify(next));
   };
 
+  // Every new DALI chat opens blank. Older chats are persistent, but are only
+  // brought back deliberately from Archive so the assistant never silently
+  // mixes an old conversation into a new question.
   const clearDaliChat = () => {
     if (aiChatLoading) return;
     setAiChatMessages([]);
     setAiChatInput('');
     setDaliMemory([]);
+    setDaliArchiveOpen(false);
     daliSessionIdRef.current = crypto.randomUUID();
   };
-  // Restore recent DALI conversation into the chat UI while keeping memory user-scoped.
-  useEffect(() => {
-    if (!isAiChatOpen || aiChatMessages.length > 0) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const stored = await getDaliRecentMemory(12);
-        if (cancelled || !stored.length) return;
-        const visible = stored
-          .filter((m: any) => m.role === 'user' || m.role === 'assistant')
-          .map((m: any) => ({ role: m.role === 'assistant' ? 'ai' : 'user', text: String(m.message || '') }))
-          .filter(m => m.text.trim());
-        if (visible.length) {
-          setAiChatMessages(visible as { role: 'user' | 'ai'; text: string }[]);
-          setDaliMemory(stored.map((m: any) => ({ role: m.role, message: m.message, entities: m.entities, created_at: m.created_at })).slice(-30));
-        }
-      } catch (memoryError) {
-        console.warn('DALI conversation restore failed:', memoryError);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [isAiChatOpen]);
+
+  const loadDaliArchive = async () => {
+    if (daliHistoryLoading) return;
+    setDaliHistoryLoading(true);
+    try {
+      const sessions = await getDaliChatSessions(true);
+      setDaliArchivedChats(sessions.filter((s: any) => s.archived));
+      setDaliArchiveOpen(true);
+    } catch (historyError) {
+      console.warn('DALI archive load failed:', historyError);
+    } finally {
+      setDaliHistoryLoading(false);
+    }
+  };
+
+  const restoreDaliArchivedChat = async (sessionId: string) => {
+    if (aiChatLoading) return;
+    try {
+      const stored = await getDaliConversationMemory(sessionId, 100);
+      const visible = stored
+        .filter((m: any) => m.role === 'user' || m.role === 'assistant')
+        .map((m: any) => ({ role: m.role === 'assistant' ? 'ai' : 'user', text: String(m.message || '') }))
+        .filter(m => m.text.trim());
+      if (!visible.length) return;
+      setAiChatMessages(visible as { role: 'user' | 'ai'; text: string }[]);
+      setDaliMemory(stored.map((m: any) => ({ role: m.role, message: m.message, entities: m.entities, created_at: m.created_at })).slice(-30));
+      daliSessionIdRef.current = sessionId;
+      setDaliArchiveOpen(false);
+    } catch (historyError) {
+      console.warn('DALI archived chat restore failed:', historyError);
+    }
+  };
+
+  const archiveCurrentDaliChat = async () => {
+    if (aiChatLoading || !daliMemory.length) return;
+    try {
+      await archiveDaliConversation(daliSessionIdRef.current, true);
+      clearDaliChat();
+    } catch (archiveError) {
+      console.warn('DALI archive save failed:', archiveError);
+    }
+  };
 
   const saveDaliMemory = async (role: 'user' | 'assistant', message: string, entities: any = {}) => {
     try {
