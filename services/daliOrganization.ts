@@ -42,7 +42,7 @@ function fallbackNodeForUser(user: Pick<User, 'role' | 'department' | 'jobTitle'
 export async function getDaliOrganizationNodes(): Promise<DaliOrgNode[]> {
   const { data, error } = await supabase
     .from('organization_structure')
-    .select('id,user_id,employee_name,employee_name_ar,job_title,job_title_ar,department,department_ar,reports_to,assigned_ports,responsibilities,responsibilities_ar,dali_access,sentinel_access,active')
+    .select('id,user_id,employee_name,employee_name_ar,job_title,job_title_ar,department,department_ar,reports_to,manager_id,assigned_ports,responsibilities,responsibilities_ar,dali_access,sentinel_access,active')
     .eq('active', true)
     .order('employee_name');
 
