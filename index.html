@@ -11,7 +11,7 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="icon" href="/nile-fleet-logo.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-primary: #ffffff;
@@ -31,7 +31,7 @@
         }
 
         body { 
-            font-family: 'Inter', 'Cairo', sans-serif; 
+            font-family: 'Inter', 'Noto Sans Arabic', 'Tajawal', 'Cairo', 'Arial', sans-serif; 
             margin: 0; 
             padding: 0; 
             transition: background-color 0.4s ease, color 0.4s ease;
@@ -57,7 +57,53 @@
             filter: brightness(1.15);
         }
         
-        [dir="rtl"] { font-family: 'Cairo', sans-serif; }
+        [dir="rtl"] {
+            font-family: 'Noto Sans Arabic', 'Tajawal', 'Cairo', 'Arial', sans-serif;
+        }
+
+        /* Arabic typography guardrails.
+           Arabic script must use the browser's native shaping/ligatures.
+           Positive letter-spacing is explicitly forbidden for Arabic because it
+           can make connected glyphs look visually disconnected. */
+        .nf-arabic-text,
+        [lang="ar"].nf-arabic-text,
+        [dir="rtl"].nf-arabic-text {
+            font-family: 'Noto Sans Arabic', 'Tajawal', 'Cairo', 'Arial', sans-serif !important;
+            font-weight: 500;
+            line-height: 1.7;
+            letter-spacing: normal !important;
+            word-spacing: normal;
+            text-transform: none !important;
+            font-kerning: normal;
+            font-variant-ligatures: common-ligatures contextual;
+            font-feature-settings: "rlig" 1, "calt" 1, "liga" 1;
+            word-break: normal;
+            overflow-wrap: anywhere;
+            unicode-bidi: plaintext;
+            text-align: start;
+        }
+
+        /* Tailwind tracking utilities are useful for Latin UI chrome but are
+           not appropriate for Arabic words. The auto-marked class above wins
+           over every tracking utility without changing English typography. */
+        .nf-arabic-text[class*="tracking-"] {
+            letter-spacing: normal !important;
+        }
+
+        input.nf-arabic-text,
+        textarea.nf-arabic-text,
+        select.nf-arabic-text {
+            text-align: right;
+            direction: rtl;
+            unicode-bidi: plaintext;
+        }
+
+        .nf-ltr-isolate {
+            direction: ltr !important;
+            unicode-bidi: isolate;
+            text-align: left;
+            letter-spacing: normal;
+        }
 
         /* THEME DEFINITIONS - Calibrated for High Visibility */
         body.theme-black {
