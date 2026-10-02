@@ -181,8 +181,15 @@ function inferIntent(input:string): IntentMatch['intent'] {
 export async function recordTerminologyUsage(matches: TerminologyMatch[]): Promise<void> {
   const ids=matches.map(m=>m.id).filter(Boolean);
   if(!ids.length) return;
-  // Non-critical usage update; never blocks DALI.
-  await supabase.rpc('increment_dali_terminology_usage', {term_ids: ids}).catch(()=>{});
+  // Non-critical usage update; never blocks DALI. Each update is constrained
+  // to the matched row and never changes the canonical value or alias.
+  await Promise.all(ids.map(id =>
+    supabase.from('dali_terminology').select('usage_count').eq('id', id).single()
+      .then(({data}) => data && supabase.from('dali_terminology')
+        .update({usage_count: Number(data.usage_count || 0) + 1})
+        .eq('id', id))
+      .catch(() => undefined)
+  ));
 }
 
 export async function learnTerminology(input: Omit<TerminologyRecord,'normalized_alias'|'id'|'usage_count'>): Promise<TerminologyRecord> {
