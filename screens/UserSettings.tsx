@@ -44,17 +44,6 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
     localStorage.setItem(daliPrefKey(name), value);
     window.dispatchEvent(new CustomEvent('dali-preferences-change'));
   };
-  type DaliVisualStyle = 'glass' | 'phantom' | 'terminal' | 'aurora' | 'blueprint';
-  type DaliBackgroundStyle = 'soft' | 'grid' | 'aurora' | 'blueprint' | 'clear';
-  type DaliThinkingStyle = 'clean' | 'technical' | 'friendly' | 'silent';
-  type DaliAnimationStyle = 'float' | 'pulse' | 'orb' | 'none';
-  const daliUserKey = user.id || user.email || 'user';
-  const [daliVisualStyle, setDaliVisualStyle] = useState<DaliVisualStyle>(() => (localStorage.getItem(`nile-dali-style-${daliUserKey}`) as DaliVisualStyle) || 'glass');
-  const [daliBackgroundStyle, setDaliBackgroundStyle] = useState<DaliBackgroundStyle>(() => (localStorage.getItem(`nile-dali-background-${daliUserKey}`) as DaliBackgroundStyle) || 'soft');
-  const [daliThinkingStyle, setDaliThinkingStyle] = useState<DaliThinkingStyle>(() => (localStorage.getItem(`nile-dali-thinking-${daliUserKey}`) as DaliThinkingStyle) || 'clean');
-  const [daliAnimationStyle, setDaliAnimationStyle] = useState<DaliAnimationStyle>(() => (localStorage.getItem(`nile-dali-animation-${daliUserKey}`) as DaliAnimationStyle) || 'float');
-  const saveDaliStyle = (name: string, value: string) => localStorage.setItem(`nile-dali-${name}-${daliUserKey}`, value);
-
   const handleCustomThemeChange = (updates: {
     bg?: string;
     text?: string;
