@@ -31,6 +31,16 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
   const [customIsDark, setCustomIsDark] = useState(() => localStorage.getItem('custom_is_dark') === 'true');
   const [customRowBg, setCustomRowBg] = useState(() => localStorage.getItem('custom_row_bg') || '#ffffff');
   const [customRailBg, setCustomRailBg] = useState(() => localStorage.getItem('custom_rail_bg') || '#ffffff');
+  type DaliVisualStyle = 'glass' | 'phantom' | 'terminal' | 'aurora' | 'blueprint';
+  type DaliBackgroundStyle = 'soft' | 'grid' | 'aurora' | 'blueprint' | 'clear';
+  type DaliThinkingStyle = 'clean' | 'technical' | 'friendly' | 'silent';
+  type DaliAnimationStyle = 'float' | 'pulse' | 'orb' | 'none';
+  const daliUserKey = user.id || user.email || 'user';
+  const [daliVisualStyle, setDaliVisualStyle] = useState<DaliVisualStyle>(() => (localStorage.getItem(`nile-dali-style-${daliUserKey}`) as DaliVisualStyle) || 'glass');
+  const [daliBackgroundStyle, setDaliBackgroundStyle] = useState<DaliBackgroundStyle>(() => (localStorage.getItem(`nile-dali-background-${daliUserKey}`) as DaliBackgroundStyle) || 'soft');
+  const [daliThinkingStyle, setDaliThinkingStyle] = useState<DaliThinkingStyle>(() => (localStorage.getItem(`nile-dali-thinking-${daliUserKey}`) as DaliThinkingStyle) || 'clean');
+  const [daliAnimationStyle, setDaliAnimationStyle] = useState<DaliAnimationStyle>(() => (localStorage.getItem(`nile-dali-animation-${daliUserKey}`) as DaliAnimationStyle) || 'float');
+  const saveDaliStyle = (name: string, value: string) => localStorage.setItem(`nile-dali-${name}-${daliUserKey}`, value);
 
   const handleCustomThemeChange = (updates: {
     bg?: string;
@@ -584,6 +594,31 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
                 <div className="px-4 py-2 rounded-xl bg-[var(--surface-2)] border border-[var(--border-primary)] text-[9px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
                   {isAr ? 'يحفظ تلقائياً' : 'AUTO SAVED'}
                 </div>
+              </div>
+            </div>
+
+            <div className="rounded-[2rem] border border-[var(--border-primary)] bg-[var(--surface-1)] p-6 lg:p-8 space-y-6">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.28em] text-[var(--accent)]">{isAr ? 'استوديو دالي' : 'DALI STUDIO'}</p>
+                <h4 className="mt-1 text-xl font-black text-[var(--text-primary)]">{isAr ? 'غيّر شكل دالي في أي وقت' : 'Change DALI whenever you want'}</h4>
+                <p className="mt-1 text-[9px] font-semibold text-[var(--text-secondary)]">{isAr ? 'الستايل والخلفية والتفكير والحركة محفوظة لكل مستخدم.' : 'Style, background, thinking and animation are saved per user.'}</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+                {([
+                  ['Style', daliVisualStyle, setDaliVisualStyle, [['glass','Glass'],['phantom','Phantom'],['terminal','Terminal'],['aurora','Aurora'],['blueprint','Blueprint']]],
+                  ['Background', daliBackgroundStyle, setDaliBackgroundStyle, [['soft','Soft'],['grid','Grid'],['aurora','Aurora'],['blueprint','Blueprint'],['clear','Clear']]],
+                  ['Thinking', daliThinkingStyle, setDaliThinkingStyle, [['clean','Clean'],['technical','Technical'],['friendly','Friendly'],['silent','Silent']]],
+                  ['Animation', daliAnimationStyle, setDaliAnimationStyle, [['float','Float'],['pulse','Pulse'],['orb','Orb'],['none','None']]]
+                ] as const).map(([label, value, setter, options]) => (
+                  <div key={label} className="rounded-2xl border border-[var(--border-primary)] bg-[var(--surface-2)] p-3">
+                    <p className="mb-2 text-[8px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{label}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {options.map(([option, name]) => (
+                        <button key={option} type="button" onClick={() => { setter(option as any); saveDaliStyle(label === 'Style' ? 'style' : label === 'Background' ? 'background' : label === 'Thinking' ? 'thinking' : 'animation', option); }} className={`rounded-lg border px-2 py-1.5 text-[8px] font-bold transition-all ${value === option ? 'border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]' : 'border-[var(--border-primary)] text-[var(--text-secondary)] hover:border-[var(--accent)]/60'}`}>{name}</button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
