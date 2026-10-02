@@ -42,6 +42,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   const [aiChatInput, setAiChatInput] = useState('');
   const [aiChatMessages, setAiChatMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([]);
   const [aiChatLoading, setAiChatLoading] = useState(false);
+  const [daliFirstMessageAnimation, setDaliFirstMessageAnimation] = useState(false);
   const [daliThinkingPhase, setDaliThinkingPhase] = useState(0);
   const [daliArchiveOpen, setDaliArchiveOpen] = useState(false);
   const [daliArchivedChats, setDaliArchivedChats] = useState<any[]>([]);
@@ -297,6 +298,10 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
     setDaliMemory(prev => [...prev, { role: 'user', message: question }].slice(-30));
     await saveDaliMemory('user', question);
     setAiChatLoading(true);
+    if (aiChatMessages.length === 0) {
+      setDaliFirstMessageAnimation(true);
+      window.setTimeout(() => setDaliFirstMessageAnimation(false), 1200);
+    }
 
     // HARD DATA-FIRST ROUTES: never send simple operational counts to the AI model.
     // This guarantees questions such as "Gensets in maintenance?" always use live stock data.
@@ -1212,7 +1217,10 @@ CONVERSATION BEHAVIOR:
 - Do not repeat the user's question unless clarification is genuinely needed.
 - React naturally: brief acknowledgements such as "Yes", "Right", "Got it", "Sure", "أيوه", "تمام", or "بالضبط" are appropriate when they fit the conversation.
 - For a follow-up, answer the follow-up first and use earlier context silently.
-- Keep the tone warm, direct, professional, and conversational. Egyptian Arabic should sound natural rather than formal/translated.
+- Keep the tone warm, friendly, direct, professional, and conversational. DALI should feel like a helpful Nile Fleet coworker, not a machine.
+- DALI may use light, harmless humor or a short playful remark when the situation is appropriate. Never joke about accidents, safety incidents, money problems, customer disputes, missing equipment, delays, or other sensitive operational issues.
+- Humor should be occasional and subtle: one small joke or playful phrase is enough. Never force a joke into every answer.
+- Use natural Egyptian Arabic when the user speaks Arabic. Friendly expressions such as "تمام", "أيوه", "ولا يهمك", "خلينا نشوف" are welcome when they fit.
 - Match the user's language and level of formality. If the user mixes Arabic and English, you may mix them naturally too.
 - Do not use canned phrases such as "According to the provided data", "I am an AI", "DALI 1.0", or "I can still..." unless the user specifically asks.
 - Do not turn every answer into a bullet list. Use normal short sentences for simple questions and structured lists only when they genuinely help.
@@ -1329,7 +1337,7 @@ I understand the relationships between gensets, bookings, containers, customers,
             : 'I could not find a direct answer in the current data. Try giving me the genset, customer, port, or booking number.';
         }
       }
-      const finalAnswer = answer || (isAr ? 'لم يصل رد من DALI 1.0.' : 'No response from DALI 1.0.');
+      const finalAnswer = answer || (isAr ? 'مش لاقي رد واضح من البيانات الحالية.' : 'I could not get a clear answer from the current data.');
       setAiChatMessages(prev => [...prev, { role: 'ai', text: finalAnswer }]);
       setDaliMemory(prev => [...prev, { role: 'assistant', message: finalAnswer }].slice(-30));
       void saveDaliMemory('assistant', finalAnswer);
@@ -1749,6 +1757,15 @@ I understand the relationships between gensets, bookings, containers, customers,
         @media (prefers-reduced-motion: reduce) {
           .dali-floating-cell { animation: none; }
         }
+        .dali-first-message { animation: daliFirstMessage .75s cubic-bezier(.2,.8,.2,1) both; }
+        @keyframes daliFirstMessage {
+          0% { opacity: 0; transform: translateY(10px) scale(.96); }
+          55% { opacity: 1; transform: translateY(-2px) scale(1.01); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .dali-first-message { animation: none; }
+        }
         .dali-chat-surface {
           background-image:
             radial-gradient(circle at 12% 8%, rgba(194,163,120,.14), transparent 32%),
@@ -1761,7 +1778,7 @@ I understand the relationships between gensets, bookings, containers, customers,
           background-color: rgba(248,250,252,.72);
         }
         .dali-chat-surface-dark {
-          background-color: rgba(4,14,24,.72);
+          background-color: rgba(4,14,24,.42);
         }
         .dali-peek-face { animation: daliPeek 3.8s ease-in-out infinite; }
         .dali-eye { animation: daliBlink 3.8s ease-in-out infinite; transform-origin: center; }
@@ -1775,7 +1792,7 @@ I understand the relationships between gensets, bookings, containers, customers,
       >
         {isAiChatOpen && (
           <div
-            className={`absolute bottom-16 right-0 w-[calc(100vw-16px)] sm:w-[min(92vw,420px)] h-[min(76vh,620px)] sm:h-[min(70vh,620px)] max-h-[calc(100dvh-96px)] rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border shadow-2xl backdrop-blur-2xl flex flex-col ${isTerminal ? 'bg-[#071522]/90 border-white/10' : 'bg-white/90 border-white/50'}`}
+            className={`absolute bottom-16 right-0 w-[calc(100vw-16px)] sm:w-[min(92vw,420px)] h-[min(76vh,620px)] sm:h-[min(70vh,620px)] max-h-[calc(100dvh-96px)] rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border shadow-2xl backdrop-blur-2xl flex flex-col ${isTerminal ? 'bg-[#071522]/55 border-white/10' : 'bg-white/45 border-white/55'}`}
             style={window.innerWidth < 640 ? {
               height: `${Math.min(620, Math.max(280, daliViewport.height - 96))}px`,
               maxHeight: `${Math.max(280, daliViewport.height - 24)}px`
@@ -1787,7 +1804,7 @@ I understand the relationships between gensets, bookings, containers, customers,
                   <span className="text-base">◉</span>
                 </div>
                 <div>
-                  <div className="flex items-center justify-between gap-2"><p className={`text-[8px] font-black tracking-[0.3em] ${isTerminal ? 'text-[#C2A378]' : 'text-slate-500'}`}>DALI AI • DEEPSEEK</p><button type="button" onClick={() => { setIsAiChatOpen(false); setActiveScreen('dali-knowledge'); }} className={`px-2 py-1 rounded-lg border text-[7px] font-black uppercase tracking-widest ${isTerminal ? 'border-white/10 text-[#C2A378] bg-white/5' : 'border-slate-200 text-[#001F3F] bg-white/50'}`}>{isAr ? 'المعرفة' : 'KNOWLEDGE'}</button></div>
+                  <div className="flex items-center justify-between gap-2"><p className={`text-[8px] font-black tracking-[0.3em] ${isTerminal ? 'text-[#C2A378]' : 'text-slate-500'}`}>DALI • NILE FLEET</p><button type="button" onClick={() => { setIsAiChatOpen(false); setActiveScreen('dali-knowledge'); }} className={`px-2 py-1 rounded-lg border text-[7px] font-black uppercase tracking-widest ${isTerminal ? 'border-white/10 text-[#C2A378] bg-white/5' : 'border-slate-200 text-[#001F3F] bg-white/50'}`}>{isAr ? 'المعرفة' : 'KNOWLEDGE'}</button></div>
                   <p className="text-sm font-black">NILE FLEET ASSISTANT</p>
                 </div>
               </div>
@@ -1854,7 +1871,7 @@ I understand the relationships between gensets, bookings, containers, customers,
                   </div>
                 </div>
               )}
-              {aiChatMessages.map((m, i) => <div key={i} className={`max-w-[88%] rounded-2xl p-3 text-[13px] sm:text-xs leading-6 whitespace-pre-wrap break-words overflow-wrap-anywhere border backdrop-blur-md ${m.role === 'user' ? (isTerminal ? 'bg-white/10 border-white/10 text-white ml-auto' : 'bg-white/55 border-white/70 text-[#001F3F] ml-auto') : (isTerminal ? 'bg-black/15 border-white/10 text-slate-200 mr-auto' : 'bg-white/45 border-white/60 text-slate-700 mr-auto')}`}>{m.text}</div>)}
+              {aiChatMessages.map((m, i) => <div key={i} className={`max-w-[88%] rounded-2xl p-3 text-[13px] sm:text-xs leading-6 whitespace-pre-wrap break-words overflow-wrap-anywhere border backdrop-blur-md transition-all duration-300 ${daliFirstMessageAnimation && i === 0 ? 'dali-first-message' : ''} ${m.role === 'user' ? (isTerminal ? 'bg-white/10 border-white/10 text-white ml-auto' : 'bg-white/35 border-white/60 text-[#001F3F] ml-auto') : (isTerminal ? 'bg-black/10 border-white/10 text-slate-200 mr-auto' : 'bg-white/30 border-white/50 text-slate-700 mr-auto')}`}>{m.text}</div>)}
               {aiChatLoading && (
                 <div className={`mr-auto w-full max-w-[92%] rounded-2xl border p-3 ${isTerminal ? 'border-[#C2A378]/15 bg-[#C2A378]/5' : 'border-slate-200 bg-white/60'}`}>
                   <div className="flex items-center gap-2 min-h-[24px]">
