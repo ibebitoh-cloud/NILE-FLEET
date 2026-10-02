@@ -81,6 +81,19 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   const themeIslandTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    const syncDaliPreferences = () => {
+      try {
+        setDaliVisualStyle((localStorage.getItem(daliPreferenceKey('style')) as DaliVisualStyle) || 'glass');
+        setDaliBackgroundStyle((localStorage.getItem(daliPreferenceKey('background')) as DaliBackgroundStyle) || 'soft');
+        setDaliThinkingStyle((localStorage.getItem(daliPreferenceKey('thinking')) as DaliThinkingStyle) || 'clean');
+        setDaliAnimationStyle((localStorage.getItem(daliPreferenceKey('animation')) as DaliAnimationStyle) || 'float');
+      } catch {}
+    };
+    window.addEventListener('dali-preferences-change', syncDaliPreferences);
+    return () => window.removeEventListener('dali-preferences-change', syncDaliPreferences);
+  }, [user.id, user.email]);
+
+  useEffect(() => {
     const handleFsChange = () => {
       const doc = document as any;
       const isCurrentlyFs = !!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement);
