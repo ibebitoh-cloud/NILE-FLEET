@@ -9,7 +9,6 @@ import { getDaliRecentMemory, saveDaliConversationMessage } from '../services/da
 import { searchDaliKnowledge } from '../services/daliKnowledge';
 import { getDaliCustomerAliases } from '../services/daliCustomerAliases';
 import { getTerminology, matchTerminology, recordTerminologyUsage, recordCorrection } from '../services/daliTerminology';
-import DaliOrb from '../components/DaliOrb';
 
 const Intelligence: React.FC = () => {
   const { lang } = useContext(LanguageContext);
@@ -682,22 +681,128 @@ ${question}`;
         </div>
 
         <aside className="xl:col-span-4">
-          <DaliOrb
-            isAr={isAr}
-            chatInput={chatInput}
-            setChatInput={setChatInput}
-            chatMessages={chatMessages}
-            chatLoading={chatLoading}
-            chatPhase={chatPhase}
-            chatPhases={chatPhases}
-            correctionInput={correctionInput}
-            setCorrectionInput={setCorrectionInput}
-            saveExplicitCorrection={saveExplicitCorrection}
-            askFleetDali={askFleetDali}
-            clearFleetChat={clearFleetChat}
-            isThinking={isThinking}
-            runStrategicAdvisor={runStrategicAdvisor}
-          />
+          <div className="sticky top-5 overflow-hidden rounded-[2rem] border border-white/10 bg-[#071522] shadow-2xl">
+            <div className="relative overflow-hidden border-b border-white/10 bg-white/[0.03] p-5">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#C2A378] to-transparent opacity-70"></div>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-[#C2A378]/30 bg-[#C2A378]/5 text-2xl text-[#C2A378]">
+                    <span className="absolute inset-1 animate-spin rounded-xl border border-[#C2A378]/20"></span>
+                    <span className="animate-pulse">◉</span>
+                  </div>
+                  <div>
+                    <p className="text-[8px] font-black uppercase tracking-[0.35em] text-[#C2A378]">DALI AI</p>
+                    <h2 className="text-sm font-black uppercase tracking-widest text-white">NILE FLEET</h2>
+                    <div className="mt-1 flex items-center gap-2 text-[7px] font-black uppercase tracking-widest text-emerald-300">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400"></span>
+                      {chatLoading ? (isAr ? 'جاري العمل' : 'WORKING') : 'ONLINE'}
+                    </div>
+                  </div>
+                </div>
+                <button type="button" onClick={clearFleetChat} disabled={chatLoading || chatMessages.length===0} className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[7px] font-black uppercase tracking-widest text-[#C2A378] transition hover:bg-white/10 disabled:opacity-30">CLEAR</button>
+              </div>
+              <div className="mt-4 grid grid-cols-3 gap-1.5">
+                {["LIVE DATABASE","COMPANY KNOWLEDGE","MEMORY"].map((x,i)=>
+                  <div key={x} className="relative overflow-hidden rounded-lg border border-white/10 bg-black/20 px-2 py-2 text-center text-[6px] font-black uppercase tracking-wider text-slate-400">
+                    <span className="mr-1 text-emerald-400">●</span>{x}
+                    {chatLoading && <span className="absolute inset-y-0 left-0 w-1/3 animate-pulse bg-white/10" style={{animationDelay: i * 180 + 'ms'}}></span>}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="dali-intel-chat min-h-[360px] max-h-[540px] overflow-y-auto p-4">
+              {chatMessages.length===0 ? (
+                <div className="flex min-h-[320px] items-center justify-center text-center">
+                  <div className="w-full">
+                    <div className="relative mx-auto flex h-24 w-24 items-center justify-center">
+                      <div className="absolute inset-0 animate-ping rounded-[2rem] border border-[#C2A378]/10"></div>
+                      <div className="absolute inset-2 animate-pulse rounded-[1.5rem] border border-[#C2A378]/20"></div>
+                      <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl border border-[#C2A378]/30 bg-[#C2A378]/5 text-3xl text-[#C2A378]">◉</div>
+                    </div>
+                    <p className="mt-4 text-[9px] font-black uppercase tracking-[0.3em] text-white">DALI AI</p>
+                    <p className="mx-auto mt-2 max-w-xs text-[9px] font-bold leading-relaxed text-slate-500">{isAr ? "اسأل دالي عن الأسطول أو الموانئ أو العمليات أو أي شيء يعرفه." : "Ask DALI about the fleet, ports, operations, or anything it knows."}</p>
+                    <div className="mx-auto mt-5 max-w-sm overflow-hidden rounded-xl border border-white/5 bg-black/20 p-3 text-left">
+                      <div className="flex items-center justify-between text-[6px] font-black uppercase tracking-widest text-slate-600">
+                        <span>{isAr ? 'حالة دالي' : 'DALI STATUS'}</span><span className="text-emerald-400">● {isAr ? 'جاهز' : 'READY'}</span>
+                      </div>
+                      <div className="mt-3 flex gap-1">
+                        {[0,1,2,3,4,5,6,7,8,9,10,11].map(i=><span key={i} className="h-1 flex-1 animate-pulse rounded-full bg-[#C2A378]/30" style={{animationDelay: i * 90 + 'ms'}}></span>)}
+                      </div>
+                    </div>
+                    <div className="mt-5 flex flex-wrap justify-center gap-2">
+                      {(isAr ? ["كم مولد في المخزون؟","أين المولد؟","ماذا تعرف؟"] : ["How many gensets are in stock?","Where is genset 123?","What does DALI know?"]).map(q=><button key={q} type="button" onClick={()=>setChatInput(q)} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-[8px] font-bold text-[#C2A378] transition hover:-translate-y-0.5 hover:bg-white/10">{q}</button>)}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {chatMessages.map((m,i)=>
+                    <div key={i} className={m.role==="user" ? "mb-4 text-right animate-in fade-in slide-in-from-bottom-2 duration-300" : "mb-4 text-left animate-in fade-in slide-in-from-bottom-2 duration-300"}>
+                      <div className="mb-1 text-[7px] font-black uppercase tracking-[0.25em] text-slate-500">{m.role==="user" ? (isAr ? "أنت" : "YOU") : "DALI"}</div>
+                      <div className={m.role==="user" ? "inline-block max-w-[94%] rounded-2xl border border-[#C2A378]/20 bg-[#C2A378]/10 px-3 py-3 text-[10px] font-bold leading-6 whitespace-pre-wrap text-white" : "inline-block max-w-[94%] rounded-2xl border border-white/10 bg-black/20 px-3 py-3 text-[10px] font-bold leading-6 whitespace-pre-wrap text-slate-200"}>{m.text}</div>
+                      {m.role==="dali" && <div className="mt-1 flex flex-wrap gap-1"><span className="rounded-full bg-emerald-400/10 px-2 py-0.5 text-[6px] font-black text-emerald-300">LIVE DATA</span><span className="rounded-full bg-white/5 px-2 py-0.5 text-[6px] font-black text-slate-500">FLEET</span></div>}
+                    </div>
+                  )}
+                  {chatLoading && (
+                    <div className="mt-2 overflow-hidden rounded-2xl border border-[#C2A378]/15 bg-[#C2A378]/5 p-4 animate-in fade-in duration-300">
+                      <div className="flex items-center gap-3">
+                        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#C2A378]/30 bg-black/20 text-[#C2A378]">
+                          <span className="absolute inset-1 animate-spin rounded-lg border border-[#C2A378]/20"></span>
+                          <span className="animate-pulse">◉</span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[7px] font-black uppercase tracking-[0.25em] text-[#C2A378]">{isAr ? 'دالي يعمل' : 'DALI IS WORKING'}</span>
+                            <span className="text-[6px] font-black text-slate-600">{chatPhase + 1}/{chatPhases.length}</span>
+                          </div>
+                          <p className="mt-1 truncate text-[9px] font-bold text-slate-300">{chatPhases[chatPhase]}</p>
+                        </div>
+                      </div>
+                      <div className="relative mt-4 h-1 overflow-hidden rounded-full bg-white/5">
+                        <div className="absolute inset-y-0 left-0 w-1/3 animate-[daliScan_1.1s_ease-in-out_infinite] rounded-full bg-[#C2A378]"></div>
+                      </div>
+                      <div className="mt-3 flex items-end gap-1">
+                        {[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].map(i=><span key={i} className="w-full animate-[daliWave_0.9s_ease-in-out_infinite] rounded-full bg-[#C2A378]/30" style={{height: 6 + ((i * 7) % 15) + 'px', animationDelay: i * 55 + 'ms'}}></span>)}
+                      </div>
+                      <div className="mt-3 grid grid-cols-3 gap-2 text-[6px] font-black uppercase tracking-widest">
+                        <span className="rounded-lg bg-black/20 px-2 py-2 text-center text-emerald-300">● {isAr ? 'بيانات' : 'DATA'}</span>
+                        <span className="rounded-lg bg-black/20 px-2 py-2 text-center text-emerald-300">● {isAr ? 'معرفة' : 'KNOWLEDGE'}</span>
+                        <span className="rounded-lg bg-black/20 px-2 py-2 text-center text-emerald-300">● {isAr ? 'ذاكرة' : 'MEMORY'}</span>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            <div className="border-t border-white/10 bg-black/10 p-3">
+              <div className="flex gap-2 rounded-2xl border border-white/10 bg-white/[0.04] p-1.5 transition focus-within:border-[#C2A378]/40">
+                <textarea value={chatInput} onChange={e=>setChatInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();askFleetDali();}}} placeholder={isAr ? "اكتب سؤالك..." : "Ask DALI anything..."} className="min-h-[46px] max-h-28 flex-1 resize-none rounded-xl border-0 bg-transparent px-3 py-2 text-[16px] leading-5 text-white outline-none placeholder:text-white/30 sm:text-xs"/>
+                <button type="button" onClick={askFleetDali} disabled={chatLoading||!chatInput.trim()} className="self-end h-11 w-11 rounded-xl border border-[#C2A378]/30 bg-[#C2A378] text-[#001F3F] transition hover:scale-105 disabled:opacity-30">➤</button>
+              </div>
+              {chatMessages.some(m => m.role === 'dali') && (
+                <div className="mt-2 flex gap-2">
+                  <input value={correctionInput} onChange={e=>setCorrectionInput(e.target.value)}
+                    placeholder={isAr ? 'صحح الفهم (مثال: Genset 125)' : 'Correct DALI (example: Genset 125)'}
+                    className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[9px] text-white outline-none" />
+                  <button type="button" onClick={saveExplicitCorrection} disabled={!correctionInput.trim()}
+                    className="rounded-xl border border-emerald-400/20 px-3 text-[7px] font-black text-emerald-300 disabled:opacity-30">
+                    {isAr ? 'تعلم' : 'LEARN'}
+                  </button>
+                </div>
+              )}
+              <div className="mt-2 flex items-center justify-between text-[7px] font-black uppercase tracking-widest text-slate-600">
+                <span>＋ Teach</span><span>📎 Attach</span><span>⌕ Search</span><span className={chatLoading ? "animate-pulse text-[#C2A378]" : ""}>{chatLoading ? (isAr ? "● معالجة" : "● PROCESSING") : "● READY"}</span>
+              </div>
+            </div>
+
+            <div className="border-t border-white/10 p-3">
+              <button type="button" onClick={runStrategicAdvisor} disabled={isThinking} className="w-full rounded-xl border border-[#C2A378]/30 bg-white/5 py-3 text-[8px] font-black uppercase tracking-[0.2em] text-[#C2A378] transition hover:bg-white/10 disabled:opacity-40">
+                {isThinking ? (isAr?"جاري التحليل...":"ANALYZING...") : (isAr?"تحليل القسم الحالي":"ANALYZE CURRENT VIEW")}
+              </button>
+            </div>
+          </div>
         </aside>
       </section>
     </div>
