@@ -17,7 +17,7 @@ const arabicSamples = [
 
 const mixedSamples = [
   'المولد G-102',
-  'Booking NF-2026-001',
+  'حجز NF-2026-001',
   'بورسعيد - Genset 125',
   'العميل شركة Nile Fleet - 1250 EGP',
 ];
