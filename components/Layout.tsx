@@ -1662,14 +1662,13 @@ I understand the relationships between gensets, bookings, containers, customers,
 
       {/* DALI — glass floating assistant */}
       <style>{`
-        @keyframes daliPeek {
-          0%, 100% { transform: translateY(16px) scale(.92); opacity: 0; }
-          18%, 72% { transform: translateY(0) scale(1); opacity: 1; }
-          86% { transform: translateY(10px) scale(.96); opacity: 0; }
+        @keyframes daliFloat {
+          0%, 100% { transform: translateY(0) scale(1); }
+          50% { transform: translateY(-7px) scale(1.02); }
         }
-        @keyframes daliBlink {
-          0%, 42%, 48%, 100% { transform: scaleY(1); }
-          45% { transform: scaleY(.08); }
+        .dali-floating-cell { animation: daliFloat 3.2s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .dali-floating-cell { animation: none; }
         }
         .dali-chat-surface {
           background-image:
@@ -1687,9 +1686,6 @@ I understand the relationships between gensets, bookings, containers, customers,
         }
         .dali-peek-face { animation: daliPeek 3.8s ease-in-out infinite; }
         .dali-eye { animation: daliBlink 3.8s ease-in-out infinite; transform-origin: center; }
-        @media (prefers-reduced-motion: reduce) {
-          .dali-peek-face, .dali-eye { animation: none; }
-        }
       `}</style>
       <div
         className="fixed z-[100] no-print"
@@ -1750,17 +1746,20 @@ I understand the relationships between gensets, bookings, containers, customers,
           onPointerMove={handleDaliPointerMove}
           onPointerUp={handleDaliPointerUp}
           onPointerCancel={handleDaliPointerUp}
-          className={`relative w-14 h-14 rounded-2xl border shadow-2xl backdrop-blur-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-grab active:cursor-grabbing touch-none ${isTerminal ? 'bg-white/[0.08] border-white/15 text-white' : 'bg-white/55 border-white/80 text-[#001F3F]'}`}
+          className={`dali-floating-cell relative w-14 h-14 rounded-2xl border shadow-2xl backdrop-blur-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-grab active:cursor-grabbing touch-none ${isTerminal ? 'bg-white/[0.08] border-white/15 text-white' : 'bg-white/55 border-white/80 text-[#001F3F]'}`}
           title={isAr ? 'مساعد دالي — اسحب لتغيير المكان' : 'DALI — drag to move'}
+          aria-label={isAr ? 'فتح دالي' : 'Open DALI'}
         >
-          <span className="dali-peek-face relative flex items-end justify-center w-10 h-9">
-            <span className={`absolute bottom-1 w-7 h-5 rounded-[45%] border-2 ${isTerminal ? 'bg-[#d9e6ef] border-white/70' : 'bg-white border-slate-300'}`}>
-              <span className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-1.5 rounded-full rotate-12 ${isTerminal ? 'bg-[#C2A378]' : 'bg-[#C2A378]'}`}></span>
-            </span>
-            <span className="relative z-10 flex gap-2 mb-3">
-              <span className={`dali-eye w-3.5 h-4 rounded-full border ${isTerminal ? 'bg-white border-white/80' : 'bg-white border-slate-300'}`}><span className={`block w-1.5 h-1.5 rounded-full mx-auto mt-1 ${isTerminal ? 'bg-[#001F3F]' : 'bg-[#001F3F]'}`}></span></span>
-              <span className={`dali-eye w-3.5 h-4 rounded-full border ${isTerminal ? 'bg-white border-white/80' : 'bg-white border-slate-300'}`}><span className={`block w-1.5 h-1.5 rounded-full mx-auto mt-1 ${isTerminal ? 'bg-[#001F3F]' : 'bg-[#001F3F]'}`}></span></span>
-            </span>
+          {user.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt={user.name || 'User'}
+              className="w-11 h-11 rounded-xl object-cover border-2 border-white/70 shadow-lg"
+              onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }}
+            />
+          ) : null}
+          <span className={`w-11 h-11 rounded-xl border-2 border-white/70 shadow-lg items-center justify-center font-black text-sm ${user.avatarUrl ? 'hidden' : 'flex'} ${isTerminal ? 'bg-[#001F3F] text-[#C2A378]' : 'bg-[#001F3F] text-white'}`}>
+            {(user.name || 'U').trim().charAt(0).toUpperCase()}
           </span>
         </button>
       </div>
