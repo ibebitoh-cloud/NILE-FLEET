@@ -45,7 +45,6 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   const [daliArchiveOpen, setDaliArchiveOpen] = useState(false);
   const [daliArchivedChats, setDaliArchivedChats] = useState<any[]>([]);
   const [daliHistoryLoading, setDaliHistoryLoading] = useState(false);
-  const [daliThinkingPhase, setDaliThinkingPhase] = useState(0);
   const daliSessionIdRef = useRef<string>(crypto.randomUUID());
   const [daliMemory, setDaliMemory] = useState<{ role: 'user' | 'assistant'; message: string; entities?: any; created_at?: string }[]>([]);
   const [daliButtonPosition, setDaliButtonPosition] = useState(() => {
@@ -114,15 +113,6 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       window.removeEventListener('invoices-tab-change', handleInvoicesTabChange);
     };
   }, []);
-
-  useEffect(() => {
-    if (!aiChatLoading) {
-      setDaliThinkingPhase(0);
-      return;
-    }
-    const timer = window.setTimeout(() => setDaliThinkingPhase(1), 2000);
-    return () => window.clearTimeout(timer);
-  }, [aiChatLoading]);
 
   useEffect(() => {
     const visualViewport = window.visualViewport;
@@ -1853,9 +1843,10 @@ I understand the relationships between gensets, bookings, containers, customers,
               {aiChatMessages.map((m, i) => <div key={i} className={`max-w-[88%] rounded-2xl p-3 text-[13px] sm:text-xs leading-6 whitespace-pre-wrap break-words overflow-wrap-anywhere border backdrop-blur-md ${m.role === 'user' ? (isTerminal ? 'bg-white/10 border-white/10 text-white ml-auto' : 'bg-white/55 border-white/70 text-[#001F3F] ml-auto') : (isTerminal ? 'bg-black/15 border-white/10 text-slate-200 mr-auto' : 'bg-white/45 border-white/60 text-slate-700 mr-auto')}`}>{m.text}</div>)}
               {aiChatLoading && (
                 <div className={`mr-auto w-full max-w-[92%] rounded-2xl border p-3 ${isTerminal ? 'border-[#C2A378]/15 bg-[#C2A378]/5' : 'border-slate-200 bg-white/60'}`}>
-                  <div className="min-h-[24px] flex items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black tracking-widest text-[#C2A378]">DALI</span>
                     <p className="text-[10px] font-bold leading-5 text-slate-400">
-                      {daliThinkingPhase === 0 ? '•••' : (isAr ? 'براجع البيانات المرتبطة…' : 'Reviewing the relevant system data…')}
+                      {isAr ? 'براجع البيانات المرتبطة…' : 'Reviewing the relevant system data…'}
                     </p>
                   </div>
                 </div>
