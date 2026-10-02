@@ -21,9 +21,11 @@ export interface DaliOrgNode {
 }
 
 const FALLBACK_ORG_NODES: DaliOrgNode[] = [
-  { id: 'ceo', name: 'Sherif Hegazy', role: 'CEO', roleAr: 'الرئيس التنفيذي', department: 'Nile Fleet', departmentAr: 'أسطول النيل', scope: ['Company leadership', 'Overall Nile Fleet operations'], scopeAr: ['إدارة الشركة', 'التشغيل العام لأسطول النيل'], daliAccess: true, sentinelAccess: true, active: true },
-  { id: 'transport-head', name: 'Samar Hegazy', role: 'Transport Department Head', roleAr: 'رئيس قسم النقل', department: 'Transport Department', departmentAr: 'قسم النقل', reportsTo: 'Sherif Hegazy', scope: ['Transport operations'], scopeAr: ['عمليات النقل'], daliAccess: true, sentinelAccess: true, active: true },
-  { id: 'genset-head', name: 'Yasmine Hegazy', role: 'Genset Department Head', roleAr: 'رئيس قسم المولدات', department: 'Genset Department', departmentAr: 'فرع المولدات', reportsTo: 'Sherif Hegazy', scope: ['Genset operations', 'Genset fleet status', 'Port coordination', 'Maintenance coordination', 'Workshop coordination'], scopeAr: ['عمليات المولدات', 'حالة أسطول المولدات', 'التنسيق بين الموانئ', 'تنسيق الصيانة', 'تنسيق الورشة'], daliAccess: true, sentinelAccess: true, active: true },
+  { id: 'ceo', name: 'Sherif Hegazy', nameAr: 'شريف حجازي', role: 'COMPANY DIRECTOR', roleAr: 'مدير الشركة', department: 'Nile Fleet', departmentAr: 'أسطول النيل', scope: ['Company leadership', 'Overall Nile Fleet operations'], scopeAr: ['إدارة الشركة', 'التشغيل العام لأسطول النيل'], daliAccess: true, sentinelAccess: true, active: true },
+  { id: 'transport-head', name: 'Samar Hegazy', nameAr: 'سمر حجازي', role: 'TRANSPORT DEPARTMENT HEAD', roleAr: 'رئيس قسم النقل', department: 'Transport', departmentAr: 'قسم النقل', reportsTo: 'Sherif Hegazy', scope: ['Transport operations'], scopeAr: ['عمليات النقل'], daliAccess: true, sentinelAccess: true, active: true },
+  { id: 'genset-head', name: 'Yasmine Hegazy', nameAr: 'ياسمين حجازي', role: 'GENSET DEPARTMENT HEAD', roleAr: 'رئيسة قسم المولدات', department: 'Genset Department', departmentAr: 'قسم المولدات', reportsTo: 'Sherif Hegazy', scope: ['Genset operations', 'Genset fleet status', 'Port coordination', 'Maintenance coordination', 'Workshop coordination'], scopeAr: ['عمليات المولدات', 'حالة أسطول المولدات', 'التنسيق بين الموانئ', 'تنسيق الصيانة', 'تنسيق الورشة'], daliAccess: true, sentinelAccess: true, active: true },
+  { id: 'genset-manager', name: 'Eslam', nameAr: 'إسلام', role: 'GENSET DEPARTMENT MANAGER', roleAr: 'مدير قسم المولدات', department: 'Genset Department', departmentAr: 'قسم المولدات', scope: ['Genset department management'], scopeAr: ['إدارة قسم المولدات'], daliAccess: true, sentinelAccess: true, active: true },
+  { id: 'maintenance-head', name: 'Nasr', nameAr: 'نصر', role: 'HEAD OF MAINTENANCE', roleAr: 'رئيس الصيانة', department: 'Maintenance / Workshop', departmentAr: 'الصيانة / الورشة', scope: ['Maintenance and workshop'], scopeAr: ['الصيانة والورشة'], daliAccess: false, sentinelAccess: false, active: true },
 ];
 
 export const isDaliAllowedRole = (user?: Pick<User, 'role'> | null) =>
@@ -77,8 +79,12 @@ export async function getDaliOrganizationNodes(): Promise<DaliOrgNode[]> {
 export async function buildDaliOrganizationContext(user: User, isArabic: boolean): Promise<string> {
   const nodes = await getDaliOrganizationNodes();
   const currentNode = (user.id && nodes.find(n => n.userId === user.id)) || fallbackNodeForUser(user);
+  const byName = new Map(nodes.map(node => [node.name, node]));
   const hierarchy = nodes.map(node => {
-    return node.name + ' — ' + (isArabic ? node.roleAr : node.role) + (node.reportsTo ? ' → reports to ' + node.reportsTo : '');
+    const displayName = isArabic ? (node.nameAr || node.name) : node.name;
+    const manager = node.reportsTo ? byName.get(node.reportsTo) : undefined;
+    const displayManager = manager ? (isArabic ? (manager.nameAr || manager.name) : manager.name) : node.reportsTo;
+    return displayName + ' — ' + (isArabic ? node.roleAr : node.role) + (displayManager ? (isArabic ? ' ← يتبع ' : ' → reports to ') + displayManager : '');
   }).join('\n');
 
   const userLines = [
