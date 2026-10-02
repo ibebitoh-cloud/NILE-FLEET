@@ -181,8 +181,15 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   // Every new DALI chat opens blank. Older chats are persistent, but are only
   // brought back deliberately from Archive so the assistant never silently
   // mixes an old conversation into a new question.
-  const clearDaliChat = () => {
+  const clearDaliChat = async () => {
     if (aiChatLoading) return;
+    // Starting a new chat archives the current session first. This keeps the
+    // visible conversation blank AND prevents old context from leaking into
+    // the next DALI question.
+    if (daliMemory.length) {
+      try { await archiveDaliConversation(daliSessionIdRef.current, true); }
+      catch (archiveError) { console.warn('DALI auto-archive failed:', archiveError); }
+    }
     setAiChatMessages([]);
     setAiChatInput('');
     setDaliMemory([]);
@@ -226,7 +233,11 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
     if (aiChatLoading || !daliMemory.length) return;
     try {
       await archiveDaliConversation(daliSessionIdRef.current, true);
-      clearDaliChat();
+      setAiChatMessages([]);
+      setAiChatInput('');
+      setDaliMemory([]);
+      setDaliArchiveOpen(false);
+      daliSessionIdRef.current = crypto.randomUUID();
     } catch (archiveError) {
       console.warn('DALI archive save failed:', archiveError);
     }
