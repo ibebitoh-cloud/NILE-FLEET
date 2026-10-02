@@ -193,13 +193,17 @@ export async function recordTerminologyUsage(matches: TerminologyMatch[]): Promi
   if(!ids.length) return;
   // Non-critical usage update; never blocks DALI. Each update is constrained
   // to the matched row and never changes the canonical value or alias.
-  await Promise.all(ids.map(id =>
-    supabase.from('dali_terminology').select('usage_count').eq('id', id).single()
-      .then(({data}) => data && supabase.from('dali_terminology')
-        .update({usage_count: Number(data.usage_count || 0) + 1})
-        .eq('id', id))
-      .catch(() => undefined)
-  ));
+  await Promise.all(ids.map(async id => {
+    try {
+      const { data } = await supabase.from('dali_terminology').select('usage_count').eq('id', id).single();
+      if (!data) return;
+      await supabase.from('dali_terminology')
+        .update({ usage_count: Number(data.usage_count || 0) + 1 })
+        .eq('id', id);
+    } catch {
+      // Usage telemetry is non-critical and must never block DALI.
+    }
+  }));
 }
 
 export async function learnTerminology(input: Omit<TerminologyRecord,'normalized_alias'|'id'|'usage_count'>): Promise<TerminologyRecord> {
