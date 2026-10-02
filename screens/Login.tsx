@@ -412,7 +412,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBackToHome }) => {
                         <p className="relative z-10 text-[#C2A378] text-[9px] sm:text-[10px] font-black tracking-[0.28em] leading-none">{isAr ? 'أسطول النيل' : 'NILE FLEET'}</p>
                         <h3 className={`relative z-10 mt-3 text-white text-[2rem] sm:text-4xl font-black tracking-[-0.045em] leading-tight ${isAr ? 'not-italic' : 'uppercase italic'}`}>{isAr ? <>مرحباً <span className="text-[#C2A378]">بعودتكم</span></> : <>WELCOME <span className="inline-block text-[#C2A378]">BACK</span></>}</h3>
                         <div className="relative z-10 mt-4 inline-flex items-center gap-2 text-xl sm:text-2xl font-black tracking-[0.18em] text-white">
-                          <span>B</span><span>E</span><span>B</span><span>I</span><span>T</span><span>O</span>
+                          <span>{isAr ? 'بيبِيتو' : 'B'}</span>{!isAr && <><span>E</span><span>B</span><span>I</span><span>T</span><span>O</span></>}
                         </div>
                         <p className="relative z-10 max-w-xs mx-auto mt-4 text-slate-300 text-[10px] sm:text-xs font-bold leading-relaxed tracking-wide">{welcomeQuote}</p>
                       </div>
