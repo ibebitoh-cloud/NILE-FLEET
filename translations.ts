@@ -137,6 +137,7 @@ export const entityTranslations: Record<string, string> = {
   "Maintenance Performance & Log": "أداء وسجل الصيانة",
   "Service execution and latest records": "تنفيذ الصيانة وآخر السجلات",
   "Maintenance": "الصيانة",
+  "Done": "تم",
   "Rate": "السعر",
   "No maintenance logs recorded": "لا توجد سجلات صيانة",
   "Live Load": "الحمل المباشر",
