@@ -1638,14 +1638,15 @@ I understand the relationships between gensets, bookings, containers, customers,
 
       {/* MOBILE MENU OVERLAY (More menu) */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-[100] bg-[#001224]/95 backdrop-blur-2xl animate-in fade-in duration-300 p-4 flex flex-col no-print">
-          <div className="flex justify-between items-center mb-6">
+        <div className="lg:hidden fixed inset-0 z-[100] bg-black/45 backdrop-blur-sm no-print">
+          <div className={`absolute top-0 bottom-0 ${isAr ? 'right-0' : 'left-0'} w-[min(88vw,380px)] max-w-full bg-[#001224] shadow-2xl border-white/10 ${isAr ? 'border-l' : 'border-r'} p-4 flex flex-col pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]`}>
+          <div className="flex justify-between items-center mb-4">
             <h1 className="flex items-center gap-2 text-xl font-black text-white tracking-widest uppercase italic"><img src="/nile-fleet-logo.png" className="h-10 w-10 object-contain" alt="Nile Fleet" />NILE <span className="text-[#C2A378]">FLEET</span></h1>
-            <button onClick={() => setIsMobileMenuOpen(false)} className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center text-lg">✕</button>
+            <button onClick={() => setIsMobileMenuOpen(false)} className="h-11 w-11 rounded-xl bg-white/10 text-white flex items-center justify-center text-lg border border-white/10">✕</button>
           </div>
           
           {/* User Info Card in Menu */}
-          <div className="mb-6 p-4 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-4">
+          <div className="mb-4 p-3 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-3">
              <div className="w-12 h-12 rounded-xl bg-[#C2A378] overflow-hidden">
                 {user.avatarUrl && <img src={user.avatarUrl} alt="profile" className="w-full h-full object-cover" />}
              </div>
@@ -1668,7 +1669,7 @@ I understand the relationships between gensets, bookings, containers, customers,
                       setIsMobileMenuOpen(false);
                     }
                   }} 
-                  className={`w-full flex items-center justify-between p-4 rounded-xl transition-all ${activeScreen === item.id ? 'bg-[#C2A378] text-[#001F3F]' : 'bg-white/5 text-[#C2A378aa]'}`}
+                  className={`w-full min-h-12 flex items-center justify-between px-3 py-2.5 rounded-xl transition-all ${activeScreen === item.id ? 'bg-[#C2A378] text-[#001F3F]' : 'bg-white/5 text-[#C2A378aa]'}`}
                 >
                   <div className="flex items-center gap-4">
                     <span className="text-lg">{(item as any).icon}</span>
@@ -1901,10 +1902,18 @@ I understand the relationships between gensets, bookings, containers, customers,
 
       {/* MAIN CONTENT */}
       <main ref={mainContentRef} onScroll={() => screenScrollPositions.current.set(activeScreen, mainContentRef.current?.scrollTop || 0)} className={`flex-1 overflow-y-auto custom-scrollbar relative flex flex-col transition-colors duration-500 ${forceBanners.length > 0 ? 'mt-8' : ''}`} style={{ backgroundColor: 'var(--bg-primary)' }}>
-        <header className="h-14 border-b flex items-center px-4 lg:px-6 justify-between shadow-sm backdrop-blur-md transition-colors no-print" style={{ backgroundColor: 'var(--rail-bg)', borderBottomColor: 'var(--border-primary)' }}>
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-5 bg-[#C2A378] rounded-full shadow-[0_0_8px_#C2A378]"></div>
-            <h2 className={`text-xs lg:text-sm font-black uppercase tracking-tight italic ${textPrimary}`}>{activeScreen.replace('-', ' ')}</h2>
+        <header className="min-h-14 border-b flex items-center px-3 sm:px-4 lg:px-6 py-2 justify-between gap-2 shadow-sm backdrop-blur-md transition-colors no-print" style={{ backgroundColor: 'var(--rail-bg)', borderBottomColor: 'var(--border-primary)' }}>
+          <div className="flex items-center gap-2 min-w-0">
+            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-11 w-11 shrink-0 rounded-xl border flex items-center justify-center text-lg" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }} aria-label={isAr ? 'فتح القائمة' : 'Open navigation'}>☰</button>
+            <div className="hidden sm:flex items-center gap-2 shrink-0">
+              <img src="/nile-fleet-logo.png" className="h-8 w-8 object-contain" alt="Nile Fleet" />
+              <span className={`hidden md:inline text-sm font-black uppercase tracking-widest italic ${textPrimary}`}>NILE <span className="text-[#C2A378]">FLEET</span></span>
+            </div>
+            <div className="hidden sm:block w-px h-6 bg-slate-300/40 shrink-0"></div>
+            <div className="min-w-0 flex items-center gap-2">
+              <div className="w-1 h-5 bg-[#C2A378] rounded-full shrink-0"></div>
+              <h2 className={`text-[11px] sm:text-xs lg:text-sm font-black uppercase tracking-tight italic truncate ${textPrimary}`}>{activeScreen.replace('-', ' ')}</h2>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {isCreator && <span className="hidden md:inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-[#C2A37866] bg-[#C2A37815] text-[#C2A378] text-[8px] font-black uppercase tracking-widest" title="System Creator">👑 {isAr ? 'منشئ النظام' : 'CREATOR'}</span>}
@@ -1923,29 +1932,26 @@ I understand the relationships between gensets, bookings, containers, customers,
             >
               <span className={`block text-base leading-none transition-all duration-500 ${isDark ? 'rotate-0' : 'rotate-180'}`}>{isDark ? '☀️' : '🌙'}</span>
             </button>
-            <button onClick={() => setActiveScreen('notifications')} className={`p-1.5 rounded-lg border relative transition-all ${isTerminal ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-slate-200 bg-white'}`}>
+            <button onClick={() => setActiveScreen('notifications')} className={`min-h-[44px] min-w-[44px] flex items-center justify-center p-1.5 rounded-lg border relative transition-all ${isTerminal ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-slate-200 bg-white'}`}>
                <span className="text-base">🔔</span>
                {notifications.length > 0 && <span className="absolute top-0 right-0 w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse"></span>}
             </button>
             <button 
               onClick={toggleFullscreen} 
-              className={`p-1.5 rounded-lg border transition-all ${(isFullscreen || isPseudoFullscreen) ? 'border-rose-500/50 bg-rose-500/10 text-rose-500' : (isTerminal ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-slate-200 bg-white')}`}
+              className={`hidden sm:inline-flex min-h-[44px] min-w-[44px] items-center justify-center p-1.5 rounded-lg border transition-all ${(isFullscreen || isPseudoFullscreen) ? 'border-rose-500/50 bg-rose-500/10 text-rose-500' : (isTerminal ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-slate-200 bg-white')}`}
               title={(isFullscreen || isPseudoFullscreen) ? (isAr ? 'خروج من ملء الشاشة' : 'Exit Fullscreen') : (isAr ? 'ملء الشاشة' : 'Fullscreen')}
             >
               {(isFullscreen || isPseudoFullscreen) ? '✕' : '⛶'}
             </button>
-            <button onClick={() => setLang(lang === 'en' ? 'ar' : 'en')} className={`px-2.5 py-1 rounded-lg border flex items-center gap-1 transition-all ${isTerminal ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-slate-200 bg-white'}`}><span className="font-black text-[9px] uppercase">{lang === 'en' ? 'AR' : 'EN'}</span></button>
+            <button onClick={() => setLang(lang === 'en' ? 'ar' : 'en')} className={`min-h-[44px] min-w-[44px] px-2.5 py-1 rounded-lg border flex items-center justify-center gap-1 transition-all ${isTerminal ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-slate-200 bg-white'}`}><span className="font-black text-[9px] uppercase">{lang === 'en' ? 'AR' : 'EN'}</span></button>
             {!isHome && activeScreen !== 'no-access' && (
               <button 
                 onClick={() => setActiveScreen(dashboardId)} 
-                className="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center gap-1 border border-rose-500"              >
+                className="hidden sm:flex bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center gap-1 border border-rose-500"              >
                 <span>{isAr ? 'إغلاق' : 'CLOSE'}</span>
                 <span className="text-xs">✕</span>
               </button>
             )}
-            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-1.5 rounded-lg border border-slate-200 bg-white">
-              <span className="text-lg">☰</span>
-            </button>
           </div>
           {themeIslandOpen && (
             <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[60] pointer-events-none">
