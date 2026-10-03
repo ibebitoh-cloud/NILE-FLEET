@@ -19,7 +19,7 @@ const Analytics: React.FC = () => {
   const invoices = db.getInvoices();
   const maintenanceLogs = db.getMaintenanceLogs();
 
-  const COLORS = ['#001F3F', '#C2A378', '#3b82f6', '#10b981', '#ef4444', '#8b5cf6'];
+  const COLORS = ['#3a3833', '#C2A378', '#3b82f6', '#10b981', '#ef4444', '#8b5cf6'];
 
   const metrics = useMemo(() => {
     const totalRevenue = invoices.reduce((sum, inv) => sum + Number(inv.amount || 0), 0);
@@ -74,7 +74,7 @@ const Analytics: React.FC = () => {
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 text-start transition-colors duration-300">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h2 className="text-3xl font-black text-[#001F3F] uppercase tracking-tighter">
+          <h2 className="text-3xl font-black text-[#3a3833] uppercase tracking-tighter">
             {lang === 'ar' ? 'ذكاء الأسطول التشغيلي' : 'Fleet Intelligence Dashboard'}
           </h2>
           <p className="text-xs text-slate-400 font-bold uppercase tracking-[0.2em] mt-1">
@@ -104,7 +104,7 @@ const Analytics: React.FC = () => {
         <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group">
           <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-slate-50 group-hover:bg-slate-100 rounded-full transition-colors duration-500"></div>
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 relative z-10">{t.revenue}</p>
-          <h4 className="text-3xl font-black text-[#001F3F] relative z-10">EGP {metrics.totalRevenue.toLocaleString()}</h4>
+          <h4 className="text-3xl font-black text-[#3a3833] relative z-10">EGP {metrics.totalRevenue.toLocaleString()}</h4>
           <p className="text-[8px] font-bold text-slate-400 mt-2">{lang === 'ar' ? 'حسب الفواتير المسجلة' : 'Based on recorded invoices'}</p>
         </div>
 
@@ -126,7 +126,7 @@ const Analytics: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col">
           <div className="flex justify-between items-center mb-8">
-            <h3 className="font-black text-[#001F3F] uppercase tracking-tight text-xl flex items-center gap-3">
+            <h3 className="font-black text-[#3a3833] uppercase tracking-tight text-xl flex items-center gap-3">
               <span className="p-2 bg-blue-50 text-blue-600 rounded-lg">📊</span>
               {lang === 'ar' ? 'تحليل أداء الوحدات' : 'Detailed Unit Performance'}
             </h3>
@@ -150,7 +150,7 @@ const Analytics: React.FC = () => {
                   <tr key={idx} className="group hover:bg-slate-50/50 transition-all duration-200">
                     <td className="py-4 px-2">
                       <div className="flex flex-col">
-                        <span className="font-black text-[#001F3F] text-xs">{data.unit}</span>
+                        <span className="font-black text-[#3a3833] text-xs">{data.unit}</span>
                         <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">SN: {data.unit.split('-').pop()}</span>
                       </div>
                     </td>
@@ -172,7 +172,7 @@ const Analytics: React.FC = () => {
         </div>
 
         <div className="flex flex-col gap-8">
-          <div className="bg-[#001F3F] p-8 rounded-[2.5rem] shadow-xl text-white relative overflow-hidden flex flex-col justify-between h-full">
+          <div className="bg-[#3a3833] p-8 rounded-[2.5rem] shadow-xl text-white relative overflow-hidden flex flex-col justify-between h-full">
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
             <div>
               <div className="flex items-center gap-2 mb-8">
@@ -208,7 +208,7 @@ const Analytics: React.FC = () => {
           </div>
 
           <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex-1">
-             <h3 className="font-black text-[#001F3F] uppercase tracking-tight mb-4 text-xs">{lang === 'ar' ? 'توزيع الأسطول حسب الميناء' : 'Fleet Distribution by Port'}</h3>
+             <h3 className="font-black text-[#3a3833] uppercase tracking-tight mb-4 text-xs">{lang === 'ar' ? 'توزيع الأسطول حسب الميناء' : 'Fleet Distribution by Port'}</h3>
              <div className="h-48">
                <ResponsiveContainer width="100%" height="100%">
                  <PieChart>
@@ -231,7 +231,7 @@ const Analytics: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-          <h3 className="font-black text-[#001F3F] uppercase tracking-tight mb-8">{lang === 'ar' ? 'تحليل تدفق الإيرادات' : 'Revenue Stream Analysis'}</h3>
+          <h3 className="font-black text-[#3a3833] uppercase tracking-tight mb-8">{lang === 'ar' ? 'تحليل تدفق الإيرادات' : 'Revenue Stream Analysis'}</h3>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={rentalTrends}>
@@ -253,7 +253,7 @@ const Analytics: React.FC = () => {
 
         <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
            <div className="flex justify-between items-center mb-8">
-              <h3 className="font-black text-[#001F3F] uppercase tracking-tight">{lang === 'ar' ? 'اتجاهات الطلب' : 'Deployment Volume Trends'}</h3>
+              <h3 className="font-black text-[#3a3833] uppercase tracking-tight">{lang === 'ar' ? 'اتجاهات الطلب' : 'Deployment Volume Trends'}</h3>
            </div>
            <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -262,7 +262,7 @@ const Analytics: React.FC = () => {
                   <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }} />
                   <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '16px', border: 'none', backgroundColor: '#fff', color: '#000' }} />
-                  <Bar dataKey="volume" fill="#001F3F" radius={[4, 4, 0, 0]} barSize={24} />
+                  <Bar dataKey="volume" fill="#3a3833" radius={[4, 4, 0, 0]} barSize={24} />
                </BarChart>
             </ResponsiveContainer>
            </div>
