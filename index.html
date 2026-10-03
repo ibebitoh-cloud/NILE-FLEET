@@ -170,19 +170,19 @@
 
         /* NILE FLEET — TWO ENVIRONMENTS ONLY: DAY / NIGHT */
         body.theme-day {
-            --bg-primary: #eef2f6;
-            --text-primary: #071a2b;
-            --text-secondary: #334e68;
-            --border-primary: #c7d2de;
-            --card-bg: #ffffff;
-            --accent: #a87932;
+            --bg-primary: #f3f1ec;
+            --text-primary: #26231f;
+            --text-secondary: #5f5a52;
+            --border-primary: #d8d2c8;
+            --card-bg: #faf9f6;
+            --accent: #9b7438;
             --input-bg: #ffffff;
-            --rail-bg: #e5ebf0;
-            --row-bg: #ffffff;
-            --surface-0: #eef2f6;
-            --surface-1: #ffffff;
-            --surface-2: #f7f9fb;
-            --surface-3: #f1f4f7;
+            --rail-bg: #e9e5de;
+            --row-bg: #faf9f6;
+            --surface-0: #f3f1ec;
+            --surface-1: #faf9f6;
+            --surface-2: #f1eee8;
+            --surface-3: #e8e3da;
         }
 
         body.theme-night {
@@ -230,8 +230,8 @@
             color: var(--text-primary) !important;
         }
 
-        body.theme-day .bg-slate-900 { background-color: #102a43 !important; }
-        body.theme-day .bg-slate-800 { background-color: #183b56 !important; }
+        body.theme-day .bg-slate-900 { background-color: #3a3833 !important; }
+        body.theme-day .bg-slate-800 { background-color: #4b4841 !important; }
         body.theme-night .bg-slate-900 { background-color: var(--surface-1) !important; }
         body.theme-night .bg-slate-800 { background-color: var(--surface-2) !important; }
 
@@ -244,7 +244,7 @@
         body.theme-day .text-gray-700,
         body.theme-day .text-neutral-900,
         body.theme-day .text-neutral-800,
-        body.theme-day .text-neutral-700 { color: #071a2b !important; }
+        body.theme-day .text-neutral-700 { color: #26231f !important; }
 
         body.theme-day .text-slate-600,
         body.theme-day .text-slate-500,
@@ -254,7 +254,7 @@
         body.theme-day .text-gray-400,
         body.theme-day .text-neutral-600,
         body.theme-day .text-neutral-500,
-        body.theme-day .text-neutral-400 { color: #334e68 !important; }
+        body.theme-day .text-neutral-400 { color: #5f5a52 !important; }
 
         body.theme-night .text-slate-900,
         body.theme-night .text-slate-800,
@@ -294,8 +294,8 @@
         body.theme-day select,
         body.theme-day textarea {
             background-color: #ffffff !important;
-            color: #071a2b !important;
-            border-color: #c7d2de !important;
+            color: #26231f !important;
+            border-color: #d8d2c8 !important;
             color-scheme: light;
         }
 
@@ -309,7 +309,7 @@
         }
 
         body.theme-day input::placeholder,
-        body.theme-day textarea::placeholder { color: #526b80 !important; opacity: 1 !important; }
+        body.theme-day textarea::placeholder { color: #6d675e !important; opacity: 1 !important; }
 
         body.theme-night input::placeholder,
         body.theme-night textarea::placeholder { color: #aebdcc !important; opacity: 1 !important; }
@@ -327,11 +327,11 @@
             color: var(--text-primary) !important;
             border-bottom-color: var(--border-primary) !important;
         }
-        body.theme-day table tbody tr:nth-child(odd):not(.selected-row) td { background: #ffffff !important; }
-        body.theme-day table tbody tr:nth-child(even):not(.selected-row) td { background: #f4f7fa !important; }
+        body.theme-day table tbody tr:nth-child(odd):not(.selected-row) td { background: #faf9f6 !important; }
+        body.theme-day table tbody tr:nth-child(even):not(.selected-row) td { background: #f1eee8 !important; }
         body.theme-night table tbody tr:nth-child(odd):not(.selected-row) td { background: #0d1928 !important; }
         body.theme-night table tbody tr:nth-child(even):not(.selected-row) td { background: #111f30 !important; }
-        body.theme-day table tbody tr:hover:not(.selected-row) td { background: #e9eef3 !important; }
+        body.theme-day table tbody tr:hover:not(.selected-row) td { background: #e4dfd6 !important; }
         body.theme-night table tbody tr:hover:not(.selected-row) td { background: #17283a !important; }
 
         /* Labels and controls */
@@ -340,9 +340,9 @@
         body.theme-day input:disabled,
         body.theme-day select:disabled,
         body.theme-day textarea:disabled {
-            color: #526b80 !important;
+            color: #6d675e !important;
             background-color: #e7edf2 !important;
-            border-color: #c7d2de !important;
+            border-color: #d8d2c8 !important;
         }
         body.theme-night button:disabled,
         body.theme-night input:disabled,
@@ -393,7 +393,7 @@
         body.theme-night .bg-blue-500,
         body.theme-night .bg-blue-600 {
             background-color: var(--accent) !important;
-            color: #071a2b !important;
+            color: #26231f !important;
         }
         body.theme-day .text-blue-500,
         body.theme-day .text-blue-600,
@@ -409,13 +409,10 @@
         body.theme-night .bg-cyan-500,
         body.theme-night .bg-cyan-600 {
             background-color: var(--accent) !important;
-            color: #071a2b !important;
+            color: #26231f !important;
         }
 
-        /* Never force white foreground on structural elements in Day. */
-        body.theme-day .text-white:not([class*="bg-green-"]):not([class*="bg-red-"]):not([class*="bg-amber-"]):not([class*="bg-yellow-"]):not([class*="bg-blue-"]) {
-            color: #071a2b !important;
-        }
+        /* Preserve intentional white text; Day surfaces define their own readable foreground. */
 
         /* Arabic shaping — connected letters must remain naturally joined. */
         [dir="rtl"] *,
