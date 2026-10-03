@@ -2011,44 +2011,34 @@ I’ll search with you. 🤖`;
               {aiChatMessages.length === 0 && !daliArchiveOpen && (
                 <div className="min-h-full flex items-center justify-center text-center px-1">
                   <div className="w-full max-w-[330px]">
-                    <div className="relative mx-auto mb-4 h-40 w-40 sm:h-44 sm:w-44">
-                      <div className="absolute inset-0 rounded-full border border-[#C2A378]/15 animate-[daliOrbRing_3.2s_linear_infinite]"></div>
-                      <div className="absolute inset-3 rounded-full border border-[#C2A378]/25"></div>
-                      <div className="dali-orb-idle absolute inset-3 rounded-full border border-[#C2A378]/45 bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,.30),rgba(194,163,120,.14)_35%,rgba(0,31,63,.62)_75%)] overflow-hidden">
-                        <div className="dali-orb-ring absolute inset-[-35%] rounded-full border border-[#C2A378]/30"></div>
-                        <div className="dali-orb-core absolute inset-[31%] rounded-full bg-[#C2A378]/55 blur-[5px]"></div>
+                    <div className="relative mx-auto mb-7 h-44 w-48 sm:h-52 sm:w-56" aria-hidden="true">
+                      <div className="absolute inset-[12%] rounded-[48%] bg-cyan-300/20 blur-2xl animate-pulse"></div>
+                      <div className="dali-blob relative mx-auto h-full w-full overflow-hidden border border-white/35 bg-[radial-gradient(ellipse_at_35%_28%,rgba(255,255,255,.62),rgba(165,243,252,.32)_28%,rgba(99,102,241,.24)_58%,rgba(2,6,23,.62)_100%)] shadow-[0_20px_70px_rgba(56,189,248,.20)] backdrop-blur-2xl">
+                        <div className="absolute -inset-1/2 animate-spin bg-[conic-gradient(from_30deg,rgba(255,255,255,.55),rgba(125,211,252,.22),rgba(196,181,253,.42),rgba(14,165,233,.16),rgba(255,255,255,.55))] opacity-70 mix-blend-screen" style={{animationDuration:"5.5s"}}></div>
+                        <div className="absolute inset-[18%] rounded-[45%] bg-[radial-gradient(ellipse_at_35%_30%,rgba(255,255,255,.55),rgba(125,211,252,.22)_38%,transparent_72%)] blur-md"></div>
+                        <div className="absolute left-[20%] top-[18%] h-4 w-4 rounded-full bg-white/70 blur-[2px]"></div>
+                        <div className="absolute right-[18%] bottom-[22%] h-2.5 w-2.5 rounded-full bg-cyan-100/60 blur-[1px]"></div>
                       </div>
                     </div>
 
-                    <p className={`text-[9px] font-black tracking-[0.34em] uppercase ${isTerminal ? 'text-[#C2A378]' : 'text-[#001F3F]/60'}`}>{isAr ? 'دالي' : 'DALI'}</p>
-                    <p className={`mt-2 text-lg sm:text-xl font-black leading-7 ${isTerminal ? 'text-white' : 'text-[#001F3F]'}`}>
+                    <p className={`text-[9px] font-black tracking-[0.34em] uppercase ${isTerminal ? "text-[#C2A378]" : "text-[#001F3F]/60"}`}>
                       {(() => {
                         const hour = new Date().getHours();
                         const greeting = hour < 12 ? (isAr ? 'صباح الخير' : 'Good morning') : hour < 18 ? (isAr ? 'مساء الخير' : 'Good afternoon') : (isAr ? 'مساء الخير' : 'Good evening');
-                        return `${greeting}, ${user.name || 'there'} 👋`;
+                        return greeting;
                       })()}
                     </p>
-                    <p className={`mt-1 text-[11px] sm:text-xs font-bold leading-6 ${isTerminal ? 'text-white/60' : 'text-[#001F3F]/65'}`}>
-                      {isAr ? 'أنا دالي. إيه اللي نشتغل عليه؟' : "I'm DALI. What should we work on?"}
+                    <p className={`mt-2 text-lg sm:text-xl font-black leading-7 ${isTerminal ? "text-white" : "text-[#001F3F]"}`}>
+                      {user.name || (isAr ? 'مستخدم' : 'there')}
                     </p>
 
                     <div className="mt-5">
-                      <p className={`mb-2.5 text-[7px] font-black uppercase tracking-[0.3em] ${isTerminal ? 'text-[#C2A378]' : 'text-[#001F3F]/45'}`}>{isAr ? 'أسئلة مقترحة' : 'SUGGESTED QUESTIONS'}</p>
+                      <p className={`mb-2.5 text-[7px] font-black uppercase tracking-[0.3em] ${isTerminal ? "text-[#C2A378]" : "text-[#001F3F]/45"}`}>{isAr ? "ابدأ من هنا" : "START HERE"}</p>
                       <div className="space-y-2">
                         {(() => {
-                          const sets = isAr
-                            ? [
-                                ['مين دالي؟','كم مولد يعمل اليوم؟','اعرض حجوزات اليوم','أين المولد 125؟'],
-                                ['⚠️ في تعارض في البيانات؟','📍 المولدات موجودة فين؟','📦 إيه الحجوزات اللي محتاجة متابعة؟','🔎 دورلي على مولد'],
-                                ['⚙️ إيه العمليات اللي شغالة؟','📊 وريني حالة المولدات','💰 افتح Price Matrix','🧠 دالي يقدر يعمل إيه ليا؟']
-                              ]
-                            : [
-                                ['Who is DALI?','How many gensets are operating today?','Show today’s bookings','Where is genset 125?'],
-                                ['⚠️ Are there any data conflicts?','📍 Where are the gensets?','📦 Which bookings need follow-up?','🔎 Find a genset'],
-                                ['⚙️ What operations are running?','📊 Show me genset status','💰 Open Price Matrix','🧠 What can DALI do for me?']
-                              ];
-                          return sets[daliSuggestedSet].map(prompt => (
-                            <button key={prompt} type="button" onClick={() => setAiChatInput(prompt.replace(/^[^\\p{L}\\p{N}]+/u, '').trim())} className={`w-full rounded-xl border px-3 py-2.5 text-[9px] font-bold transition-all active:scale-[.98] ${isTerminal ? 'border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/[0.07]' : 'border-white/50 bg-white/30 text-[#001F3F] hover:bg-white/50'}`}>{prompt}</button>
+                          const prompts = !daliIntroCompleted ? (isAr ? ['مين دالي؟'] : ['Who is DALI?']) : (isAr ? [['كم مولد يعمل اليوم؟','اعرض حجوزات اليوم','أين المولد 125؟'],['⚠️ في تعارض في البيانات؟','📍 المولدات موجودة فين؟','📦 إيه الحجوزات اللي محتاجة متابعة؟']][daliSuggestedSet] : [['How many gensets are operating today?','Show today’s bookings','Where is genset 125?'],['⚠️ Are there any data conflicts?','📍 Where are the gensets?','📦 Which bookings need follow-up?']][daliSuggestedSet]);
+                          return prompts.map(prompt => (
+                            <button key={prompt} type="button" onClick={() => setAiChatInput(prompt.replace(/^[^\p{L}\p{N}]+/u, '').trim())} className={`w-full rounded-xl border px-3 py-2.5 text-[9px] font-bold transition-all active:scale-[.98] ${isTerminal ? 'border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/[0.07]' : 'border-white/50 bg-white/30 text-[#001F3F] hover:bg-white/50'}`}>{prompt}</button>
                           ));
                         })()}
                       </div>
@@ -2056,7 +2046,6 @@ I’ll search with you. 🤖`;
                   </div>
                 </div>
               )}
-
               {aiChatMessages.length > 0 && (
                 <div className="space-y-3">
                   {aiChatMessages.map((m, i) => (
