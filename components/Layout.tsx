@@ -162,7 +162,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   useEffect(() => {
     if (aiChatMessages.length > 0 || daliArchiveOpen) return;
     const timer = window.setInterval(() => {
-      setDaliSuggestedSet(prev => (prev + 1) % 3);
+      setDaliSuggestedSet(prev => (prev + 1) % 2);
     }, 24000);
     return () => window.clearInterval(timer);
   }, [aiChatMessages.length, daliArchiveOpen]);
