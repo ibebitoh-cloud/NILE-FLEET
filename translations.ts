@@ -1315,7 +1315,7 @@ const CORE_AR_FALLBACKS: Record<string, string> = {
   'ADD': 'إضافة', 'REMOVE': 'إزالة', 'DELETE': 'حذف', 'UPDATE': 'تحديث', 'REFRESH': 'تحديث', 'FILTER': 'تصفية',
   'CLEAR': 'مسح', 'APPLY': 'تطبيق', 'SUBMIT': 'إرسال', 'CONFIRM': 'تأكيد', 'REJECT': 'رفض', 'APPROVE': 'اعتماد',
   'SEARCH': 'بحث', 'EXPORT': 'تصدير', 'IMPORT': 'استيراد', 'DOWNLOAD': 'تنزيل', 'UPLOAD': 'رفع', 'PRINT': 'طباعة',
-  'SAVE': 'حفظ', 'EDIT': 'تعديل', 'CANCEL': 'إلغاء', 'DELETE': 'حذف', 'DETAILS': 'التفاصيل', 'TOTAL': 'الإجمالي',
+  'SAVE': 'حفظ', 'EDIT': 'تعديل', 'CANCEL': 'إلغاء', 'DETAILS': 'التفاصيل', 'TOTAL': 'الإجمالي',
   'DATE': 'التاريخ', 'TIME': 'الوقت', 'NAME': 'الاسم', 'NUMBER': 'الرقم', 'STATUS': 'الحالة', 'TYPE': 'النوع',
   'LOCATION': 'الموقع', 'PORT': 'الميناء', 'CUSTOMER': 'العميل', 'BOOKING': 'الحجز', 'OPERATION': 'العملية',
   'GENSET': 'المولد', 'GENSETS': 'المولدات', 'STOCK': 'المخزون', 'MAINTENANCE': 'الصيانة', 'WORKSHOP': 'الورشة',
