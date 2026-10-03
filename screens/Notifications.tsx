@@ -85,10 +85,10 @@ const Notifications: React.FC = () => {
     <div className={`max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500 pb-32 text-start ${isAr ? 'rtl font-cairo' : 'ltr'}`}>
       
       {/* HUB NAVIGATION */}
-      <div className="bg-[#001F3F] p-8 rounded-[3rem] shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8 border border-white/10 relative overflow-hidden">
+      <div className="bg-[#3a3833] p-8 rounded-[3rem] shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8 border border-white/10 relative overflow-hidden">
          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl"></div>
          <div className="flex items-center gap-6 relative z-10">
-            <div className="w-16 h-16 bg-[#C2A378] text-[#001F3F] rounded-2xl flex items-center justify-center text-3xl font-black shadow-lg">🔔</div>
+            <div className="w-16 h-16 bg-[#C2A378] text-[#3a3833] rounded-2xl flex items-center justify-center text-3xl font-black shadow-lg">🔔</div>
             <div>
                <h2 className="text-3xl font-black italic uppercase tracking-tighter text-white leading-none">{isAr ? 'مركز التنبيهات' : 'Notification Hub'}</h2>
                <p className="text-[9px] font-black text-blue-400 uppercase tracking-[0.4em] mt-2">Unified Communications Matrix</p>
@@ -96,7 +96,7 @@ const Notifications: React.FC = () => {
          </div>
          <div className="flex flex-wrap items-center gap-4 relative z-10">
             <div className="flex bg-black/40 p-1.5 rounded-2xl border border-white/10 overflow-hidden">
-               <button onClick={() => setActiveTab('INBOX')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${activeTab === 'INBOX' ? 'bg-[#C2A378] text-[#001F3F]' : 'text-slate-400 hover:text-white'}`}>{isAr ? 'صندوق الوارد' : 'INBOX'}</button>
+               <button onClick={() => setActiveTab('INBOX')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${activeTab === 'INBOX' ? 'bg-[#C2A378] text-[#3a3833]' : 'text-slate-400 hover:text-white'}`}>{isAr ? 'صندوق الوارد' : 'INBOX'}</button>
                {isAdmin && <button onClick={() => setActiveTab('COMMAND')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${activeTab === 'COMMAND' ? 'bg-rose-600 text-white' : 'text-rose-400 hover:text-rose-200'}`}>{isAr ? 'غرفة العمليات' : 'COMMAND HUB'}</button>}
             </div>
             
@@ -113,7 +113,7 @@ const Notifications: React.FC = () => {
       {activeTab === 'INBOX' ? (
         <div className="animate-in slide-in-from-bottom-4 space-y-6">
            <div className="flex justify-between items-center px-4">
-              <h3 className="text-xl font-black uppercase italic tracking-tighter text-[#001F3F] dark:text-white">{isAr ? 'أحدث التنبيهات' : 'Inbox Activity'}</h3>
+              <h3 className="text-xl font-black uppercase italic tracking-tighter text-[#3a3833] dark:text-white">{isAr ? 'أحدث التنبيهات' : 'Inbox Activity'}</h3>
               {isAdmin && (
                 <button onClick={handleClearHistory} className="text-[10px] font-black uppercase text-rose-500 hover:text-rose-700 underline decoration-dotted transition-colors">
                   {isAr ? 'مسح الأرشيف' : 'Wipe Archive'}
@@ -181,7 +181,7 @@ const Notifications: React.FC = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 text-start">
                  <div className="space-y-8">
                     <div>
-                       <h3 className="text-3xl font-black italic uppercase tracking-tighter text-[#001F3F] dark:text-white">Command Broadcast</h3>
+                       <h3 className="text-3xl font-black italic uppercase tracking-tighter text-[#3a3833] dark:text-white">Command Broadcast</h3>
                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em] mt-2">Targeted Signal Injection</p>
                     </div>
 
