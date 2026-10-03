@@ -191,9 +191,9 @@ async function remove(table: string, id: string): Promise<boolean> {
   return true;
 }
 
-function dispatchChange() {
-  window.dispatchEvent(new CustomEvent('db-undo-success'));
-  window.dispatchEvent(new CustomEvent('db-change'));
+function dispatchChange(detail?: { entity?: string; id?: string }) {
+  window.dispatchEvent(new CustomEvent('db-undo-success', { detail }));
+  window.dispatchEvent(new CustomEvent('db-change', { detail }));
 }
 
 async function auditLog(action: string, details: string) {
@@ -290,7 +290,24 @@ function startRealtimeSync() {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'operations' }, () => scheduleRealtimeRefresh('operations'))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'invoices' }, () => scheduleRealtimeRefresh('invoices'))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, () => scheduleRealtimeRefresh('reservations'))
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'gensets' }, () => scheduleRealtimeRefresh('gensets'))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'gensets' }, (payload) => {
+      // Ignore the realtime echo of a change this browser has already applied
+      // to its local cache. External changes still trigger the normal reload.
+      const incoming = snakeToCamel(payload.new || payload.old || {}) as Partial<Genset>;
+      const id = String(incoming.id || '');
+      if (id) {
+        const cached = _stock.find(unit => unit.id === id);
+        const eventAlreadyApplied =
+          payload.eventType === 'DELETE'
+            ? !cached
+            : Boolean(cached) && Object.entries(incoming).every(([key, value]) => {
+                const cachedValue = (cached as any)?.[key];
+                return String(cachedValue ?? '') === String(value ?? '');
+              });
+        if (eventAlreadyApplied) return;
+      }
+      scheduleRealtimeRefresh('gensets');
+    })
     .subscribe(status => {
       if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         console.error('[supabaseDb] realtime subscription status:', status);
@@ -1112,7 +1129,7 @@ class SupabaseDB {
     if (!saved) return false;
     _stock = _stock.map(s => s.id === updatedGenset.id ? updatedGenset : s);
     await auditLog('STOCK', `Updated unit ${updatedGenset.unitNumber}`);
-    dispatchChange();
+    dispatchChange({ entity: 'genset', id: updatedGenset.id });
     return true;
   }
 
