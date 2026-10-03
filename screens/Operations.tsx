@@ -157,7 +157,7 @@ const EditOperationModal: React.FC<{
 const Operations: React.FC<{ highlightId?: string | null; clearHighlight?: () => void }> = ({ highlightId, clearHighlight }) => {
   const { lang } = useContext(LanguageContext);
   const { theme } = useContext(ThemeContext);
-  const isDark = theme === 'black';
+  const isDark = theme === 'night';
   const t = translations[lang];
   const isAr = lang === 'ar';
 
@@ -181,6 +181,15 @@ const Operations: React.FC<{ highlightId?: string | null; clearHighlight?: () =>
   const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo' }).format(new Date());
 
   const refresh = () => setOperations([...db.getOperations()]);
+  useEffect(() => {
+    const sync = () => refresh();
+    window.addEventListener('db-change', sync);
+    window.addEventListener('db-undo-success', sync);
+    return () => {
+      window.removeEventListener('db-change', sync);
+      window.removeEventListener('db-undo-success', sync);
+    };
+  }, []);
 
   const filteredOps = useMemo(() => {
     return operations.filter(op => {
