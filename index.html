@@ -158,24 +158,24 @@
 
         /* NILE FLEET — TWO ENVIRONMENTS ONLY: DAY / NIGHT */
         body.theme-day {
-            --bg-primary: #f5f7fa;
-            --text-primary: #102a43;
-            --text-secondary: #526b80;
-            --border-primary: #d5dde5;
+            --bg-primary: #eef2f6;
+            --text-primary: #071a2b;
+            --text-secondary: #334e68;
+            --border-primary: #c7d2de;
             --card-bg: #ffffff;
-            --accent: #b18b52;
-            --input-bg: #eef2f5;
+            --accent: #a87932;
+            --input-bg: #ffffff;
             --rail-bg: #e5ebf0;
             --row-bg: #ffffff;
         }
         body.theme-night {
-            --bg-primary: #07111f;
-            --text-primary: #f5f7fa;
-            --text-secondary: #aebdca;
-            --border-primary: #26384b;
-            --card-bg: #101c2e;
-            --accent: #c2a378;
-            --input-bg: #0b1624;
+            --bg-primary: #050b14;
+            --text-primary: #ffffff;
+            --text-secondary: #d1dbe5;
+            --border-primary: #34485d;
+            --card-bg: #0d1928;
+            --accent: #d0ae78;
+            --input-bg: #0a1421;
             --rail-bg: #050d16;
             --row-bg: #0d1927;
         }
@@ -385,6 +385,70 @@
         body[class*="theme-"] [class~="bg-slate-100"] { background-color: var(--input-bg) !important; }
         body[class*="theme-"] [class~="border-slate-100"],
         body[class*="theme-"] [class~="border-slate-200"] { border-color: var(--border-primary) !important; }
+
+        /* FINAL READABILITY CONTRACT — text must remain visually distinct from its surface. */
+        body[class*="theme-"] {
+            color: var(--text-primary);
+        }
+        body[class*="theme-"] main,
+        body[class*="theme-"] aside,
+        body[class*="theme-"] section {
+            color: var(--text-primary);
+        }
+        body.theme-day .text-gray-500,
+        body.theme-day .text-gray-600,
+        body.theme-day .text-slate-500,
+        body.theme-day .text-slate-400 {
+            color: #334e68 !important;
+        }
+        body.theme-night .text-gray-500,
+        body.theme-night .text-gray-600,
+        body.theme-night .text-slate-500,
+        body.theme-night .text-slate-400,
+        body.theme-night .text-slate-300 {
+            color: #d1dbe5 !important;
+        }
+        body.theme-night .text-slate-900,
+        body.theme-night .text-slate-800,
+        body.theme-night .text-slate-700,
+        body.theme-night .text-gray-900,
+        body.theme-night .text-gray-800,
+        body.theme-night .text-gray-700 {
+            color: #ffffff !important;
+        }
+        body.theme-day .text-slate-900,
+        body.theme-day .text-slate-800,
+        body.theme-day .text-slate-700,
+        body.theme-day .text-gray-900,
+        body.theme-day .text-gray-800,
+        body.theme-day .text-gray-700 {
+            color: #071a2b !important;
+        }
+        body.theme-night input::placeholder,
+        body.theme-night textarea::placeholder {
+            color: #aebdcc !important;
+            opacity: 1 !important;
+        }
+        body.theme-day input::placeholder,
+        body.theme-day textarea::placeholder {
+            color: #526b80 !important;
+            opacity: 1 !important;
+        }
+        body.theme-day input,
+        body.theme-day select,
+        body.theme-day textarea {
+            color: #071a2b !important;
+            background: #ffffff !important;
+        }
+        body.theme-night input,
+        body.theme-night select,
+        body.theme-night textarea {
+            color: #ffffff !important;
+            background: #0a1421 !important;
+        }
+        body[class*="theme-"] .disabled\:text-slate-400:disabled {
+            color: var(--text-secondary) !important;
+        }
 
         /* FINAL THEME CONTRACT — only Day and Night. Structural UI colors are theme-driven. */
         body.theme-day,
