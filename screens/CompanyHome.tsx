@@ -42,7 +42,7 @@ const CompanyHome: React.FC<CompanyHomeProps> = ({ onGenset }) => {
 
       <main>
         <section className="relative overflow-hidden border-b border-white/10">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_25%,rgba(194,163,120,.18),transparent_32%),linear-gradient(135deg,#071827,#001F3F_55%,#06111d)]"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_25%,rgba(194,163,120,.18),transparent_32%),linear-gradient(135deg,#071827,#3a3833_55%,#06111d)]"></div>
           <div className="relative mx-auto grid max-w-7xl gap-12 px-5 py-20 lg:grid-cols-[1.15fr_.85fr] lg:px-8 lg:py-28">
             <div className="flex flex-col justify-center">
               <p className="mb-5 text-[10px] font-black uppercase tracking-[.45em] text-[#C2A378]">Since 2009 · Egypt</p>
@@ -148,7 +148,7 @@ const CompanyHome: React.FC<CompanyHomeProps> = ({ onGenset }) => {
           </div>
         </section>
 
-        <section className="border-t border-white/10 bg-[#001F3F]">
+        <section className="border-t border-white/10 bg-[#3a3833]">
           <div className="mx-auto max-w-7xl px-5 py-12 lg:px-8">
             <div className="grid gap-8 md:grid-cols-2">
               <div>
