@@ -386,7 +386,82 @@
         body[class*="theme-"] [class~="border-slate-100"],
         body[class*="theme-"] [class~="border-slate-200"] { border-color: var(--border-primary) !important; }
 
-        /* FINAL THEME CONTRACT — only Day and Night */
+        /* FINAL THEME CONTRACT — only Day and Night. Structural UI colors are theme-driven. */
+        body.theme-day,
+        body.theme-day #root {
+            --brand-navy: #102a43;
+            --brand-gold: #b18b52;
+            --brand-action-text: #102a43;
+        }
+        body.theme-night,
+        body.theme-night #root {
+            --brand-navy: #07111f;
+            --brand-gold: #c2a378;
+            --brand-action-text: #07111f;
+        }
+
+        /* Remove old blue/cyan brand treatment from structural controls.
+           Status/info surfaces remain intentionally blue in the semantic block above. */
+        body.theme-day .bg-blue-500,
+        body.theme-day .bg-blue-600,
+        body.theme-night .bg-blue-500,
+        body.theme-night .bg-blue-600 {
+            background-color: var(--accent) !important;
+            color: var(--brand-action-text) !important;
+        }
+        body.theme-day .hover\\:bg-blue-600:hover,
+        body.theme-day .hover\\:bg-blue-700:hover,
+        body.theme-night .hover\\:bg-blue-600:hover,
+        body.theme-night .hover\\:bg-blue-700:hover {
+            background-color: color-mix(in srgb, var(--accent) 86%, #000) !important;
+        }
+        body.theme-day .text-blue-500,
+        body.theme-day .text-blue-600,
+        body.theme-night .text-blue-500,
+        body.theme-night .text-blue-600 {
+            color: var(--accent) !important;
+        }
+        body.theme-day .border-blue-100,
+        body.theme-day .border-blue-200,
+        body.theme-day .border-blue-500,
+        body.theme-day .border-blue-600,
+        body.theme-night .border-blue-100,
+        body.theme-night .border-blue-200,
+        body.theme-night .border-blue-500,
+        body.theme-night .border-blue-600 {
+            border-color: var(--border-primary) !important;
+        }
+
+        /* Structural sky/cyan utilities are also normalized; semantic info badges
+           continue using the dedicated status variables. */
+        body.theme-day .text-sky-500,
+        body.theme-day .text-sky-600,
+        body.theme-night .text-sky-500,
+        body.theme-night .text-sky-600,
+        body.theme-day .text-cyan-500,
+        body.theme-day .text-cyan-600,
+        body.theme-night .text-cyan-500,
+        body.theme-night .text-cyan-600 {
+            color: var(--accent) !important;
+        }
+
+        /* Common dark structural surfaces become the correct surface in each mode. */
+        body.theme-day .bg-slate-950 { background-color: var(--brand-navy) !important; }
+        body.theme-night .bg-slate-950 { background-color: var(--bg-primary) !important; }
+        body.theme-day .bg-slate-900 { background-color: var(--brand-navy) !important; }
+        body.theme-night .bg-slate-900 { background-color: var(--card-bg) !important; }
+        body.theme-day .bg-slate-800 { background-color: #183b56 !important; }
+        body.theme-night .bg-slate-800 { background-color: var(--input-bg) !important; }
+
+        /* Inputs use the same contract everywhere; native controls follow the mode. */
+        body.theme-day input,
+        body.theme-day select,
+        body.theme-day textarea { color-scheme: light; }
+        body.theme-night input,
+        body.theme-night select,
+        body.theme-night textarea { color-scheme: dark; }
+
+
         body.theme-day .bg-slate-900,
         body.theme-day .bg-slate-950,
         body.theme-day .bg-black { background-color: #102a43 !important; color: #ffffff !important; }
