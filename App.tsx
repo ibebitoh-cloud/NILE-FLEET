@@ -278,22 +278,6 @@ const App: React.FC = () => {
     return () => window.removeEventListener('hashchange', syncFromUrl);
   }, [user]);
 
-  const getIsDark = (currentTheme: ThemeMode): boolean => currentTheme === 'night';
-
-  const isDark = getIsDark(theme);
-
-  const updateCustomTheme = useCallback((_colors: {
-    bg: string; text: string; textSec: string; card: string; accent: string;
-    border: string; input: string; isDark: boolean; rowBg?: string; railBg?: string;
-  }) => {
-    // Kept as a compatibility no-op for older screens/components.
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.style.setProperty('--app-scale', scale.toString());
-    localStorage.setItem('app_scale', scale.toString());
-  }, [scale]);
-
   /**
    * AI LINGUISTIC OBSERVER
    * Automatically monitors the UI for untranslated text andConsults Gemini
