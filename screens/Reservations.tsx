@@ -9,6 +9,15 @@ const Reservations: React.FC = () => {
   const { lang } = useContext(LanguageContext);
   const t = translations[lang];
   const [reservations, setReservations] = useState<Reservation[]>(db.getReservations());
+  useEffect(() => {
+    const sync = () => setReservations([...db.getReservations()]);
+    window.addEventListener('db-change', sync);
+    window.addEventListener('db-undo-success', sync);
+    return () => {
+      window.removeEventListener('db-change', sync);
+      window.removeEventListener('db-undo-success', sync);
+    };
+  }, []);
 
   const handleStatusChange = async (id: string, status: ReservationStatus): Promise<boolean> => {
     const saved = await db.updateReservationStatus(id, status);
