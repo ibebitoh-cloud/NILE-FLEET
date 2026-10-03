@@ -131,7 +131,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         <div className="flex items-center gap-3 mb-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="font-black text-[#001F3F] dark:text-white text-base">{lang === 'ar' ? 'دالي' : 'DALI 1.0'}</span>
+              <span className="font-black text-[#3a3833] dark:text-white text-base">{lang === 'ar' ? 'دالي' : 'DALI 1.0'}</span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
             </div>
             <p className="text-[10px] text-slate-400 font-bold">{lang === 'ar' ? 'مساعد العمليات السريع' : 'Fast operations assistant'}</p>
@@ -146,7 +146,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           if (input) input.value = '';
         }} className="flex gap-2">
           <input name="dali-dashboard-question" className="flex-1 min-w-0 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-3 text-xs font-bold outline-none focus:border-blue-500 text-slate-900 dark:text-white" placeholder={lang === 'ar' ? 'اكتب سؤالك لدالي...' : 'Ask DALI 1.0...'} />
-          <button type="submit" className="px-5 rounded-xl bg-[#001F3F] text-white text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-transform">➤</button>
+          <button type="submit" className="px-5 rounded-xl bg-[#3a3833] text-white text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-transform">➤</button>
         </form>
       </section>
 
@@ -154,7 +154,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       <section>
         <div className="flex items-end justify-between mb-3 px-1">
           <div>
-            <h2 className="text-xl md:text-2xl font-black text-[#001F3F] dark:text-white uppercase italic tracking-tight">{translateEntity('Port Control', lang)}</h2>
+            <h2 className="text-xl md:text-2xl font-black text-[#3a3833] dark:text-white uppercase italic tracking-tight">{translateEntity('Port Control', lang)}</h2>
             <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.25em]">{translateEntity('Stock • Maintenance • Preorder', lang)}</p>
           </div>
           <button onClick={() => onNavigate('stock')} className="text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Fleet</button>
@@ -167,7 +167,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               className="text-start bg-white dark:bg-slate-800 rounded-[1.6rem] p-4 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all"
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="bg-[#001F3F] dark:bg-slate-700 text-[#C2A378] px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">{translateEntity(port.port, lang)}</span>
+                <span className="bg-[#3a3833] dark:bg-slate-700 text-[#C2A378] px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">{translateEntity(port.port, lang)}</span>
                 <span className={`w-2 h-2 rounded-full ${port.preorderCount > port.stockCount ? 'bg-rose-500' : 'bg-emerald-500'}`}></span>
               </div>
               <div className="grid grid-cols-3 gap-2">
@@ -187,7 +187,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       <section className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
           <div>
-            <h2 className="font-black text-[#001F3F] dark:text-white uppercase italic">{translateEntity('Smart Operations Watch', lang)}</h2>
+            <h2 className="font-black text-[#3a3833] dark:text-white uppercase italic">{translateEntity('Smart Operations Watch', lang)}</h2>
             <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">{translateEntity('Automatic exception detection', lang)}</p>
           </div>
           <span className="text-[9px] font-black uppercase px-2.5 py-1 rounded-full bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400">{smartAlerts.length} Signals</span>
@@ -210,7 +210,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         <section className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
           <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between gap-3">
             <div>
-              <h2 className="font-black text-[#001F3F] dark:text-white uppercase italic">{translateEntity('Customer Financial Reports', lang)}</h2>
+              <h2 className="font-black text-[#3a3833] dark:text-white uppercase italic">{translateEntity('Customer Financial Reports', lang)}</h2>
               <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Billed • Paid • Outstanding</p>
             </div>
             <button onClick={() => onNavigate('financials')} className="text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">{isReadOnly ? 'Ledger' : 'Financials'}</button>
@@ -223,7 +223,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           <div className="divide-y divide-slate-100 dark:divide-slate-700">
             {customerFinancials.slice(0, 5).map(c => (
               <button key={c.id} onClick={() => onNavigate('customers')} className="w-full px-5 py-3 flex items-center justify-between gap-3 text-start hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
-                <div className="min-w-0"><p className="font-black text-xs text-[#001F3F] dark:text-slate-200 uppercase truncate">{c.name}</p><span className="text-[8px] text-slate-400 font-bold">{c.operations} operations</span></div>
+                <div className="min-w-0"><p className="font-black text-xs text-[#3a3833] dark:text-slate-200 uppercase truncate">{c.name}</p><span className="text-[8px] text-slate-400 font-bold">{c.operations} operations</span></div>
                 <div className="text-right shrink-0"><span className="block text-[8px] text-slate-400 uppercase">{translateEntity('Outstanding', lang)}</span><b className={`text-xs ${c.outstanding > 0 ? 'text-rose-500' : 'text-slate-400'}`}>{money(Math.max(c.outstanding, 0))}</b></div>
               </button>
             ))}
@@ -235,7 +235,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         <section className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
           <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between gap-3">
             <div>
-              <h2 className="font-black text-[#001F3F] dark:text-white uppercase italic">{translateEntity('Maintenance Performance & Log', lang)}</h2>
+              <h2 className="font-black text-[#3a3833] dark:text-white uppercase italic">{translateEntity('Maintenance Performance & Log', lang)}</h2>
               <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">{translateEntity('Service execution and latest records', lang)}</p>
             </div>
             <button onClick={() => onNavigate('maintenance')} className="text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Maintenance</button>
@@ -249,7 +249,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           <div className="divide-y divide-slate-100 dark:divide-slate-700">
             {maintenanceLogs.slice(0, 5).map(log => (
               <button key={log.id} onClick={() => onNavigate('maintenance', log.gensetNumber)} className="w-full px-5 py-3 flex items-center justify-between gap-3 text-start hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
-                <div className="min-w-0"><p className="font-black text-xs text-[#001F3F] dark:text-slate-200 uppercase">GENSET {log.gensetNumber}</p><span className="text-[8px] text-slate-400 font-bold">{log.serviceDate} • {log.serviceType.replace(/_/g, ' ')}</span></div>
+                <div className="min-w-0"><p className="font-black text-xs text-[#3a3833] dark:text-slate-200 uppercase">GENSET {log.gensetNumber}</p><span className="text-[8px] text-slate-400 font-bold">{log.serviceDate} • {log.serviceType.replace(/_/g, ' ')}</span></div>
                 <span className={`text-[8px] font-black uppercase px-2 py-1 rounded-lg ${log.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600' : log.status === 'IN_PROGRESS' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>{log.status.replace(/_/g, ' ')}</span>
               </button>
             ))}
@@ -268,7 +268,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         ].map(item => (
           <button key={item.label} onClick={() => onNavigate(item.action)} className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm text-start hover:shadow-lg transition-all">
             <span className="block text-[8px] text-slate-400 font-black uppercase tracking-widest">{item.label}</span>
-            <b className="text-2xl text-[#001F3F] dark:text-white">{item.value}</b>
+            <b className="text-2xl text-[#3a3833] dark:text-white">{item.value}</b>
           </button>
         ))}
       </div>
