@@ -124,7 +124,7 @@ const StockManagement: React.FC = () => {
       activeMaintLogs,
       scheduledMaintLogs
     };
-  }, [stock, maintenanceLogs]);
+  }, [stock, ops, maintenanceLogs]);
 
   // Genset Handlers
   const handleUpdateGenset = async (e: React.FormEvent) => {
