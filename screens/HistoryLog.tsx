@@ -27,7 +27,7 @@ const HistoryLog: React.FC = () => {
     <div className="space-y-6 animate-in fade-in duration-500 text-start pb-20">
       <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
         <div>
-           <h3 className="text-2xl font-black text-[#001F3F] uppercase tracking-tight">System Action Recorder</h3>
+           <h3 className="text-2xl font-black text-[#3a3833] uppercase tracking-tight">System Action Recorder</h3>
            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">{lang === 'ar' ? 'راجع سجل النشاط. التراجع عن التغييرات غير متاح.' : 'Review activity. Undo is unavailable.'}</p>
         </div>
         <div className="flex gap-4">
@@ -42,7 +42,7 @@ const HistoryLog: React.FC = () => {
           </button>
           {!isReadOnly && <button
             onClick={handleFinalize}
-            className="bg-[#001F3F] text-white px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-[#002b57] transition-all shadow-xl shadow-blue-900/20"
+            className="bg-[#3a3833] text-white px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-[#002b57] transition-all shadow-xl shadow-blue-900/20"
           >
             {t.finalize}
           </button>}
