@@ -330,7 +330,7 @@ const StockManagement: React.FC = () => {
       {/* Top Header & View Tabs */}
       <div className="bg-white dark:bg-slate-800 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-xl font-black uppercase tracking-tight text-[#001F3F] dark:text-white flex items-center gap-2">
+          <h1 className="text-xl font-black uppercase tracking-tight text-[#3a3833] dark:text-white flex items-center gap-2">
             <span>⚡</span>
             <span>{isAr ? 'إدارة أسطول المولدات والصيانة' : 'Genset Fleet & Maintenance Command'}</span>
           </h1>
@@ -344,7 +344,7 @@ const StockManagement: React.FC = () => {
           <div className="bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl flex border border-slate-200 dark:border-slate-700">
             <button
               onClick={() => setActiveTab('visual')}
-              className={`px-4 py-2 rounded-xl font-black uppercase text-[9px] tracking-wider transition-all flex items-center gap-1.5 ${activeTab === 'visual' ? 'bg-[#001F3F] text-white shadow-md' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'}`}
+              className={`px-4 py-2 rounded-xl font-black uppercase text-[9px] tracking-wider transition-all flex items-center gap-1.5 ${activeTab === 'visual' ? 'bg-[#3a3833] text-white shadow-md' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'}`}
             >
               <span>🛰️</span>
               <span>{isAr ? 'خريطة الأسطول' : 'Fleet View'}</span>
@@ -354,13 +354,13 @@ const StockManagement: React.FC = () => {
               onClick={() => setActiveTab('inventory')}
               className={`px-4 py-2 rounded-xl font-black uppercase text-[9px] tracking-wider transition-all flex items-center gap-1.5 ${
                 activeTab === 'inventory'
-                  ? 'bg-[#001F3F] text-white shadow-md'
+                  ? 'bg-[#3a3833] text-white shadow-md'
                   : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'
               }`}
             >
               <span>⚡</span>
               <span>{isAr ? 'المخزون والأسطول' : 'Fleet Inventory'}</span>
-              <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-black ${activeTab === 'inventory' ? 'bg-[#C2A378] text-[#001F3F]' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+              <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-black ${activeTab === 'inventory' ? 'bg-[#C2A378] text-[#3a3833]' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
                 {stock.length}
               </span>
             </button>
@@ -369,13 +369,13 @@ const StockManagement: React.FC = () => {
               onClick={() => setActiveTab('maintenance')}
               className={`px-4 py-2 rounded-xl font-black uppercase text-[9px] tracking-wider transition-all flex items-center gap-1.5 ${
                 activeTab === 'maintenance'
-                  ? 'bg-[#001F3F] text-[#C2A378] shadow-md border border-[#C2A378]/30'
+                  ? 'bg-[#3a3833] text-[#C2A378] shadow-md border border-[#C2A378]/30'
                   : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'
               }`}
             >
               <span>🛠️</span>
               <span>{isAr ? 'سجلات الصيانة' : 'Maintenance Logs'}</span>
-              <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-black ${activeTab === 'maintenance' ? 'bg-[#C2A378] text-[#001F3F]' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+              <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-black ${activeTab === 'maintenance' ? 'bg-[#C2A378] text-[#3a3833]' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
                 {maintenanceLogs.length}
               </span>
             </button>
@@ -394,7 +394,7 @@ const StockManagement: React.FC = () => {
           {!isReadOnly && activeTab === 'inventory' && (
             <button 
               onClick={() => setShowAddModal(true)}
-              className="bg-[#001F3F] hover:bg-slate-900 text-[#C2A378] border border-[#C2A378]/40 px-4 py-2.5 rounded-xl font-black uppercase text-[9px] tracking-widest shadow-md whitespace-nowrap transition-all"
+              className="bg-[#3a3833] hover:bg-slate-900 text-[#C2A378] border border-[#C2A378]/40 px-4 py-2.5 rounded-xl font-black uppercase text-[9px] tracking-widest shadow-md whitespace-nowrap transition-all"
             >
               + {isAr ? 'تسجيل مولد جديد' : 'Register Asset'}
             </button>
@@ -407,7 +407,7 @@ const StockManagement: React.FC = () => {
         <div className="bg-white dark:bg-slate-800 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
           <p className="text-[8px] font-black uppercase tracking-wider text-slate-400">{isAr ? 'إجمالي الأسطول' : 'Total Fleet'}</p>
           <div className="flex items-baseline justify-between mt-1">
-            <span className="text-xl font-black text-[#001F3F] dark:text-white font-mono">{metrics.total}</span>
+            <span className="text-xl font-black text-[#3a3833] dark:text-white font-mono">{metrics.total}</span>
             <span className="text-[8px] font-bold text-slate-400 uppercase">Units</span>
           </div>
         </div>
@@ -454,7 +454,7 @@ const StockManagement: React.FC = () => {
       {/* ================= VISUAL FLEET BOARD ================= */}
       {activeTab === 'visual' && (
         <div className="space-y-4 animate-in fade-in duration-300">
-          <div className="bg-[#001F3F] text-white rounded-3xl p-5 shadow-xl border border-[#C2A378]/30">
+          <div className="bg-[#3a3833] text-white rounded-3xl p-5 shadow-xl border border-[#C2A378]/30">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2">
@@ -484,7 +484,7 @@ const StockManagement: React.FC = () => {
                 <div key={port} className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden">
                   <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
                     <div>
-                      <h3 className="font-black text-sm text-[#001F3F] dark:text-white uppercase">{port}</h3>
+                      <h3 className="font-black text-sm text-[#3a3833] dark:text-white uppercase">{port}</h3>
                       <p className="text-[8px] text-slate-400 font-bold uppercase">{units.length} {isAr ? 'مولد' : 'GENSETS'}</p>
                     </div>
                     <div className="flex gap-1 text-[7px] font-black">
@@ -564,7 +564,7 @@ const StockManagement: React.FC = () => {
           <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left whitespace-nowrap border-collapse">
-                <thead className="bg-[#001F3F] text-white font-black uppercase text-[9px]">
+                <thead className="bg-[#3a3833] text-white font-black uppercase text-[9px]">
                   <tr>
                     <th className="p-4 w-10 text-center border-r border-white/5">
                       <input type="checkbox" className="rounded" checked={selectedIds.size === filteredStock.length && filteredStock.length > 0} onChange={toggleSelectAll} />
@@ -787,7 +787,7 @@ const StockManagement: React.FC = () => {
           <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left whitespace-nowrap border-collapse">
-                <thead className="bg-[#001F3F] text-white font-black uppercase text-[9px]">
+                <thead className="bg-[#3a3833] text-white font-black uppercase text-[9px]">
                   <tr>
                     <th className="p-4 w-10 text-center">#</th>
                     <th className="p-4">{isAr ? 'بدء الصيانة' : 'Start Date'}</th>
@@ -905,9 +905,9 @@ const StockManagement: React.FC = () => {
       {/* ================= BULK RELOCATION BAR ================= */}
       {selectedIds.size > 0 && activeTab === 'inventory' && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-10">
-          <div className="bg-[#001F3F] text-white px-8 py-5 rounded-[2.5rem] shadow-2xl border-2 border-[#C2A378] flex items-center gap-10 backdrop-blur-xl">
+          <div className="bg-[#3a3833] text-white px-8 py-5 rounded-[2.5rem] shadow-2xl border-2 border-[#C2A378] flex items-center gap-10 backdrop-blur-xl">
             <div className="flex items-center gap-3">
-              <span className="w-10 h-10 bg-[#C2A378] text-[#001F3F] rounded-full flex items-center justify-center font-black text-sm">{selectedIds.size}</span>
+              <span className="w-10 h-10 bg-[#C2A378] text-[#3a3833] rounded-full flex items-center justify-center font-black text-sm">{selectedIds.size}</span>
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-[#C2A378]">{isAr ? 'إعادة توجيه مجمعة' : 'Bulk Relocation'}</p>
                 <p className="text-[9px] font-bold text-slate-400">{selectedIds.size} {isAr ? 'مولدات محددة' : 'Assets Selected'}</p>
@@ -921,7 +921,7 @@ const StockManagement: React.FC = () => {
                   <button 
                     key={loc}
                     onClick={() => handleBulkTransfer(loc)}
-                    className="bg-white/10 hover:bg-[#C2A378] hover:text-[#001F3F] border border-white/20 rounded-xl px-4 py-2 text-[9px] font-black uppercase transition-all"
+                    className="bg-white/10 hover:bg-[#C2A378] hover:text-[#3a3833] border border-white/20 rounded-xl px-4 py-2 text-[9px] font-black uppercase transition-all"
                   >
                     {loc}
                   </button>
@@ -937,10 +937,10 @@ const StockManagement: React.FC = () => {
 
       {/* ================= MODAL: UNIT MAINTENANCE HISTORY TIMELINE ================= */}
       {selectedUnitForMaint && (
-        <div className="fixed inset-0 bg-[#001F3F]/80 backdrop-blur-md z-[200] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-[#3a3833]/80 backdrop-blur-md z-[200] flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col animate-in zoom-in-95">
             {/* Header */}
-            <div className="p-6 bg-[#001F3F] text-white flex justify-between items-center border-b border-white/10">
+            <div className="p-6 bg-[#3a3833] text-white flex justify-between items-center border-b border-white/10">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-2xl">
                   🛠️
@@ -967,7 +967,7 @@ const StockManagement: React.FC = () => {
                     onClick={() => {
                       openNewMaintenanceModal(selectedUnitForMaint);
                     }}
-                    className="bg-[#C2A378] text-[#001F3F] hover:bg-amber-400 px-4 py-2 rounded-xl font-black uppercase text-[9px] tracking-wider transition-all flex items-center gap-1"
+                    className="bg-[#C2A378] text-[#3a3833] hover:bg-amber-400 px-4 py-2 rounded-xl font-black uppercase text-[9px] tracking-wider transition-all flex items-center gap-1"
                   >
                     <span>+</span>
                     <span>{isAr ? 'إضافة سجل صيانة' : 'Add Record'}</span>
@@ -1059,7 +1059,7 @@ const StockManagement: React.FC = () => {
                         </div>
 
                         <div className="text-right">
-                          <span className="text-sm font-black font-mono text-[#001F3F] dark:text-[#C2A378]">
+                          <span className="text-sm font-black font-mono text-[#3a3833] dark:text-[#C2A378]">
                             
                           </span>
                           {log.runningHours && (
@@ -1123,11 +1123,11 @@ const StockManagement: React.FC = () => {
 
       {/* ================= MODAL: LOG / EDIT MAINTENANCE RECORD ================= */}
       {maintModalState.isOpen && (
-        <div className="fixed inset-0 bg-[#001F3F]/85 backdrop-blur-md z-[250] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-[#3a3833]/85 backdrop-blur-md z-[250] flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl max-w-xl w-full overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 flex flex-col max-h-[92vh]">
             
             {/* Modal Header */}
-            <div className="p-6 bg-[#001F3F] text-white flex justify-between items-center border-b border-white/10">
+            <div className="p-6 bg-[#3a3833] text-white flex justify-between items-center border-b border-white/10">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">🛠️</span>
                 <div>
@@ -1413,7 +1413,7 @@ const StockManagement: React.FC = () => {
 
       {/* ================= MODAL: REGISTER NEW ASSET ================= */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-[#001F3F]/90 backdrop-blur-xl z-[200] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-[#3a3833]/90 backdrop-blur-xl z-[200] flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl max-w-md w-full overflow-hidden border-[10px] border-slate-900 animate-in zoom-in-95">
             <div className="p-6 bg-slate-900 text-white flex justify-between items-center">
               <h3 className="text-xl font-black italic uppercase">{isAr ? 'تسجيل مولد جديد' : 'New Asset Identity'}</h3>
@@ -1438,7 +1438,7 @@ const StockManagement: React.FC = () => {
 
       {/* ================= MODAL: MODIFY ASSET ================= */}
       {editingGenset && (
-        <div className="fixed inset-0 bg-[#001F3F]/90 backdrop-blur-xl z-[200] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-[#3a3833]/90 backdrop-blur-xl z-[200] flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl max-w-md w-full overflow-hidden border-[10px] border-slate-900 animate-in zoom-in-95">
             <div className="p-6 bg-slate-900 text-white flex justify-between items-center">
               <div>
@@ -1489,7 +1489,7 @@ const StockManagement: React.FC = () => {
                 </button>
               </div>
 
-              <button type="submit" className="w-full py-4 bg-[#001F3F] text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl">Apply Changes</button>
+              <button type="submit" className="w-full py-4 bg-[#3a3833] text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl">Apply Changes</button>
             </form>
           </div>
         </div>
