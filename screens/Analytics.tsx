@@ -1,5 +1,5 @@
 
-import React, { useMemo, useContext } from 'react';
+import React, { useMemo, useContext, useEffect, useState } from 'react';
 import { db } from '../services/supabaseDb';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -12,6 +12,16 @@ import { translations } from '../translations';
 const localDateISO = (date = new Date()) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo' }).format(date);
 
 const Analytics: React.FC = () => {
+  const [, setDataVersion] = useState(0);
+  useEffect(() => {
+    const refresh = () => setDataVersion(v => v + 1);
+    window.addEventListener('db-change', refresh);
+    window.addEventListener('db-undo-success', refresh);
+    return () => {
+      window.removeEventListener('db-change', refresh);
+      window.removeEventListener('db-undo-success', refresh);
+    };
+  }, []);
   const { lang } = useContext(LanguageContext);
   const t = translations[lang];
   const stock = db.getStock();
