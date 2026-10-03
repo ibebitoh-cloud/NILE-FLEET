@@ -1763,7 +1763,7 @@ I’ll search with you. 🤖`;
             </React.Fragment>
           ))}
         </nav>
-        <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className={`absolute -right-3 top-16 bg-[#C2A378] text-[#001F3F] w-6 h-6 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-50 border-2 border-[#001224]`}>
+        <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className={`absolute -right-3 top-16 bg-[#C2A378] text-[#26231f] w-6 h-6 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-50 border-2 border-[var(--rail-bg)]`}>
           <span className="text-[10px] font-bold">{isSidebarCollapsed ? '→' : '←'}</span>
         </button>
         <div className={`p-3 border-t ${borderClass} ${isDark ? 'bg-black/40' : 'bg-[#f3f1ec]'}`}>
@@ -1779,8 +1779,8 @@ I’ll search with you. 🤖`;
 
       {/* MOBILE MENU OVERLAY (More menu) */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-[100] bg-black/45 backdrop-blur-sm no-print">
-          <div className={`absolute top-0 bottom-0 ${isAr ? 'right-0' : 'left-0'} w-[min(88vw,380px)] max-w-full bg-[#001224] shadow-2xl border-white/10 ${isAr ? 'border-l' : 'border-r'} p-4 flex flex-col pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]`}>
+        <div className="lg:hidden fixed inset-0 z-[100] bg-black/35 backdrop-blur-sm no-print">
+          <div className={`absolute top-0 bottom-0 ${isAr ? 'right-0' : 'left-0'} w-[min(88vw,380px)] max-w-full bg-[var(--card-bg)] shadow-2xl border-white/10 ${isAr ? 'border-l' : 'border-r'} p-4 flex flex-col pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]`}>
           <div className="flex justify-between items-center mb-4">
             <h1 className="flex items-center gap-2 text-xl font-black text-white tracking-widest uppercase italic"><img src="/nile-fleet-logo.png" className="h-10 w-10 object-contain" alt="Nile Fleet" />NILE <span className="text-[#C2A378]">FLEET</span></h1>
             <button onClick={() => setIsMobileMenuOpen(false)} className="h-11 w-11 rounded-xl bg-white/10 text-white flex items-center justify-center text-lg border border-white/10">✕</button>
@@ -1810,7 +1810,7 @@ I’ll search with you. 🤖`;
                       setIsMobileMenuOpen(false);
                     }
                   }} 
-                  className={`w-full min-h-12 flex items-center justify-between px-3 py-2.5 rounded-xl transition-all ${activeScreen === item.id ? 'bg-[#C2A378] text-[#001F3F]' : 'bg-white/5 text-[#C2A378aa]'}`}
+                  className={`w-full min-h-12 flex items-center justify-between px-3 py-2.5 rounded-xl transition-all ${activeScreen === item.id ? 'bg-[#C2A378] text-[#26231f]' : 'bg-black/5 text-[var(--text-secondary)]'}`}
                 >
                   <div className="flex items-center gap-4">
                     <span className="text-lg">{(item as any).icon}</span>
@@ -2043,7 +2043,7 @@ I’ll search with you. 🤖`;
             )}
           </div>
           {themeIslandOpen && (
-            <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[60] pointer-events-none">
+            <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[60] pointer-events-none px-3 w-max max-w-[calc(100vw-24px)]">
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#001F3F] dark:bg-white text-white dark:text-[#001F3F] shadow-2xl border border-[#C2A37866] animate-in fade-in zoom-in-95 duration-300">
                 <span className="text-sm animate-spin">{isDark ? '☀️' : '🌙'}</span>
                 <span className="text-[9px] font-black uppercase tracking-[0.2em]">{isDark ? (isAr ? 'الوضع الداكن' : 'DARK MODE') : (isAr ? 'الوضع الفاتح' : 'LIGHT MODE')}</span>
@@ -2070,7 +2070,7 @@ I’ll search with you. 🤖`;
       </main>
 
       {/* MOBILE NAV: primary Genset screens */}
-      <nav className={`lg:hidden fixed bottom-0 left-0 right-0 border-t px-1.5 py-1.5 z-40 grid grid-cols-5 gap-1 items-center transition-all ${isDark ? 'bg-[#001224] border-white/5' : 'bg-white border-slate-200'} backdrop-blur-xl pb-5 no-print`}>
+      <nav className={`lg:hidden fixed bottom-0 left-0 right-0 border-t px-1.5 pt-1.5 z-40 grid grid-cols-5 gap-1 items-center transition-all ${isDark ? 'bg-[#001224] border-white/5' : 'bg-[var(--rail-bg)] border-[var(--border-primary)]'} backdrop-blur-xl pb-[calc(0.4rem+env(safe-area-inset-bottom))] no-print`}>
         {[
           { id: dashboardId, label: isAr ? 'الرئيسية' : 'DASHBOARD', icon: '📊' },
           { id: 'port-gate', label: isAr ? 'البوابة' : 'GATE', icon: '🚧' },
