@@ -24,7 +24,7 @@ const MAINT_STATUS_CONFIG: Record<'COMPLETED' | 'IN_PROGRESS' | 'SCHEDULED', { l
 const StockManagement: React.FC = () => {
   const { lang } = useContext(LanguageContext);
   const { theme } = useContext(ThemeContext);
-  const isDark = theme === 'black';
+  const isDark = theme === 'night';
   const t = translations[lang];
   const isAr = lang === 'ar';
 
@@ -71,6 +71,7 @@ const StockManagement: React.FC = () => {
   useEffect(() => {
     const handleDbChange = () => setDbVersion(v => v + 1);
     window.addEventListener('db-undo-success', handleDbChange);
+    window.addEventListener('db-change', handleDbChange);
     return () => window.removeEventListener('db-undo-success', handleDbChange);
   }, []);
 
