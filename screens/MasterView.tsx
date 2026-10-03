@@ -552,6 +552,17 @@ const MasterView: React.FC = () => {
   });
   const [sortConfig, setSortConfig] = useState<SortConfig>(null);
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
+  const selectedOperations = useMemo(() => operations.filter(op => selectedRowIds.has(op.id)), [operations, selectedRowIds]);
+  const selectedStatusCounts = useMemo(() => selectedOperations.reduce<Record<string, number>>((acc, op) => {
+    const key = op.status || 'UNKNOWN';
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {}), [selectedOperations]);
+  const selectedPortCounts = useMemo(() => selectedOperations.reduce<Record<string, number>>((acc, op) => {
+    const key = op.clipOnPort || '—';
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {}), [selectedOperations]);
   const [collapsedStatusGroups, setCollapsedStatusGroups] = useState<Set<string>>(new Set());
   const [showSettings, setShowSettings] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -1850,38 +1861,84 @@ const MasterView: React.FC = () => {
       </div>
 
       {selectedRowIds.size > 0 && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-10 duration-500">
-           <div className="bg-[#3a3833] text-white px-8 py-4 rounded-[2.5rem] shadow-2xl border-2 border-[#C2A378] flex items-center gap-10 backdrop-blur-xl">
-              <div className="flex items-center gap-3">
-                 <span className="w-10 h-10 bg-[#C2A378] text-[#3a3833] rounded-full flex items-center justify-center font-black text-sm">{selectedRowIds.size}</span>
-                 <div>
+        <div className="fixed inset-x-2 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] sm:inset-auto sm:bottom-24 sm:left-1/2 sm:-translate-x-1/2 z-[100] animate-in slide-in-from-bottom-10 duration-300">
+          <div className="w-full sm:w-auto sm:min-w-[680px] max-w-[calc(100vw-1rem)] sm:max-w-[92vw] max-h-[58vh] overflow-hidden bg-[#3a3833] text-white rounded-[1.5rem] sm:rounded-[2.5rem] shadow-2xl border-2 border-[#C2A378] backdrop-blur-xl">
+            <div className="px-3 py-3 sm:px-6 sm:py-4 border-b border-white/10">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="w-10 h-10 shrink-0 bg-[#C2A378] text-[#3a3833] rounded-full flex items-center justify-center font-black text-sm">{selectedRowIds.size}</span>
+                  <div className="min-w-0">
                     <p className="text-[10px] font-black uppercase tracking-widest text-[#C2A378]">{isAr ? 'وضع الإجراء المجمع' : 'Bulk Action Mode'}</p>
-                    <p className="text-[9px] font-bold text-slate-400">{isAr ? 'عمليات مختارة' : 'Selected Entries'}</p>
-                 </div>
+                    <p className="text-[9px] font-bold text-slate-400">{isAr ? 'العمليات المختارة' : 'Selected Entries'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button type="button" onClick={() => setSelectedRowIds(new Set(filteredAndSortedOps.map(op => op.id)))} disabled={isReadOnly || filteredAndSortedOps.length === selectedRowIds.size} className="min-h-[38px] px-2.5 rounded-lg border border-white/15 text-[8px] font-black uppercase tracking-wider text-slate-300 disabled:opacity-40">{isAr ? 'الكل' : 'Select All'}</button>
+                  <button type="button" onClick={() => setSelectedRowIds(new Set())} className="min-h-[38px] px-2.5 rounded-lg border border-white/15 text-[8px] font-black uppercase tracking-wider text-slate-300">{isAr ? 'مسح' : 'Clear'}</button>
+                </div>
               </div>
-              <div className="h-10 w-px bg-white/10"></div>
-              {!isReadOnly && (
-                <button
-                  onClick={handleCloneSelectedOperations}
-                  className="bg-[#C2A378] text-[#3a3833] px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#d8bd91] transition-all shadow-lg"
-                  title={isAr ? 'إضافة نسخة جديدة من العمليات المحددة' : 'Add a new copy of the selected operations'}
-                >
-                  + {isAr ? 'نسخ السطر' : 'Clone Line'}
-                </button>
+
+              <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                <div className="rounded-lg bg-white/5 border border-white/10 px-2.5 py-2">
+                  <div className="text-[7px] uppercase tracking-widest text-slate-400">{isAr ? 'الحالة' : 'Status'}</div>
+                  <div className="mt-1 text-[9px] font-black truncate">{Object.keys(selectedStatusCounts).length === 1 ? translateEntity(Object.keys(selectedStatusCounts)[0], lang) : (isAr ? 'متعددة' : 'Mixed')}</div>
+                </div>
+                <div className="rounded-lg bg-white/5 border border-white/10 px-2.5 py-2">
+                  <div className="text-[7px] uppercase tracking-widest text-slate-400">{isAr ? 'الميناء' : 'Port'}</div>
+                  <div className="mt-1 text-[9px] font-black truncate">{Object.keys(selectedPortCounts).length === 1 ? translateEntity(Object.keys(selectedPortCounts)[0], lang) : (isAr ? 'متعددة' : 'Mixed')}</div>
+                </div>
+                <div className="rounded-lg bg-white/5 border border-white/10 px-2.5 py-2">
+                  <div className="text-[7px] uppercase tracking-widest text-slate-400">{isAr ? 'حاويات' : 'Containers'}</div>
+                  <div className="mt-1 text-[9px] font-black">{selectedOperations.filter(op => Boolean(op.containerNumber?.trim())).length}</div>
+                </div>
+                <div className="rounded-lg bg-white/5 border border-white/10 px-2.5 py-2">
+                  <div className="text-[7px] uppercase tracking-widest text-slate-400">{isAr ? 'مولدات' : 'Gensets'}</div>
+                  <div className="mt-1 text-[9px] font-black">{selectedOperations.filter(op => Boolean(op.gensetNumber?.trim())).length}</div>
+                </div>
+              </div>
+
+              <div className="mt-2 flex gap-1.5 overflow-x-auto no-scrollbar">
+                {Object.entries(selectedStatusCounts).map(([status, count]) => (
+                  <span key={status} className="shrink-0 rounded-full bg-white/5 border border-white/10 px-2 py-1 text-[7px] font-black uppercase tracking-wider text-slate-300">{translateEntity(status, lang)} · {count}</span>
+                ))}
+              </div>
+            </div>
+
+            <div className="max-h-[24vh] sm:max-h-[20vh] overflow-y-auto px-2.5 py-2.5 sm:px-4 sm:py-3 space-y-1.5">
+              {selectedOperations.slice(0, 30).map(op => (
+                <div key={op.id} className="rounded-xl border border-white/10 bg-white/[0.035] px-2.5 py-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="shrink-0 w-7 h-7 rounded-lg bg-[#C2A378]/15 text-[#C2A378] flex items-center justify-center text-[7px] font-black">✓</span>
+                    <div className="min-w-0 flex-1 grid grid-cols-2 sm:grid-cols-5 gap-x-3 gap-y-1">
+                      <div className="min-w-0"><div className="text-[7px] uppercase tracking-wider text-slate-500">{isAr ? 'الحجز' : 'Booking'}</div><div className="text-[9px] font-black text-white truncate">{op.bookingNumber || '—'}</div></div>
+                      <div className="min-w-0"><div className="text-[7px] uppercase tracking-wider text-slate-500">{isAr ? 'الحاوية' : 'Container'}</div><div className="text-[9px] font-bold text-slate-300 truncate">{op.containerNumber || '—'}</div></div>
+                      <div className="min-w-0"><div className="text-[7px] uppercase tracking-wider text-slate-500">{isAr ? 'المولد' : 'Genset'}</div><div className="text-[9px] font-bold text-slate-300 truncate">{op.gensetNumber || '—'}</div></div>
+                      <div className="min-w-0"><div className="text-[7px] uppercase tracking-wider text-slate-500">{isAr ? 'العميل' : 'Customer'}</div><div className="text-[9px] font-bold text-slate-300 truncate">{op.customerName || '—'}</div></div>
+                      <div className="min-w-0"><div className="text-[7px] uppercase tracking-wider text-slate-500">{isAr ? 'الحالة' : 'Status'}</div><div className="text-[9px] font-bold text-[#C2A378] truncate">{translateEntity(op.status || '—', lang)}</div></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {selectedOperations.length > 30 && (
+                <div className="text-center py-2 text-[8px] font-bold text-slate-500">{isAr ? 'عرض أول 30 من ' + selectedOperations.length + ' عملية مختارة' : 'Showing first 30 of ' + selectedOperations.length + ' selected entries'}</div>
               )}
-              <div className="flex items-center gap-4">
-                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-300">{isAr ? 'تغيير الحالة لـ:' : 'Target Status:'}</p>
-                 <select className="bg-white/10 text-white border border-white/20 rounded-xl px-4 py-2 text-[10px] font-black uppercase outline-none focus:border-[#C2A378] transition-all" onChange={(e) => handleBulkStatusChange(e.target.value as any)} defaultValue="">
-                    <option value="" disabled>-- {isAr ? 'اختر الحالة' : 'Select Status'} --</option>
-                    {STATUS_CYCLE.map(s => <option key={s} value={s} className="bg-slate-900">{translateEntity(s, lang)}</option>)}
-                 </select>
+            </div>
+
+            <div className="px-3 py-3 sm:px-5 sm:py-3 border-t border-white/10 flex flex-col sm:flex-row gap-2">
+              {!isReadOnly && (
+                <button onClick={handleCloneSelectedOperations} className="min-h-[44px] flex-1 bg-[#C2A378] text-[#3a3833] px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-[#d8bd91] transition-all shadow-lg" title={isAr ? 'إضافة نسخة جديدة من العمليات المحددة' : 'Add a new copy of the selected operations'}>+ {isAr ? 'نسخ السطور' : 'Clone Selected'}</button>
+              )}
+              <div className="flex flex-1 items-center gap-2">
+                <select className="min-h-[44px] flex-1 bg-white/10 text-white border border-white/20 rounded-xl px-3 py-2 text-[9px] font-black uppercase outline-none focus:border-[#C2A378]" onChange={(e) => handleBulkStatusChange(e.target.value as any)} defaultValue="">
+                  <option value="" disabled>-- {isAr ? 'تغيير الحالة' : 'Change Status'} --</option>
+                  {STATUS_CYCLE.map(status => <option key={status} value={status} className="bg-slate-900">{translateEntity(status, lang)}</option>)}
+                </select>
               </div>
-              {isAdmin && <button onClick={handleBulkDelete} className="bg-rose-600 text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg">{isAr ? 'حذف إجباري' : 'Force Delete'}</button>}
-              <button onClick={() => setSelectedRowIds(new Set())} className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">{isAr ? 'إلغاء' : 'Clear'}</button>
-           </div>
+              {isAdmin && <button onClick={handleBulkDelete} className="min-h-[44px] px-4 bg-rose-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg">{isAr ? 'حذف' : 'Delete'}</button>}
+            </div>
+          </div>
         </div>
       )}
-
       {showAddModal && (
         <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-2xl z-[500] flex items-center justify-center p-2 sm:p-4 overscroll-contain">
           <div className={`nf-mobile-modal rounded-[2rem] sm:rounded-[3.5rem] shadow-2xl max-w-[98vw] w-full h-[calc(100dvh-1rem)] sm:h-[85vh] max-h-[calc(100dvh-1rem)] overflow-hidden border-[4px] sm:border-[10px] border-slate-900 flex flex-col animate-in zoom-in-95 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-900'}`}>
