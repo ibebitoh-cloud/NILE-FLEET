@@ -2090,7 +2090,7 @@ I’ll search with you. 🤖`;
               className={`min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all ${active ? 'bg-[#C2A378] text-[#001F3F]' : available ? (isDark ? 'text-[#C2A378cc] hover:bg-white/5' : 'text-slate-600 hover:bg-slate-100') : 'opacity-25 cursor-not-allowed'}`}
             >
               <span className="text-base leading-none">{item.icon}</span>
-              <span className="max-w-full truncate text-[6.5px] font-black uppercase tracking-[.08em]">{item.label}</span>
+              <span className="max-w-full truncate text-[7.5px] font-black uppercase tracking-[.06em]">{item.label}</span>
             </button>
           );
         })}
