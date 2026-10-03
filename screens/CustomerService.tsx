@@ -154,19 +154,19 @@ const CustomerService: React.FC = () => {
     <div className={`max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500 pb-32 text-start ${isAr ? 'rtl font-cairo' : 'ltr'}`}>
       
       {/* HUB NAVIGATION */}
-      <div className="bg-[#001F3F] p-8 rounded-[3rem] shadow-2xl flex flex-col lg:flex-row justify-between items-center gap-8 border border-white/10 relative overflow-hidden">
+      <div className="bg-[#3a3833] p-8 rounded-[3rem] shadow-2xl flex flex-col lg:flex-row justify-between items-center gap-8 border border-white/10 relative overflow-hidden">
          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl"></div>
          <div className="flex items-center gap-6 relative z-10">
-            <div className="w-16 h-16 bg-[#C2A378] text-[#001F3F] rounded-2xl flex items-center justify-center text-3xl font-black shadow-lg">🎧</div>
+            <div className="w-16 h-16 bg-[#C2A378] text-[#3a3833] rounded-2xl flex items-center justify-center text-3xl font-black shadow-lg">🎧</div>
             <div>
                <h2 className="text-3xl font-black italic uppercase tracking-tighter text-white leading-none">{isAr ? 'مركز المساعدة' : 'Support Hub'}</h2>
                <p className="text-[9px] font-black text-blue-400 uppercase tracking-[0.4em] mt-2">{isAr ? 'تواصل مباشر ومعلومات الساحات' : 'Direct support and yard locations'}</p>
             </div>
          </div>
          <div className="flex bg-black/40 p-1.5 rounded-2xl border border-white/10 relative z-10 overflow-hidden flex-wrap">
-            <button onClick={() => setActiveTab('CONTACTS')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${activeTab === 'CONTACTS' ? 'bg-[#C2A378] text-[#001F3F]' : 'text-slate-400 hover:text-white'}`}>{isAr ? 'الطاقم' : 'PERSONNEL'}</button>
-            <button onClick={() => setActiveTab('PORTS')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${activeTab === 'PORTS' ? 'bg-[#C2A378] text-[#001F3F]' : 'text-slate-400 hover:text-white'}`}>{isAr ? 'المواقع' : 'PORTS'}</button>
-            <button onClick={() => setActiveTab('FAQ')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${activeTab === 'FAQ' ? 'bg-[#C2A378] text-[#001F3F]' : 'text-slate-400 hover:text-white'}`}>{isAr ? 'الإرشادات' : 'GUIDELINES'}</button>
+            <button onClick={() => setActiveTab('CONTACTS')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${activeTab === 'CONTACTS' ? 'bg-[#C2A378] text-[#3a3833]' : 'text-slate-400 hover:text-white'}`}>{isAr ? 'الطاقم' : 'PERSONNEL'}</button>
+            <button onClick={() => setActiveTab('PORTS')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${activeTab === 'PORTS' ? 'bg-[#C2A378] text-[#3a3833]' : 'text-slate-400 hover:text-white'}`}>{isAr ? 'المواقع' : 'PORTS'}</button>
+            <button onClick={() => setActiveTab('FAQ')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${activeTab === 'FAQ' ? 'bg-[#C2A378] text-[#3a3833]' : 'text-slate-400 hover:text-white'}`}>{isAr ? 'الإرشادات' : 'GUIDELINES'}</button>
          </div>
          {isAdmin && !isReadOnly && (
            <button onClick={() => openAdd(activeTab === 'CONTACTS' ? 'CONTACT' : activeTab === 'PORTS' ? 'PORT' : 'FAQ')} className="relative z-10 bg-white/10 hover:bg-white/20 text-[#C2A378] border border-[#C2A378]/30 px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all">
@@ -206,7 +206,7 @@ const CustomerService: React.FC = () => {
                         <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-4 ${isDark ? 'border-slate-900' : 'border-white'} ${c.status === 'ONLINE' ? 'bg-emerald-500' : c.status === 'BUSY' ? 'bg-amber-500' : 'bg-slate-300'}`}></div>
                      </div>
                      <div>
-                        <h4 className="text-xl font-black uppercase italic tracking-tighter text-[#001F3F] dark:text-white">{isAr ? c.nameAr : c.name}</h4>
+                        <h4 className="text-xl font-black uppercase italic tracking-tighter text-[#3a3833] dark:text-white">{isAr ? c.nameAr : c.name}</h4>
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isAr ? c.roleAr : c.role}</p>
                         {maintenanceContacts.some(contact => contact.id === c.id) && <span className="mt-2 inline-flex rounded-full bg-amber-50 px-3 py-1 text-[8px] font-black uppercase tracking-wider text-amber-700">{isAr ? 'متابعة الصيانة' : 'Maintenance Follow-up'}</span>}
                      </div>
@@ -289,9 +289,9 @@ const CustomerService: React.FC = () => {
 
       {/* MODAL FOR ADD/EDIT */}
       {showModal !== 'NONE' && (
-        <div className="fixed inset-0 bg-[#001F3F]/95 backdrop-blur-xl z-[600] flex items-center justify-center p-6">
-           <div className="bg-white dark:bg-slate-900 rounded-[3.5rem] shadow-2xl max-w-2xl w-full overflow-hidden border-[10px] border-[#001F3F] animate-in zoom-in-95">
-              <div className="p-8 bg-[#001F3F] text-white flex justify-between items-center text-start">
+        <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-xl z-[600] flex items-center justify-center p-6">
+           <div className="bg-white dark:bg-slate-900 rounded-[3.5rem] shadow-2xl max-w-2xl w-full overflow-hidden border-[10px] border-[#3a3833] animate-in zoom-in-95">
+              <div className="p-8 bg-[#3a3833] text-white flex justify-between items-center text-start">
                  <h3 className="text-xl font-black uppercase italic tracking-widest">{editingId ? (isAr ? 'تعديل البيانات' : 'Edit Item') : (isAr ? 'إضافة بيانات' : 'Create Entry')}</h3>
                  <button onClick={() => setShowModal('NONE')} className="text-white hover:text-rose-500 font-bold text-2xl transition-colors">✕</button>
               </div>
@@ -352,7 +352,7 @@ const CustomerService: React.FC = () => {
                  )}
 
                  {actionError && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-bold text-rose-700">{actionError}</p>}
-                 <button type="submit" disabled={formSaving} className="w-full bg-[#001F3F] text-white py-6 rounded-[2.5rem] font-black uppercase text-xs tracking-[0.4em] shadow-2xl active:scale-95 transition-all disabled:cursor-wait disabled:opacity-60">
+                 <button type="submit" disabled={formSaving} className="w-full bg-[#3a3833] text-white py-6 rounded-[2.5rem] font-black uppercase text-xs tracking-[0.4em] shadow-2xl active:scale-95 transition-all disabled:cursor-wait disabled:opacity-60">
                     {formSaving ? (isAr ? 'جارٍ الحفظ...' : 'SAVING...') : (isAr ? 'اعتماد التغييرات' : 'AUTHORIZE PROTOCOL UPDATE')}
                  </button>
               </form>
