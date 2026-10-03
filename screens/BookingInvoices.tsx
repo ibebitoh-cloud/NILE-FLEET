@@ -7,7 +7,7 @@ import InvoiceView from '../components/InvoiceView';
 const BookingInvoices: React.FC = () => {
   const { lang } = useContext(LanguageContext);
   const { theme } = useContext(ThemeContext);
-  const isDark = theme === 'black';
+  const isDark = theme === 'night';
   const isAr = lang === 'ar';
 
   const [searchTerm, setSearchTerm] = useState('');
