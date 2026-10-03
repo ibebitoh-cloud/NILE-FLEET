@@ -1935,6 +1935,8 @@ I’ll search with you. 🤖`;
         .dali-orb-thinking { animation: daliOrbThink 1.25s linear infinite; }
         .dali-orb-core { animation: daliOrbCore 1.1s ease-in-out infinite; }
         .dali-orb-ring { animation: daliOrbRing 1.8s linear infinite; }
+        @keyframes daliBlobMorph { 0%,100% { border-radius:44% 56% 62% 38% / 42% 38% 62% 58%; transform:translateY(0) rotate(0deg) scale(1); } 25% { border-radius:62% 38% 44% 56% / 55% 48% 52% 45%; transform:translate(2px,-4px) rotate(3deg) scale(1.03); } 50% { border-radius:38% 62% 55% 45% / 42% 60% 40% 58%; transform:translate(-3px,1px) rotate(-4deg) scale(.985); } 75% { border-radius:55% 45% 38% 62% / 60% 42% 58% 40%; transform:translate(3px,3px) rotate(2deg) scale(1.015); } }
+        .dali-blob { animation:daliBlobMorph 7s ease-in-out infinite; }
         @media (prefers-reduced-motion: reduce) {
           .dali-orb-idle,.dali-orb-thinking,.dali-orb-core,.dali-orb-ring { animation: none; }
         }
@@ -2053,6 +2055,11 @@ I’ll search with you. 🤖`;
                       <div className={`max-w-[88%] rounded-2xl p-3 text-[13px] sm:text-xs leading-6 whitespace-pre-wrap break-words overflow-wrap-anywhere border backdrop-blur-md transition-all duration-300 ${daliFirstMessageAnimation && i === 0 ? 'dali-first-message' : ''} ${m.role === 'user' ? (isTerminal ? 'bg-white/10 border-white/10 text-white' : 'bg-white/35 border-white/60 text-[#001F3F]') : (isTerminal ? 'bg-black/10 border-white/10 text-slate-200' : 'bg-white/30 border-white/50 text-slate-700')}`}>{m.text}</div>
                     </div>
                   ))}
+                  {!aiChatLoading && daliPostIntroSuggestion && (
+                    <div className="flex justify-center pt-1">
+                      <button type="button" onClick={() => { setAiChatInput(isAr ? 'دالي يقدر يعمل إيه؟' : 'What can DALI do?'); setDaliPostIntroSuggestion(false); }} className={`rounded-full border px-4 py-2 text-[9px] font-bold backdrop-blur-md transition-all active:scale-95 ${isTerminal ? 'border-[#C2A378]/25 bg-white/[0.05] text-[#C2A378] hover:bg-white/[0.08]' : 'border-white/60 bg-white/35 text-[#001F3F] hover:bg-white/55'}`}>{isAr ? 'دالي يقدر يعمل إيه؟' : 'What can DALI do?'}</button>
+                    </div>
+                  )}
                 </div>
               )}
 
