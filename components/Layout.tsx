@@ -2094,9 +2094,9 @@ I’ll search with you. 🤖`;
             </button>
           );
         })}
-        <button onClick={() => setIsMobileMenuOpen(true)} className={`min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all ${isMobileMenuOpen ? 'bg-[#C2A378] text-[#001F3F]' : isDark ? 'text-[#C2A378cc] hover:bg-white/5' : 'text-slate-600 hover:bg-slate-100'}`}>
-          <span className="text-base leading-none">☰</span>
-          <span className="text-[6.5px] font-black uppercase tracking-[.08em]">MORE</span>
+        <button onClick={() => setActiveScreen('customer-prices')} className={`min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all ${activeScreen === 'customer-prices' ? 'bg-[#C2A378] text-[#26231f]' : isDark ? 'text-[#C2A378cc] hover:bg-white/5' : 'text-[#5f5a52] hover:bg-[#e4dfd6]'}`}>
+          <span className="text-base leading-none">💰</span>
+          <span className="text-[6.5px] font-black uppercase tracking-[.08em]">{isAr ? 'الأسعار' : 'RATE MATRIX'}</span>
         </button>
       </nav>
     </div>
