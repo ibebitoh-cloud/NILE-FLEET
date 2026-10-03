@@ -88,7 +88,9 @@ export const runThinkingAudit = async (prompt: string, budget: number = 1200) =>
   if (question) {
     try {
       const liveData = await buildDaliData();
-      const exact = answerDali(question, liveData);
+      const { data: sessionData } = await supabase.auth.getSession();
+      const contextKey = sessionData.session?.user?.id || 'anonymous';
+      const exact = answerDali(question, liveData, contextKey);
       if (exact) return exact;
     } catch (error) {
       console.warn('DALI deterministic route failed; falling back to AI:', error);
