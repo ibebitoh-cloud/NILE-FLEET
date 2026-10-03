@@ -86,10 +86,8 @@ const App: React.FC = () => {
   const loggingInRef = useRef(false);
   
   const [theme, setTheme] = useState<ThemeMode>(() => {
-    const saved = localStorage.getItem('theme');
-    if (saved === 'night') return 'night';
-    if (saved === 'day') return 'day';
-    return 'day';
+    // NILE FLEET uses the Night system surface as the permanent application theme.
+    return 'night';
   });
 
   const [scale, setScale] = useState<number>(() => {
