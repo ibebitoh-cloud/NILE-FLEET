@@ -25,8 +25,8 @@ export interface DaliData {
 }
 
 type Ctx = { customer?: string; ports?: string[]; unit?: string; intent?: string };
-let lastCtx: Ctx = {};
-export const resetDaliContext = () => { lastCtx = {}; };
+const lastCtxByKey = new Map<string, Ctx>();
+export const resetDaliContext = (contextKey: string = 'default') => { lastCtxByKey.delete(contextKey); };
 
 // ───────────────────────────── text helpers ─────────────────────────────
 
@@ -224,13 +224,14 @@ export function auditDaliData(data: DaliData): DaliAuditFinding[] {
 }
 // ───────────────────────────── main entry ─────────────────────────────
 
-export function answerDali(question: string, data: DaliData): string | null {
+export function answerDali(question: string, data: DaliData, contextKey: string = 'default'): string | null {
   const q = String(question || '').trim();
   if (!q) return null;
   const ar = /[\u0600-\u06FF]/.test(q);
   const L = (en: string, a: string) => (ar ? a : en);
   const nq = norm(q);
   const now = data.now || new Date();
+  const lastCtx = lastCtxByKey.get(contextKey) || {};
   const range = findRange(nq, now);
 
   // deterministic data audit / consistency checks
@@ -329,7 +330,7 @@ I'm not an employee in the administrative hierarchy. I'm the intelligence layer 
       }
     }
   }
-  const remember = (intent: string) => { lastCtx = { customer, ports, unit, intent }; };
+  const remember = (intent: string) => { lastCtxByKey.set(contextKey, { customer, ports, unit, intent }); };
   const rangeLabel = range ? L(range.label, range.labelAr) : '';
   const portSet = ports ? new Set(ports) : undefined;
   const portText = ports ? (ports.length > 1 ? L('Port Said (PSD + SCCT)', 'بورسعيد (PSD + SCCT)') : portLabel(ports[0], ar)) : '';
