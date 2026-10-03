@@ -80,6 +80,20 @@
             text-align: start;
         }
 
+        /* Arabic shaping guard — connected Arabic letters must never be
+           separated by inherited Tailwind tracking or component styles. */
+        [dir="rtl"] *,
+        [lang="ar"] * {
+            letter-spacing: normal !important;
+            word-spacing: normal !important;
+            text-transform: none;
+        }
+
+        [dir="rtl"] [class*="tracking-"],
+        [lang="ar"] [class*="tracking-"] {
+            letter-spacing: normal !important;
+        }
+
         /* Tailwind tracking utilities are useful for Latin UI chrome but are
            not appropriate for Arabic words. The auto-marked class above wins
            over every tracking utility without changing English typography. */
