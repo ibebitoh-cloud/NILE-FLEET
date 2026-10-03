@@ -86,7 +86,10 @@ const App: React.FC = () => {
   const loggingInRef = useRef(false);
   
   const [theme, setTheme] = useState<ThemeMode>(() => {
-    return (localStorage.getItem('theme') as ThemeMode) || 'nile';
+    const saved = localStorage.getItem('theme');
+    if (saved === 'day' || saved === 'white' || saved === 'corporate' || saved === 'sandstorm' || saved === 'ocean' || saved === 'mint' || saved === 'arctic' || saved === 'rose') return 'day';
+    if (saved === 'night' || saved === 'black' || saved === 'navy' || saved === 'forest' || saved === 'sahara' || saved === 'cyber' || saved === 'slate' || saved === 'midnight' || saved === 'toxic' || saved === 'lava' || saved === 'copper' || saved === 'phantom' || saved === 'nile' || saved === 'carbon' || saved === 'royal' || saved === 'crimson') return 'night';
+    return 'day';
   });
 
   const [scale, setScale] = useState<number>(() => {
@@ -251,13 +254,7 @@ const App: React.FC = () => {
     return () => window.removeEventListener('hashchange', syncFromUrl);
   }, [user]);
 
-  const getIsDark = (currentTheme: ThemeMode): boolean => {
-    if (currentTheme === 'custom') {
-      return localStorage.getItem('custom_is_dark') === 'true';
-    }
-    const DARK_THEMES = ['black', 'navy', 'forest', 'sahara', 'cyber', 'slate', 'midnight', 'toxic', 'lava', 'copper', 'phantom', 'nile', 'carbon', 'royal', 'crimson'];
-    return DARK_THEMES.includes(currentTheme);
-  };
+  const getIsDark = (currentTheme: ThemeMode): boolean => currentTheme === 'night';
 
   const isDark = getIsDark(theme);
 
