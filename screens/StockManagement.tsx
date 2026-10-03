@@ -483,50 +483,35 @@ const StockManagement: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-1.5">
             {Object.values(Location).map(port => {
               const units = stock.filter(s => s.location === port).sort((a,b) => a.unitNumber.localeCompare(b.unitNumber));
               if (!units.length) return null;
               const available = units.filter(u => u.status === GensetStatus.IN_STOCK || (u.status === GensetStatus.CLIPPED_ON && !activeOperationUnits.has(u.unitNumber.trim().toUpperCase()))).length;
-              const rented = units.filter(u => u.status === GensetStatus.CLIPPED_ON && activeOperationUnits.has(u.unitNumber.trim().toUpperCase())).length;
-              const unlinked = 0;
+              const active = units.filter(u => u.status === GensetStatus.CLIPPED_ON && activeOperationUnits.has(u.unitNumber.trim().toUpperCase())).length;
               const maintenance = units.filter(u => u.status === GensetStatus.MAINTENANCE).length;
               return (
-                <div key={port} className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden">
-                  <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
-                    <div>
-                      <h3 className="font-black text-sm text-[#3a3833] dark:text-white uppercase">{port}</h3>
-                      <p className="text-[8px] text-slate-400 font-bold uppercase">{units.length} {isAr ? 'مولد' : 'GENSETS'}</p>
-                    </div>
-                    <div className="flex gap-1 text-[7px] font-black">
-                      <span className="px-2 py-1 rounded-lg bg-emerald-100 text-emerald-700">S {available}</span>
-                      <span className="px-2 py-1 rounded-lg bg-blue-100 text-blue-700">R {rented}</span>{unlinked > 0 && <span className="px-2 py-1 rounded-lg bg-amber-100 text-amber-700">! {unlinked}</span>}
-                      <span className="px-2 py-1 rounded-lg bg-rose-100 text-rose-700">M {maintenance}</span>
-                    </div>
+                <div key={port} className="min-w-0 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+                  <div className="bg-[#3a3833] text-white px-1.5 py-2 text-center border-b border-[#C2A378]/30">
+                    <div className="font-black text-[9px] truncate">{port}</div>
+                    <div className="text-[6px] font-bold text-slate-300">{units.length} {isAr ? 'مولد' : 'G'}</div>
                   </div>
-                  <div className="p-3 grid grid-cols-4 sm:grid-cols-5 gap-2">
+                  <div className="flex justify-center gap-0.5 py-1 border-b border-slate-100 dark:border-slate-800 text-[6px] font-black">
+                    <span className="text-emerald-600">S {available}</span>
+                    <span className="text-blue-600">A {active}</span>
+                    <span className="text-rose-600">M {maintenance}</span>
+                  </div>
+                  <div className="p-1 space-y-1">
                     {units.map(unit => {
                       const linkedActive = activeOperationUnits.has(unit.unitNumber.trim().toUpperCase());
-                      const statusClass =
-                        unit.status === GensetStatus.IN_STOCK || (unit.status === GensetStatus.CLIPPED_ON && !linkedActive)
-                          ? 'bg-emerald-500 text-white border-emerald-600 shadow-emerald-200'
-                          : unit.status === GensetStatus.CLIPPED_ON
-                            ? 'bg-blue-600 text-white border-blue-700 shadow-blue-200'
-                            : unit.status === GensetStatus.MAINTENANCE
-                              ? 'bg-rose-500 text-white border-rose-600 shadow-rose-200'
-                              : 'bg-amber-500 text-white border-amber-600 shadow-amber-200';
-                      const activeOp = ops.find(o => o.gensetNumber?.trim().toUpperCase() === unit.unitNumber?.trim().toUpperCase() && o.status === 'IN PROGRESS');
+                      const isAvailable = unit.status === GensetStatus.IN_STOCK || (unit.status === GensetStatus.CLIPPED_ON && !linkedActive);
+                      const statusClass = unit.status === GensetStatus.MAINTENANCE ? 'bg-rose-500 border-rose-600' : unit.status === GensetStatus.CLIPPED_ON && linkedActive ? 'bg-blue-600 border-blue-700' : isAvailable ? 'bg-emerald-500 border-emerald-600' : 'bg-amber-500 border-amber-600';
+                      const label = unit.status === GensetStatus.MAINTENANCE ? (isAr ? 'صيانة' : 'MAINT') : unit.status === GensetStatus.CLIPPED_ON && linkedActive ? (isAr ? 'رحلة' : 'ACTIVE') : isAvailable ? (isAr ? 'متاح' : 'STOCK') : unit.status.replace('_', ' ');
+                      const activeOp = ops.find(o => o.gensetNumber?.trim().toUpperCase() === unit.unitNumber.trim().toUpperCase() && o.status === 'IN PROGRESS');
                       return (
-                        <button
-                          key={unit.id}
-                          title={activeOp ? `#${activeOp.bookingNumber}` : (unit.status === GensetStatus.CLIPPED_ON && !linkedActive ? (isAr ? "متاح" : "IN STOCK") : unit.status)}
-                          onClick={() => setEditingGenset({...unit})}
-                          className={`min-h-[58px] rounded-xl border-2 ${statusClass} shadow-md hover:scale-105 transition-transform px-1.5 py-2 flex flex-col items-center justify-center`}
-                        >
-                          <span className="text-[10px] sm:text-[11px] font-black font-mono tracking-tight">{unit.unitNumber}</span>
-                          <span className="text-[6px] font-black uppercase opacity-80 mt-1">
-                            {unit.status === GensetStatus.IN_STOCK || (unit.status === GensetStatus.CLIPPED_ON && !linkedActive) ? (isAr ? 'متاح' : 'IN STOCK') : unit.status === GensetStatus.CLIPPED_ON ? (isAr ? 'على رحلة' : 'ACTIVE') : unit.status === GensetStatus.MAINTENANCE ? (isAr ? 'صيانة' : 'MAINT') : unit.status}
-                          </span>
+                        <button key={unit.id} title={activeOp ? `#${activeOp.bookingNumber}` : label} onClick={() => setEditingGenset({...unit})} className={`${statusClass} min-h-[42px] w-full rounded-lg border text-white px-1 py-1 flex flex-col items-center justify-center hover:brightness-110 transition-all`}>
+                          <span className="text-[9px] font-black font-mono truncate max-w-full">{unit.unitNumber}</span>
+                          <span className="text-[5px] font-black uppercase opacity-90 mt-0.5">{label}</span>
                         </button>
                       );
                     })}
@@ -535,7 +520,7 @@ const StockManagement: React.FC = () => {
               );
             })}
           </div>
-
+          <p className="text-[7px] text-slate-400 text-center uppercase tracking-widest">{isAr ? 'الموانئ كلها ظاهرة جنب بعض — كل مولد في سطر مستقل حسب حالته' : 'All ports visible side by side — every genset shown vertically by live status'}</p>
           {stock.length === 0 && (
             <div className="bg-white dark:bg-slate-800 rounded-3xl p-12 text-center border border-slate-200 dark:border-slate-700">
               <div className="text-4xl mb-3">⚡</div>
