@@ -41,7 +41,7 @@ const Reservations: React.FC = () => {
     <div className="space-y-6 animate-in fade-in duration-500 text-start pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-           <h3 className="text-3xl font-black text-[#001F3F] uppercase tracking-tighter italic">{t.reservations}</h3>
+           <h3 className="text-3xl font-black text-[#3a3833] uppercase tracking-tighter italic">{t.reservations}</h3>
            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Review and dispatch customer rental requests</p>
         </div>
       </div>
@@ -49,11 +49,11 @@ const Reservations: React.FC = () => {
       <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
         <div className="p-8 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
           <h4 className="font-black text-slate-800 uppercase text-xs tracking-widest">Incoming Requests Queue</h4>
-          <span className="bg-[#001F3F] text-[#C2A378] px-4 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest">{reservations.length} {t.records}</span>
+          <span className="bg-[#3a3833] text-[#C2A378] px-4 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest">{reservations.length} {t.records}</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-[11px]">
-            <thead className="bg-[#001F3F] text-white font-black uppercase tracking-widest">
+            <thead className="bg-[#3a3833] text-white font-black uppercase tracking-widest">
               <tr>
                 <th className="px-8 py-5">Booking #</th>
                 <th className="px-8 py-5">Partner</th>
@@ -122,7 +122,7 @@ const Reservations: React.FC = () => {
         </div>
       </div>
       
-      <div className="p-10 bg-[#001F3F] rounded-[3rem] text-white flex flex-col md:flex-row items-center gap-10 relative overflow-hidden shadow-2xl">
+      <div className="p-10 bg-[#3a3833] rounded-[3rem] text-white flex flex-col md:flex-row items-center gap-10 relative overflow-hidden shadow-2xl">
          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
          <div className="w-20 h-20 bg-[#C2A378] rounded-[2rem] flex items-center justify-center text-4xl shadow-xl shrink-0">🛡️</div>
          <div className="flex-1 text-center md:text-left">
