@@ -15,7 +15,7 @@ const CustomerDossier: React.FC<{
   const { lang } = useContext(LanguageContext);
   const { theme } = useContext(ThemeContext);
   // Fix: Derive isDark by checking for 'black' theme mode
-  const isDark = theme === 'black';
+  const isDark = theme === 'night';
   const t = translations[lang];
 
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'OPS' | 'LEDGER' | 'MATRIX'>('OVERVIEW');
@@ -44,7 +44,7 @@ const CustomerDossier: React.FC<{
   , [customer]);
 
   const customerPrices = useMemo(() => 
-    db.getCustomerPrices().filter(p => p.customerName === (customer.companyName || customer.name))
+    db.getCustomerPrices().filter(p => p.customerId === customer.id || (!p.customerId && p.customerName === (customer.companyName || customer.name)))
   , [customer]);
 
   const stats = useMemo(() => {
@@ -408,7 +408,7 @@ const CustomerDossier: React.FC<{
 const Customers: React.FC = () => {
   const { lang } = useContext(LanguageContext);
   const { theme } = useContext(ThemeContext);
-  const isDark = theme === 'black';
+  const isDark = theme === 'night';
   const t = translations[lang];
 
   const currentUser = useMemo(() => JSON.parse(localStorage.getItem('user') || '{}') as User, []);
