@@ -137,6 +137,30 @@ const App: React.FC = () => {
     localStorage.setItem('app_lang', lang);
   }, [lang]);
 
+  const isDark = theme === 'night';
+
+  const updateCustomTheme = useCallback((_colors: {
+    bg: string; text: string; textSec: string; card: string; accent: string;
+    border: string; input: string; isDark: boolean; rowBg?: string; railBg?: string;
+  }) => {
+    // Legacy compatibility API. Custom visual themes are no longer supported.
+  }, []);
+
+  const themeContextValue = useMemo(() => ({
+    theme, setTheme, scale, setScale, isMuted, setIsMuted, isDark, updateCustomTheme
+  }), [theme, scale, isMuted, isDark, updateCustomTheme]);
+
+  useEffect(() => {
+    document.body.className = `theme-${theme}`;
+    document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+    localStorage.setItem('theme', theme);
+  }, [theme, isDark]);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--app-scale', String(scale));
+    localStorage.setItem('app_scale', String(scale));
+  }, [scale]);
+
   // Authentication is authoritative. localStorage is only a UI cache and is never
   // treated as proof of identity or authorization.
   useEffect(() => {
