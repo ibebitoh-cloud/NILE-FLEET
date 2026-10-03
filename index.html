@@ -83,8 +83,26 @@
         /* Tailwind tracking utilities are useful for Latin UI chrome but are
            not appropriate for Arabic words. The auto-marked class above wins
            over every tracking utility without changing English typography. */
-        .nf-arabic-text[class*="tracking-"] {
+        .nf-arabic-text[class*="tracking-"],
+        [dir="rtl"] [class*="tracking-"],
+        [lang="ar"] [class*="tracking-"] {
             letter-spacing: normal !important;
+            word-spacing: normal !important;
+            text-transform: none !important;
+        }
+
+        /* Arabic shaping / spacing guard: never spread connected Arabic glyphs. */
+        [dir="rtl"] *,
+        [lang="ar"] * {
+            letter-spacing: normal;
+        }
+
+        /* Keep Latin operational identifiers naturally spaced inside Arabic UI. */
+        [dir="rtl"] .nf-ltr-isolate,
+        [dir="rtl"] [data-ltr] {
+            letter-spacing: normal !important;
+            word-spacing: normal !important;
+            text-transform: none !important;
         }
 
         input.nf-arabic-text,
