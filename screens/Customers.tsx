@@ -19,6 +19,16 @@ const CustomerDossier: React.FC<{
   const t = translations[lang];
 
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'OPS' | 'LEDGER' | 'MATRIX'>('OVERVIEW');
+  const [, setDataVersion] = useState(0);
+  useEffect(() => {
+    const refresh = () => setDataVersion(v => v + 1);
+    window.addEventListener('db-change', refresh);
+    window.addEventListener('db-undo-success', refresh);
+    return () => {
+      window.removeEventListener('db-change', refresh);
+      window.removeEventListener('db-undo-success', refresh);
+    };
+  }, []);
   const [profile, setProfile] = useState<Partial<User>>({ ...customer });
   
   // Data Fetches
@@ -409,6 +419,15 @@ const Customers: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const refresh = () => setUsers([...db.getUsers()]);
+  useEffect(() => {
+    const sync = () => refresh();
+    window.addEventListener('db-change', sync);
+    window.addEventListener('db-undo-success', sync);
+    return () => {
+      window.removeEventListener('db-change', sync);
+      window.removeEventListener('db-undo-success', sync);
+    };
+  }, []);
 
   const filteredCustomers = useMemo(() => {
     return users.filter(u => u.role === UserRole.CUSTOMER && 
