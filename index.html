@@ -179,7 +179,12 @@
             --input-bg: #ffffff;
             --rail-bg: #e5ebf0;
             --row-bg: #ffffff;
+            --surface-0: #eef2f6;
+            --surface-1: #ffffff;
+            --surface-2: #f7f9fb;
+            --surface-3: #f1f4f7;
         }
+
         body.theme-night {
             --bg-primary: #050b14;
             --text-primary: #ffffff;
@@ -190,371 +195,207 @@
             --input-bg: #0a1421;
             --rail-bg: #050d16;
             --row-bg: #0d1927;
+            --surface-0: #050b14;
+            --surface-1: #0d1928;
+            --surface-2: #0a1421;
+            --surface-3: #111f30;
         }
-
-        /* GLOBAL SELECTORS FOR DYNAMIC COLORS */
-        main, aside, section, div, table, tr, th, td, input, select, textarea, button {
-            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-        }
-
-        /* Force visibility on cards even in dark themes */
-        body.theme-night .bg-white, body.theme-night .bg-slate-50, body.theme-night .bg-slate-100,
-        body.theme-night .bg-white, body.theme-night .bg-slate-50, body.theme-night .bg-slate-100 { 
-            background-color: var(--card-bg) !important; 
-            color: var(--text-primary) !important; 
-        }
-
-        /* Contrast-safe border and semantic color system */
-        .border, .border-slate-100, .border-slate-200, .border-white\/5 { 
-            border-color: var(--border-primary) !important; 
-        }
-        .border-2, .border-4 { border-color: var(--border-primary) !important; }
 
         body[class*="theme-"] {
-            --surface-0: var(--bg-primary);
-            --surface-1: var(--card-bg);
-            --surface-2: var(--input-bg);
-            --surface-3: color-mix(in srgb, var(--card-bg) 82%, var(--bg-primary));
-            --surface-border-strong: color-mix(in srgb, var(--border-primary) 72%, var(--text-secondary));
-            --status-success-bg: #dcfce7; --status-success-fg: #166534;
-            --status-warning-bg: #fef3c7; --status-warning-fg: #92400e;
-            --status-danger-bg: #fee2e2; --status-danger-fg: #991b1b;
-            --status-info-bg: #dbeafe; --status-info-fg: #1e40af;
-            --status-neutral-bg: #e2e8f0; --status-neutral-fg: #334155;
-        }
-        body.theme-night {
-            --status-success-bg: #14532d; --status-success-fg: #bbf7d0;
-            --status-warning-bg: #78350f; --status-warning-fg: #fde68a;
-            --status-danger-bg: #7f1d1d; --status-danger-fg: #fecaca;
-            --status-info-bg: #1e3a8a; --status-info-fg: #bfdbfe;
-            --status-neutral-bg: #334155; --status-neutral-fg: #e2e8f0;
+            color: var(--text-primary);
+            background: var(--bg-primary);
         }
 
-        /* Semantic status surfaces: same meaning, distinct hues, theme-safe contrast. */
-        body[class*="theme-"] .bg-green-50, body[class*="theme-"] .bg-green-100,
-        body[class*="theme-"] .bg-emerald-50, body[class*="theme-"] .bg-emerald-100 {
-            background-color: var(--status-success-bg) !important; color: var(--status-success-fg) !important;
-        }
-        body[class*="theme-"] .bg-amber-50, body[class*="theme-"] .bg-amber-100,
-        body[class*="theme-"] .bg-yellow-50, body[class*="theme-"] .bg-yellow-100 {
-            background-color: var(--status-warning-bg) !important; color: var(--status-warning-fg) !important;
-        }
-        body[class*="theme-"] .bg-red-50, body[class*="theme-"] .bg-red-100,
-        body[class*="theme-"] .bg-rose-50, body[class*="theme-"] .bg-rose-100 {
-            background-color: var(--status-danger-bg) !important; color: var(--status-danger-fg) !important;
-        }
-        body[class*="theme-"] .bg-blue-50, body[class*="theme-"] .bg-blue-100,
-        body[class*="theme-"] .bg-sky-50, body[class*="theme-"] .bg-sky-100 {
-            background-color: var(--status-info-bg) !important; color: var(--status-info-fg) !important;
-        }
-
-        /* Foreground normalization: prevent low-contrast text on either surface. */
-        body[class*="theme-"] .text-slate-300 { color: var(--text-secondary) !important; }
-        body[class*="theme-"] .text-slate-400 { color: var(--text-secondary) !important; }
-        body[class*="theme-"] .text-slate-500 { color: var(--text-secondary) !important; }
-        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
-        body.theme-night .text-blue-500, body.theme-night .text-blue-600 {
-            color: #93c5fd !important;
-        }
-        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
-        body.theme-night .text-rose-500, body.theme-night .text-rose-600 {
-            color: #fda4af !important;
-        }
-
-        /* Table rows always alternate enough to remain visually separate. */
-        table tbody tr:nth-child(odd):not(.selected-row) td { background-color: var(--surface-1) !important; }
-        table tbody tr:nth-child(even):not(.selected-row) td { background-color: var(--surface-3) !important; }
-        table tbody tr:hover:not(.selected-row) td { background-color: var(--surface-2) !important; filter: none !important; }
-        table tbody td { border-bottom-color: var(--surface-border-strong) !important; }
-
-        /* Inputs always sit on a separate surface from their parent card. */
-        body[class*="theme-"] input, body[class*="theme-"] select, body[class*="theme-"] textarea {
-            background-color: var(--surface-2) !important;
-            color: var(--text-primary) !important;
-            border-color: var(--surface-border-strong) !important;
-        }
-        body[class*="theme-"] input:focus, body[class*="theme-"] select:focus, body[class*="theme-"] textarea:focus {
+        /* Core surfaces. Components can still use Tailwind classes; these rules
+           normalize only structural neutrals so Day and Night stay consistent. */
+        body.theme-day .bg-white,
+        body.theme-day .bg-slate-50,
+        body.theme-day .bg-slate-100,
+        body.theme-day .bg-gray-50,
+        body.theme-day .bg-gray-100,
+        body.theme-day .bg-neutral-50,
+        body.theme-day .bg-neutral-100 {
             background-color: var(--surface-1) !important;
-            border-color: var(--accent) !important;
-            box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent) !important;
-        }
-        
-        /* Table Cell & Input Inversion */
-        table td, table th { 
-            border-bottom: 1px solid var(--border-primary); 
-            color: var(--text-primary); 
-        }
-        
-        input, select, textarea {
-            background-color: var(--input-bg) !important;
             color: var(--text-primary) !important;
-            border-color: var(--border-primary) !important;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        input:focus, select:focus, textarea:focus {
-            background-color: var(--bg-primary) !important; /* Switch to main bg on focus for maximum contrast */
-            border-color: var(--accent) !important;
-            outline: none;
-            box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent);
+        body.theme-night .bg-white,
+        body.theme-night .bg-slate-50,
+        body.theme-night .bg-slate-100,
+        body.theme-night .bg-gray-50,
+        body.theme-night .bg-gray-100,
+        body.theme-night .bg-neutral-50,
+        body.theme-night .bg-neutral-100 {
+            background-color: var(--surface-1) !important;
+            color: var(--text-primary) !important;
         }
 
-        /* Ensure high contrast for inputs in specific themes if needed */
-        
-        body.theme-day input, body.theme-day select, body.theme-day textarea {
-            background-color: #ffffff !important; /* Force white bg for yellow theme inputs */
-        }
+        body.theme-day .bg-slate-900 { background-color: #102a43 !important; }
+        body.theme-day .bg-slate-800 { background-color: #183b56 !important; }
+        body.theme-night .bg-slate-900 { background-color: var(--surface-1) !important; }
+        body.theme-night .bg-slate-800 { background-color: var(--surface-2) !important; }
 
-        input::placeholder { 
-            color: var(--text-secondary); 
-            opacity: 0.6; 
-        }
-
-        /* Global Label Visibility */
-        label { 
-            color: var(--text-secondary) !important; 
-            font-weight: 800 !important;
-        }
-
-        /* THEME SURFACE NORMALIZATION */
-        body[class*="theme-"] .bg-white,
-        body[class*="theme-"] .bg-slate-50,
-        body[class*="theme-"] .bg-slate-100 {
-            background-color: var(--card-bg) !important;
-            color: var(--text-primary);
-        }
-        body[class*="theme-"] .text-slate-900,
-        body[class*="theme-"] .text-slate-800,
-        body[class*="theme-"] .text-slate-700 {
-            color: var(--text-primary);
-        }
-        body[class*="theme-"] .text-slate-500,
-        body[class*="theme-"] .text-slate-400 {
-            color: var(--text-secondary);
-        }
-        body[class*="theme-"] .hover\\:bg-slate-50:hover,
-        body[class*="theme-"] .hover\\:bg-slate-100:hover {
-            background-color: var(--input-bg) !important;
-        }
-        body[class*="theme-"] input,
-        body[class*="theme-"] select,
-        body[class*="theme-"] textarea {
-            color-scheme: light;
-        }
-        body.theme-night input, body.theme-night input, body.theme-night input,
-        body.theme-night input, body.theme-night input, body.theme-night input {
-            color-scheme: dark;
-        }
-        body.theme-day input,
-        body.theme-day input, body.theme-day input {
-            color-scheme: light;
-        }
-
-        /* Brand utility classes are theme-aware while preserving semantic status colors. */
-        body[class*="theme-"] [class~="text-[#001F3F]"] { color: var(--text-primary) !important; }
-        body[class*="theme-"] [class~="bg-slate-50"] { background-color: var(--card-bg) !important; }
-        body[class*="theme-"] [class~="bg-slate-100"] { background-color: var(--input-bg) !important; }
-        body[class*="theme-"] [class~="border-slate-100"],
-        body[class*="theme-"] [class~="border-slate-200"] { border-color: var(--border-primary) !important; }
-
-        /* FINAL READABILITY CONTRACT — text must remain visually distinct from its surface. */
-        body[class*="theme-"] {
-            color: var(--text-primary);
-        }
-        body[class*="theme-"] main,
-        body[class*="theme-"] aside,
-        body[class*="theme-"] section {
-            color: var(--text-primary);
-        }
-        body.theme-day .text-gray-500,
-        body.theme-day .text-gray-600,
-        body.theme-day .text-slate-500,
-        body.theme-day .text-slate-400 {
-            color: #334e68 !important;
-        }
-        body.theme-night .text-gray-500,
-        body.theme-night .text-gray-600,
-        body.theme-night .text-slate-500,
-        body.theme-night .text-slate-400,
-        body.theme-night .text-slate-300 {
-            color: #d1dbe5 !important;
-        }
-        body.theme-night .text-slate-900,
-        body.theme-night .text-slate-800,
-        body.theme-night .text-slate-700,
-        body.theme-night .text-gray-900,
-        body.theme-night .text-gray-800,
-        body.theme-night .text-gray-700 {
-            color: #ffffff !important;
-        }
+        /* Text hierarchy — never leave muted Tailwind gray text unreadable. */
         body.theme-day .text-slate-900,
         body.theme-day .text-slate-800,
         body.theme-day .text-slate-700,
         body.theme-day .text-gray-900,
         body.theme-day .text-gray-800,
-        body.theme-day .text-gray-700 {
-            color: #071a2b !important;
+        body.theme-day .text-gray-700,
+        body.theme-day .text-neutral-900,
+        body.theme-day .text-neutral-800,
+        body.theme-day .text-neutral-700 { color: #071a2b !important; }
+
+        body.theme-day .text-slate-600,
+        body.theme-day .text-slate-500,
+        body.theme-day .text-slate-400,
+        body.theme-day .text-gray-600,
+        body.theme-day .text-gray-500,
+        body.theme-day .text-gray-400,
+        body.theme-day .text-neutral-600,
+        body.theme-day .text-neutral-500,
+        body.theme-day .text-neutral-400 { color: #334e68 !important; }
+
+        body.theme-night .text-slate-900,
+        body.theme-night .text-slate-800,
+        body.theme-night .text-slate-700,
+        body.theme-night .text-gray-900,
+        body.theme-night .text-gray-800,
+        body.theme-night .text-gray-700,
+        body.theme-night .text-neutral-900,
+        body.theme-night .text-neutral-800,
+        body.theme-night .text-neutral-700 { color: #ffffff !important; }
+
+        body.theme-night .text-slate-600,
+        body.theme-night .text-slate-500,
+        body.theme-night .text-slate-400,
+        body.theme-night .text-slate-300,
+        body.theme-night .text-gray-600,
+        body.theme-night .text-gray-500,
+        body.theme-night .text-gray-400,
+        body.theme-night .text-neutral-600,
+        body.theme-night .text-neutral-500,
+        body.theme-night .text-neutral-400 { color: #d1dbe5 !important; }
+
+        /* Borders */
+        body[class*="theme-"] .border,
+        body[class*="theme-"] .border-2,
+        body[class*="theme-"] .border-slate-100,
+        body[class*="theme-"] .border-slate-200,
+        body[class*="theme-"] .border-gray-100,
+        body[class*="theme-"] .border-gray-200,
+        body[class*="theme-"] .border-neutral-100,
+        body[class*="theme-"] .border-neutral-200 {
+            border-color: var(--border-primary) !important;
         }
-        body.theme-night input::placeholder,
-        body.theme-night textarea::placeholder {
-            color: #aebdcc !important;
-            opacity: 1 !important;
-        }
-        body.theme-day input::placeholder,
-        body.theme-day textarea::placeholder {
-            color: #526b80 !important;
-            opacity: 1 !important;
-        }
+
+        /* Forms */
         body.theme-day input,
         body.theme-day select,
         body.theme-day textarea {
+            background-color: #ffffff !important;
             color: #071a2b !important;
-            background: #ffffff !important;
+            border-color: #c7d2de !important;
+            color-scheme: light;
         }
+
         body.theme-night input,
         body.theme-night select,
         body.theme-night textarea {
+            background-color: #0a1421 !important;
             color: #ffffff !important;
-            background: #0a1421 !important;
-        }
-        body[class*="theme-"] .disabled\:text-slate-400:disabled {
-            color: var(--text-secondary) !important;
+            border-color: #34485d !important;
+            color-scheme: dark;
         }
 
-        /* FINAL THEME CONTRACT — only Day and Night. Structural UI colors are theme-driven. */
-        body.theme-day,
-        body.theme-day #root {
-            --brand-navy: #102a43;
-            --brand-gold: #b18b52;
-            --brand-action-text: #102a43;
-        }
-        body.theme-night,
-        body.theme-night #root {
-            --brand-navy: #07111f;
-            --brand-gold: #c2a378;
-            --brand-action-text: #07111f;
-        }
+        body.theme-day input::placeholder,
+        body.theme-day textarea::placeholder { color: #526b80 !important; opacity: 1 !important; }
 
-        /* Remove old blue/cyan brand treatment from structural controls.
-           Status/info surfaces remain intentionally blue in the semantic block above. */
-        body.theme-day .bg-blue-500,
-        body.theme-day .bg-blue-600,
-        body.theme-night .bg-blue-500,
-        body.theme-night .bg-blue-600 {
-            background-color: var(--accent) !important;
-            color: var(--brand-action-text) !important;
-        }
-        body.theme-day .hover\\:bg-blue-600:hover,
-        body.theme-day .hover\\:bg-blue-700:hover,
-        body.theme-night .hover\\:bg-blue-600:hover,
-        body.theme-night .hover\\:bg-blue-700:hover {
-            background-color: color-mix(in srgb, var(--accent) 86%, #000) !important;
-        }
-        body.theme-day .text-blue-500,
-        body.theme-day .text-blue-600,
-        body.theme-night .text-blue-500,
-        body.theme-night .text-blue-600 {
-            color: var(--accent) !important;
-        }
-        body.theme-day .border-blue-100,
-        body.theme-day .border-blue-200,
-        body.theme-day .border-blue-500,
-        body.theme-day .border-blue-600,
-        body.theme-night .border-blue-100,
-        body.theme-night .border-blue-200,
-        body.theme-night .border-blue-500,
-        body.theme-night .border-blue-600 {
-            border-color: var(--border-primary) !important;
+        body.theme-night input::placeholder,
+        body.theme-night textarea::placeholder { color: #aebdcc !important; opacity: 1 !important; }
+
+        body[class*="theme-"] input:focus,
+        body[class*="theme-"] select:focus,
+        body[class*="theme-"] textarea:focus {
+            border-color: var(--accent) !important;
+            outline: none;
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent) !important;
         }
 
-        /* Structural sky/cyan utilities are also normalized; semantic info badges
-           continue using the dedicated status variables. */
-        body.theme-day .text-sky-500,
-        body.theme-day .text-sky-600,
-        body.theme-night .text-sky-500,
-        body.theme-night .text-sky-600,
-        body.theme-day .text-cyan-500,
-        body.theme-day .text-cyan-600,
-        body.theme-night .text-cyan-500,
-        body.theme-night .text-cyan-600 {
-            color: var(--accent) !important;
-        }
-
-        /* Common dark structural surfaces become the correct surface in each mode. */
-        body.theme-day .bg-slate-950 { background-color: var(--brand-navy) !important; }
-        body.theme-night .bg-slate-950 { background-color: var(--bg-primary) !important; }
-        body.theme-day .bg-slate-900 { background-color: var(--brand-navy) !important; }
-        body.theme-night .bg-slate-900 { background-color: var(--card-bg) !important; }
-        body.theme-day .bg-slate-800 { background-color: #183b56 !important; }
-        body.theme-night .bg-slate-800 { background-color: var(--input-bg) !important; }
-
-        /* Inputs use the same contract everywhere; native controls follow the mode. */
-        body.theme-day input,
-        body.theme-day select,
-        body.theme-day textarea { color-scheme: light; }
-        body.theme-night input,
-        body.theme-night select,
-        body.theme-night textarea { color-scheme: dark; }
-
-
-
-        /* FINAL SYSTEM-WIDE CONTRAST LAYER
-           Structural neutrals follow the active theme. Semantic colors (success/warning/danger/info)
-           are intentionally excluded so their meaning remains distinct. */
-        body.theme-day .bg-gray-50, body.theme-day .bg-gray-100,
-        body.theme-day .bg-neutral-50, body.theme-day .bg-neutral-100 {
-            background-color: var(--card-bg) !important;
+        /* Tables */
+        body[class*="theme-"] table tbody tr:not(.selected-row) td {
             color: var(--text-primary) !important;
+            border-bottom-color: var(--border-primary) !important;
         }
-        body.theme-night .bg-gray-50, body.theme-night .bg-gray-100,
-        body.theme-night .bg-neutral-50, body.theme-night .bg-neutral-100 {
-            background-color: var(--card-bg) !important;
-            color: var(--text-primary) !important;
-        }
+        body.theme-day table tbody tr:nth-child(odd):not(.selected-row) td { background: #ffffff !important; }
+        body.theme-day table tbody tr:nth-child(even):not(.selected-row) td { background: #f4f7fa !important; }
+        body.theme-night table tbody tr:nth-child(odd):not(.selected-row) td { background: #0d1928 !important; }
+        body.theme-night table tbody tr:nth-child(even):not(.selected-row) td { background: #111f30 !important; }
+        body.theme-day table tbody tr:hover:not(.selected-row) td { background: #e9eef3 !important; }
+        body.theme-night table tbody tr:hover:not(.selected-row) td { background: #17283a !important; }
 
-        body.theme-day .text-gray-700, body.theme-day .text-gray-800,
-        body.theme-day .text-gray-900, body.theme-day .text-neutral-700,
-        body.theme-day .text-neutral-800, body.theme-day .text-neutral-900 {
-            color: #071a2b !important;
-        }
-        body.theme-night .text-gray-700, body.theme-night .text-gray-800,
-        body.theme-night .text-gray-900, body.theme-night .text-neutral-700,
-        body.theme-night .text-neutral-800, body.theme-night .text-neutral-900 {
-            color: #ffffff !important;
-        }
-
-        body.theme-day .border-gray-100, body.theme-day .border-gray-200,
-        body.theme-day .border-neutral-100, body.theme-day .border-neutral-200 {
-            border-color: var(--border-primary) !important;
-        }
-        body.theme-night .border-gray-100, body.theme-night .border-gray-200,
-        body.theme-night .border-neutral-100, body.theme-night .border-neutral-200 {
-            border-color: var(--border-primary) !important;
-        }
-
-        body.theme-day input::placeholder, body.theme-day textarea::placeholder,
-        body.theme-night input::placeholder, body.theme-night textarea::placeholder {
-            opacity: 1 !important;
-        }
-
-        body.theme-day button:disabled, body.theme-day input:disabled,
-        body.theme-day select:disabled, body.theme-day textarea:disabled {
+        /* Labels and controls */
+        body[class*="theme-"] label { color: var(--text-secondary) !important; }
+        body.theme-day button:disabled,
+        body.theme-day input:disabled,
+        body.theme-day select:disabled,
+        body.theme-day textarea:disabled {
             color: #526b80 !important;
             background-color: #e7edf2 !important;
             border-color: #c7d2de !important;
         }
-        body.theme-night button:disabled, body.theme-night input:disabled,
-        body.theme-night select:disabled, body.theme-night textarea:disabled {
+        body.theme-night button:disabled,
+        body.theme-night input:disabled,
+        body.theme-night select:disabled,
+        body.theme-night textarea:disabled {
             color: #aebdcc !important;
             background-color: #101c2b !important;
             border-color: #34485d !important;
         }
 
-        /* Never let structural white text disappear on a light surface. */
-        body.theme-day .text-white:not(.bg-green-50 *):not(.bg-green-100 *):not(.bg-red-50 *):not(.bg-red-100 *) {
-            color: inherit;
+        /* Structural action colors use the Nile Fleet gold accent. Semantic status
+           colors below remain untouched. */
+        body.theme-day .bg-blue-500,
+        body.theme-day .bg-blue-600,
+        body.theme-night .bg-blue-500,
+        body.theme-night .bg-blue-600 {
+            background-color: var(--accent) !important;
+            color: #071a2b !important;
         }
-        
+        body.theme-day .text-blue-500,
+        body.theme-day .text-blue-600,
+        body.theme-night .text-blue-500,
+        body.theme-night .text-blue-600 { color: var(--accent) !important; }
+
+        body.theme-day .bg-sky-500,
+        body.theme-day .bg-sky-600,
+        body.theme-night .bg-sky-500,
+        body.theme-night .bg-sky-600,
+        body.theme-day .bg-cyan-500,
+        body.theme-day .bg-cyan-600,
+        body.theme-night .bg-cyan-500,
+        body.theme-night .bg-cyan-600 {
+            background-color: var(--accent) !important;
+            color: #071a2b !important;
+        }
+
+        /* Never force white foreground on structural elements in Day. */
+        body.theme-day .text-white:not([class*="bg-green-"]):not([class*="bg-red-"]):not([class*="bg-amber-"]):not([class*="bg-yellow-"]):not([class*="bg-blue-"]) {
+            color: #071a2b !important;
+        }
+
+        /* Arabic shaping — connected letters must remain naturally joined. */
+        [dir="rtl"] *,
+        [lang="ar"] * {
+            letter-spacing: normal !important;
+            word-spacing: normal !important;
+            text-transform: none;
+        }
+        [dir="rtl"] [class*="tracking-"],
+        [lang="ar"] [class*="tracking-"] {
+            letter-spacing: normal !important;
+        }
+
         @media (max-width: 1023px) {
             main { padding-bottom: 76px; }
         }
