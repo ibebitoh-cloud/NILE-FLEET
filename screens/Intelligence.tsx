@@ -411,7 +411,7 @@ ${question}`;
     ? 'bg-slate-900/80 border-white/10'
     : 'bg-white border-slate-200';
   const mutedClass = isDark ? 'text-slate-400' : 'text-slate-500';
-  const primaryClass = isDark ? 'text-white' : 'text-[#001F3F]';
+  const primaryClass = isDark ? 'text-white' : 'text-[#3a3833]';
 
   return (
     <>
@@ -420,7 +420,7 @@ ${question}`;
       @keyframes daliWave { 0%, 100% { transform: scaleY(.45); opacity: .35; } 50% { transform: scaleY(1.25); opacity: 1; } }
     `}</style>
     <div className={`min-h-screen pb-32 text-start ${isAr ? 'rtl font-cairo' : 'ltr'}`}>
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#001F3F] shadow-2xl">
+      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#3a3833] shadow-2xl">
         <div className="absolute -top-28 -right-28 h-72 w-72 rounded-full bg-blue-500/10 blur-3xl"></div>
         <div className="absolute -bottom-32 -left-24 h-72 w-72 rounded-full bg-[#C2A378]/10 blur-3xl"></div>
         <div className="relative z-10 p-6 md:p-8">
@@ -454,7 +454,7 @@ ${question}`;
                   key={id}
                   type="button"
                   onClick={() => { setActiveView(id); setAdvice(''); setLinkError(false); }}
-                  className={`min-w-[90px] rounded-xl px-3 py-3 transition-all ${activeView === id ? 'bg-[#C2A378] text-[#001F3F] shadow-lg' : 'text-slate-300 hover:bg-white/10'}`}
+                  className={`min-w-[90px] rounded-xl px-3 py-3 transition-all ${activeView === id ? 'bg-[#C2A378] text-[#3a3833] shadow-lg' : 'text-slate-300 hover:bg-white/10'}`}
                 >
                   <div className="text-sm">{id === activeView ? activeConfig.icon : ({PORT:'⚓',UNIT:'⚙️',SUPPLIER:'⛽',COSTS:'📋'} as any)[id]}</div>
                   <div className="mt-1 text-[8px] font-black uppercase tracking-widest">{navLabel(id)}</div>
@@ -779,7 +779,7 @@ ${question}`;
             <div className="border-t border-white/10 bg-black/10 p-3">
               <div className="flex gap-2 rounded-2xl border border-white/10 bg-white/[0.04] p-1.5 transition focus-within:border-[#C2A378]/40">
                 <textarea value={chatInput} onChange={e=>setChatInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();askFleetDali();}}} placeholder={isAr ? "اكتب سؤالك..." : "Ask DALI anything..."} className="min-h-[46px] max-h-28 flex-1 resize-none rounded-xl border-0 bg-transparent px-3 py-2 text-[16px] leading-5 text-white outline-none placeholder:text-white/30 sm:text-xs"/>
-                <button type="button" onClick={askFleetDali} disabled={chatLoading||!chatInput.trim()} className="self-end h-11 w-11 rounded-xl border border-[#C2A378]/30 bg-[#C2A378] text-[#001F3F] transition hover:scale-105 disabled:opacity-30">➤</button>
+                <button type="button" onClick={askFleetDali} disabled={chatLoading||!chatInput.trim()} className="self-end h-11 w-11 rounded-xl border border-[#C2A378]/30 bg-[#C2A378] text-[#3a3833] transition hover:scale-105 disabled:opacity-30">➤</button>
               </div>
               {chatMessages.some(m => m.role === 'dali') && (
                 <div className="mt-2 flex gap-2">
