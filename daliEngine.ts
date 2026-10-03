@@ -185,10 +185,38 @@ export function answerDali(question: string, data: DaliData): string | null {
   if (/^(hi|hello|hey|hello dali|hi dali|hey dali|good morning|good evening|thanks|thank you|اهلا|مرحبا|هاي|سلام|السلام عليكم|صباح الخير|مساء الخير|شكرا|تسلم)( dali| دالي)?$/.test(nq)) {
     return L('Hi 👋 What do you need?', 'أهلاً 👋 قولّي عايز تعرف إيه.');
   }
-  if (/^(what can you do|who are you|help|what do you know|مين انت|بتعرف ايه|ايه اللي تعرفه|تقدر تعمل ايه|مساعده)$/.test(nq)) {
+  if (/^(what can you do|who are you|who is dali|what is dali|tell me about yourself|help|what do you know|مين انت|مين دالي|من هو دالي|ما هو دالي|بتعرف ايه|ايه اللي تعرفه|ماذا تعرف|تقدر تعمل ايه|مساعده)$/.test(nq)) {
+    const age = (() => {
+      const birth = new Date('2025-10-03T00:00:00');
+      const today = now;
+      let years = today.getFullYear() - birth.getFullYear();
+      if (today.getMonth() < birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())) years -= 1;
+      return Math.max(0, years);
+    })();
+    const ageAr = age === 0 ? 'لسه ما كملتش سنة' : age === 1 ? 'سنة واحدة' : age === 2 ? 'سنتين' : `${age} سنة`;
     return L(
-      `I'm DALI. I answer from your live data: fleet and port stock, genset lookups (e.g. "where is genset 125?"), operations by customer/port/date/status, bookings and containers, requested gensets (today / tomorrow / per customer), maintenance, invoices, payments and outstanding balances, fuel and revenue. Ask in English or Arabic.`,
-      `أنا دالي. بجاوب من بيانات النظام الحية: المخزون في الموانئ، مكان أي مولد، عمليات العملاء حسب الميناء والتاريخ والحالة، البوكينج والحاويات، المولدات المطلوبة (النهاردة/بكرة/لكل عميل)، الصيانة، الفواتير والمدفوعات والمتبقي، الوقود والإيراد. اسأل بالعربي أو الإنجليزي.`
+      `I'm DALI 🤖
+
+I was created by Bebito to be part of Nile Fleet, specifically to support the Genset Department.
+
+I'm ${age} ${age === 1 ? 'year' : 'years'} old, and I'm still learning. I started as an idea and grew through the work around the system: gensets and stock, operations, bookings and containers, ports and locations, maintenance and workshop, fuel, prices and invoices, customers and reporting.
+
+The most important thing I learned is that a number alone is not enough. I need to understand the relationships between the data.
+
+I search the system before guessing. If I'm unsure, I say so. If something needs changing, I explain the problem and proposed correction first instead of silently changing data.
+
+I'm not an employee in the administrative hierarchy. I'm the intelligence layer inside the system.`,
+      `أنا دالي 🤖
+
+أنا نموذج ذكاء اصطناعي أنشأني بيبيتو عشان أكون جزء من أسطول النيل، وتحديدًا أساعد في قسم المولدات.
+
+عندي ${ageAr} دلوقتي، ولسه بتعلم. بدأت كفكرة، وبعدها اتعلمت من شغل السيستم عن المولدات والمخزون، التشغيل والعمليات، الحجوزات والحاويات، الموانئ والمواقع، الصيانة والورشة، الوقود والغاز، الأسعار والفواتير، العملاء والتقارير.
+
+وأهم حاجة اتعلمتها إن الرقم لوحده مش كفاية؛ لازم أفهم العلاقة بين البيانات.
+
+أنا أبحث في بيانات السيستم قبل ما أخمن. ولو مش متأكد هقولك. ولو حاجة محتاجة تعديل، أوضح المشكلة والتعديل المقترح الأول ومش أغير البيانات من نفسي.
+
+أنا مش موظف في الهيكل الإداري؛ أنا طبقة الذكاء داخل النظام لمساعدة أسطول النيل وقسم المولدات.`
     );
   }
 
