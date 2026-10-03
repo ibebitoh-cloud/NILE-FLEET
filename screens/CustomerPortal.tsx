@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useContext } from 'react';
+import React, { useState, useMemo, useContext, useEffect } from 'react';
 import { User, Reservation, Invoice, Location, ReservationStatus } from '../types';
 import { db } from '../services/supabaseDb';
 import InvoiceView from '../components/InvoiceView';
@@ -18,6 +18,16 @@ const CustomerPortal: React.FC<CustomerPortalProps> = ({ user, type }) => {
   const [isBooking, setIsBooking] = useState(false);
   const [viewingInvoice, setViewingInvoice] = useState<Invoice | null>(null);
   const [showSoa, setShowSoa] = useState(false);
+  const [, setDataVersion] = useState(0);
+  useEffect(() => {
+    const refresh = () => setDataVersion(v => v + 1);
+    window.addEventListener('db-change', refresh);
+    window.addEventListener('db-undo-success', refresh);
+    return () => {
+      window.removeEventListener('db-change', refresh);
+      window.removeEventListener('db-undo-success', refresh);
+    };
+  }, []);
   const [formData, setFormData] = useState({
     bookingNumber: '',
     gensetsNeeded: 1,
