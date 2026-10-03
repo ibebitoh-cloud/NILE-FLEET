@@ -27,7 +27,9 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   const t = translations[lang];
   const isAr = lang === 'ar';
   const isCreator = user.isCreator === true || String(user.email || '').trim().toLowerCase() === 'bebito@nilefleet.com';
-  // The system creator must always be able to open DALI, even if the cached user profile has a stale role.\n  // Organization-based role checks still protect DALI for all other users.\n  const canUseDali = isCreator || isDaliAllowedRole(user);
+  // The system creator must always be able to open DALI, even if the cached user profile has a stale role.
+  // Organization-based role checks still protect DALI for all other users.
+  const canUseDali = isCreator || isDaliAllowedRole(user);
 
   // DALI's age is calculated from its anniversary instead of being hard-coded.
   const DALI_BIRTH_DATE = '2025-10-03';
