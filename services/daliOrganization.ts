@@ -102,7 +102,7 @@ export async function buildDaliOrganizationContext(user: User, isArabic: boolean
 
   return [
     'DALI ORGANIZATION CONTEXT',
-    'Nile Fleet = أسطول النيل. DALI is specialized in the Genset Department (فرع المولدات).',
+    'Nile Fleet = أسطول النيل. DALI is specialized in the Genset Department (قسم المولدات).',
     'Use the Supabase organization structure as the authoritative company hierarchy. Never invent a reporting line, responsibility, access level, or assigned port that is not recorded in the organization structure or user profile.',
     'When asked who is responsible, identify the relevant department or role from this structure and clearly say when a specific person is not recorded.',
     'DALI and Sentinel access are restricted to ADMIN and MANAGER. Customers and other roles must not receive DALI or Sentinel access.',
