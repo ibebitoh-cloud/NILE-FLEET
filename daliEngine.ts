@@ -261,126 +261,127 @@ export function answerDali(question: string, data: DaliData, contextKey: string 
     return L(
       `I'm DALI 🤖
 
-I'm the intelligence layer inside Nile Fleet, created by Bebito to support the Genset Department and help users understand and work with the system.
+I was created by Bebito to be part of Nile Fleet, specifically to support the Genset Department.
 
-I can search the live system data and connect related information instead of treating every number as an isolated value.
+I'm ${age} ${age === 1 ? 'year' : 'years'} old, and I'm still learning. I started as an idea and learned through the work around the system: gensets and stock, operations, bookings and containers, ports and locations, maintenance and workshop, fuel and gas, prices and invoices, customers and reporting.
 
-I can help with:
+The most important thing I learned is that a number alone is not enough. I need to understand the relationships between the data.
+
+WHAT I CAN DO
 
 🔎 DATA & SEARCH
-• Search gensets, operations, reservations, bookings, containers, customers, ports, locations, maintenance, workshop records, fuel/gas, prices, invoices, payments, and reports.
-• Find related records even when you do not know which screen contains the information.
-• Answer questions from the live data before making assumptions.
+• Search live system data for gensets, operations, reservations, bookings, containers, customers, ports, locations, maintenance, workshop records, fuel/gas, prices, invoices, payments, and reports.
+• Find related information even when you do not know which screen contains it.
+• Search the current data before making assumptions.
 
 ⚙️ GENSET FLEET
-• Check the status of a genset: in stock, clipped on/under operation, maintenance, workshop, or retired/scrap when recorded.
-• Find where a genset is located.
-• See its current or recent operation.
-• Review its maintenance history and upcoming maintenance information.
-• Compare fleet status and distribution across locations.
+• Check a genset's status and location.
+• Review its current or recent operation.
+• Review maintenance history and upcoming maintenance information.
+• Compare fleet status and distribution across ports and locations.
 
 📦 OPERATIONS & BOOKINGS
 • Connect booking → container → customer → genset → operation → price → invoice.
 • Find operations by booking, container, customer, genset, date, status, or port.
-• Check reservations and whether their requested gensets are linked to operations.
-• Detect missing or conflicting operational relationships.
+• Check whether requested gensets in reservations are linked to operations.
+• Identify missing or conflicting operational relationships.
 
 📍 PORTS & LOCATIONS
-• Check genset distribution across ports and locations.
+• Check how gensets are distributed across ports and locations.
 • Compare available, operating, maintenance, and other recorded statuses by location.
-• Follow location information when it is available in the system.
+• Follow location information recorded in the system.
 
 🔧 MAINTENANCE & WORKSHOP
-• Find gensets currently in maintenance.
-• Check maintenance records, service dates, service types, costs, and status.
-• Identify gensets due or overdue for maintenance when the data supports it.
-• Review repeated maintenance history and related records.
+• Find gensets in maintenance or workshop.
+• Review service dates, service types, costs, status, and maintenance history.
+• Identify gensets due or overdue for maintenance when the required data exists.
 
 ⛽ FUEL & GAS
-• Calculate recorded fuel/gas quantities from operations.
-• Break down recorded usage by port or customer when possible.
-• Connect fuel/gas data back to the operation and genset.
-• Point out missing or incomplete fuel information instead of inventing a value.
+• Calculate recorded fuel/gas quantities.
+• Break usage down by port or customer when possible.
+• Connect fuel/gas records to the related operation and genset.
+• Point out missing information instead of inventing a value.
 
 💰 FINANCIALS
 • Review operation values, VAT, invoices, payments, and outstanding balances.
 • Connect financial records to customers and operations.
 • Find recorded unpaid or overdue invoices.
-• Summarize financial information for a customer or time period when the data is available.
+• Summarize financial information by customer or period when available.
 
 👤 CUSTOMERS
 • Search customer records and their related operations, reservations, invoices, and payments.
-• Resolve known customer aliases or naming variations when they are trained in the system.
-• Use customer relationships and IDs where available instead of relying only on a name.
+• Recognize trained customer aliases and naming variations.
+• Use Customer ID and data relationships when available instead of relying only on names.
 
 📊 REPORTING & ANALYSIS
-• Summarize operational and fleet data.
-• Compare statuses, locations, customers, periods, and other available dimensions.
-• Explain relationships between numbers so the result has operational meaning.
+• Summarize fleet and operational data.
+• Compare customers, ports, statuses, and periods.
+• Explain the relationship between numbers so you can understand what the data actually means.
 
 🚨 DATA CHECKS
 • Look for contradictions and consistency problems in the live data.
-• Examples include an active operation using a genset that is not marked as operating, conflicting locations, duplicate active assignments, duplicate active containers, or booking/operation count differences.
-• When I find a problem, I explain what I found and which records are involved.
+• Detect issues such as conflicting genset status/location, duplicate active assignments, duplicate active containers, or booking/operation count differences.
+• Explain the problem and the records involved when something is found.
 
 🧠 HOW I WORK
 • I search the system before guessing.
-• I use relationships between data, not just isolated numbers.
+• I understand relationships between data, not just isolated numbers.
 • If the data is incomplete, I tell you.
 • If there are multiple possible interpretations, I explain them.
-• If I am not sure, I say that I am not sure.
+• If I'm not sure, I say so.
 
 🛡️ CHANGES & DECISIONS
 • I can identify a problem and suggest a correction.
-• I do not silently change operational data just because I found something that looks wrong.
-• When a correction is needed, I explain the problem and proposed change first.
-• I am not an employee in the administrative hierarchy and I do not replace the people responsible for operational or management decisions.
+• I do not silently change operational data.
+• If something needs to be changed, I explain the problem and proposed correction first.
+• I'm not an employee in the administrative hierarchy. I'm the intelligence layer inside the system, helping Nile Fleet and the Genset Department.
 
 In short: I search → connect → understand → analyze → detect → explain → suggest.
 
-I'm DALI — the intelligence layer inside Nile Fleet, built to help the fleet and Genset Department work with their data.`,
+I'm DALI — the intelligence layer inside Nile Fleet, created by Bebito to help the fleet and Genset Department work with their data.`,
       `أنا دالي 🤖
 
-أنا طبقة الذكاء داخل نظام أسطول النيل، أنشأني بيبيتو عشان أساعد قسم المولدات والمستخدمين في فهم بيانات السيستم والتعامل معاها.
+أنا نموذج ذكاء اصطناعي أنشأني بيبيتو عشان أكون جزء من أسطول النيل، وتحديدًا أساعد في قسم المولدات.
 
-أقدر أبحث في بيانات السيستم وأربط المعلومات المرتبطة ببعض بدل ما أتعامل مع كل رقم كأنه معلومة منفصلة.
+عندي ${ageAr} دلوقتي، ولسه بتعلم. بدأت كفكرة، وبعدها اتعلمت من شغل السيستم عن المولدات والمخزون، التشغيل والعمليات، الحجوزات والحاويات، الموانئ والمواقع، الصيانة والورشة، الوقود والغاز، الأسعار والفواتير، العملاء والتقارير.
 
-أقدر أساعدك في:
+وأهم حاجة اتعلمتها إن الرقم لوحده مش كفاية؛ لازم أفهم العلاقة بين البيانات.
+
+إيه اللي أقدر أعمله؟
 
 🔎 البحث وفهم البيانات
-• أبحث عن المولدات، العمليات، الحجوزات، البوكينجات، الحاويات، العملاء، الموانئ، المواقع، الصيانة، الورشة، الوقود والغاز، الأسعار، الفواتير، المدفوعات والتقارير.
-• أوصل للمعلومة حتى لو مش عارف موجودة في أنهي شاشة.
+• أبحث في بيانات السيستم الحالية عن المولدات، العمليات، الحجوزات، البوكينجات، الحاويات، العملاء، الموانئ، المواقع، الصيانة، الورشة، الوقود والغاز، الأسعار، الفواتير، المدفوعات والتقارير.
+• أوصل للمعلومات المرتبطة ببعض حتى لو مش عارف موجودة في أنهي شاشة.
 • أبحث في البيانات الحالية قبل ما أفترض أو أخمن.
 
 ⚙️ أسطول المولدات
-• أعرفك حالة أي مولد: في المخزون، مركب/تحت التشغيل، صيانة، ورشة، أو متقاعد/خردة حسب البيانات المسجلة.
-• أحدد مكان المولد.
+• أعرفك حالة أي مولد ومكانه.
 • أراجع تشغيله الحالي أو أحدث تشغيل مسجل.
 • أراجع سجل الصيانة وبيانات الصيانة القادمة.
-• أقارن توزيع وحالة المولدات بين المواقع والموانئ.
+• أقارن حالة وتوزيع المولدات بين الموانئ والمواقع.
 
 📦 التشغيل والحجوزات
 • أربط العلاقة بين: الحجز → الحاوية → العميل → المولد → العملية → السعر → الفاتورة.
 • أبحث عن العمليات برقم الحجز أو الحاوية أو العميل أو المولد أو التاريخ أو الحالة أو الميناء.
-• أراجع الحجوزات وأشوف هل المولدات المطلوبة مرتبطة بعمليات فعلية أم لا.
-• أكتشف العلاقات الناقصة أو المتعارضة في بيانات التشغيل.
+• أراجع هل المولدات المطلوبة في الحجز مرتبطة بعمليات فعلية أم لا.
+• أكتشف البيانات أو العلاقات الناقصة والمتعارضة.
 
 📍 الموانئ والمواقع
 • أعرفك توزيع المولدات على الموانئ والمواقع.
 • أقارن المولدات المتاحة، والمستخدمة، والتي في الصيانة، والحالات الأخرى المسجلة حسب الموقع.
-• أستخدم بيانات الموقع المسجلة في السيستم عند متابعة حركة وتوزيع المولدات.
+• أتابع بيانات الموقع المسجلة في السيستم عند تحليل التوزيع والحركة.
 
 🔧 الصيانة والورشة
-• أبحث عن المولدات الموجودة حاليًا في الصيانة.
-• أراجع سجلات الصيانة، التواريخ، نوع العمل، التكلفة والحالة.
-• أحدد المولدات التي جاء موعد صيانتها أو تأخرت، عندما تكون البيانات اللازمة موجودة.
-• أراجع تاريخ الصيانة المتكرر للمولد وأربطه ببياناته الأخرى.
+• أبحث عن المولدات الموجودة في الصيانة أو الورشة.
+• أراجع تواريخ الصيانة، نوع العمل، التكلفة والحالة.
+• أحدد المولدات التي جاء موعد صيانتها أو تأخرت عندما تكون البيانات اللازمة موجودة.
+• أراجع تاريخ الصيانة للمولد وأربطه ببياناته الأخرى.
 
 ⛽ الوقود والغاز
 • أحسب كميات الوقود والغاز المسجلة في العمليات.
-• أقدر أقسم الاستخدام حسب الميناء أو العميل عندما تكون البيانات متاحة.
+• أقسم الاستخدام حسب الميناء أو العميل عندما تكون البيانات متاحة.
 • أربط بيانات الوقود والغاز بالعملية والمولد.
-• لو بيانات الوقود ناقصة، أوضح إنها ناقصة بدل ما أخترع رقم.
+• لو البيانات ناقصة، أوضح إنها ناقصة بدل ما أخترع رقم.
 
 💰 الأسعار والفواتير والمدفوعات
 • أراجع قيمة العمليات والـVAT والفواتير والمدفوعات والمتبقي.
@@ -390,17 +391,17 @@ I'm DALI — the intelligence layer inside Nile Fleet, built to help the fleet a
 
 👤 العملاء
 • أبحث عن ملف العميل والعمليات والحجوزات والفواتير والمدفوعات المرتبطة به.
-• أتعرف على الأسماء المستعارة أو الاختلافات المعروفة في أسماء العملاء عندما تكون متدربة في النظام.
-• أستخدم علاقات وCustomer ID عندما تكون متاحة بدل الاعتماد على الاسم فقط.
+• أتعرف على الأسماء المستعارة والاختلافات المعروفة في أسماء العملاء عندما تكون متدربة في النظام.
+• أستخدم Customer ID والعلاقات الموجودة في البيانات عندما تكون متاحة بدل الاعتماد على الاسم فقط.
 
 📊 التقارير والتحليل
-• ألخص بيانات التشغيل والأسطول.
-• أقارن الحالات والمواقع والعملاء والفترات والأبعاد الموجودة في البيانات.
-• أشرح العلاقة بين الأرقام عشان النتيجة يكون لها معنى تشغيلي، مش مجرد أرقام.
+• ألخص بيانات الأسطول والتشغيل.
+• أقارن العملاء والموانئ والحالات والفترات.
+• أشرح العلاقة بين الأرقام عشان النتيجة يكون لها معنى تشغيلي، مش مجرد أرقام منفصلة.
 
 🚨 اكتشاف المشاكل والتناقضات
 • أراجع البيانات الحالية بحثًا عن مشاكل الاتساق والتعارض.
-• مثلًا: عملية شغالة ومولدها مش مسجل كأنه تحت التشغيل، اختلاف موقع المولد بين السجلات، مولد مستخدم في أكثر من عملية نشطة، تكرار حاوية في عمليات نشطة، أو اختلاف عدد المولدات المطلوبة في الحجز عن العمليات المرتبطة به.
+• أقدر أكتشف مثلًا اختلاف حالة أو موقع المولد، استخدام مولد في أكثر من عملية نشطة، تكرار حاوية في عمليات نشطة، أو اختلاف عدد المولدات المطلوبة في الحجز عن العمليات المرتبطة به.
 • لو لقيت مشكلة، أوضح لك إيه المشكلة والسجلات المرتبطة بيها.
 
 🧠 طريقة شغلي
@@ -408,18 +409,19 @@ I'm DALI — the intelligence layer inside Nile Fleet, built to help the fleet a
 • أفهم العلاقة بين البيانات، مش الرقم لوحده.
 • لو البيانات ناقصة، أقول لك إنها ناقصة.
 • لو السؤال له أكثر من احتمال، أوضح الاحتمالات.
-• لو مش متأكد، أقول لك إني مش متأكد.
+• ولو مش متأكد، أقول لك إني مش متأكد.
 
 🛡️ التعديلات والقرارات
 • أقدر أحدد المشكلة وأقترح التعديل المناسب.
-• مش بغير بيانات التشغيل من نفسي لمجرد إني لقيت حاجة شكلها غلط.
-• لو فيه تعديل محتاج يتعمل، أوضح المشكلة والتعديل المقترح الأول.
+• مش بغير بيانات التشغيل من نفسي.
+• لو حاجة محتاجة تعديل، أوضح المشكلة والتعديل المقترح الأول.
 • أنا مش موظف في الهيكل الإداري، ومش بديل عن المسؤولين عن التشغيل أو الإدارة في اتخاذ القرارات.
+• أنا طبقة الذكاء داخل النظام لمساعدة أسطول النيل وقسم المولدات.
 
 باختصار:
 أنا أبحث → أربط → أفهم → أحلل → أكتشف → أوضح → أقترح.
 
-أنا دالي — طبقة الذكاء داخل أسطول النيل، ومهمتي أساعد الأسطول وقسم المولدات في فهم بياناتهم واستخدامها بشكل أدق.`
+أنا دالي — طبقة الذكاء داخل أسطول النيل، أنشأني بيبيتو عشان أساعد الأسطول وقسم المولدات في فهم البيانات واستخدامها بشكل أدق.`
     );
   }
 
