@@ -1814,7 +1814,7 @@ const MasterView: React.FC = () => {
                    <button onClick={() => setShowAddModal(false)} aria-label={isAr ? 'إغلاق' : 'Close'} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-white hover:text-rose-400 hover:bg-white/10 text-xl">✕</button>
                 </div>
              </div>
-             <div className="nf-mobile-scroll-container flex-1 min-h-0 overflow-auto overscroll-contain p-1 sm:p-4 relative" style={{ backgroundColor: isDark ? '#0b1220' : '#f1f5f9' }}> flex-1 overflow-auto p-2 sm:p-4 relative" style={{ backgroundColor: isDark ? '#0b1220' : '#f1f5f9' }}>
+             <div className="nf-mobile-scroll-container flex-1 min-h-0 overflow-auto overscroll-contain p-1 sm:p-4 relative" style={{ backgroundColor: isDark ? '#0b1220' : '#f1f5f9' }}>
                 <table className="manifest-staging-table w-max min-w-full text-start whitespace-nowrap border-collapse text-[11px] sm:text-[10px]" style={{ tableLayout: 'fixed' }}>
                    <colgroup>{stagingColumnHeaders.map(column => <col key={column.key} style={{ width: stagingColWidths[column.key] ?? stagingColumnDefaults[column.key] }} />)}</colgroup>
                    <thead className="bg-[#3a3833] text-white text-[9px] font-black uppercase tracking-widest sticky top-0 z-30">
