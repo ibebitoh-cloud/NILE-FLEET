@@ -1245,7 +1245,10 @@ const MasterView: React.FC = () => {
       return;
     }
 
-    const updatedOperation = { ...op, [field]: val } as Operation;
+    // db.updateOperation has already merged the authoritative cached row.
+    // Use that exact row so related fields (for example customerId) stay in sync.
+    skipNextDbChangeRefreshRef.current = false;
+    const updatedOperation = db.getOperations().find(item => item.id === op.id) || ({ ...op, [field]: val } as Operation);
     setOperations(current =>
       current.map(item => item.id === updatedOperation.id ? updatedOperation : item)
     );
