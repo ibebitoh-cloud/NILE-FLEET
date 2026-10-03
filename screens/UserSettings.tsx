@@ -2,7 +2,7 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
 import { User, UserRole, InvoiceSettings, Location } from '../types';
 import { db } from '../services/supabaseDb';
-import { LanguageContext, ThemeContext, ThemeMode } from '../App';
+import { LanguageContext, ThemeContext } from '../App';
 import { translations, translateEntity, discoveryQueue, dynamicTranslations, registerDynamicTranslation, deleteDynamicTranslation, scanForUntranslated } from '../translations';
 import { AVATARS } from '../constants';
 import SignaturePad from '../components/SignaturePad';
@@ -14,70 +14,12 @@ interface UserSettingsProps {
 
 const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
   const { lang } = useContext(LanguageContext);
-  const { theme, setTheme, scale, setScale, isDark, updateCustomTheme } = useContext(ThemeContext);
+  const { theme, setTheme, scale, setScale } = useContext(ThemeContext);
   const t = translations[lang];
   const isAr = lang === 'ar';
   
   const isSuperOwner = user.email === 'bebito@nilefleet.com';
   const isAdmin = user.role === UserRole.ADMIN;
-
-  const [customBg, setCustomBg] = useState(() => localStorage.getItem('custom_bg_primary') || '#ffffff');
-  const [customText, setCustomText] = useState(() => localStorage.getItem('custom_text_primary') || '#0f172a');
-  const [customSec, setCustomSec] = useState(() => localStorage.getItem('custom_text_secondary') || '#475569');
-  const [customCard, setCustomCard] = useState(() => localStorage.getItem('custom_card_bg') || '#ffffff');
-  const [customAccent, setCustomAccent] = useState(() => localStorage.getItem('custom_accent') || '#3b82f6');
-  const [customBorder, setCustomBorder] = useState(() => localStorage.getItem('custom_border_primary') || '#e2e8f0');
-  const [customInput, setCustomInput] = useState(() => localStorage.getItem('custom_input_bg') || '#f8fafc');
-  const [customIsDark, setCustomIsDark] = useState(() => localStorage.getItem('custom_is_dark') === 'true');
-  const [customRowBg, setCustomRowBg] = useState(() => localStorage.getItem('custom_row_bg') || '#ffffff');
-  const [customRailBg, setCustomRailBg] = useState(() => localStorage.getItem('custom_rail_bg') || '#ffffff');
-  const handleCustomThemeChange = (updates: {
-    bg?: string;
-    text?: string;
-    textSec?: string;
-    card?: string;
-    accent?: string;
-    border?: string;
-    input?: string;
-    isDark?: boolean;
-    rowBg?: string;
-    railBg?: string;
-  }) => {
-    const updatedBg = updates.bg !== undefined ? updates.bg : customBg;
-    const updatedText = updates.text !== undefined ? updates.text : customText;
-    const updatedTextSec = updates.textSec !== undefined ? updates.textSec : customSec;
-    const updatedCard = updates.card !== undefined ? updates.card : customCard;
-    const updatedAccent = updates.accent !== undefined ? updates.accent : customAccent;
-    const updatedBorder = updates.border !== undefined ? updates.border : customBorder;
-    const updatedInput = updates.input !== undefined ? updates.input : customInput;
-    const updatedIsDark = updates.isDark !== undefined ? updates.isDark : customIsDark;
-    const updatedRowBg = updates.rowBg !== undefined ? updates.rowBg : customRowBg;
-    const updatedRailBg = updates.railBg !== undefined ? updates.railBg : customRailBg;
-
-    if (updates.bg !== undefined) setCustomBg(updates.bg);
-    if (updates.text !== undefined) setCustomText(updates.text);
-    if (updates.textSec !== undefined) setCustomSec(updates.textSec);
-    if (updates.card !== undefined) setCustomCard(updates.card);
-    if (updates.accent !== undefined) setCustomAccent(updates.accent);
-    if (updates.border !== undefined) setCustomBorder(updates.border);
-    if (updates.input !== undefined) setCustomInput(updates.input);
-    if (updates.isDark !== undefined) setCustomIsDark(updates.isDark);
-    if (updates.rowBg !== undefined) setCustomRowBg(updates.rowBg);
-    if (updates.railBg !== undefined) setCustomRailBg(updates.railBg);
-
-    updateCustomTheme({
-      bg: updatedBg,
-      text: updatedText,
-      textSec: updatedTextSec,
-      card: updatedCard,
-      accent: updatedAccent,
-      border: updatedBorder,
-      input: updatedInput,
-      isDark: updatedIsDark,
-      rowBg: updatedRowBg,
-      railBg: updatedRailBg
-    });
-  };
 
   const [activeTab, setActiveTab] = useState<'IDENTITY' | 'CONTACT' | 'BUSINESS' | 'LINGUISTICS' | 'COMMAND'>('IDENTITY');
   
@@ -564,148 +506,64 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
 
         {activeTab === 'DISPLAY' && (
           <div className="p-6 lg:p-10 space-y-8 animate-in fade-in duration-300">
-            <div className="rounded-[2rem] p-6 lg:p-8 bg-[var(--surface-1)] border border-[var(--border-primary)] relative overflow-hidden">
-              <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-[var(--accent)]/10 blur-3xl pointer-events-none"></div>
-              <div className="relative z-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5">
-                <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.28em] text-[var(--accent)] mb-2">
-                    {isAr ? 'مظهر النظام' : 'SYSTEM APPEARANCE'}
-                  </p>
-                  <h3 className="text-2xl font-black tracking-tight text-[var(--text-primary)]">
-                    {isAr ? 'اختر بيئة العمل الخاصة بك' : 'Choose your workspace environment'}
-                  </h3>
-                  <p className="mt-2 max-w-2xl text-xs font-semibold leading-6 text-[var(--text-secondary)]">
-                    {isAr ? 'خمسة أنظمة جاهزة مصممة للعمل اليومي، مع مساحة مخصصة بالكامل عند الحاجة.' : 'Five purpose-built environments for daily operations, plus a fully custom palette when you need it.'}
-                  </p>
-                </div>
-                <div className="px-4 py-2 rounded-xl bg-[var(--surface-2)] border border-[var(--border-primary)] text-[9px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
-                  {isAr ? 'يحفظ تلقائياً' : 'AUTO SAVED'}
-                </div>
-              </div>
+            <div className="rounded-[2rem] p-6 lg:p-8 bg-[var(--surface-1)] border border-[var(--border-primary)]">
+              <p className="text-[9px] font-black uppercase tracking-[0.28em] text-[var(--accent)] mb-2">
+                {isAr ? 'مظهر النظام' : 'SYSTEM APPEARANCE'}
+              </p>
+              <h3 className="text-2xl font-black tracking-tight text-[var(--text-primary)]">
+                {isAr ? 'بيئة تشغيل واحدة — نهار أو ليل' : 'One system environment — Day or Night'}
+              </h3>
+              <p className="mt-2 max-w-2xl text-xs font-semibold leading-6 text-[var(--text-secondary)]">
+                {isAr ? 'نفس تصميم نايل فليت في الوضعين، مع تغيير الألوان فقط حسب وقت العمل.' : 'The same Nile Fleet design in both modes. Only the color environment changes.'}
+              </p>
             </div>
 
-            <div className="rounded-[2rem] border border-[var(--border-primary)] bg-[var(--surface-1)] p-6 lg:p-8 space-y-6">
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.28em] text-[var(--accent)]">{isAr ? 'استوديو دالي' : 'DALI STUDIO'}</p>
-                <h4 className="mt-1 text-xl font-black text-[var(--text-primary)]">{isAr ? 'غيّر شكل دالي في أي وقت' : 'Change DALI whenever you want'}</h4>
-                <p className="mt-1 text-[9px] font-semibold text-[var(--text-secondary)]">{isAr ? 'الستايل والخلفية والتفكير والحركة محفوظة لكل مستخدم.' : 'Style, background, thinking and animation are saved per user.'}</p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-                {([
-                  ['Style', daliVisualStyle, setDaliVisualStyle, [['glass','Glass'],['phantom','Phantom'],['terminal','Terminal'],['aurora','Aurora'],['blueprint','Blueprint']]],
-                  ['Background', daliBackgroundStyle, setDaliBackgroundStyle, [['soft','Soft'],['grid','Grid'],['aurora','Aurora'],['blueprint','Blueprint'],['clear','Clear']]],
-                  ['Thinking', daliThinkingStyle, setDaliThinkingStyle, [['clean','Clean'],['technical','Technical'],['friendly','Friendly'],['silent','Silent']]],
-                  ['Animation', daliAnimationStyle, setDaliAnimationStyle, [['float','Float'],['pulse','Pulse'],['orb','Orb'],['none','None']]]
-                ] as const).map(([label, value, setter, options]) => (
-                  <div key={label} className="rounded-2xl border border-[var(--border-primary)] bg-[var(--surface-2)] p-3">
-                    <p className="mb-2 text-[8px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{label}</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {options.map(([option, name]) => (
-                        <button key={option} type="button" onClick={() => { setter(option as any); updateDaliPreference(label === 'Style' ? 'style' : label === 'Background' ? 'background' : label === 'Thinking' ? 'thinking' : 'animation', option); }} className={`rounded-lg border px-2 py-1.5 text-[8px] font-bold transition-all ${value === option ? 'border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]' : 'border-[var(--border-primary)] text-[var(--text-secondary)] hover:border-[var(--accent)]/60'}`}>{name}</button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {[
-                { id: 'nile', name: isAr ? 'نايل فليت' : 'Nile Fleet', desc: isAr ? 'هوية نايل فليت التشغيلية' : 'Nile Fleet operational identity', preview: ['#061a16','#0b241f','#4fd1a5'] },
-                { id: 'navy', name: isAr ? 'ليلي الميناء' : 'Port Night', desc: isAr ? 'واضح للعمل الليلي والموانئ' : 'High-clarity night operations', preview: ['#07111f','#101c2e','#5ec8ff'] },
-                { id: 'corporate', name: isAr ? 'تنفيذي فاتح' : 'Executive Light', desc: isAr ? 'نظيف للاجتماعات والتقارير' : 'Clean for reports and office work', preview: ['#f4f7fa','#ffffff','#0b7fab'] },
-                { id: 'carbon', name: isAr ? 'فولاذ صناعي' : 'Industrial Steel', desc: isAr ? 'تقني وهادئ للشاشات الثقيلة' : 'Technical and restrained', preview: ['#11161b','#1b2229','#58a6d9'] },
-                { id: 'sandstorm', name: isAr ? 'صحراء تشغيلية' : 'Desert Operations', desc: isAr ? 'دافئ وواضح للعمليات الميدانية' : 'Warm field-operations workspace', preview: ['#f3ecdf','#fffaf2','#b7791f'] }
+                {
+                  id: 'day' as const,
+                  name: isAr ? '☀️ وضع الصباح' : '☀️ DAY MODE',
+                  desc: isAr ? 'خلفية فاتحة، بطاقات بيضاء، نص كحلي ولمسة ذهبية.' : 'Light workspace, white cards, navy text and Nile Fleet gold.',
+                  preview: ['#f5f7fa','#ffffff','#b18b52']
+                },
+                {
+                  id: 'night' as const,
+                  name: isAr ? '🌙 وضع الليل' : '🌙 NIGHT MODE',
+                  desc: isAr ? 'خلفية كحلية عميقة، بطاقات داكنة ونص فاتح ولمسة ذهبية.' : 'Deep navy workspace, dark cards, light text and Nile Fleet gold.',
+                  preview: ['#07111f','#101c2e','#c2a378']
+                }
               ].map(p => (
                 <button
                   key={p.id}
                   type="button"
-                  onClick={() => setTheme(p.id as ThemeMode)}
-                  className={`group text-start rounded-[1.5rem] overflow-hidden border-2 transition-all duration-200 ${theme === p.id ? 'border-[var(--accent)] shadow-xl -translate-y-1' : 'border-[var(--border-primary)] hover:border-[var(--accent)]/60'}`}
+                  onClick={() => setTheme(p.id)}
+                  className={`group text-start rounded-[2rem] overflow-hidden border-2 transition-all duration-200 ${theme === p.id ? 'border-[var(--accent)] shadow-xl -translate-y-1' : 'border-[var(--border-primary)] hover:border-[var(--accent)]/60'}`}
                 >
-                  <div className="h-24 p-3 flex items-end gap-2" style={{ background: p.preview[0] }}>
-                    <div className="h-10 flex-1 rounded-lg" style={{ background: p.preview[1] }}></div>
-                    <div className="h-7 w-7 rounded-lg" style={{ background: p.preview[2] }}></div>
+                  <div className="h-32 p-4 flex items-end gap-3" style={{ background: p.preview[0] }}>
+                    <div className="h-16 flex-1 rounded-xl" style={{ background: p.preview[1] }}></div>
+                    <div className="h-10 w-10 rounded-xl" style={{ background: p.preview[2] }}></div>
                   </div>
-                  <div className="p-4 bg-[var(--surface-1)]">
+                  <div className="p-5 bg-[var(--surface-1)]">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-black uppercase tracking-wide text-[var(--text-primary)]">{p.name}</span>
-                      {theme === p.id && <span className="text-[9px] font-black text-[var(--accent)]">✓</span>}
+                      <span className="text-sm font-black tracking-wide text-[var(--text-primary)]">{p.name}</span>
+                      {theme === p.id && <span className="text-[10px] font-black text-[var(--accent)]">✓</span>}
                     </div>
-                    <p className="mt-1 text-[9px] font-semibold leading-4 text-[var(--text-secondary)]">{p.desc}</p>
+                    <p className="mt-2 text-[10px] font-semibold leading-5 text-[var(--text-secondary)]">{p.desc}</p>
                   </div>
                 </button>
               ))}
-
-              <button
-                type="button"
-                onClick={() => setTheme('custom')}
-                className={`group text-start rounded-[1.5rem] overflow-hidden border-2 transition-all duration-200 ${theme === 'custom' ? 'border-[var(--accent)] shadow-xl -translate-y-1' : 'border-dashed border-[var(--border-primary)] hover:border-[var(--accent)]/60'}`}
-              >
-                <div className="h-24 p-3 grid grid-cols-3 gap-2" style={{ background: 'linear-gradient(135deg,#101827,#17243b)' }}>
-                  <div className="rounded-lg" style={{ background: customBg }}></div>
-                  <div className="rounded-lg" style={{ background: customCard }}></div>
-                  <div className="rounded-lg" style={{ background: customAccent }}></div>
-                </div>
-                <div className="p-4 bg-[var(--surface-1)]">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-wide text-[var(--text-primary)]">{isAr ? 'مخصص' : 'Custom'}</span>
-                    {theme === 'custom' && <span className="text-[9px] font-black text-[var(--accent)]">✓</span>}
-                  </div>
-                  <p className="mt-1 text-[9px] font-semibold leading-4 text-[var(--text-secondary)]">{isAr ? 'تحكم كامل في الألوان' : 'Full control over your colors'}</p>
-                </div>
-              </button>
             </div>
 
-            {theme === 'custom' && (
-              <div className="rounded-[2rem] border border-[var(--border-primary)] bg-[var(--surface-1)] p-6 lg:p-8 space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-                  <div>
-                    <h4 className="text-sm font-black uppercase tracking-widest text-[var(--text-primary)]">{isAr ? 'لوحة مخصصة' : 'Custom palette'}</h4>
-                    <p className="mt-1 text-[9px] font-semibold text-[var(--text-secondary)]">{isAr ? 'عدّل الألوان وشاهد النتيجة فوراً.' : 'Adjust the system colors and see the result instantly.'}</p>
-                  </div>
-                  <button type="button" onClick={() => handleCustomThemeChange({ bg:'#07111f', text:'#f8fafc', textSec:'#9fb0c2', card:'#101c2e', accent:'#5ec8ff', border:'#26384b', input:'#0b1624', isDark:true, rowBg:'#0d1927', railBg:'#050d16' })} className="px-4 py-2 rounded-xl bg-[var(--surface-2)] border border-[var(--border-primary)] text-[8px] font-black uppercase tracking-widest text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-                    {isAr ? 'إعادة ضبط' : 'Reset'}
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[
-                    ['bg','Background',customBg],['card','Cards',customCard],['text','Primary text',customText],['textSec','Secondary text',customSec],
-                    ['accent','Accent',customAccent],['input','Inputs',customInput],['border','Borders',customBorder],['rowBg','Table rows',customRowBg]
-                  ].map(([key,label,value]) => (
-                    <div key={key} className="rounded-xl bg-[var(--surface-2)] border border-[var(--border-primary)] p-3">
-                      <label className="text-[8px] font-black uppercase tracking-wider">{isAr ? ({Background:'الخلفية',Cards:'البطاقات','Primary text':'النص الرئيسي','Secondary text':'النص الثانوي',Accent:'اللون المميز',Inputs:'حقول الإدخال',Borders:'الحدود','Table rows':'صفوف الجداول'} as any)[label] || label : label}</label>
-                      <div className="mt-2 flex items-center gap-2">
-                        <input type="color" className="w-9 h-9 rounded-lg border-0 p-0 cursor-pointer" value={value as string} onChange={e => handleCustomThemeChange({ [key]: e.target.value } as any)} />
-                        <span className="text-[9px] font-mono font-bold text-[var(--text-secondary)]">{value}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="lg:col-span-2 rounded-[1.5rem] bg-[var(--surface-1)] border border-[var(--border-primary)] p-5">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-[9px] font-black uppercase tracking-widest text-[var(--text-primary)]">{isAr ? 'حجم الواجهة' : 'Interface scale'}</p>
-                    <p className="mt-1 text-[9px] font-semibold text-[var(--text-secondary)]">{isAr ? 'يضبط حجم النص والمسافات فقط.' : 'Adjusts text and spacing without changing functionality.'}</p>
-                  </div>
-                  <span className="text-sm font-black text-[var(--accent)]">{(scale * 100).toFixed(0)}%</span>
-                </div>
-                <input type="range" min="0.75" max="1.1" step="0.05" value={scale} onChange={e => setScale(parseFloat(e.target.value))} className="mt-5 w-full accent-[var(--accent)]" />
-                <div className="mt-2 flex justify-between text-[8px] font-black uppercase text-[var(--text-secondary)]"><span>Compact</span><span>Standard</span><span>Large</span></div>
-              </div>
-              <div className="rounded-[1.5rem] bg-[var(--surface-1)] border border-[var(--border-primary)] p-5 flex flex-col justify-between">
+            <div className="rounded-[1.5rem] bg-[var(--surface-1)] border border-[var(--border-primary)] p-5">
+              <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-[var(--text-primary)]">{isAr ? 'الوضع الحالي' : 'Current environment'}</p>
-                  <p className="mt-2 text-lg font-black text-[var(--accent)]">{theme === 'custom' ? (isAr ? 'مخصص' : 'Custom') : theme === 'nile' ? 'Nile Fleet' : theme === 'navy' ? 'Port Night' : theme === 'corporate' ? 'Executive Light' : theme === 'carbon' ? 'Industrial Steel' : 'Desert Operations'}</p>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[var(--text-primary)]">{isAr ? 'حجم الواجهة' : 'Interface scale'}</p>
+                  <p className="mt-1 text-[9px] font-semibold text-[var(--text-secondary)]">{isAr ? 'يضبط حجم النص والمسافات فقط.' : 'Adjusts text and spacing without changing functionality.'}</p>
                 </div>
-                <button type="button" onClick={() => setScale(0.85)} className="mt-4 w-full py-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-primary)] text-[8px] font-black uppercase tracking-widest text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-                  {isAr ? 'الحجم القياسي' : 'Set standard size'}
-                </button>
+                <span className="text-sm font-black text-[var(--accent)]">{(scale * 100).toFixed(0)}%</span>
               </div>
+              <input type="range" min="0.75" max="1.1" step="0.05" value={scale} onChange={e => setScale(parseFloat(e.target.value))} className="mt-5 w-full accent-[var(--accent)]" />
+              <div className="mt-2 flex justify-between text-[8px] font-black uppercase text-[var(--text-secondary)]"><span>Compact</span><span>Standard</span><span>Large</span></div>
             </div>
           </div>
         )}
