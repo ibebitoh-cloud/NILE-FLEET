@@ -1,4 +1,4 @@
-import React, { useState, useContext, useMemo } from 'react';
+import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { db } from '../services/supabaseDb';
 import { LanguageContext } from '../App';
 import { translations, translateEntity } from '../translations';
@@ -21,6 +21,16 @@ const Reports: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<string>('ALL');
   const [isThinking, setIsThinking] = useState(false);
   const [auditAdvice, setAuditAdvice] = useState<string>('');
+  const [, setDataVersion] = useState(0);
+  useEffect(() => {
+    const refresh = () => setDataVersion(v => v + 1);
+    window.addEventListener('db-change', refresh);
+    window.addEventListener('db-undo-success', refresh);
+    return () => {
+      window.removeEventListener('db-change', refresh);
+      window.removeEventListener('db-undo-success', refresh);
+    };
+  }, []);
 
   const ops = db.getOperations();
   const customers = useMemo(() => 
@@ -35,7 +45,8 @@ const Reports: React.FC = () => {
     return ops.filter(o => {
       const operationDate = String(o.operationDate || '').slice(0, 10);
       const matchesDate = operationDate >= from && operationDate <= to;
-      const matchesCustomer = selectedCustomer === 'ALL' || o.customerName === selectedCustomer;
+      const normalizeCustomer = (value?: string) => String(value || '').trim().toLocaleLowerCase().replace(/\s+/g, ' ');
+      const matchesCustomer = selectedCustomer === 'ALL' || normalizeCustomer(o.customerName) === normalizeCustomer(selectedCustomer);
       const matchesSearch = !search || 
         (o.bookingNumber || '').toLowerCase().includes(search) ||
         (o.containerNumber || '').toLowerCase().includes(search) ||
