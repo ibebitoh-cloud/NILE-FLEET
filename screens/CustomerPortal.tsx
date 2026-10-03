@@ -251,13 +251,13 @@ const CustomerPortal: React.FC<CustomerPortalProps> = ({ user, type }) => {
         <div className="flex flex-wrap gap-2">
           <button 
             onClick={() => setShowSoa(true)}
-            className="flex items-center gap-1.5 bg-[#001F3F] hover:bg-slate-800 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95"
+            className="flex items-center gap-1.5 bg-[#3a3833] hover:bg-slate-800 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95"
           >
             📋 {isAr ? 'كشف الحساب' : 'Statement of Account (SOA)'}
           </button>
           <button 
             onClick={handleExportAllDataAndFinance}
-            className="flex items-center gap-1.5 bg-[#C2A378] hover:bg-[#b09268] text-[#001F3F] px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95"
+            className="flex items-center gap-1.5 bg-[#C2A378] hover:bg-[#b09268] text-[#3a3833] px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95"
           >
             📥 {isAr ? 'تصدير البيانات والمالية (CSV)' : 'Export Data & Finance (CSV)'}
           </button>
