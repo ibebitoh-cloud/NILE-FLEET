@@ -477,7 +477,7 @@ const StockManagement: React.FC = () => {
               <div className="flex flex-wrap gap-2 text-[8px] font-black uppercase">
                 <span className="px-3 py-2 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">● {isAr ? 'متاح' : 'IN STOCK'} {metrics.inStock}</span>
                 <span className="px-3 py-2 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-400/30">● {isAr ? 'على رحلة مؤكدة' : 'ACTIVE / CLIPPED'} {metrics.clippedOn}</span>
-                {metrics.unlinkedClippedOn > 0 && <span className="px-3 py-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-400/30">⚠ {isAr ? 'حالة بدون عملية' : 'STATUS WITHOUT OPERATION'} {metrics.unlinkedClippedOn}</span>
+                {metrics.unlinkedClippedOn > 0 && <span className="px-3 py-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-400/30">⚠ {isAr ? 'حالة بدون عملية' : 'STATUS WITHOUT OPERATION'} {metrics.unlinkedClippedOn}</span>}
                 <span className="px-3 py-2 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-400/30">● {isAr ? 'صيانة' : 'MAINTENANCE'} {metrics.inMaint}</span>
               </div>
             </div>
