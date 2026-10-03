@@ -49,11 +49,9 @@
         table tbody tr:not(.selected-row):hover td {
             filter: brightness(0.95);
         }
-        body.theme-night table tbody tr:not(.selected-row):hover td,
-        body.theme-night table tbody tr:not(.selected-row):hover td,
-        body.theme-night table tbody tr:not(.selected-row):hover td,
-        body.theme-night, body.theme-day table tbody tr:not(.selected-row):hover td {
-            filter: brightness(1.15);
+        body.theme-night table tbody tr:not(.selected-row):hover td {
+            filter: none;
+            background-color: var(--surface-2, var(--input-bg)) !important;
         }
         
         [dir="rtl"] {
@@ -187,10 +185,6 @@
 
         /* Force visibility on cards even in dark themes */
         body.theme-night .bg-white, body.theme-night .bg-slate-50, body.theme-night .bg-slate-100,
-        body.theme-night .bg-white, body.theme-night .bg-slate-50, body.theme-night .bg-slate-100,
-        body.theme-night .bg-white, body.theme-night .bg-slate-50, body.theme-night .bg-slate-100,
-        body.theme-night .bg-white, body.theme-night .bg-slate-50, body.theme-night .bg-slate-100,
-        body.theme-night .bg-white, body.theme-night .bg-slate-50, body.theme-night .bg-slate-100,
         body.theme-night .bg-white, body.theme-night .bg-slate-50, body.theme-night .bg-slate-100 { 
             background-color: var(--card-bg) !important; 
             color: var(--text-primary) !important; 
@@ -214,10 +208,7 @@
             --status-info-bg: #dbeafe; --status-info-fg: #1e40af;
             --status-neutral-bg: #e2e8f0; --status-neutral-fg: #334155;
         }
-        body.theme-night, body.theme-night, body.theme-night, body.theme-night,
-        body.theme-night, body.theme-night, body.theme-night, body.theme-night,
-        body.theme-night, body.theme-night, body.theme-night, body.theme-night,
-        body.theme-night, body.theme-night, body.theme-night {
+        body.theme-night {
             --status-success-bg: #14532d; --status-success-fg: #bbf7d0;
             --status-warning-bg: #78350f; --status-warning-fg: #fde68a;
             --status-danger-bg: #7f1d1d; --status-danger-fg: #fecaca;
@@ -248,35 +239,9 @@
         body[class*="theme-"] .text-slate-400 { color: var(--text-secondary) !important; }
         body[class*="theme-"] .text-slate-500 { color: var(--text-secondary) !important; }
         body.theme-night .text-blue-500, body.theme-night .text-blue-600,
-        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
-        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
-        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
-        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
-        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
-        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
-        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
-        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
-        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
-        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
-        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
-        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
-        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
         body.theme-night .text-blue-500, body.theme-night .text-blue-600 {
             color: #93c5fd !important;
         }
-        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
-        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
-        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
-        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
-        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
-        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
-        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
-        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
-        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
-        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
-        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
-        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
-        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
         body.theme-night .text-rose-500, body.theme-night .text-rose-600,
         body.theme-night .text-rose-500, body.theme-night .text-rose-600 {
             color: #fda4af !important;
@@ -317,14 +282,10 @@
             background-color: var(--bg-primary) !important; /* Switch to main bg on focus for maximum contrast */
             border-color: var(--accent) !important;
             outline: none;
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent);
         }
 
         /* Ensure high contrast for inputs in specific themes if needed */
-        body.theme-day input, body.theme-day select, body.theme-day textarea,
-        body.theme-day input, body.theme-day select, body.theme-day textarea {
-            background-color: #ffffff !important; /* Force white bg for these theme inputs for better contrast */
-        }
         
         body.theme-day input, body.theme-day select, body.theme-day textarea {
             background-color: #ffffff !important; /* Force white bg for yellow theme inputs */
@@ -367,14 +328,10 @@
             color-scheme: light;
         }
         body.theme-night input, body.theme-night input, body.theme-night input,
-        body.theme-night input, body.theme-night input, body.theme-night input,
-        body.theme-night input, body.theme-night input, body.theme-night input,
-        body.theme-night input, body.theme-night input, body.theme-night input,
         body.theme-night input, body.theme-night input, body.theme-night input {
             color-scheme: dark;
         }
-        body.theme-day input, body.theme-day input, body.theme-day input,
-        body.theme-day input, body.theme-day input, body.theme-day input,
+        body.theme-day input,
         body.theme-day input, body.theme-day input {
             color-scheme: light;
         }
@@ -526,6 +483,64 @@
         body.theme-night textarea { color-scheme: dark; }
 
 
+
+        /* FINAL SYSTEM-WIDE CONTRAST LAYER
+           Structural neutrals follow the active theme. Semantic colors (success/warning/danger/info)
+           are intentionally excluded so their meaning remains distinct. */
+        body.theme-day .bg-gray-50, body.theme-day .bg-gray-100,
+        body.theme-day .bg-neutral-50, body.theme-day .bg-neutral-100 {
+            background-color: var(--card-bg) !important;
+            color: var(--text-primary) !important;
+        }
+        body.theme-night .bg-gray-50, body.theme-night .bg-gray-100,
+        body.theme-night .bg-neutral-50, body.theme-night .bg-neutral-100 {
+            background-color: var(--card-bg) !important;
+            color: var(--text-primary) !important;
+        }
+
+        body.theme-day .text-gray-700, body.theme-day .text-gray-800,
+        body.theme-day .text-gray-900, body.theme-day .text-neutral-700,
+        body.theme-day .text-neutral-800, body.theme-day .text-neutral-900 {
+            color: #071a2b !important;
+        }
+        body.theme-night .text-gray-700, body.theme-night .text-gray-800,
+        body.theme-night .text-gray-900, body.theme-night .text-neutral-700,
+        body.theme-night .text-neutral-800, body.theme-night .text-neutral-900 {
+            color: #ffffff !important;
+        }
+
+        body.theme-day .border-gray-100, body.theme-day .border-gray-200,
+        body.theme-day .border-neutral-100, body.theme-day .border-neutral-200 {
+            border-color: var(--border-primary) !important;
+        }
+        body.theme-night .border-gray-100, body.theme-night .border-gray-200,
+        body.theme-night .border-neutral-100, body.theme-night .border-neutral-200 {
+            border-color: var(--border-primary) !important;
+        }
+
+        body.theme-day input::placeholder, body.theme-day textarea::placeholder,
+        body.theme-night input::placeholder, body.theme-night textarea::placeholder {
+            opacity: 1 !important;
+        }
+
+        body.theme-day button:disabled, body.theme-day input:disabled,
+        body.theme-day select:disabled, body.theme-day textarea:disabled {
+            color: #526b80 !important;
+            background-color: #e7edf2 !important;
+            border-color: #c7d2de !important;
+        }
+        body.theme-night button:disabled, body.theme-night input:disabled,
+        body.theme-night select:disabled, body.theme-night textarea:disabled {
+            color: #aebdcc !important;
+            background-color: #101c2b !important;
+            border-color: #34485d !important;
+        }
+
+        /* Never let structural white text disappear on a light surface. */
+        body.theme-day .text-white:not(.bg-green-50 *):not(.bg-green-100 *):not(.bg-red-50 *):not(.bg-red-100 *) {
+            color: inherit;
+        }
+        
         @media (max-width: 1023px) {
             main { padding-bottom: 76px; }
         }
