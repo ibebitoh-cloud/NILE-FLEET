@@ -1800,25 +1800,30 @@ const MasterView: React.FC = () => {
       )}
 
       {showAddModal && (
-        <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-2xl z-[500] flex items-center justify-center p-4">
-          <div className={`rounded-[3.5rem] shadow-2xl max-w-[98vw] w-full h-[85vh] overflow-hidden border-[10px] border-slate-900 flex flex-col animate-in zoom-in-95 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-900'}`}>
-             <div className={`p-8 flex justify-between items-center shrink-0 ${isDark ? 'bg-slate-950 text-white' : 'bg-slate-900 text-white'}`}>
-                <div className="text-start">
-                  <h3 className="text-2xl font-black italic uppercase tracking-tighter text-[#C2A378]">{isAr ? 'حقن بيانات السجل المجمع' : 'Bulk Manifest Staging'}</h3>
-                  <p className="text-[9px] font-bold tracking-wide text-slate-300">{isAr ? 'أدخل البيانات يدوياً أو الصق صفوفاً مفصولة بعلامات تبويب. أضف تاريخ العملية ثم تاريخ التركيب كآخر عمودين اختياريين.' : 'Enter rows manually or paste tab-separated data. Optionally append Operation Date, then Clip On Date.'}</p>
+        <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-2xl z-[500] flex items-center justify-center p-2 sm:p-4 overscroll-contain">
+          <div className={`nf-mobile-modal rounded-[2rem] sm:rounded-[3.5rem] shadow-2xl max-w-[98vw] w-full h-[calc(100dvh-1rem)] sm:h-[85vh] max-h-[calc(100dvh-1rem)] overflow-hidden border-[4px] sm:border-[10px] border-slate-900 flex flex-col animate-in zoom-in-95 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-900'}`}>
+             <div className={`p-4 sm:p-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 shrink-0 ${isDark ? 'bg-slate-950 text-white' : 'bg-slate-900 text-white'}`}>
+                <div className="text-start min-w-0 w-full sm:flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="text-xl sm:text-2xl font-black italic uppercase tracking-tighter text-[#C2A378] leading-tight">{isAr ? 'حقن بيانات السجل المجمع' : 'Bulk Manifest Staging'}</h3>
+                    <button onClick={() => setShowAddModal(false)} aria-label={isAr ? 'إغلاق' : 'Close'} className="sm:hidden shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-white hover:text-rose-400 hover:bg-white/10 text-xl">✕</button>
+                  </div>
+                  <p className="mt-2 text-[9px] sm:text-[10px] font-bold tracking-wide leading-relaxed text-slate-300">{isAr ? 'أدخل البيانات يدوياً أو الصق صفوفاً مفصولة بعلامات تبويب. أضف تاريخ العملية ثم تاريخ التركيب كآخر عمودين اختياريين.' : 'Enter rows manually or paste tab-separated data. Optionally append Operation Date, then Clip On Date.'}</p>
                 </div>
-                <div className="flex gap-4">
+                <div className="flex w-full sm:w-auto flex-col sm:flex-row gap-2 sm:gap-4 items-stretch sm:items-center min-w-0">
                    <textarea 
-                     className="w-48 h-10 p-2 bg-slate-800 border border-slate-500 rounded-xl text-[10px] font-bold text-white placeholder:text-slate-300 outline-none focus:w-80 focus:h-20 focus:ring-2 focus:ring-[#C2A378] transition-all"
+                     className="w-full sm:w-48 h-12 sm:h-10 p-2 bg-slate-800 border border-slate-500 rounded-xl text-[10px] sm:text-[10px] font-bold text-white placeholder:text-slate-300 outline-none focus:ring-2 focus:ring-[#C2A378] transition-all resize-none sm:focus:w-80 sm:focus:h-20"
                      placeholder={isAr ? 'الصق البيانات هنا...' : 'Paste tab-separated rows...'}
                      value={rawPasteBuffer} 
                      onChange={(e) => setRawPasteBuffer(e.target.value)}
                    />
-                   <button type="button" onClick={() => fallbackParse(rawPasteBuffer)} className="px-4 py-2 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 text-white text-[9px] font-black uppercase tracking-wider">{isAr ? 'تحميل الصفوف' : 'Load Rows'}</button>
-                   <button onClick={() => setShowAddModal(false)} className="text-white hover:text-rose-500 p-2">✕</button>
+                   <div className="flex w-full sm:w-auto gap-2">
+                     <button type="button" onClick={() => fallbackParse(rawPasteBuffer)} className="flex-1 sm:flex-none min-h-[44px] px-4 py-2 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 text-white text-[9px] font-black uppercase tracking-wider">{isAr ? 'تحميل الصفوف' : 'Load Rows'}</button>
+                     <button onClick={() => setShowAddModal(false)} aria-label={isAr ? 'إغلاق' : 'Close'} className="hidden sm:flex min-h-[44px] min-w-[44px] items-center justify-center text-white hover:text-rose-500 p-2 rounded-xl hover:bg-white/10 text-lg">✕</button>
+                   </div>
                 </div>
              </div>
-             <div className="flex-1 overflow-auto p-4 relative" style={{ backgroundColor: isDark ? '#0b1220' : '#f1f5f9' }}>
+             <div className="nf-mobile-scroll-container flex-1 overflow-auto p-2 sm:p-4 relative" style={{ backgroundColor: isDark ? '#0b1220' : '#f1f5f9' }}>
                 <table className="manifest-staging-table w-max min-w-full text-start whitespace-nowrap border-collapse" style={{ tableLayout: 'fixed' }}>
                    <colgroup>{stagingColumnHeaders.map(column => <col key={column.key} style={{ width: stagingColWidths[column.key] ?? stagingColumnDefaults[column.key] }} />)}</colgroup>
                    <thead className="bg-[#3a3833] text-white text-[9px] font-black uppercase tracking-widest sticky top-0 z-10">
