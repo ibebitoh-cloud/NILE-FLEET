@@ -21,7 +21,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
   const isSuperOwner = user.email === 'bebito@nilefleet.com';
   const isAdmin = user.role === UserRole.ADMIN;
 
-  const [activeTab, setActiveTab] = useState<'IDENTITY' | 'CONTACT' | 'BUSINESS' | 'LINGUISTICS' | 'COMMAND'>('IDENTITY');
+  const [activeTab, setActiveTab] = useState<'IDENTITY' | 'CONTACT' | 'BUSINESS' | 'LINGUISTICS' | 'DISPLAY' | 'COMMAND'>('IDENTITY');
   
   const [profileData, setProfileData] = useState<Partial<User>>({
     ...user,
@@ -337,7 +337,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
             {[
               { id: 'IDENTITY', label: isAr ? 'الهوية' : 'Identity', icon: '👤' },
               { id: 'CONTACT', label: isAr ? 'بيانات العمل' : 'Logistics', icon: '📍' },
-
+              { id: 'DISPLAY', label: isAr ? 'المظهر' : 'Appearance', icon: '☀️' },
               { id: 'BUSINESS', label: isAr ? 'الفواتير والشركة' : 'Branding', icon: '🏢' },
               { id: 'LINGUISTICS', label: isAr ? 'اللغة والذكاء' : 'Linguistics', icon: '🗣️' },
               isSuperOwner ? { id: 'COMMAND', label: isAr ? 'التحكم الحرج' : 'Command', icon: '☢️' } : null,
@@ -351,7 +351,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
               <button 
                 key={tab.id} 
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center justify-center gap-2 px-3 py-3 rounded-2xl text-[8px] font-black uppercase transition-all border ${activeTab === tab.id ? 'bg-[#001F3F] text-white border-[#001F3F] shadow-lg shadow-blue-900/20' : 'bg-slate-50 dark:bg-slate-800/70 text-slate-400 border-slate-100 dark:border-white/5 hover:border-blue-200 hover:text-blue-600'}`}
+                className={`flex items-center justify-center gap-2 px-3 py-3 rounded-2xl text-[8px] font-black uppercase transition-all border ${activeTab === tab.id ? 'bg-[#001F3F] text-white border-[#001F3F] shadow-lg' : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border-primary)] hover:border-[var(--accent)] hover:text-[var(--accent)]'}`}
               >
                 <span>{tab.icon}</span>
                 {tab.label}
