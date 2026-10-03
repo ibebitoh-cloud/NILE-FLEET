@@ -589,7 +589,7 @@ const App: React.FC = () => {
 
   if (!authChecked) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary,#f8fafc)] text-[var(--text-primary,#0f172a)]">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary,#f8fafc)] text-[var(--text-primary,#26231f)]">
         <div className="text-center">
           <img src="/nile-fleet-logo.png" className="h-20 w-20 object-contain mx-auto mb-4" alt="Nile Fleet" />
           <div className="w-10 h-10 border-4 border-slate-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
