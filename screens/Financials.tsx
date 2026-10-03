@@ -40,7 +40,7 @@ export const ProLedger: React.FC<{
   const netDue = Number(partner.pastOutstandingAmount || 0) + unpaidInvoicesTotal + unbilledTotal;
 
   const settings = branding || {
-    primaryColor: '#001F3F',
+    primaryColor: '#3a3833',
     currency: 'EGP',
     logoUrl: '',
     stampUrl: ''
@@ -67,7 +67,7 @@ export const ProLedger: React.FC<{
            }
            .no-print { display: none !important; }
            .ledger-printable-area * { color: black !important; visibility: visible !important; }
-           .total-highlight { background-color: #001F3F !important; -webkit-print-color-adjust: exact; }
+           .total-highlight { background-color: #3a3833 !important; -webkit-print-color-adjust: exact; }
            .total-highlight * { color: #C2A378 !important; }
          }
        `}</style>
@@ -114,7 +114,7 @@ export const ProLedger: React.FC<{
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{isAr ? 'لم يُفوتر بعد' : 'Unbilled Ops'}</p>
                       <p className="text-2xl lg:text-3xl font-black text-blue-600">{settings.currency} {unbilledTotal.toLocaleString()}</p>
                    </div>
-                   <div className="bg-[#001F3F] p-8 rounded-[2rem] shadow-xl total-highlight">
+                   <div className="bg-[#3a3833] p-8 rounded-[2rem] shadow-xl total-highlight">
                       <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-2">{isAr ? 'صافي المستحق' : 'Net Due'}</p>
                       <p className="text-2xl lg:text-3xl font-black text-[#C2A378] italic">{settings.currency} {netDue.toLocaleString()}</p>
                    </div>
@@ -484,7 +484,7 @@ const Financials: React.FC = () => {
                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">{t.liveUnbilled}</p>
                         <p className="text-2xl font-black text-blue-600">EGP {Number(accountBreakdown.unbilledTotal || 0).toLocaleString()}</p>
                      </div>
-                     <div className="text-center bg-[#001F3F] px-8 py-5 rounded-[2rem] shadow-xl">
+                     <div className="text-center bg-[#3a3833] px-8 py-5 rounded-[2rem] shadow-xl">
                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Grand Total Due</p>
                         <p className="text-2xl font-black text-[#C2A378] italic">EGP {Number(accountBreakdown.totalExposure || 0).toLocaleString()}</p>
                      </div>
@@ -576,7 +576,7 @@ const Financials: React.FC = () => {
                                    </span>
                                 </td>
                                 <td className="px-8 py-6 text-right">
-                                   <button onClick={e => { e.stopPropagation(); setViewingInvoice(inv); }} className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#001F3F] hover:text-white transition-all border border-slate-200 dark:border-white/10">View Doc</button>
+                                   <button onClick={e => { e.stopPropagation(); setViewingInvoice(inv); }} className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#3a3833] hover:text-white transition-all border border-slate-200 dark:border-white/10">View Doc</button>
                                 </td>
                              </tr>
                            ))}
@@ -597,7 +597,7 @@ const Financials: React.FC = () => {
 
       {/* RECEIVE PAYMENT MODAL */}
       {showPaymentModal && selectedUser && (
-        <div className="fixed inset-0 bg-[#001F3F]/95 backdrop-blur-xl z-[500] flex items-center justify-center p-6">
+        <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-xl z-[500] flex items-center justify-center p-6">
            <div className={`bg-white rounded-[4rem] shadow-2xl max-w-2xl w-full overflow-hidden border-[12px] border-slate-900 animate-in zoom-in-95 ${isAr ? 'rtl font-cairo' : 'ltr'}`}>
               <div className="p-10 bg-slate-900 text-white flex justify-between items-center text-start relative overflow-hidden">
                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#C2A378]/20 rounded-full blur-2xl -mr-16 -mt-16"></div>
