@@ -200,12 +200,12 @@ const BookingInvoices: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-[#001F3F] text-white p-8 rounded-3xl relative overflow-hidden shadow-xl border border-[#C2A37833]">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-[#3a3833] text-white p-8 rounded-3xl relative overflow-hidden shadow-xl border border-[#C2A37833]">
         <div className="absolute right-0 top-0 opacity-10 font-black text-8xl pointer-events-none uppercase tracking-widest font-mono">
           BILLING
         </div>
         <div className="relative z-10 space-y-2">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] bg-[#C2A378] text-[#001F3F] px-3 py-1 rounded-full">
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] bg-[#C2A378] text-[#3a3833] px-3 py-1 rounded-full">
             {isAr ? 'فوترة الحجوزات والشحنات' : 'BOOKINGS BILLING MANAGEMENT'}
           </span>
           <h2 className="text-3xl font-black tracking-tight">
@@ -270,7 +270,7 @@ const BookingInvoices: React.FC = () => {
         <div className="relative w-full sm:max-w-md">
           <input
             type="text"
-            className={`w-full px-4 py-2 text-sm rounded-xl font-medium border focus:outline-none transition-all ${isDark ? 'bg-slate-800 border-white/10 text-white focus:border-[#C2A378]' : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-[#001F3F]'}`}
+            className={`w-full px-4 py-2 text-sm rounded-xl font-medium border focus:outline-none transition-all ${isDark ? 'bg-slate-800 border-white/10 text-white focus:border-[#C2A378]' : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-[#3a3833]'}`}
             placeholder={isAr ? 'بحث برقم الحجز أو العميل...' : 'Search booking # or customer name...'}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -293,7 +293,7 @@ const BookingInvoices: React.FC = () => {
               }}
               className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${
                 filterStatus === tab.id && submenuFilter === 'ALL'
-                  ? 'bg-[#001F3F] text-white' 
+                  ? 'bg-[#3a3833] text-white' 
                   : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:opacity-80'
               }`}
             >
@@ -354,7 +354,7 @@ const BookingInvoices: React.FC = () => {
               <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4 pb-4 border-b border-slate-100 dark:border-white/5">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-black font-mono bg-[#001F3F] text-[#C2A378] px-3 py-1 rounded-lg">
+                    <span className="text-lg font-black font-mono bg-[#3a3833] text-[#C2A378] px-3 py-1 rounded-lg">
                       {booking.bookingNumber}
                     </span>
                     {booking.isPendingBilling && (
@@ -364,7 +364,7 @@ const BookingInvoices: React.FC = () => {
                     )}
                   </div>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400 mt-1">
-                    <span className="font-bold text-[#001F3F] dark:text-[#C2A378]">{booking.customerName}</span>
+                    <span className="font-bold text-[#3a3833] dark:text-[#C2A378]">{booking.customerName}</span>
                     <span className="opacity-40">•</span>
                     <span className="font-mono">{booking.portIn} ➡️ {booking.portOut}</span>
                     {booking.reservation && (
@@ -690,7 +690,7 @@ const BookingInvoices: React.FC = () => {
                 </button>
                 <button 
                   onClick={handleSaveEdit}
-                  className="flex-[2] bg-[#001F3F] text-white hover:bg-slate-850 dark:bg-[#C2A378] dark:text-[#001F3F] py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  className="flex-[2] bg-[#3a3833] text-white hover:bg-slate-850 dark:bg-[#C2A378] dark:text-[#3a3833] py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
                 >
                   💾 {isAr ? 'تحويل وحفظ' : 'Save Changes'}
                 </button>
