@@ -69,13 +69,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       invoiceByCustomer[name].billed += amount;
       invoiceByCustomer[name].paid += Math.min(amount, Math.max(0, db.getInvoicePaidAmount(i.id)));
     });
+    const normalizeCustomer = (value?: string) => String(value || '').trim().toLocaleLowerCase().replace(/\s+/g, ' ');
     const opsByCustomer: Record<string, number> = {};
-    ops.forEach(o => { const n = String(o.customerName || ''); opsByCustomer[n] = (opsByCustomer[n] || 0) + 1; });
+    ops.forEach(o => {
+      const key = o.customerId || normalizeCustomer(o.customerName);
+      opsByCustomer[key] = (opsByCustomer[key] || 0) + 1;
+    });
 
     return customers.map(cust => {
       const name = cust.companyName || cust.name;
       const totals = invoiceByCustomer[name] || { billed: 0, paid: 0 };
-      return { id: cust.id, name, billed: totals.billed, paid: totals.paid, outstanding: totals.billed - totals.paid, operations: opsByCustomer[name] || 0 };
+      const operationCount = opsByCustomer[cust.id] || opsByCustomer[normalizeCustomer(name)] || 0;
+      return { id: cust.id, name, billed: totals.billed, paid: totals.paid, outstanding: totals.billed - totals.paid, operations: operationCount };
     }).sort((a, b) => b.outstanding - a.outstanding);
   }, [customers, invoices, ops]);
 
