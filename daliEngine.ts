@@ -249,7 +249,7 @@ export function answerDali(question: string, data: DaliData, contextKey: string 
   if (/^(hi|hello|hey|hello dali|hi dali|hey dali|good morning|good evening|thanks|thank you|اهلا|مرحبا|هاي|سلام|السلام عليكم|صباح الخير|مساء الخير|شكرا|تسلم)( dali| دالي)?$/.test(nq)) {
     return L('Hi 👋 What do you need?', 'أهلاً 👋 قولّي عايز تعرف إيه.');
   }
-  if (/^(what can you do|who are you|who is dali|what is dali|tell me about yourself|help|what do you know|مين انت|مين دالي|من هو دالي|ما هو دالي|بتعرف ايه|ايه اللي تعرفه|ماذا تعرف|تقدر تعمل ايه|مساعده)$/.test(nq)) {
+  if (/^(what can you do|what can dali do|who are you|who is dali|what is dali|tell me about yourself|help|what do you know|مين انت|مين دالي|من هو دالي|ما هو دالي|بتعرف ايه|ايه اللي تعرفه|ماذا تعرف|تقدر تعمل ايه|دالي يقدر يعمل ايه|دالي يقدر يعمل اية|يقدر يعمل ايه|يقدر يعمل اية|دالي يعمل ايه|دالي يعمل اية|مساعده)$/.test(nq)) {
     const age = (() => {
       const birth = new Date('2025-10-03T00:00:00');
       const today = now;
