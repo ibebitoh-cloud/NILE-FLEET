@@ -806,11 +806,11 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
   // ---- theme-dependent classes ------------------------------------
   const K = isDark
     ? { root: 'bg-[#020305] text-white', head: 'border-white/10 bg-black/55', text: 'text-white', muted: 'text-slate-400', soft: 'text-slate-300', faint: 'text-slate-500', card: 'border-white/10 bg-black/45', band: 'border-white/10 bg-black/60', line: 'border-white/15', foot: 'bg-[#00111f]/85', chip: 'border-white/10 bg-white/[.04] text-slate-300' }
-    : { root: 'bg-[#dbeafe] text-[#0b1a2b]', head: 'border-black/10 bg-white/60', text: 'text-[#0b1a2b]', muted: 'text-slate-600', soft: 'text-slate-700', faint: 'text-slate-500', card: 'border-black/10 bg-white/60', band: 'border-black/10 bg-white/70', line: 'border-black/15', foot: 'bg-[#0b2a4a]/90 text-white', chip: 'border-black/10 bg-white/60 text-slate-600' };
+    : { root: 'bg-[#dbeafe] text-[#26231f]', head: 'border-black/10 bg-white/60', text: 'text-[#26231f]', muted: 'text-slate-600', soft: 'text-slate-700', faint: 'text-slate-500', card: 'border-black/10 bg-white/60', band: 'border-black/10 bg-white/70', line: 'border-black/15', foot: 'bg-[#0b2a4a]/90 text-white', chip: 'border-black/10 bg-white/60 text-slate-600' };
   const gold = isDark ? 'text-[#c2a378]' : 'text-[#8a6a35]';
   const gensetTheme = isDark
     ? { card: 'border-[#c2a378]/40 bg-[#050b12]/85 text-white', overlay: 'bg-[radial-gradient(circle_at_75%_35%,rgba(194,163,120,.22),transparent_30%),linear-gradient(135deg,#07121a,#010203)]', badge: 'bg-[#c2a378] text-black', meta: 'text-[#c2a378]', body: 'text-slate-400', action: 'text-white' }
-    : { card: 'border-[#8a6a35]/35 bg-white/90 text-[#0b1a2b] shadow-[0_20px_60px_rgba(15,23,42,.12)]', overlay: 'bg-[radial-gradient(circle_at_75%_35%,rgba(194,163,120,.18),transparent_30%),linear-gradient(135deg,#ffffff,#edf3f8)]', badge: 'bg-[#8a6a35] text-white', meta: 'text-[#8a6a35]', body: 'text-slate-600', action: 'text-[#0b1a2b]' };
+    : { card: 'border-[#8a6a35]/35 bg-white/90 text-[#26231f] shadow-[0_20px_60px_rgba(15,23,42,.12)]', overlay: 'bg-[radial-gradient(circle_at_75%_35%,rgba(194,163,120,.18),transparent_30%),linear-gradient(135deg,#ffffff,#edf3f8)]', badge: 'bg-[#8a6a35] text-white', meta: 'text-[#8a6a35]', body: 'text-slate-600', action: 'text-[#26231f]' };
 
   const tx = {
     brandSub: ar ? 'النقل · اللوجستيات · مصر' : 'Transport · Logistics · Egypt',
@@ -983,20 +983,20 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         .nf4-contact-bar:before{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,#fff 18%,#c2a378 42%,#d9b66f 50%,#c62828 62%,#fff 82%,transparent);opacity:1}
         .nf4-contact-bar:after{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),rgba(194,163,120,.9),rgba(198,40,40,.8),transparent);opacity:.75}
         .nf4-route-light{background:linear-gradient(90deg,rgba(248,250,252,.98),rgba(255,255,255,.97),rgba(241,245,249,.98))!important;box-shadow:0 10px 35px rgba(15,23,42,.12);border-color:rgba(15,23,42,.12)!important}
-        .nf4-route-light:before{background:linear-gradient(90deg,transparent,#0f172a 18%,#8a6a35 42%,#b08a4b 50%,#c62828 62%,#0f172a 82%,transparent)!important}
+        .nf4-route-light:before{background:linear-gradient(90deg,transparent,#3a3833 18%,#8a6a35 42%,#b08a4b 50%,#c62828 62%,#3a3833 82%,transparent)!important}
         .nf4-route-light:after{background:linear-gradient(90deg,transparent,rgba(15,23,42,.45),rgba(138,106,53,.8),rgba(198,40,40,.65),transparent)!important}
         .nf4-route-light .nf4-route-welcome span,.nf4-route-light .nf4-route-label{color:rgba(15,23,42,.58)}
-        .nf4-route-light .nf4-route-welcome strong,.nf4-route-light .nf4-route-phone strong{color:#0b1a2b}
+        .nf4-route-light .nf4-route-welcome strong,.nf4-route-light .nf4-route-phone strong{color:#26231f}
         .nf4-route-light .nf4-route-rail{border-color:rgba(15,23,42,.16)}
         .nf4-route-light .nf4-route-rail:before{background:repeating-linear-gradient(90deg,rgba(15,23,42,.24) 0 18px,transparent 18px 31px)}
         .nf4-route-light .nf4-route-stop{background:#f8fafc;color:#64748b}
-        .nf4-route-light .nf4-route-stop:first-child{color:#0b1a2b}
+        .nf4-route-light .nf4-route-stop:first-child{color:#26231f}
         .nf4-route-light .nf4-route-stop:last-of-type{color:#b91c1c}
         .nf4-route-light .nf4-route-meta{color:rgba(15,23,42,.5)}
         .nf4-route-light .nf4-route-phone>span,.nf4-route-light .nf4-route-social{border-color:rgba(15,23,42,.18);color:#334155;background:rgba(15,23,42,.035)}
         .nf4-route-light .nf4-route-phone small{color:#64748b}
-        .nf4-route-light .nf4-route-social:hover{border-color:#0f172a;background:rgba(15,23,42,.07);color:#0b1a2b}
-        .nf4-route-light .nf4-route-quote{border-color:rgba(15,23,42,.25);background:linear-gradient(135deg,rgba(15,23,42,.05),rgba(15,23,42,.015));color:#0b1a2b}
+        .nf4-route-light .nf4-route-social:hover{border-color:#3a3833;background:rgba(58,56,51,.07);color:#26231f}
+        .nf4-route-light .nf4-route-quote{border-color:rgba(15,23,42,.25);background:linear-gradient(135deg,rgba(15,23,42,.05),rgba(15,23,42,.015));color:#26231f}
         .nf4-route-light .nf4-route-quote:hover{border-color:#c62828;background:rgba(198,40,40,.07)}
         .nf4-route-dark{background:linear-gradient(90deg,rgba(4,8,14,.98),rgba(20,25,32,.97),rgba(4,8,14,.98))!important}
         .nf4-contact-card{background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.02));border-color:rgba(255,255,255,.2)}
@@ -1113,7 +1113,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       {/* route progress (scroll) */}
       <div className="fixed left-0 right-0 top-0 z-50 h-[3px] bg-black/10"><div ref={barRef} className="h-full w-0 bg-[#c2a378] shadow-[0_0_12px_#c2a378]" /></div>
 
-      <div className={`nf4-contact-bar border-b ${isDark ? "nf4-route-dark text-white" : "nf4-route-light text-[#0b1a2b]"}`}>
+      <div className={`nf4-contact-bar border-b ${isDark ? "nf4-route-dark text-white" : "nf4-route-light text-[#26231f]"}`}>
         <div className="nf4-route-line mx-auto max-w-[1500px] px-4 lg:px-10">
           <div className="nf4-route-welcome">
             <span>WELCOME TO</span><strong>NILE FLEET</strong>
@@ -1489,7 +1489,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                           <img src={p.logo} alt={`${p.name} logo`} className="h-full w-full object-contain" loading="lazy" />
                         </div>
                         <div className="text-left">
-                          <div className={`text-[8px] font-black tracking-[.1em] ${isDark ? 'text-white' : 'text-[#0b1a2b]'}`}>{p.name}</div>
+                          <div className={`text-[8px] font-black tracking-[.1em] ${isDark ? 'text-white' : 'text-[#26231f]'}`}>{p.name}</div>
                           <div className="mt-1 text-[6px] font-bold tracking-[.13em] text-[#c2a378]">{p.type}</div>
                         </div>
                       </div>
@@ -1510,7 +1510,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white p-1">
                               <img src={p.logo} alt={`${p.name} logo`} className="h-full w-full object-contain" loading="lazy" />
                             </div>
-                            <span className={`text-[8px] font-black tracking-[.04em] ${isDark ? 'text-white' : 'text-[#0b1a2b]'}`}>{p.name}</span>
+                            <span className={`text-[8px] font-black tracking-[.04em] ${isDark ? 'text-white' : 'text-[#26231f]'}`}>{p.name}</span>
                           </a>
                         ))}
                       </div>
