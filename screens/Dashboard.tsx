@@ -57,33 +57,60 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     return locations.map(port => ({ port, ...byPort[port] }));
   }, [stock, ops]);
 
+  // Customer financials are intentionally calculated from the same rules used by
+  // Financials/الشؤون المالية: historical opening balance + unpaid invoices +
+  // unbilled operations. This keeps the dashboard from showing a separate,
+  // invoice-only version of the customer's balance.
   const customerFinancials = useMemo(() => {
-    const normalizeCustomer = (value?: string) => String(value || '').trim().toLocaleLowerCase().replace(/\s+/g, ' ');
-    const invoiceByCustomer: Record<string, { billed: number; paid: number }> = {};
-    invoices.forEach(i => {
-      const key = i.customerId || normalizeCustomer(i.customerName);
-      if (!invoiceByCustomer[key]) invoiceByCustomer[key] = { billed: 0, paid: 0 };
-      const amount = Number(i.amount) || 0;
-      invoiceByCustomer[key].billed += amount;
-      invoiceByCustomer[key].paid += Math.min(amount, Math.max(0, db.getInvoicePaidAmount(i.id)));
-    });
-    const opsByCustomer: Record<string, number> = {};
-    ops.forEach(o => {
-      const key = o.customerId || normalizeCustomer(o.customerName);
-      opsByCustomer[key] = (opsByCustomer[key] || 0) + 1;
+    const normalizeCustomer = (value?: string) => String(value || '').trim().toLocaleLowerCase().replace(/\\s+/g, ' ');
+    const rows = customers.map(cust => {
+      const name = cust.companyName || cust.name;
+      const customerOperations = ops.filter(o =>
+        o.customerId === cust.id ||
+        (!o.customerId && [cust.companyName, cust.name].some(n => normalizeCustomer(n) === normalizeCustomer(o.customerName)))
+      );
+      const unbilledTotal = customerOperations
+        .filter(o => !o.invoiced)
+        .reduce((sum, o) => sum + (Number(String(o.rate || 0).replace(/,/g, '')) || 0) + (Number(String(o.vat || 0).replace(/,/g, '')) || 0), 0);
+
+      const userInvoices = invoices.filter(i => {
+        if (i.customerId) return i.customerId === cust.id;
+        const invoiceName = normalizeCustomer(i.customerName);
+        return Boolean(invoiceName && [cust.companyName, cust.name].some(n => normalizeCustomer(n) === invoiceName));
+      });
+      const billed = userInvoices.reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+      const paid = userInvoices.reduce((sum, i) => {
+        const amount = Number(i.amount) || 0;
+        return sum + Math.min(amount, Math.max(0, db.getInvoicePaidAmount(i.id)));
+      }, 0);
+      const unpaidInvoicesTotal = userInvoices
+        .filter(i => i.status === 'UNPAID')
+        .reduce((sum, i) => sum + Math.max(0, (Number(i.amount) || 0) - db.getInvoicePaidAmount(i.id)), 0);
+      const historicalOpeningBalance = Number(cust.pastOutstandingAmount || 0);
+      const outstanding = historicalOpeningBalance + unpaidInvoicesTotal + unbilledTotal;
+      const operationCount = customerOperations.length;
+
+      return {
+        id: cust.id,
+        name,
+        billed,
+        paid,
+        historicalOpeningBalance,
+        unbilled: unbilledTotal,
+        unpaidInvoices: unpaidInvoicesTotal,
+        outstanding,
+        operations: operationCount,
+      };
     });
 
-    return customers.map(cust => {
-      const name = cust.companyName || cust.name;
-      const totals = invoiceByCustomer[cust.id] || invoiceByCustomer[normalizeCustomer(name)] || { billed: 0, paid: 0 };
-      const operationCount = opsByCustomer[cust.id] || opsByCustomer[normalizeCustomer(name)] || 0;
-      return { id: cust.id, name, billed: totals.billed, paid: totals.paid, outstanding: totals.billed - totals.paid, operations: operationCount };
-    }).sort((a, b) => b.outstanding - a.outstanding);
+    return rows.sort((a, b) => b.outstanding - a.outstanding);
   }, [customers, invoices, ops]);
 
   const financialTotals = useMemo(() => ({
     billed: customerFinancials.reduce((s, c) => s + c.billed, 0),
     paid: customerFinancials.reduce((s, c) => s + c.paid, 0),
+    historical: customerFinancials.reduce((s, c) => s + c.historicalOpeningBalance, 0),
+    unbilled: customerFinancials.reduce((s, c) => s + c.unbilled, 0),
     outstanding: customerFinancials.reduce((s, c) => s + Math.max(c.outstanding, 0), 0),
   }), [customerFinancials]);
 
