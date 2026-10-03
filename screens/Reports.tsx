@@ -21,7 +21,7 @@ const Reports: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<string>('ALL');
   const [isThinking, setIsThinking] = useState(false);
   const [auditAdvice, setAuditAdvice] = useState<string>('');
-  const [, setDataVersion] = useState(0);
+  const [dataVersion, setDataVersion] = useState(0);
   useEffect(() => {
     const refresh = () => setDataVersion(v => v + 1);
     window.addEventListener('db-change', refresh);
