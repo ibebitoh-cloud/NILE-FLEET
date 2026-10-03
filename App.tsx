@@ -114,6 +114,7 @@ const App: React.FC = () => {
   const [authChecked, setAuthChecked] = useState(false);
   const [appDataReady, setAppDataReady] = useState(false);
   const loggingInRef = useRef(false);
+  const restoreRememberedScreenRef = useRef(false);
   
   const [theme, setTheme] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem('theme');
@@ -362,13 +363,17 @@ const App: React.FC = () => {
       const screen = window.location.hash.slice(1).split('?')[0];
       if (!user) return;
       const rememberedScreen = getRememberedScreen(user);
-      const destination = permittedScreens.has(screen)
-        ? screen
-        : rememberedScreen && permittedScreens.has(rememberedScreen)
-          ? rememberedScreen
-          : permittedScreens.has(homeScreen)
-            ? homeScreen
-            : permittedScreens.values().next().value || 'no-access';
+      const shouldRestoreRemembered = restoreRememberedScreenRef.current;
+      const destination = shouldRestoreRemembered && rememberedScreen && permittedScreens.has(rememberedScreen)
+        ? rememberedScreen
+        : permittedScreens.has(screen)
+          ? screen
+          : rememberedScreen && permittedScreens.has(rememberedScreen)
+            ? rememberedScreen
+            : permittedScreens.has(homeScreen)
+              ? homeScreen
+              : permittedScreens.values().next().value || 'no-access';
+      if (shouldRestoreRemembered) restoreRememberedScreenRef.current = false;
       if (destination === 'no-access') {
         if (window.location.hash) window.location.hash = '';
       } else if (screen !== destination) {
@@ -595,6 +600,7 @@ const App: React.FC = () => {
               : u.role === UserRole.CUSTOMER
                 ? 'cust-reservations'
                 : 'dashboard');
+          restoreRememberedScreenRef.current = Boolean(rememberedScreen);
           setActiveScreen(targetScreen);
           // Keep the URL and remembered screen in agreement. Otherwise the
           // auth/hash synchronization effect can immediately overwrite the
