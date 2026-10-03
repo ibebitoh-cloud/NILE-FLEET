@@ -353,6 +353,39 @@
             border-color: #34485d !important;
         }
 
+        /* Semantic status colors stay distinct from structural theme colors. */
+        body.theme-day {
+            --status-success-bg: #dcfce7; --status-success-fg: #166534;
+            --status-warning-bg: #fef3c7; --status-warning-fg: #92400e;
+            --status-danger-bg: #fee2e2; --status-danger-fg: #991b1b;
+            --status-info-bg: #dbeafe; --status-info-fg: #1e40af;
+            --status-neutral-bg: #e2e8f0; --status-neutral-fg: #334155;
+        }
+        body.theme-night {
+            --status-success-bg: #14532d; --status-success-fg: #bbf7d0;
+            --status-warning-bg: #78350f; --status-warning-fg: #fde68a;
+            --status-danger-bg: #7f1d1d; --status-danger-fg: #fecaca;
+            --status-info-bg: #1e3a8a; --status-info-fg: #bfdbfe;
+            --status-neutral-bg: #334155; --status-neutral-fg: #e2e8f0;
+        }
+
+        body[class*="theme-"] .bg-green-50, body[class*="theme-"] .bg-green-100,
+        body[class*="theme-"] .bg-emerald-50, body[class*="theme-"] .bg-emerald-100 {
+            background-color: var(--status-success-bg) !important; color: var(--status-success-fg) !important;
+        }
+        body[class*="theme-"] .bg-amber-50, body[class*="theme-"] .bg-amber-100,
+        body[class*="theme-"] .bg-yellow-50, body[class*="theme-"] .bg-yellow-100 {
+            background-color: var(--status-warning-bg) !important; color: var(--status-warning-fg) !important;
+        }
+        body[class*="theme-"] .bg-red-50, body[class*="theme-"] .bg-red-100,
+        body[class*="theme-"] .bg-rose-50, body[class*="theme-"] .bg-rose-100 {
+            background-color: var(--status-danger-bg) !important; color: var(--status-danger-fg) !important;
+        }
+        body[class*="theme-"] .bg-blue-50, body[class*="theme-"] .bg-blue-100,
+        body[class*="theme-"] .bg-sky-50, body[class*="theme-"] .bg-sky-100 {
+            background-color: var(--status-info-bg) !important; color: var(--status-info-fg) !important;
+        }
+
         /* Structural action colors use the Nile Fleet gold accent. Semantic status
            colors below remain untouched. */
         body.theme-day .bg-blue-500,
