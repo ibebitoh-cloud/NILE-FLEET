@@ -61,15 +61,15 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   }, [stock, ops, reservations]);
 
   const customerFinancials = useMemo(() => {
+    const normalizeCustomer = (value?: string) => String(value || '').trim().toLocaleLowerCase().replace(/\s+/g, ' ');
     const invoiceByCustomer: Record<string, { billed: number; paid: number }> = {};
     invoices.forEach(i => {
-      const name = String(i.customerName || '');
-      if (!invoiceByCustomer[name]) invoiceByCustomer[name] = { billed: 0, paid: 0 };
+      const key = i.customerId || normalizeCustomer(i.customerName);
+      if (!invoiceByCustomer[key]) invoiceByCustomer[key] = { billed: 0, paid: 0 };
       const amount = Number(i.amount) || 0;
-      invoiceByCustomer[name].billed += amount;
-      invoiceByCustomer[name].paid += Math.min(amount, Math.max(0, db.getInvoicePaidAmount(i.id)));
+      invoiceByCustomer[key].billed += amount;
+      invoiceByCustomer[key].paid += Math.min(amount, Math.max(0, db.getInvoicePaidAmount(i.id)));
     });
-    const normalizeCustomer = (value?: string) => String(value || '').trim().toLocaleLowerCase().replace(/\s+/g, ' ');
     const opsByCustomer: Record<string, number> = {};
     ops.forEach(o => {
       const key = o.customerId || normalizeCustomer(o.customerName);
@@ -78,7 +78,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
     return customers.map(cust => {
       const name = cust.companyName || cust.name;
-      const totals = invoiceByCustomer[name] || { billed: 0, paid: 0 };
+      const totals = invoiceByCustomer[cust.id] || invoiceByCustomer[normalizeCustomer(name)] || { billed: 0, paid: 0 };
       const operationCount = opsByCustomer[cust.id] || opsByCustomer[normalizeCustomer(name)] || 0;
       return { id: cust.id, name, billed: totals.billed, paid: totals.paid, outstanding: totals.billed - totals.paid, operations: operationCount };
     }).sort((a, b) => b.outstanding - a.outstanding);
