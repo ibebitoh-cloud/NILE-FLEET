@@ -31,19 +31,6 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
   const [customIsDark, setCustomIsDark] = useState(() => localStorage.getItem('custom_is_dark') === 'true');
   const [customRowBg, setCustomRowBg] = useState(() => localStorage.getItem('custom_row_bg') || '#ffffff');
   const [customRailBg, setCustomRailBg] = useState(() => localStorage.getItem('custom_rail_bg') || '#ffffff');
-  type DaliVisualStyle = 'glass' | 'phantom' | 'terminal' | 'aurora' | 'blueprint';
-  type DaliBackgroundStyle = 'soft' | 'grid' | 'aurora' | 'blueprint' | 'clear';
-  type DaliThinkingStyle = 'clean' | 'friendly' | 'technical' | 'silent';
-  type DaliAnimationStyle = 'float' | 'pulse' | 'orb' | 'none';
-  const daliPrefKey = (name: string) => 'nile-dali-' + name + '-' + (user.id || user.email || 'user');
-  const [daliVisualStyle, setDaliVisualStyle] = useState<DaliVisualStyle>(() => (localStorage.getItem(daliPrefKey('style')) as DaliVisualStyle) || 'glass');
-  const [daliBackgroundStyle, setDaliBackgroundStyle] = useState<DaliBackgroundStyle>(() => (localStorage.getItem(daliPrefKey('background')) as DaliBackgroundStyle) || 'soft');
-  const [daliThinkingStyle, setDaliThinkingStyle] = useState<DaliThinkingStyle>(() => (localStorage.getItem(daliPrefKey('thinking')) as DaliThinkingStyle) || 'clean');
-  const [daliAnimationStyle, setDaliAnimationStyle] = useState<DaliAnimationStyle>(() => (localStorage.getItem(daliPrefKey('animation')) as DaliAnimationStyle) || 'float');
-  const updateDaliPreference = (name: string, value: string) => {
-    localStorage.setItem(daliPrefKey(name), value);
-    window.dispatchEvent(new CustomEvent('dali-preferences-change'));
-  };
   const handleCustomThemeChange = (updates: {
     bg?: string;
     text?: string;
@@ -92,7 +79,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
     });
   };
 
-  const [activeTab, setActiveTab] = useState<'IDENTITY' | 'CONTACT' | 'DISPLAY' | 'BUSINESS' | 'LINGUISTICS' | 'COMMAND'>('IDENTITY');
+  const [activeTab, setActiveTab] = useState<'IDENTITY' | 'CONTACT' | 'BUSINESS' | 'LINGUISTICS' | 'COMMAND'>('IDENTITY');
   
   const [profileData, setProfileData] = useState<Partial<User>>({
     ...user,
@@ -408,7 +395,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
             {[
               { id: 'IDENTITY', label: isAr ? 'الهوية' : 'Identity', icon: '👤' },
               { id: 'CONTACT', label: isAr ? 'بيانات العمل' : 'Logistics', icon: '📍' },
-              { id: 'DISPLAY', label: isAr ? 'المظهر' : 'Appearance', icon: '◐' },
+
               { id: 'BUSINESS', label: isAr ? 'الفواتير والشركة' : 'Branding', icon: '🏢' },
               { id: 'LINGUISTICS', label: isAr ? 'اللغة والذكاء' : 'Linguistics', icon: '🗣️' },
               isSuperOwner ? { id: 'COMMAND', label: isAr ? 'التحكم الحرج' : 'Command', icon: '☢️' } : null,
@@ -450,35 +437,6 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
             </div>
             <button type="submit" className="w-full py-5 rounded-2xl bg-rose-600 text-white font-black uppercase text-[10px] tracking-widest">Commit Changes</button>
           </form>
-        )}
-
-        {activeTab === 'DISPLAY' && (
-          <div className="p-6 sm:p-8 lg:p-12 space-y-8 animate-in slide-in-from-bottom-4">
-            <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-[#C2A378]">DALI</p>
-              <h3 className="mt-2 text-2xl font-black text-slate-900 dark:text-white">{isAr ? 'مظهر دالي' : 'DALI Appearance'}</h3>
-              <p className="mt-2 text-[10px] font-bold text-slate-400">{isAr ? 'غيّر الشكل والخلفية وطريقة التفكير والحركة وقتما تريد.' : 'Change DALI style, background, thinking and animation whenever you want.'}</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {[
-                {key:'style',title:isAr?'الشكل':'Style',value:daliVisualStyle,set:setDaliVisualStyle,options:[['glass','Glass'],['phantom','Phantom'],['terminal','Terminal'],['aurora','Aurora'],['blueprint','Blueprint']]},
-                {key:'background',title:isAr?'الخلفية':'Background',value:daliBackgroundStyle,set:setDaliBackgroundStyle,options:[['soft','Soft'],['grid','Grid'],['aurora','Aurora'],['blueprint','Blueprint'],['clear','Clear']]},
-                {key:'thinking',title:isAr?'التفكير':'Thinking',value:daliThinkingStyle,set:setDaliThinkingStyle,options:[['clean','Clean'],['friendly','Friendly'],['technical','Technical'],['silent','Silent']]},
-                {key:'animation',title:isAr?'الحركة':'Animation',value:daliAnimationStyle,set:setDaliAnimationStyle,options:[['float','Float'],['pulse','Pulse'],['orb','Orb'],['none','None']]}
-              ].map((group:any) => (
-                <div key={group.key} className="rounded-[2rem] border border-slate-100 dark:border-white/5 bg-slate-50/80 dark:bg-white/[0.03] p-5">
-                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-3">{group.title}</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {group.options.map(([value,label]:[string,string]) => (
-                      <button key={value} type="button" onClick={() => { group.set(value); updateDaliPreference(group.key,value); }} className={`min-h-11 rounded-xl border px-3 py-2 text-[9px] font-black uppercase transition-all ${group.value === value ? 'bg-[#001F3F] text-[#C2A378] border-[#001F3F] shadow-lg' : 'bg-white dark:bg-slate-900 text-slate-500 border-slate-200 dark:border-white/10'}`}>
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         )}
 
         {activeTab === 'LINGUISTICS' && (
