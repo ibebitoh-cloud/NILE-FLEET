@@ -827,6 +827,7 @@ const MasterView: React.FC = () => {
   };
 
   const [invoices, setInvoices] = useState<Invoice[]>(() => db.getInvoices());
+  const [, setGensetRevision] = useState(0);
 
   const refresh = () => {
     setOperations([...db.getOperations()]);
@@ -850,7 +851,14 @@ const MasterView: React.FC = () => {
   }, [operations]);
 
   useEffect(() => {
-    const sync = () => {
+    const sync = (event: Event) => {
+      const detail = (event as CustomEvent<{ entity?: string }>).detail;
+      if (detail?.entity === 'genset') {
+        // Genset edits are already committed to the shared database/cache.
+        // Re-render this view without reloading operations or disturbing scroll.
+        setGensetRevision(value => value + 1);
+        return;
+      }
       if (skipNextDbChangeRefreshRef.current) {
         skipNextDbChangeRefreshRef.current = false;
         return;
@@ -1294,7 +1302,7 @@ const MasterView: React.FC = () => {
           : `Could not save gas amount. ${detail || 'Make sure the database update has been applied.'}`);
         return;
       }
-      refresh();
+      setGensetRevision(value => value + 1);
     });
   };
 
