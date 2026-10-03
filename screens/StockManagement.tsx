@@ -108,7 +108,9 @@ const StockManagement: React.FC = () => {
   // Aggregate Metrics
   const metrics = useMemo(() => {
     const inStock = stock.filter(s => s.status === GensetStatus.IN_STOCK).length;
-    const clippedOn = stock.filter(s => s.status === GensetStatus.CLIPPED_ON).length;
+    const activeUnits = new Set(ops.filter(o => o.status === 'IN PROGRESS' && o.gensetNumber?.trim()).map(o => o.gensetNumber.trim().toUpperCase()));
+    const clippedOn = stock.filter(s => s.status === GensetStatus.CLIPPED_ON && activeUnits.has(s.unitNumber.trim().toUpperCase())).length;
+    const unlinkedClippedOn = stock.filter(s => s.status === GensetStatus.CLIPPED_ON && !activeUnits.has(s.unitNumber.trim().toUpperCase())).length;
     const inMaint = stock.filter(s => s.status === GensetStatus.MAINTENANCE).length;
     const activeMaintLogs = maintenanceLogs.filter(m => m.status === 'IN_PROGRESS').length;
     const scheduledMaintLogs = maintenanceLogs.filter(m => m.status === 'SCHEDULED').length;
@@ -116,6 +118,7 @@ const StockManagement: React.FC = () => {
       total: stock.length,
       inStock,
       clippedOn,
+      unlinkedClippedOn,
       inMaint,
       totalLogs: maintenanceLogs.length,
       activeMaintLogs,
@@ -214,7 +217,12 @@ const StockManagement: React.FC = () => {
     setSelectedIds(newSet);
   };
 
-  const getStatusBadge = (status: GensetStatus) => {
+  const activeOperationUnits = useMemo(() => new Set(ops.filter(o => o.status === 'IN PROGRESS' && o.gensetNumber?.trim()).map(o => o.gensetNumber.trim().toUpperCase())), [ops]);
+
+  const getStatusBadge = (status: GensetStatus, unitNumber?: string) => {
+    if (status === GensetStatus.CLIPPED_ON && (!unitNumber || !activeOperationUnits.has(unitNumber.trim().toUpperCase()))) {
+      return <span className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 px-2 py-0.5 rounded text-[8px] font-black uppercase">Data Mismatch</span>;
+    }
     switch (status) {
       case GensetStatus.IN_STOCK:
         return <span className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-0.5 rounded text-[8px] font-black uppercase">Available</span>;
@@ -468,7 +476,8 @@ const StockManagement: React.FC = () => {
               </div>
               <div className="flex flex-wrap gap-2 text-[8px] font-black uppercase">
                 <span className="px-3 py-2 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">● {isAr ? 'متاح' : 'IN STOCK'} {metrics.inStock}</span>
-                <span className="px-3 py-2 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-400/30">● {isAr ? 'مؤجر / على رحلة' : 'RENTED / CLIPPED'} {metrics.clippedOn}</span>
+                <span className="px-3 py-2 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-400/30">● {isAr ? 'على رحلة مؤكدة' : 'ACTIVE / CLIPPED'} {metrics.clippedOn}</span>
+                {metrics.unlinkedClippedOn > 0 && <span className="px-3 py-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-400/30">⚠ {isAr ? 'حالة بدون عملية' : 'STATUS WITHOUT OPERATION'} {metrics.unlinkedClippedOn}</span>
                 <span className="px-3 py-2 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-400/30">● {isAr ? 'صيانة' : 'MAINTENANCE'} {metrics.inMaint}</span>
               </div>
             </div>
@@ -479,7 +488,8 @@ const StockManagement: React.FC = () => {
               const units = stock.filter(s => s.location === port).sort((a,b) => a.unitNumber.localeCompare(b.unitNumber));
               if (!units.length) return null;
               const available = units.filter(u => u.status === GensetStatus.IN_STOCK).length;
-              const rented = units.filter(u => u.status === GensetStatus.CLIPPED_ON).length;
+              const rented = units.filter(u => u.status === GensetStatus.CLIPPED_ON && activeOperationUnits.has(u.unitNumber.trim().toUpperCase())).length;
+              const unlinked = units.filter(u => u.status === GensetStatus.CLIPPED_ON && !activeOperationUnits.has(u.unitNumber.trim().toUpperCase())).length;
               const maintenance = units.filter(u => u.status === GensetStatus.MAINTENANCE).length;
               return (
                 <div key={port} className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden">
@@ -490,17 +500,18 @@ const StockManagement: React.FC = () => {
                     </div>
                     <div className="flex gap-1 text-[7px] font-black">
                       <span className="px-2 py-1 rounded-lg bg-emerald-100 text-emerald-700">S {available}</span>
-                      <span className="px-2 py-1 rounded-lg bg-blue-100 text-blue-700">R {rented}</span>
+                      <span className="px-2 py-1 rounded-lg bg-blue-100 text-blue-700">R {rented}</span>{unlinked > 0 && <span className="px-2 py-1 rounded-lg bg-amber-100 text-amber-700">! {unlinked}</span>}
                       <span className="px-2 py-1 rounded-lg bg-rose-100 text-rose-700">M {maintenance}</span>
                     </div>
                   </div>
                   <div className="p-3 grid grid-cols-4 sm:grid-cols-5 gap-2">
                     {units.map(unit => {
+                      const linkedActive = activeOperationUnits.has(unit.unitNumber.trim().toUpperCase());
                       const statusClass =
                         unit.status === GensetStatus.IN_STOCK
                           ? 'bg-emerald-500 text-white border-emerald-600 shadow-emerald-200'
                           : unit.status === GensetStatus.CLIPPED_ON
-                            ? 'bg-blue-600 text-white border-blue-700 shadow-blue-200'
+                            ? (linkedActive ? 'bg-blue-600 text-white border-blue-700 shadow-blue-200' : 'bg-amber-500 text-white border-amber-600 shadow-amber-200')
                             : unit.status === GensetStatus.MAINTENANCE
                               ? 'bg-rose-500 text-white border-rose-600 shadow-rose-200'
                               : 'bg-amber-500 text-white border-amber-600 shadow-amber-200';
@@ -514,7 +525,7 @@ const StockManagement: React.FC = () => {
                         >
                           <span className="text-[10px] sm:text-[11px] font-black font-mono tracking-tight">{unit.unitNumber}</span>
                           <span className="text-[6px] font-black uppercase opacity-80 mt-1">
-                            {unit.status === GensetStatus.IN_STOCK ? (isAr ? 'متاح' : 'STOCK') : unit.status === GensetStatus.CLIPPED_ON ? (isAr ? 'مؤجر' : 'RENTED') : unit.status === GensetStatus.MAINTENANCE ? (isAr ? 'صيانة' : 'MAINT') : unit.status}
+                            {unit.status === GensetStatus.IN_STOCK ? (isAr ? 'متاح' : 'STOCK') : unit.status === GensetStatus.CLIPPED_ON ? (linkedActive ? (isAr ? 'على رحلة' : 'ACTIVE') : (isAr ? 'غير مرتبط بعملية' : 'NO OPERATION')) : unit.status === GensetStatus.MAINTENANCE ? (isAr ? 'صيانة' : 'MAINT') : unit.status}
                           </span>
                         </button>
                       );
