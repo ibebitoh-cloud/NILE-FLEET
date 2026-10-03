@@ -39,6 +39,35 @@ const getDefaultAllowedScreens = (role: UserRole): string[] => {
   if (role === UserRole.GATE_OPERATOR) return ['port-gate', 'notifications', 'support', 'user-settings'];
   return ['cust-reservations', 'cust-invoices', 'notifications', 'support', 'user-settings'];
 };
+
+const getUserMemoryKey = (userId: string) => `nilefleet_user_memory_${userId}`;
+
+const getRememberedScreen = (u: User): string | null => {
+  try {
+    const raw = localStorage.getItem(getUserMemoryKey(u.id));
+    if (!raw) return null;
+    const memory = JSON.parse(raw);
+    const screen = typeof memory?.lastScreen === 'string' ? memory.lastScreen : null;
+    if (!screen) return null;
+    const allowed = new Set(
+      Array.isArray(u.allowedScreens) ? u.allowedScreens : getDefaultAllowedScreens(u.role)
+    );
+    if (u.role === UserRole.ADMIN || u.role === UserRole.MANAGER) allowed.add('financials');
+    if (u.role === UserRole.CUSTOMER) return ['cust-reservations', 'cust-invoices', 'notifications', 'support'].includes(screen) ? screen : null;
+    return allowed.has(screen) ? screen : null;
+  } catch {
+    return null;
+  }
+};
+
+const rememberUserScreen = (u: User, screen: string) => {
+  try {
+    const key = getUserMemoryKey(u.id);
+    const current = JSON.parse(localStorage.getItem(key) || '{}');
+    localStorage.setItem(key, JSON.stringify({ ...current, lastScreen: screen }));
+  } catch {}
+};
+
 export type ThemeMode = 'day' | 'night';
 
 interface LanguageContextType {
@@ -260,12 +289,14 @@ const App: React.FC = () => {
           setUser(null);
           localStorage.removeItem('user');
         } else {
+          const rememberedScreen = getRememberedScreen(sessionUser);
           setActiveScreen(
-            sessionUser.role === UserRole.GATE_OPERATOR
+            rememberedScreen ||
+            (sessionUser.role === UserRole.GATE_OPERATOR
               ? 'port-gate'
               : sessionUser.role === UserRole.CUSTOMER
                 ? 'cust-reservations'
-                : 'dashboard'
+                : 'dashboard')
           );
         }
       } else {
@@ -553,12 +584,14 @@ const App: React.FC = () => {
           loggingInRef.current = false;
           setUser(u);
           localStorage.setItem('user', JSON.stringify(u));
+          const rememberedScreen = getRememberedScreen(u);
           setActiveScreen(
-            u.role === UserRole.GATE_OPERATOR
+            rememberedScreen ||
+            (u.role === UserRole.GATE_OPERATOR
               ? 'port-gate'
               : u.role === UserRole.CUSTOMER
                 ? 'cust-reservations'
-                : 'dashboard'
+                : 'dashboard')
           );
         };
       }
@@ -588,6 +621,7 @@ const App: React.FC = () => {
 
   const navigateTo = useCallback((screen: string, id?: string) => {
     setHighlightId(id || null);
+    if (user) rememberUserScreen(user, screen);
     setActiveScreen(screen);
     setOpenScreens(current => current.includes(screen) ? current : [...current, screen]);
     window.location.hash = screen;
@@ -690,6 +724,7 @@ const App: React.FC = () => {
 
   const setScreenFromLayout = (screen: string) => {
     setHighlightId(null);
+    if (user) rememberUserScreen(user, screen);
     setActiveScreen(screen);
     setOpenScreens(current => current.includes(screen) ? current : [...current, screen]);
     window.location.hash = screen;
@@ -708,6 +743,7 @@ const App: React.FC = () => {
     const nextScreens = remaining.length ? remaining : nextScreen === 'no-access' ? [] : [nextScreen];
     setOpenScreens(nextScreens);
     if (activeScreen === screen) {
+      if (user) rememberUserScreen(user, nextScreen);
       setActiveScreen(nextScreen);
       window.location.hash = nextScreen === 'no-access' ? '' : nextScreen;
     }
