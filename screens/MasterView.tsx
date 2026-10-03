@@ -825,8 +825,26 @@ const MasterView: React.FC = () => {
   const [invoices, setInvoices] = useState<Invoice[]>(() => db.getInvoices());
 
   const refresh = () => {
+    const scrollPositions = new Map<HTMLElement, { top: number; left: number }>();
+    document.querySelectorAll<HTMLElement>('*').forEach((element) => {
+      if (element.scrollTop > 0 || element.scrollLeft > 0) {
+        scrollPositions.set(element, { top: element.scrollTop, left: element.scrollLeft });
+      }
+    });
+    const windowTop = window.scrollY;
+    const windowLeft = window.scrollX;
+
     setOperations([...db.getOperations()]);
     setInvoices([...db.getInvoices()]);
+
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: windowTop, left: windowLeft, behavior: 'instant' as ScrollBehavior });
+      scrollPositions.forEach((position, element) => {
+        if (!element.isConnected) return;
+        element.scrollTop = position.top;
+        element.scrollLeft = position.left;
+      });
+    });
   };
 
   useEffect(() => {
