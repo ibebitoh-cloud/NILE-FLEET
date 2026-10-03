@@ -630,6 +630,7 @@ const MasterView: React.FC = () => {
 
   const masterTableScrollRef = useRef<HTMLDivElement | null>(null);
   const pendingMasterScrollRef = useRef<{ left: number; top: number } | null>(null);
+  const skipNextDbChangeRefreshRef = useRef(false);
 
   const [viewPrefs, setViewPrefs] = useState<{
     density: number;
@@ -849,7 +850,13 @@ const MasterView: React.FC = () => {
   }, [operations]);
 
   useEffect(() => {
-    const sync = () => refresh();
+    const sync = () => {
+      if (skipNextDbChangeRefreshRef.current) {
+        skipNextDbChangeRefreshRef.current = false;
+        return;
+      }
+      refresh();
+    };
     window.addEventListener('db-undo-success', sync);
     window.addEventListener('db-change', sync);
     return () => {
@@ -1222,21 +1229,27 @@ const MasterView: React.FC = () => {
 
   const handleUpdateCell = async (op: Operation, field: keyof Operation, val: any) => {
     if (isReadOnly) return;
-    const scrollContainer = masterTableScrollRef.current;
-    if (scrollContainer) {
-      pendingMasterScrollRef.current = {
-        left: scrollContainer.scrollLeft,
-        top: scrollContainer.scrollTop
-      };
-    }
+
+    // Do not rebuild the whole Master View after an inline edit. The database
+    // service already updates its in-memory operation and emits db-change;
+    // rebuilding the table is what causes the browser to lose its horizontal
+    // scroll position and jump back to the far-left edge.
+    skipNextDbChangeRefreshRef.current = true;
     const saved = await db.updateOperation({ ...op, [field]: val });
+
     if (!saved) {
+      skipNextDbChangeRefreshRef.current = false;
       window.alert(isAr
         ? `فشل حفظ التعديل: ${db.getLastDbError() || ''}`
         : `Failed to save change: ${db.getLastDbError() || ''}`);
       return;
     }
-    refresh();
+
+    const updatedOperation = { ...op, [field]: val } as Operation;
+    setOperations(current =>
+      current.map(item => item.id === updatedOperation.id ? updatedOperation : item)
+    );
+    setInvoices([...db.getInvoices()]);
   };
 
   const handleUpdateGensetGas = (unitNumber: string, value: string) => {
