@@ -170,20 +170,24 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   useEffect(() => {
     const visualViewport = window.visualViewport;
     if (!visualViewport) return;
+    // Keyboard detection only needs viewport resize events. Listening to
+    // visualViewport scroll fires continuously while the page is being scrolled
+    // on iOS and forces a React state update for every scroll frame.
     const updateDaliViewport = () => {
       const keyboardInset = Math.max(0, window.innerHeight - (visualViewport.height + visualViewport.offsetTop));
-      setDaliViewport({
+      const next = {
         height: visualViewport.height,
         keyboardInset: window.innerWidth < 640 ? keyboardInset : 0
-      });
+      };
+      setDaliViewport(prev =>
+        prev.height === next.height && prev.keyboardInset === next.keyboardInset ? prev : next
+      );
     };
     updateDaliViewport();
     visualViewport.addEventListener('resize', updateDaliViewport);
-    visualViewport.addEventListener('scroll', updateDaliViewport);
     window.addEventListener('resize', updateDaliViewport);
     return () => {
       visualViewport.removeEventListener('resize', updateDaliViewport);
-      visualViewport.removeEventListener('scroll', updateDaliViewport);
       window.removeEventListener('resize', updateDaliViewport);
     };
   }, []);
