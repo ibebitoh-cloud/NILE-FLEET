@@ -1616,18 +1616,18 @@ I’ll search with you. 🤖`;
       ? allPossibleMenuItems.filter(item => roleDefaultScreenIds.includes(item.id))
       : defaultMenu;
 
-  const isTerminal = isDark;
+  const isDark = isDark;
   
-  const sidebarBg = isTerminal ? 'bg-[#001224]' : 'bg-white shadow-xl';
-  const mainBg = isTerminal ? 'bg-[#000b14]' : 'bg-slate-50';
-  const borderClass = isTerminal ? 'border-[#C2A37822]' : 'border-slate-200';
-  const textPrimary = isTerminal ? 'text-white' : 'text-[#001F3F]';
-  const textSecondary = isTerminal ? 'text-[#C2A37888]' : 'text-slate-400';
-  const headerBg = isTerminal ? 'bg-[#001224bb] border-[#C2A37822]' : 'bg-white/80 border-slate-200';
+  const sidebarBg = isDark ? 'bg-[#001224]' : 'bg-white shadow-xl';
+  const mainBg = isDark ? 'bg-[#000b14]' : 'bg-slate-50';
+  const borderClass = isDark ? 'border-[#C2A37822]' : 'border-slate-200';
+  const textPrimary = isDark ? 'text-white' : 'text-[#001F3F]';
+  const textSecondary = isDark ? 'text-[#C2A37888]' : 'text-slate-400';
+  const headerBg = isDark ? 'bg-[#001224bb] border-[#C2A37822]' : 'bg-white/80 border-slate-200';
 
   const getNavItemClass = (itemId: string) => {
     const isActive = activeScreen === itemId;
-    if (isTerminal) return isActive ? 'bg-[#C2A378] text-[#001F3F] shadow-[0_0_20px_rgba(194,163,120,0.4)]' : 'text-[#C2A378aa] hover:bg-white/5 hover:text-white';
+    if (isDark) return isActive ? 'bg-[#C2A378] text-[#001F3F] shadow-[0_0_20px_rgba(194,163,120,0.4)]' : 'text-[#C2A378aa] hover:bg-white/5 hover:text-white';
     return isActive ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-200';
   };
 
@@ -1720,7 +1720,7 @@ I’ll search with you. 🤖`;
                   ].map(sub => {
                     const isSubActive = activeScreen === 'port-gate' && activePortGateTab === sub.tab;
                     const subClass = isSubActive 
-                      ? (isTerminal ? 'text-[#C2A378] font-bold' : 'text-blue-600 font-bold') 
+                      ? (isDark ? 'text-[#C2A378] font-bold' : 'text-blue-600 font-bold') 
                       : 'text-[#C2A378aa] hover:text-white dark:hover:text-white';
                     return (
                       <button 
@@ -1745,7 +1745,7 @@ I’ll search with you. 🤖`;
                   ].map(sub => {
                     const isSubActive = activeScreen === 'booking-invoices' && activeInvoicesTab === sub.tab;
                     const subClass = isSubActive 
-                      ? (isTerminal ? 'text-[#C2A378] font-bold' : 'text-blue-600 font-bold') 
+                      ? (isDark ? 'text-[#C2A378] font-bold' : 'text-blue-600 font-bold') 
                       : 'text-[#C2A378aa] hover:text-white dark:hover:text-white';
                     return (
                       <button 
@@ -1766,14 +1766,14 @@ I’ll search with you. 🤖`;
         <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className={`absolute -right-3 top-16 bg-[#C2A378] text-[#001F3F] w-6 h-6 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-50 border-2 border-[#001224]`}>
           <span className="text-[10px] font-bold">{isSidebarCollapsed ? '→' : '←'}</span>
         </button>
-        <div className={`p-3 border-t ${borderClass} ${isTerminal ? 'bg-black/40' : 'bg-slate-50'}`}>
+        <div className={`p-3 border-t ${borderClass} ${isDark ? 'bg-black/40' : 'bg-slate-50'}`}>
           <div className={`mb-3 flex items-center gap-2 px-1 ${isSidebarCollapsed ? 'flex-col px-0' : ''}`}>
             <div className={`w-8 h-8 rounded-lg bg-[#C2A378] overflow-hidden flex items-center justify-center text-[#001F3F] text-[10px] font-black border border-white/20 cursor-pointer uppercase`} onClick={() => setActiveScreen('user-settings')}>
               {user.avatarUrl ? <img src={user.avatarUrl} alt="profile" className="w-full h-full object-cover" /> : user.name[0]}
             </div>
             {!isSidebarCollapsed && <div className="flex-1 min-w-0 text-start leading-tight"><p className={`text-[8px] font-black ${textSecondary} uppercase`}>{user.role}</p><p className={`text-[10px] font-bold ${textPrimary} truncate uppercase`}>{user.name}</p></div>}
           </div>
-          <button onClick={onLogout} className={`w-full px-3 py-2 rounded-lg text-[9px] font-black transition-all border uppercase tracking-widest ${isTerminal ? 'bg-rose-900/20 hover:bg-rose-600 text-rose-100 border-rose-900/50' : 'bg-rose-50 hover:bg-rose-600 text-rose-500 border-rose-100'}`}>{isSidebarCollapsed ? 'OUT' : t.signOut}</button>
+          <button onClick={onLogout} className={`w-full px-3 py-2 rounded-lg text-[9px] font-black transition-all border uppercase tracking-widest ${isDark ? 'bg-rose-900/20 hover:bg-rose-600 text-rose-100 border-rose-900/50' : 'bg-rose-50 hover:bg-rose-600 text-rose-500 border-rose-100'}`}>{isSidebarCollapsed ? 'OUT' : t.signOut}</button>
         </div>
       </aside>
 
@@ -1961,7 +1961,7 @@ I’ll search with you. 🤖`;
                 <div className="mt-5 w-full max-w-[320px]"><div className="mb-2 flex items-center gap-2"><span className="h-px flex-1 bg-white/10"></span><span className="text-[7px] font-black tracking-[0.2em] text-white/30">{isAr?'ابدأ بسؤال':'START WITH A QUESTION'}</span><span className="h-px flex-1 bg-white/10"></span></div><div className="grid gap-2">{(()=>{const prompts=!daliIntroCompleted?(isAr?['مين دالي؟']:['Who is DALI?']):(isAr?[['كم مولد يعمل اليوم؟','اعرض حجوزات اليوم','أين المولد 125؟'],['⚠️ في تعارض في البيانات؟','📍 المولدات موجودة فين؟','📦 إيه الحجوزات اللي محتاجة متابعة؟']][daliSuggestedSet]:[['How many gensets are operating today?','Show today’s bookings','Where is genset 125?'],['⚠️ Are there any data conflicts?','📍 Where are the gensets?','📦 Which bookings need follow-up?']][daliSuggestedSet]);return prompts.map(prompt=><button key={prompt} type="button" onClick={()=>setAiChatInput(prompt.replace(/^[^\p{L}\p{N}]+/u,'').trim())} className="min-h-10 w-full rounded-xl border border-white/10 bg-white/[0.045] px-3.5 py-2.5 text-left text-[10px] font-semibold leading-5 text-white/75 transition hover:border-white/20 hover:bg-white/[0.075] hover:text-white active:scale-[.99]">{prompt}</button>)})()}</div></div>
               </div>}
               {aiChatMessages.length>0&&<div className="flex flex-col gap-3 pt-1">{aiChatMessages.map((m,i)=><div key={i} className={`flex ${m.role==='user'?'justify-end':'justify-start'}`}><div className={`max-w-[88%] px-3.5 py-2.5 text-[12px] leading-5.5 sm:text-[13px] sm:leading-6 whitespace-pre-wrap break-words overflow-wrap-anywhere ${m.role==='user'?'rounded-[20px] rounded-br-md bg-[#C2A378] text-[#07131f]':'rounded-[20px] rounded-bl-md bg-white/[0.055] text-white/90'}`}>{m.text}</div></div>)}{!aiChatLoading&&daliPostIntroSuggestion&&<div className="flex justify-start pt-1"><button type="button" onClick={()=>{setAiChatInput(isAr?'دالي يقدر يعمل إيه؟':'What can DALI do?');setDaliPostIntroSuggestion(false)}} className="rounded-full border border-[#C2A378]/30 bg-[#C2A378]/10 px-4 py-2 text-[9px] font-bold text-[#C2A378] transition hover:bg-[#C2A378]/15">{isAr?'دالي يقدر يعمل إيه؟':'What can DALI do?'}</button></div>}</div>}
-              {aiChatLoading&&<div className="flex flex-col items-center justify-center py-10 text-center"><div className="relative h-24 w-28"><div className="dali-blob absolute inset-0 overflow-hidden border border-[#C2A378]/25 bg-[radial-gradient(ellipse_at_35%_28%,rgba(255,255,255,.30),rgba(194,163,120,.18)_38%,rgba(0,31,63,.76)_100%)] shadow-[0_0_55px_rgba(194,163,120,.16)]"><div className="pointer-events-none absolute inset-[10%] rounded-[48%] bg-[radial-gradient(ellipse_at_30%_25%,rgba(255,255,255,.38),rgba(194,163,120,.12)_40%,transparent_72%)] opacity-80" style={{animation:'daliOrbCore 1.8s ease-in-out infinite'}}></div><div className="absolute inset-[30%] rounded-full bg-[#C2A378]/55 blur-md"></div></div></div><p className="mt-4 text-[9px] font-black tracking-[0.18em] text-[#C2A378]">{isAr?'دالي يفكر':'DALI IS THINKING'}</p><p className="mt-1 text-[9px] leading-5 text-white/35">{daliThinkingStyle==='silent'?'•••':isAr?(daliThinkingStyle==='friendly'?['بشوف الموضوع 👀…','براجع البيانات…','بربط النتائج…','تمام، بجمعها لك…'][daliThinkingPhase]:daliThinkingStyle==='technical'?['أحدد نوع الطلب…','أطابق المصطلحات…','أراجع السجلات المرتبطة…','أتحقق من النتيجة…'][daliThinkingPhase]:['براجع البيانات المرتبطة…','ببحث في سجلات النظام…','براجع النتائج المرتبطة…','بجمع الإجابة…'][daliThinkingPhase]):(daliThinkingStyle==='friendly'?['Taking a quick look 👀…','Checking the data…','Connecting the results…','Got it — putting it together…'][daliThinkingPhase]:daliThinkingStyle==='technical'?['Classifying the request…','Matching terminology…','Reviewing related records…','Validating the result…'][daliThinkingPhase]:['Checking the relevant system data…','Searching the system records…','Reviewing the related results…','Putting the answer together…'][daliThinkingPhase])}</p></div>}
+              {aiChatLoading&&<div className="flex flex-col items-center justify-center py-10 text-center"><div className="relative h-24 w-28"><div className="dali-blob absolute inset-0 overflow-hidden border border-[#C2A378]/25 bg-[radial-gradient(ellipse_at_35%_28%,rgba(255,255,255,.30),rgba(194,163,120,.18)_38%,rgba(0,31,63,.76)_100%)] shadow-[0_0_55px_rgba(194,163,120,.16)]"><div className="pointer-events-none absolute inset-[10%] rounded-[48%] bg-[radial-gradient(ellipse_at_30%_25%,rgba(255,255,255,.38),rgba(194,163,120,.12)_40%,transparent_72%)] opacity-80" style={{animation:'daliOrbCore 1.8s ease-in-out infinite'}}></div><div className="absolute inset-[30%] rounded-full bg-[#C2A378]/55 blur-md"></div></div></div><p className="mt-4 text-[9px] font-black tracking-[0.18em] text-[#C2A378]">{isAr?'دالي يفكر':'DALI IS THINKING'}</p><p className="mt-1 text-[9px] leading-5 text-white/35">{'clean'==='silent'?'•••':isAr?('clean'==='friendly'?['بشوف الموضوع 👀…','براجع البيانات…','بربط النتائج…','تمام، بجمعها لك…'][daliThinkingPhase]:'clean'==='technical'?['أحدد نوع الطلب…','أطابق المصطلحات…','أراجع السجلات المرتبطة…','أتحقق من النتيجة…'][daliThinkingPhase]:['براجع البيانات المرتبطة…','ببحث في سجلات النظام…','براجع النتائج المرتبطة…','بجمع الإجابة…'][daliThinkingPhase]):('clean'==='friendly'?['Taking a quick look 👀…','Checking the data…','Connecting the results…','Got it — putting it together…'][daliThinkingPhase]:'clean'==='technical'?['Classifying the request…','Matching terminology…','Reviewing related records…','Validating the result…'][daliThinkingPhase]:['Checking the relevant system data…','Searching the system records…','Reviewing the related results…','Putting the answer together…'][daliThinkingPhase])}</p></div>}
             </div>
             <footer className="shrink-0 border-t border-white/10 bg-black/10 p-2.5 sm:p-3.5"><div className="flex items-end gap-2 rounded-[20px] border border-white/10 bg-white/[0.045] p-1.5 focus-within:border-white/20 focus-within:bg-white/[0.065]"><textarea value={aiChatInput} onChange={e=>setAiChatInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();askNileAi()}}} placeholder={isAr?'اكتب لدالي...':'Message DALI...'} onFocus={e=>{if(window.innerWidth<640)window.setTimeout(()=>e.currentTarget.scrollIntoView({block:'nearest',behavior:'smooth'}),80)}} className="min-h-[46px] max-h-28 flex-1 resize-none rounded-[15px] border-0 bg-transparent px-3 py-2.5 text-[16px] leading-6 text-white outline-none placeholder:text-white/30 sm:text-[13px]"/><button data-dali-send onClick={askNileAi} disabled={aiChatLoading||!aiChatInput.trim()} className="h-11 w-11 shrink-0 rounded-[15px] bg-[#C2A378] text-[#07131f] transition hover:brightness-110 active:scale-95 disabled:opacity-25" title={isAr?'إرسال':'Send'}>↑</button></div><p className="mt-2 px-1 text-[7px] text-white/25">{isAr?'دالي يبحث في بيانات النظام قبل أن يخمّن.':'DALI checks system data before guessing.'}</p></footer>
           </section>
@@ -2008,31 +2008,31 @@ I’ll search with you. 🤖`;
             {isCreator && <span className="hidden md:inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-[#C2A37866] bg-[#C2A37815] text-[#C2A378] text-[8px] font-black uppercase tracking-widest" title="System Creator">👑 {isAr ? 'منشئ النظام' : 'CREATOR'}</span>}
             <button 
               onClick={() => setIsMuted(!isMuted)} 
-              className={`p-1.5 rounded-lg border transition-all ${isTerminal ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-slate-200 bg-white'}`}
+              className={`p-1.5 rounded-lg border transition-all ${isDark ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-slate-200 bg-white'}`}
               title={isMuted ? (isAr ? 'إلغاء كتم التنبيهات' : 'Unmute Notifications') : (isAr ? 'كتم التنبيهات' : 'Mute Notifications')}
             >
                <span className="text-base">{isMuted ? '🔇' : '🔊'}</span>
             </button>
             <button
               onClick={toggleTheme}
-              className={`relative p-1.5 rounded-lg border transition-all overflow-hidden ${isTerminal ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-slate-200 bg-white'}`}
+              className={`relative p-1.5 rounded-lg border transition-all overflow-hidden ${isDark ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-slate-200 bg-white'}`}
               title={isDark ? (isAr ? 'الوضع الفاتح' : 'Light Mode') : (isAr ? 'الوضع الداكن' : 'Dark Mode')}
               aria-label={isDark ? 'Light Mode' : 'Dark Mode'}
             >
               <span className={`block text-base leading-none transition-all duration-500 ${isDark ? 'rotate-0' : 'rotate-180'}`}>{isDark ? '☀️' : '🌙'}</span>
             </button>
-            <button onClick={() => setActiveScreen('notifications')} className={`min-h-[44px] min-w-[44px] flex items-center justify-center p-1.5 rounded-lg border relative transition-all ${isTerminal ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-slate-200 bg-white'}`}>
+            <button onClick={() => setActiveScreen('notifications')} className={`min-h-[44px] min-w-[44px] flex items-center justify-center p-1.5 rounded-lg border relative transition-all ${isDark ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-slate-200 bg-white'}`}>
                <span className="text-base">🔔</span>
                {notifications.length > 0 && <span className="absolute top-0 right-0 w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse"></span>}
             </button>
             <button 
               onClick={toggleFullscreen} 
-              className={`hidden sm:inline-flex min-h-[44px] min-w-[44px] items-center justify-center p-1.5 rounded-lg border transition-all ${(isFullscreen || isPseudoFullscreen) ? 'border-rose-500/50 bg-rose-500/10 text-rose-500' : (isTerminal ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-slate-200 bg-white')}`}
+              className={`hidden sm:inline-flex min-h-[44px] min-w-[44px] items-center justify-center p-1.5 rounded-lg border transition-all ${(isFullscreen || isPseudoFullscreen) ? 'border-rose-500/50 bg-rose-500/10 text-rose-500' : (isDark ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-slate-200 bg-white')}`}
               title={(isFullscreen || isPseudoFullscreen) ? (isAr ? 'خروج من ملء الشاشة' : 'Exit Fullscreen') : (isAr ? 'ملء الشاشة' : 'Fullscreen')}
             >
               {(isFullscreen || isPseudoFullscreen) ? '✕' : '⛶'}
             </button>
-            <button onClick={() => setLang(lang === 'en' ? 'ar' : 'en')} className={`min-h-[44px] min-w-[44px] px-2.5 py-1 rounded-lg border flex items-center justify-center gap-1 transition-all ${isTerminal ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-slate-200 bg-white'}`}><span className="font-black text-[9px] uppercase">{lang === 'en' ? 'AR' : 'EN'}</span></button>
+            <button onClick={() => setLang(lang === 'en' ? 'ar' : 'en')} className={`min-h-[44px] min-w-[44px] px-2.5 py-1 rounded-lg border flex items-center justify-center gap-1 transition-all ${isDark ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-slate-200 bg-white'}`}><span className="font-black text-[9px] uppercase">{lang === 'en' ? 'AR' : 'EN'}</span></button>
             {!isHome && activeScreen !== 'no-access' && (
               <button 
                 onClick={() => setActiveScreen(dashboardId)} 
@@ -2070,7 +2070,7 @@ I’ll search with you. 🤖`;
       </main>
 
       {/* MOBILE NAV: primary Genset screens */}
-      <nav className={`lg:hidden fixed bottom-0 left-0 right-0 border-t px-1.5 py-1.5 z-40 grid grid-cols-5 gap-1 items-center transition-all ${isTerminal ? 'bg-[#001224] border-white/5' : 'bg-white border-slate-200'} backdrop-blur-xl pb-5 no-print`}>
+      <nav className={`lg:hidden fixed bottom-0 left-0 right-0 border-t px-1.5 py-1.5 z-40 grid grid-cols-5 gap-1 items-center transition-all ${isDark ? 'bg-[#001224] border-white/5' : 'bg-white border-slate-200'} backdrop-blur-xl pb-5 no-print`}>
         {[
           { id: dashboardId, label: isAr ? 'الرئيسية' : 'DASHBOARD', icon: '📊' },
           { id: 'port-gate', label: isAr ? 'البوابة' : 'GATE', icon: '🚧' },
@@ -2087,14 +2087,14 @@ I’ll search with you. 🤖`;
                 if (item.id === 'port-gate') handlePortGateTabClick(activePortGateTab);
                 else setActiveScreen(item.id);
               }}
-              className={`min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all ${active ? 'bg-[#C2A378] text-[#001F3F]' : available ? (isTerminal ? 'text-[#C2A378cc] hover:bg-white/5' : 'text-slate-600 hover:bg-slate-100') : 'opacity-25 cursor-not-allowed'}`}
+              className={`min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all ${active ? 'bg-[#C2A378] text-[#001F3F]' : available ? (isDark ? 'text-[#C2A378cc] hover:bg-white/5' : 'text-slate-600 hover:bg-slate-100') : 'opacity-25 cursor-not-allowed'}`}
             >
               <span className="text-base leading-none">{item.icon}</span>
               <span className="max-w-full truncate text-[6.5px] font-black uppercase tracking-[.08em]">{item.label}</span>
             </button>
           );
         })}
-        <button onClick={() => setIsMobileMenuOpen(true)} className={`min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all ${isMobileMenuOpen ? 'bg-[#C2A378] text-[#001F3F]' : isTerminal ? 'text-[#C2A378cc] hover:bg-white/5' : 'text-slate-600 hover:bg-slate-100'}`}>
+        <button onClick={() => setIsMobileMenuOpen(true)} className={`min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all ${isMobileMenuOpen ? 'bg-[#C2A378] text-[#001F3F]' : isDark ? 'text-[#C2A378cc] hover:bg-white/5' : 'text-slate-600 hover:bg-slate-100'}`}>
           <span className="text-base leading-none">☰</span>
           <span className="text-[6.5px] font-black uppercase tracking-[.08em]">MORE</span>
         </button>
