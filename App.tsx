@@ -113,6 +113,15 @@ const App: React.FC = () => {
     }
   });
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  // Mobile performance: keep only the active screen mounted. Hidden desktop tabs can be expensive on phones.
+  const [isMobileViewport, setIsMobileViewport] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches);
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px)');
+    const sync = () => setIsMobileViewport(media.matches);
+    sync();
+    media.addEventListener?.('change', sync);
+    return () => media.removeEventListener?.('change', sync);
+  }, []);
   // All screens read business data from the shared SupabaseDB cache. Bump this
   // version whenever that cache changes so mounted screens (including hidden
   // tabs) re-render from the same current source of truth.
@@ -716,8 +725,8 @@ const App: React.FC = () => {
           onCloseScreen={closeScreenTab}
         >
           <Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center text-slate-500">Loading…</div>}>
-            {(openScreens.length ? openScreens : ['no-access']).map(screen => (
-              <div key={`${screen}-${dataVersion}`} hidden={screen !== activeScreen} className="min-h-full">
+            {(isMobileViewport ? [activeScreen] : (openScreens.length ? openScreens : ['no-access'])).map(screen => (
+              <div key={`${screen}-${dataVersion}`} hidden={!isMobileViewport && screen !== activeScreen} className="min-h-full min-w-0">
                 {renderScreen(screen)}
               </div>
             ))}
