@@ -21,7 +21,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
   const isSuperOwner = user.email === 'bebito@nilefleet.com';
   const isAdmin = user.role === UserRole.ADMIN;
 
-  const [activeTab, setActiveTab] = useState<'IDENTITY' | 'CONTACT' | 'BUSINESS' | 'LINGUISTICS' | 'DISPLAY' | 'COMMAND'>('IDENTITY');
+  const [activeTab, setActiveTab] = useState<'BUSINESS' | 'LINGUISTICS' | 'COMMAND'>('BUSINESS');
   
   const [profileData, setProfileData] = useState<Partial<User>>({
     ...user,
@@ -335,19 +335,10 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2">
             {[
-              { id: 'IDENTITY', label: isAr ? 'الهوية' : 'Identity', icon: '👤' },
-              { id: 'CONTACT', label: isAr ? 'بيانات العمل' : 'Logistics', icon: '📍' },
-              { id: 'DISPLAY', label: isAr ? 'المظهر' : 'Appearance', icon: '☀️' },
-              { id: 'BUSINESS', label: isAr ? 'الفواتير والشركة' : 'Branding', icon: '🏢' },
+              { id: 'BUSINESS', label: isAr ? 'العلامة التجارية' : 'Branding', icon: '🏢' },
               { id: 'LINGUISTICS', label: isAr ? 'اللغة والذكاء' : 'Linguistics', icon: '🗣️' },
               isSuperOwner ? { id: 'COMMAND', label: isAr ? 'التحكم الحرج' : 'Command', icon: '☢️' } : null,
-            ].filter((tab): tab is { id: string; label: string; icon: string } => {
-              if (!tab) return false;
-              if (user.role === UserRole.GATE_OPERATOR) {
-                return ['IDENTITY', 'DISPLAY', 'LINGUISTICS'].includes(tab.id);
-              }
-              return true;
-            }).map((tab) => (
+            ].filter(Boolean).map((tab) => (
               <button 
                 key={tab.id} 
                 onClick={() => setActiveTab(tab.id as any)}
