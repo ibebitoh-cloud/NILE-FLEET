@@ -107,8 +107,8 @@ const StockManagement: React.FC = () => {
 
   // Aggregate Metrics
   const metrics = useMemo(() => {
-    const inStock = stock.filter(s => s.status === GensetStatus.IN_STOCK || (s.status === GensetStatus.CLIPPED_ON && !activeUnits.has(s.unitNumber.trim().toUpperCase()))).length;
     const activeUnits = new Set(ops.filter(o => o.status === 'IN PROGRESS' && o.gensetNumber?.trim()).map(o => o.gensetNumber.trim().toUpperCase()));
+    const inStock = stock.filter(s => s.status === GensetStatus.IN_STOCK || (s.status === GensetStatus.CLIPPED_ON && !activeUnits.has(s.unitNumber.trim().toUpperCase()))).length;
     const clippedOn = stock.filter(s => s.status === GensetStatus.CLIPPED_ON && activeUnits.has(s.unitNumber.trim().toUpperCase())).length;
     const unlinkedClippedOn = 0;
     const inMaint = stock.filter(s => s.status === GensetStatus.MAINTENANCE).length;
