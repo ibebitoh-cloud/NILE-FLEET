@@ -1287,13 +1287,19 @@ class SupabaseDB {
     const norm = (v?: string) => String(v || '').trim().toUpperCase();
     const destination = norm(op.destination);
     const commodity = norm(op.commodity);
-    const candidates = _customerPrices.filter(p => p.customerName === name && p.portIn === op.clipOnPort && p.portOut === op.clipOffPort);
+    const candidates = _customerPrices.filter(p => {
+      if (p.customerName !== name) return false;
+      const hasRule = Boolean(norm(p.destination) || norm(p.commodity));
+      // Rule-based rates are independent of the route. The base rate is route-specific.
+      return hasRule || (p.portIn === op.clipOnPort && p.portOut === op.clipOffPort);
+    });
     const score = (p: CustomerPrice) => {
       const d = norm(p.destination), c = norm(p.commodity);
-      if (d && c && d === destination && c === commodity) return 4;
-      if (c && c === commodity) return 3;
-      if (d && d === destination) return 2;
-      if (!d && !c) return 1;
+      const routeMatch = p.portIn === op.clipOnPort && p.portOut === op.clipOffPort;
+      if (d && c && d === destination && c === commodity) return routeMatch ? 40 : 30;
+      if (c && c === commodity) return routeMatch ? 30 : 20;
+      if (d && d === destination) return routeMatch ? 20 : 10;
+      if (!d && !c && routeMatch) return 1;
       return 0;
     };
     return candidates.reduce<CustomerPrice | null>((best, p) => score(p) > (best ? score(best) : 0) ? p : best, null);
