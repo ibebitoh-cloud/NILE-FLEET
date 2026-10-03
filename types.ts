@@ -194,6 +194,9 @@ export interface CustomerPrice {
   portOut: Location;
   price: number;
   includeVat?: boolean;
+  /** Optional rule conditions. Null/empty means the base route price. */
+  destination?: string;
+  commodity?: string;
 }
 
 export type MaintenanceServiceType = 
