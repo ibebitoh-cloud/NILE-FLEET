@@ -412,6 +412,50 @@
             color: #26231f !important;
         }
 
+        /* SYSTEM-WIDE DAY-MODE CONTRAST GUARD
+           Prevent white foregrounds from disappearing on light surfaces. */
+        body.theme-day .bg-white [class*="text-white"],
+        body.theme-day .bg-slate-50 [class*="text-white"],
+        body.theme-day .bg-slate-100 [class*="text-white"],
+        body.theme-day .bg-gray-50 [class*="text-white"],
+        body.theme-day .bg-gray-100 [class*="text-white"],
+        body.theme-day .bg-neutral-50 [class*="text-white"],
+        body.theme-day .bg-neutral-100 [class*="text-white"],
+        body.theme-day [style*="background-color: #fff"] [class*="text-white"],
+        body.theme-day [style*="background-color: rgb(255, 255, 255)"] [class*="text-white"] {
+            color: var(--text-primary) !important;
+        }
+
+        body.theme-day .bg-white[class*="text-white"],
+        body.theme-day .bg-slate-50[class*="text-white"],
+        body.theme-day .bg-slate-100[class*="text-white"],
+        body.theme-day .bg-gray-50[class*="text-white"],
+        body.theme-day .bg-gray-100[class*="text-white"],
+        body.theme-day .bg-neutral-50[class*="text-white"],
+        body.theme-day .bg-neutral-100[class*="text-white"] {
+            color: var(--text-primary) !important;
+        }
+
+        /* Common light cards with inherited white/opacity text. */
+        body.theme-day .bg-white .text-white\/90,
+        body.theme-day .bg-white .text-white\/80,
+        body.theme-day .bg-white .text-white\/75,
+        body.theme-day .bg-white .text-white\/70,
+        body.theme-day .bg-white .text-white\/60,
+        body.theme-day .bg-white .text-white\/50,
+        body.theme-day .bg-white .text-white\/40,
+        body.theme-day .bg-white .text-white\/30 {
+            color: var(--text-secondary) !important;
+        }
+
+        /* Native form controls must remain readable in Day mode even when a
+           component accidentally carries a white text utility. */
+        body.theme-day input[class*="text-white"],
+        body.theme-day select[class*="text-white"],
+        body.theme-day textarea[class*="text-white"] {
+            color: var(--text-primary) !important;
+        }
+
         /* Preserve intentional white text; Day surfaces define their own readable foreground. */
 
         /* Arabic shaping — connected letters must remain naturally joined. */
