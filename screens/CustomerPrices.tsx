@@ -71,6 +71,29 @@ const CustomerPrices: React.FC = () => {
     setPrices([...db.getCustomerPrices()]);
   };
 
+  const getSpecialPrice = (cust: any, kind: 'destination' | 'commodity') => {
+    const name = cust.companyName || cust.name;
+    return prices.find(p => p.customerName === name && (kind === 'destination' ? (p.destination || '').toUpperCase() === 'MINYA' : (p.commodity || '').toUpperCase() === 'GRAPES'));
+  };
+
+  const saveSpecialPrice = (cust: any, kind: 'destination' | 'commodity', value: string) => {
+    const existing = getSpecialPrice(cust, kind);
+    const base = prices.find(p => p.customerName === (cust.companyName || cust.name) && !p.destination && !p.commodity);
+    const obj: CustomerPrice = {
+      id: existing?.id || `special-${kind}-${cust.id}`,
+      customerId: cust.id,
+      customerName: cust.companyName || cust.name,
+      portIn: existing?.portIn ?? base?.portIn ?? Location.ALEX,
+      portOut: existing?.portOut ?? base?.portOut ?? Location.ALEX,
+      price: parseFloat(value) || 0,
+      includeVat: existing?.includeVat ?? false,
+      destination: kind === 'destination' ? 'MINYA' : undefined,
+      commodity: kind === 'commodity' ? 'GRAPES' : undefined
+    };
+    db.setCustomerPrice(obj);
+    setPrices([...db.getCustomerPrices()]);
+  };
+
   const getPriceObj = (cust: any, portIn: Location, portOut: Location) => {
     const custName = cust.companyName || cust.name;
     return prices.find(pr => 
@@ -283,6 +306,23 @@ const CustomerPrices: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 no-print">
+        <div className="p-8 bg-white border-2 border-slate-200 rounded-[2.5rem] shadow-sm md:col-span-2">
+          <div className="flex items-center justify-between gap-4 mb-6">
+            <div><h4 className="text-lg font-black text-[#3a3833] uppercase">Special Rate Rules</h4><p className="text-xs text-slate-500 font-medium mt-1">Independent conditions: destination and commodity are separate rules.</p></div>
+            <span className="text-[9px] font-black uppercase tracking-widest text-[#9b7438]">Rate Matrix</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {(['destination','commodity'] as const).map(kind => {
+              const rule = getSpecialPrice(selectedCustomer, kind);
+              return <div key={kind} className="p-5 bg-[#f3f1ec] rounded-2xl border border-[#d8d2c8]">
+                <div className="flex items-center justify-between mb-3"><div><p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{kind === 'destination' ? 'Destination' : 'Commodity'}</p><p className="text-sm font-black text-[#3a3833]">{kind === 'destination' ? 'MINYA' : 'GRAPES'}</p></div><span className="text-[8px] font-black text-[#9b7438] uppercase">Independent</span></div>
+                <div className="flex items-center gap-2"><span className="text-[8px] font-black text-slate-500">EGP</span><input type="number" defaultValue={rule?.price || ''} onBlur={e => saveSpecialPrice(selectedCustomer, kind, e.target.value)} className="w-full bg-white border border-[#d8d2c8] rounded-xl px-4 py-3 text-sm font-black text-[#26231f] outline-none focus:border-[#9b7438]" placeholder="Rate" /></div>
+              </div>;
+            })}
+          </div>
+        </div>
+
+
         <div className="p-10 bg-[#3a3833] rounded-[3rem] text-white space-y-6 shadow-xl relative overflow-hidden">
            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
            <h4 className="text-lg font-black uppercase italic text-[#C2A378]">VAT Logic Control</h4>
