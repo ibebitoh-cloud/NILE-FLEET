@@ -104,6 +104,58 @@
             letter-spacing: normal;
         }
 
+        /* SYSTEM-WIDE RTL LAYOUT
+           Arabic mode is a true interface direction, not only translated words.
+           Components can opt out with .nf-ltr-isolate for IDs, codes and values. */
+        [dir="rtl"] body,
+        html[dir="rtl"] body {
+            direction: rtl;
+            text-align: start;
+        }
+
+        [dir="rtl"] button,
+        [dir="rtl"] input,
+        [dir="rtl"] textarea,
+        [dir="rtl"] select {
+            font-family: 'Noto Sans Arabic', 'Tajawal', 'Cairo', 'Arial', sans-serif;
+        }
+
+        [dir="rtl"] input::placeholder,
+        [dir="rtl"] textarea::placeholder {
+            text-align: right;
+            direction: rtl;
+        }
+
+        [dir="rtl"] table {
+            direction: rtl;
+        }
+
+        [dir="rtl"] th,
+        [dir="rtl"] td {
+            text-align: start;
+        }
+
+        /* Keep operational identifiers readable in their natural LTR order. */
+        [dir="rtl"] .nf-ltr-isolate,
+        [dir="rtl"] [data-ltr] {
+            direction: ltr !important;
+            unicode-bidi: isolate;
+            text-align: left !important;
+            font-family: 'Inter', Arial, sans-serif;
+        }
+
+        /* Arabic UI must never inherit Latin uppercase styling or tracking. */
+        [dir="rtl"] .uppercase,
+        [dir="rtl"] [class*="tracking-"] {
+            text-transform: none;
+        }
+
+        /* Prevent flex rows from looking visually reversed twice. Components
+           explicitly using flex-row-reverse keep their intended semantic order. */
+        [dir="rtl"] .nf-arabic-row {
+            direction: rtl;
+        }
+
         /* THEME DEFINITIONS - Calibrated for High Visibility */
         body.theme-black {
             --bg-primary: #000000;
