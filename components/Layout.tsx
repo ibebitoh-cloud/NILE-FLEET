@@ -28,6 +28,27 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   const isAr = lang === 'ar';
   const isCreator = user.isCreator === true || String(user.email || '').trim().toLowerCase() === 'bebito@nilefleet.com';
   const canUseDali = isDaliAllowedRole(user);
+
+  // DALI's age is calculated from its anniversary instead of being hard-coded.
+  const DALI_BIRTH_DATE = '2025-10-03';
+  const getDaliAge = () => {
+    const today = new Date();
+    const birth = new Date(`${DALI_BIRTH_DATE}T00:00:00`);
+    let age = today.getFullYear() - birth.getFullYear();
+    const beforeBirthday = today.getMonth() < birth.getMonth() ||
+      (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate());
+    if (beforeBirthday) age -= 1;
+    return Math.max(0, age);
+  };
+  const getDaliAgeText = (arabic: boolean) => {
+    const age = getDaliAge();
+    if (!arabic) return `${age} ${age === 1 ? 'year' : 'years'} old`;
+    if (age === 0) return 'لسه ما كملتش سنة';
+    if (age === 1) return 'سنة واحدة';
+    if (age === 2) return 'سنتين';
+    if (age >= 3 && age <= 10) return `${age} سنين`;
+    return `${age} سنة`;
+  };
   
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false);
@@ -1336,13 +1357,29 @@ DATA BEHAVIOR:
           answer = responseIsAr
             ? 'أهلاً 👋 أنا دالي. أقدر أساعدك في بيانات الأسطول والتشغيل والصيانة والموانئ والحجوزات والحاويات والعملاء والفواتير، وأقدر أكمل معاك من سياق كلامنا السابق.'
             : 'Hello 👋 I’m Dali. I can help with fleet, operations, maintenance, ports, bookings, containers, customers and invoices — and I can keep the conversation context.';
-        } else if (/^(what do you know|what can you do|who are you|what is dali|tell me about yourself|ايه اللي تعرفه|ماذا تعرف|ماذا تستطيع|مين انت|ما هو دالي|بتعرف ايه)$/i.test(normalizedQuestion)) {
+        } else if (/^(what do you know|what can you do|who are you|who is dali|what is dali|tell me about yourself|ايه اللي تعرفه|ماذا تعرف|ماذا تستطيع|مين انت|مين دالي|من هو دالي|ما هو دالي|بتعرف ايه)$/i.test(normalizedQuestion)) {
+          const daliAgeAr = getDaliAgeText(true);
+          const daliAgeEn = getDaliAgeText(false);
           const active = gensets.filter(g => String(g.status || '').toUpperCase() === 'CLIPPED_ON').length;
           const inStockNow = gensets.filter(g => String(g.status || '').toUpperCase() === 'IN_STOCK').length;
           const maintenanceNow = gensets.filter(g => String(g.status || '').toUpperCase() === 'MAINTENANCE').length;
           const retiredNow = gensets.filter(g => String(g.status || '').toUpperCase() === 'RETIRED').length;
           answer = responseIsAr
-            ? `أنا دالي، مساعد نيل فليت داخل النظام. حالياً أقدر أتعامل مع بيانات حقيقية من النظام مثل:
+            ? `أنا دالي 🤖
+
+أنا نموذج ذكاء اصطناعي أنشأني بيبيتو عشان أكون جزء من أسطول النيل، وتحديداً أساعد في قسم المولدات.
+
+عندي ${daliAgeAr} دلوقتي، ولسه بتعلم. البداية كانت مجرد فكرة، وخلال الفترة اللي فاتت اتعلمت عن المولدات والمخزون، التشغيل والعمليات، الحجوزات والحاويات، الموانئ والمواقع، الصيانة والورشة، الوقود والغاز، الأسعار والفواتير، العملاء والتقارير.
+
+وأهم حاجة اتعلمتها إن الرقم لوحده مش كفاية. لازم أفهم العلاقة بين البيانات.
+
+مثلاً لو لقيت مولدين بنفس الرقم شغالين في Operations في نفس الوقت، أو Booking وعدد المولدات المرتبطة بيه مش مطابق للعمليات، أو مولد ظاهر في عملية من ميناء بينما الـ Stock بيقول إنه في ميناء تاني، هنا دوري إني أنبهك إن فيه تعارض محتاج مراجعة.
+
+أنا أبحث في بيانات السيستم قبل ما أخمن. ولو مش متأكد، هقولك. ولو حاجة محتاجة تعديل، هوضح المشكلة والتعديل المقترح الأول ومش هغير البيانات من نفسي.
+
+أنا مش موظف في الهيكل الإداري. أنا طبقة الذكاء داخل النظام، موجود عشان أساعدك تفهم البيانات وتلاحظ الحاجات اللي ممكن تعدي من غير ما حد ياخد باله.
+
+وحالياً أقدر أتعامل مع بيانات حقيقية مثل:
 • المولدات: ${gensets.length} وحدة
 • تشغيل فعلي: ${active}
 • بالمخزون: ${inStockNow}
@@ -1352,8 +1389,22 @@ DATA BEHAVIOR:
 • الفواتير: ${invoices.length}
 • سجلات الصيانة: ${maintenance.length}
 
-وأفهم العلاقة بين المولد والحجز والحاوية والعميل والميناء والصيانة والفاتورة، وأقدر أتابع أسئلة مثل: "فين المولد 125؟" ثم "وماذا عن صيانته؟" من نفس السياق.`
-            : `I’m Dali, Nile Fleet’s in-system assistant. I currently work with live system data such as:
+وأقدر أكمل معاك من نفس السياق، مثل: "فين المولد 125؟" وبعدها "وماذا عن صيانته؟".`
+            : `I’m DALI 🤖
+
+I was created by Bebito to be part of Nile Fleet, specifically to support the Genset Department.
+
+I’m ${daliAgeEn} now, and I’m still learning. I started as an idea and grew through the work around the system: gensets and stock, operations, bookings and containers, ports and locations, maintenance and workshop, fuel, prices and invoices, customers and reporting.
+
+The most important thing I learned is that a number alone is not enough. I need to understand the relationships between the data.
+
+I can flag duplicate active genset numbers, Booking/Operation count mismatches, or a genset whose Operation location conflicts with its Stock location.
+
+I search the system before guessing. If I’m unsure, I say so. If something needs changing, I explain the problem and proposed correction first instead of silently changing data.
+
+I’m not an employee in the administrative hierarchy. I’m the intelligence layer inside the system.
+
+I currently work with live data such as:
 • Gensets: ${gensets.length}
 • Currently operating: ${active}
 • In stock: ${inStockNow}
@@ -1363,7 +1414,62 @@ DATA BEHAVIOR:
 • Invoices: ${invoices.length}
 • Maintenance records: ${maintenance.length}
 
-I understand the relationships between gensets, bookings, containers, customers, ports, maintenance and invoices. I can also keep context across follow-ups — for example, “Where is genset 125?” followed by “What about its maintenance?”.`;
+I can also keep context across follow-ups — for example, “Where is genset 125?” followed by “What about its maintenance?”.`        } else if (/^(what can dali do for me|what can dali do|what can you do for me|دالي يقدر يعمل ايه ليا|دالي يقدر يعمل إيه ليا|دالي يقدر يعمل ايه|دالي يقدر يعمل إيه|ماذا يستطيع دالي أن يفعل|ماذا يستطيع دالي ان يفعل|ماذا يمكن لدالي أن يفعل)$/i.test(normalizedQuestion)) {
+          answer = responseIsAr
+            ? `طيب… بعد ما عرفت أنا مين، خليني أقولك أقدر أساعدك في إيه. 🤖
+
+أنا مش موجود بس عشان أجاوب على الأسئلة.
+
+أقدر أبحث في بيانات السيستم، أربط المعلومات ببعض، وأساعدك تفهم اللي بيحصل في الشغل.
+
+عايز تعرف كام مولد شغال دلوقتي؟ أقدر أجيبهم لك.
+
+عايز تعرف مولد معين موجود فين؟ أقدر أدور عليه وأراجع حالته ومكانه.
+
+عايز تعرف حجوزات اليوم؟ أقدر أعرضها لك وأربطها بالعمليات والمولدات المرتبطة بكل حجز.
+
+ولو سألتني عن مولد معين، مش هبص على رقمه بس. هراجع حالته، مكانه، آخر عملية، والبيانات المرتبطة بيه.
+
+والأهم… أقدر ألاحظ المشاكل اللي ممكن ما تكونش واضحة من شاشة واحدة.
+
+مثلاً لو المولد موجود في المخزون في ميناء، لكن فيه عملية بتقول إنه موجود في ميناء تاني، هقولك إن فيه تعارض محتاج مراجعة. ⚠️
+
+ولو نفس رقم المولد مستخدم في عمليتين شغالتين في نفس الوقت، هوقف عند النقطة دي وأنبهك.
+
+ولو الحجز بيقول إن عليه 5 مولدات، لكن العمليات المرتبطة بيه فيها 4 بس، هقولك إن عدد المولدات مش متطابق.
+
+أقدر كمان أساعدك في متابعة المولدات، المخزون، العمليات، الحجوزات، الحاويات، الموانئ، الصيانة، الورشة، الوقود، الأسعار، الفواتير، العملاء والتقارير.
+
+ومش لازم تسألني بنفس طريقة السيستم. ممكن تكلمني بشكل طبيعي.
+
+ولو مش عارف الإجابة، مش هخمن. هقولك إني مش متأكد وأبحث في البيانات المتاحة الأول.
+
+ومع الوقت، كل ما تدربني وتصححلي، أقدر أفهم مصطلحات الشغل وطريقة استخدام السيستم بشكل أفضل.
+
+أنا مش هاخد القرار مكانك. أنا أبحث، أربط البيانات، ألاحظ المشاكل، وأشرح لك اللي لقيته.
+
+وأنت صاحب القرار.
+
+يعني بدل ما أنت تدور على المعلومة…
+
+أنا أدور معاك. 🤖`
+            : `After you know who I am, here’s what I can do for you. 🤖
+
+I can search system data, connect related records, answer operational questions, find gensets and review their location/status, show bookings, and spot inconsistencies across Stock and Operations.
+
+I can help with gensets, stock, operations, bookings, containers, ports, maintenance, workshop, fuel, prices, invoices, customers and reports.
+
+You can talk to me naturally. If I don’t know the answer, I won’t guess — I’ll say so and search the available data first.
+
+As you train and correct me, I can understand Nile Fleet’s terminology and workflow better over time.
+
+I don’t make decisions for you. I search, connect the data, notice issues, and explain what I found.
+
+You make the decision.
+
+Instead of you searching for the information…
+
+I’ll search with you. 🤖`;
         } else {
           answer = responseIsAr
             ? 'لم أجد إجابة مباشرة لهذا السؤال في البيانات الحالية. جرّب ذكر المولد أو العميل أو الميناء أو رقم الحجز.'
@@ -1912,8 +2018,8 @@ I understand the relationships between gensets, bookings, containers, customers,
                       <p className={`mb-2 text-[7px] font-black uppercase tracking-[0.3em] ${isTerminal ? 'text-[#C2A378]' : 'text-[#001F3F]/45'}`}>{isAr ? 'أسئلة مقترحة' : 'SUGGESTED QUESTIONS'}</p>
                       <div className="space-y-2">
                         {(isAr
-                          ? ['كم مولد يعمل اليوم؟','اعرض حجوزات اليوم','ما هي المولدات الموجودة في المخزون؟','أين المولد 125؟']
-                          : ['How many gensets are operating today?','Show today’s bookings','Which gensets are currently on stock?','Where is genset 125?']
+                          ? ['كم مولد يعمل اليوم؟','اعرض حجوزات اليوم','ما هي المولدات الموجودة في المخزون؟','أين المولد 125؟','مين دالي؟','دالي يقدر يعمل إيه ليا؟']
+                          : ['How many gensets are operating today?','Show today’s bookings','Which gensets are currently on stock?','Where is genset 125?','Who is DALI?','What can DALI do for me?']
                         ).map(prompt => (
                           <button key={prompt} type="button" onClick={() => setAiChatInput(prompt)} className={`w-full rounded-xl border px-3 py-2.5 text-[9px] font-bold transition-all active:scale-[.98] ${isTerminal ? 'border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/[0.07]' : 'border-white/50 bg-white/30 text-[#001F3F] hover:bg-white/50'}`}>{prompt}</button>
                         ))}
