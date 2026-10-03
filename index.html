@@ -49,10 +49,10 @@
         table tbody tr:not(.selected-row):hover td {
             filter: brightness(0.95);
         }
-        body.theme-black table tbody tr:not(.selected-row):hover td,
-        body.theme-midnight table tbody tr:not(.selected-row):hover td,
-        body.theme-navy table tbody tr:not(.selected-row):hover td,
-        body.theme-custom table tbody tr:not(.selected-row):hover td {
+        body.theme-night table tbody tr:not(.selected-row):hover td,
+        body.theme-night table tbody tr:not(.selected-row):hover td,
+        body.theme-night table tbody tr:not(.selected-row):hover td,
+        body.theme-night, body.theme-day table tbody tr:not(.selected-row):hover td {
             filter: brightness(1.15);
         }
         
@@ -156,204 +156,28 @@
             direction: rtl;
         }
 
-        /* THEME DEFINITIONS - Calibrated for High Visibility */
-        body.theme-black {
-            --bg-primary: #000000;
-            --text-primary: #ffffff;
-            --text-secondary: #cbd5e1;
-            --border-primary: #262626;
-            --card-bg: #0a0a0a;
+        /* NILE FLEET — TWO ENVIRONMENTS ONLY: DAY / NIGHT */
+        body.theme-day {
+            --bg-primary: #f5f7fa;
+            --text-primary: #102a43;
+            --text-secondary: #526b80;
+            --border-primary: #d5dde5;
+            --card-bg: #ffffff;
+            --accent: #b18b52;
+            --input-bg: #eef2f5;
+            --rail-bg: #e5ebf0;
+            --row-bg: #ffffff;
+        }
+        body.theme-night {
+            --bg-primary: #07111f;
+            --text-primary: #f5f7fa;
+            --text-secondary: #aebdca;
+            --border-primary: #26384b;
+            --card-bg: #101c2e;
             --accent: #c2a378;
-            --input-bg: #171717;
-            --rail-bg: #001224;
-            --row-bg: #050505;
-        }
-        body.theme-white {
-            --bg-primary: #f8fafc;
-            --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --border-primary: #e2e8f0;
-            --card-bg: #ffffff;
-            --accent: #2563eb;
-            --input-bg: #f1f5f9;
-        }
-        body.theme-yellow {
-            --bg-primary: #facc15;
-            --text-primary: #000000;
-            --text-secondary: #422006;
-            --border-primary: #a16207;
-            --card-bg: #fde047;
-            --accent: #000000;
-            --input-bg: #fef08a;
-        }
-        body.theme-navy {
-            --bg-primary: #020617;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --border-primary: #1e293b;
-            --card-bg: #0f172a;
-            --accent: #38bdf8;
-            --input-bg: #1e293b;
-        }
-        body.theme-forest {
-            --bg-primary: #022c22;
-            --text-primary: #ecfdf5;
-            --text-secondary: #6ee7b7;
-            --border-primary: #064e3b;
-            --card-bg: #022c22;
-            --accent: #10b981;
-            --input-bg: #064e3b;
-        }
-        body.theme-sahara {
-            --bg-primary: #451a03;
-            --text-primary: #fffbeb;
-            --text-secondary: #fcd34d;
-            --border-primary: #78350f;
-            --card-bg: #2d1202;
-            --accent: #fbbf24;
-            --input-bg: #451a03;
-        }
-        body.theme-cyber {
-            --bg-primary: #1a0033;
-            --text-primary: #00ffff;
-            --text-secondary: #f0abfc;
-            --border-primary: #4a044e;
-            --card-bg: #1a0033;
-            --accent: #ff00ff;
-            --input-bg: #2d004d;
-        }
-        body.theme-slate {
-            --bg-primary: #1e293b;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --border-primary: #334155;
-            --card-bg: #1e293b;
-            --accent: #38bdf8;
-            --input-bg: #0f172a;
-        }
-        body.theme-midnight {
-            --bg-primary: #000000;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --border-primary: #1e293b;
-            --card-bg: #0f172a;
-            --accent: #818cf8;
-            --input-bg: #1e293b;
-        }
-        body.theme-rose {
-            --bg-primary: #fff1f2;
-            --text-primary: #881337;
-            --text-secondary: #be123c;
-            --border-primary: #fecdd3;
-            --card-bg: #ffffff;
-            --accent: #e11d48;
-            --input-bg: #fff1f2;
-        }
-        body.theme-toxic {
-            --bg-primary: #000000;
-            --text-primary: #39ff14;
-            --text-secondary: #22c55e;
-            --border-primary: #171717;
-            --card-bg: #050505;
-            --accent: #39ff14;
-            --input-bg: #000000;
-        }
-
-        /* NEW THEMES */
-        body.theme-ocean {
-            --bg-primary: #f0f9ff;
-            --text-primary: #0c4a6e;
-            --text-secondary: #0369a1;
-            --border-primary: #bae6fd;
-            --card-bg: #ffffff;
-            --accent: #0ea5e9;
-            --input-bg: #f0f9ff;
-        }
-        body.theme-lava {
-            --bg-primary: #000000;
-            --text-primary: #ffffff;
-            --text-secondary: #fca5a5;
-            --border-primary: #450a0a;
-            --card-bg: #0a0a0a;
-            --accent: #ef4444;
-            --input-bg: #1a0000;
-        }
-        body.theme-mint {
-            --bg-primary: #f0fdf4;
-            --text-primary: #14532d;
-            --text-secondary: #166534;
-            --border-primary: #bbf7d0;
-            --card-bg: #ffffff;
-            --accent: #22c55e;
-            --input-bg: #f0fdf4;
-        }
-        body.theme-copper {
-            --bg-primary: #1c1917;
-            --text-primary: #fef3c7;
-            --text-secondary: #d97706;
-            --border-primary: #44403c;
-            --card-bg: #0c0a09;
-            --accent: #ea580c;
-            --input-bg: #292524;
-        }
-        body.theme-arctic {
-            --bg-primary: #f8fafc;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --border-primary: #cbd5e1;
-            --card-bg: #ffffff;
-            --accent: #0ea5e9;
-            --input-bg: #f1f5f9;
-        }
-        body.theme-emerald-vibrant {
-            --bg-primary: #f0fdf4;
-            --text-primary: #064e3b;
-            --text-secondary: #047857;
-            --border-primary: #bbf7d0;
-            --card-bg: #ffffff;
-            --accent: #10b981;
-            --input-bg: #f0fdf4;
-        }
-        body.theme-phantom {
-            --bg-primary: #121212;
-            --text-primary: #e0e0e0;
-            --text-secondary: #a0a0a0;
-            --border-primary: #2d2d2d;
-            --card-bg: #1a1a1a;
-            --accent: #9b9b9b;
-            --input-bg: #252525;
-        }
-
-        /* NILE FLEET THEME PACK — high-contrast, operational palettes */
-        body.theme-nile {
-            --bg-primary: #061a16; --text-primary: #f5fbf8; --text-secondary: #9ac8bb;
-            --border-primary: #1a4037; --card-bg: #0c2822; --accent: #d4ad62; --input-bg: #102f29;
-            --rail-bg: #04110e; --row-bg: #09221d;
-        }
-        body.theme-carbon {
-            --bg-primary: #11161b; --text-primary: #f2f5f7; --text-secondary: #9aa7b3;
-            --border-primary: #303a44; --card-bg: #1a222a; --accent: #58a6d9; --input-bg: #222c35;
-            --rail-bg: #0b1015; --row-bg: #151d24;
-        }
-        body.theme-royal {
-            --bg-primary: #11152f; --text-primary: #f8f9ff; --text-secondary: #b9c0ed;
-            --border-primary: #343b72; --card-bg: #191f42; --accent: #a78bfa; --input-bg: #222951;
-            --rail-bg: #0a0d21; --row-bg: #151a38;
-        }
-        body.theme-sandstorm {
-            --bg-primary: #f3ecdf; --text-primary: #2e2923; --text-secondary: #6d6255;
-            --border-primary: #d9ccb9; --card-bg: #fffaf2; --accent: #b7791f; --input-bg: #eee2d1;
-            --rail-bg: #e7dac7; --row-bg: #fffaf2;
-        }
-        body.theme-corporate {
-            --bg-primary: #f4f7fa; --text-primary: #102a43; --text-secondary: #526b80;
-            --border-primary: #d0dae3; --card-bg: #ffffff; --accent: #0b7fab; --input-bg: #eef3f7;
-            --rail-bg: #e3eaf0; --row-bg: #ffffff;
-        }
-        body.theme-crimson {
-            --bg-primary: #190b10; --text-primary: #fff5f7; --text-secondary: #e6a8b5;
-            --border-primary: #55202d; --card-bg: #241018; --accent: #fb7185; --input-bg: #32131e;
-            --rail-bg: #10070b; --row-bg: #1e0d14;
+            --input-bg: #0b1624;
+            --rail-bg: #050d16;
+            --row-bg: #0d1927;
         }
 
         /* GLOBAL SELECTORS FOR DYNAMIC COLORS */
@@ -362,12 +186,12 @@
         }
 
         /* Force visibility on cards even in dark themes */
-        body.theme-black .bg-white, body.theme-black .bg-slate-50, body.theme-black .bg-slate-100,
-        body.theme-midnight .bg-white, body.theme-midnight .bg-slate-50, body.theme-midnight .bg-slate-100,
-        body.theme-navy .bg-white, body.theme-navy .bg-slate-50, body.theme-navy .bg-slate-100,
-        body.theme-lava .bg-white, body.theme-lava .bg-slate-50, body.theme-lava .bg-slate-100,
-        body.theme-copper .bg-white, body.theme-copper .bg-slate-50, body.theme-copper .bg-slate-100,
-        body.theme-phantom .bg-white, body.theme-phantom .bg-slate-50, body.theme-phantom .bg-slate-100 { 
+        body.theme-night .bg-white, body.theme-night .bg-slate-50, body.theme-night .bg-slate-100,
+        body.theme-night .bg-white, body.theme-night .bg-slate-50, body.theme-night .bg-slate-100,
+        body.theme-night .bg-white, body.theme-night .bg-slate-50, body.theme-night .bg-slate-100,
+        body.theme-night .bg-white, body.theme-night .bg-slate-50, body.theme-night .bg-slate-100,
+        body.theme-night .bg-white, body.theme-night .bg-slate-50, body.theme-night .bg-slate-100,
+        body.theme-night .bg-white, body.theme-night .bg-slate-50, body.theme-night .bg-slate-100 { 
             background-color: var(--card-bg) !important; 
             color: var(--text-primary) !important; 
         }
@@ -390,10 +214,10 @@
             --status-info-bg: #dbeafe; --status-info-fg: #1e40af;
             --status-neutral-bg: #e2e8f0; --status-neutral-fg: #334155;
         }
-        body.theme-black, body.theme-navy, body.theme-forest, body.theme-sahara,
-        body.theme-cyber, body.theme-slate, body.theme-midnight, body.theme-toxic,
-        body.theme-lava, body.theme-phantom, body.theme-copper, body.theme-nile,
-        body.theme-carbon, body.theme-royal, body.theme-crimson {
+        body.theme-night, body.theme-night, body.theme-night, body.theme-night,
+        body.theme-night, body.theme-night, body.theme-night, body.theme-night,
+        body.theme-night, body.theme-night, body.theme-night, body.theme-night,
+        body.theme-night, body.theme-night, body.theme-night {
             --status-success-bg: #14532d; --status-success-fg: #bbf7d0;
             --status-warning-bg: #78350f; --status-warning-fg: #fde68a;
             --status-danger-bg: #7f1d1d; --status-danger-fg: #fecaca;
@@ -423,38 +247,38 @@
         body[class*="theme-"] .text-slate-300 { color: var(--text-secondary) !important; }
         body[class*="theme-"] .text-slate-400 { color: var(--text-secondary) !important; }
         body[class*="theme-"] .text-slate-500 { color: var(--text-secondary) !important; }
-        body.theme-black .text-blue-500, body.theme-black .text-blue-600,
-        body.theme-navy .text-blue-500, body.theme-navy .text-blue-600,
-        body.theme-forest .text-blue-500, body.theme-forest .text-blue-600,
-        body.theme-sahara .text-blue-500, body.theme-sahara .text-blue-600,
-        body.theme-cyber .text-blue-500, body.theme-cyber .text-blue-600,
-        body.theme-slate .text-blue-500, body.theme-slate .text-blue-600,
-        body.theme-midnight .text-blue-500, body.theme-midnight .text-blue-600,
-        body.theme-toxic .text-blue-500, body.theme-toxic .text-blue-600,
-        body.theme-lava .text-blue-500, body.theme-lava .text-blue-600,
-        body.theme-phantom .text-blue-500, body.theme-phantom .text-blue-600,
-        body.theme-copper .text-blue-500, body.theme-copper .text-blue-600,
-        body.theme-nile .text-blue-500, body.theme-nile .text-blue-600,
-        body.theme-carbon .text-blue-500, body.theme-carbon .text-blue-600,
-        body.theme-royal .text-blue-500, body.theme-royal .text-blue-600,
-        body.theme-crimson .text-blue-500, body.theme-crimson .text-blue-600 {
+        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
+        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
+        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
+        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
+        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
+        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
+        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
+        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
+        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
+        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
+        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
+        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
+        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
+        body.theme-night .text-blue-500, body.theme-night .text-blue-600,
+        body.theme-night .text-blue-500, body.theme-night .text-blue-600 {
             color: #93c5fd !important;
         }
-        body.theme-black .text-rose-500, body.theme-black .text-rose-600,
-        body.theme-navy .text-rose-500, body.theme-navy .text-rose-600,
-        body.theme-forest .text-rose-500, body.theme-forest .text-rose-600,
-        body.theme-sahara .text-rose-500, body.theme-sahara .text-rose-600,
-        body.theme-cyber .text-rose-500, body.theme-cyber .text-rose-600,
-        body.theme-slate .text-rose-500, body.theme-slate .text-rose-600,
-        body.theme-midnight .text-rose-500, body.theme-midnight .text-rose-600,
-        body.theme-toxic .text-rose-500, body.theme-toxic .text-rose-600,
-        body.theme-lava .text-rose-500, body.theme-lava .text-rose-600,
-        body.theme-phantom .text-rose-500, body.theme-phantom .text-rose-600,
-        body.theme-copper .text-rose-500, body.theme-copper .text-rose-600,
-        body.theme-nile .text-rose-500, body.theme-nile .text-rose-600,
-        body.theme-carbon .text-rose-500, body.theme-carbon .text-rose-600,
-        body.theme-royal .text-rose-500, body.theme-royal .text-rose-600,
-        body.theme-crimson .text-rose-500, body.theme-crimson .text-rose-600 {
+        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
+        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
+        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
+        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
+        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
+        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
+        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
+        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
+        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
+        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
+        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
+        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
+        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
+        body.theme-night .text-rose-500, body.theme-night .text-rose-600,
+        body.theme-night .text-rose-500, body.theme-night .text-rose-600 {
             color: #fda4af !important;
         }
 
@@ -497,12 +321,12 @@
         }
 
         /* Ensure high contrast for inputs in specific themes if needed */
-        body.theme-rose input, body.theme-rose select, body.theme-rose textarea,
-        body.theme-emerald-vibrant input, body.theme-emerald-vibrant select, body.theme-emerald-vibrant textarea {
+        body.theme-day input, body.theme-day select, body.theme-day textarea,
+        body.theme-day input, body.theme-day select, body.theme-day textarea {
             background-color: #ffffff !important; /* Force white bg for these theme inputs for better contrast */
         }
         
-        body.theme-yellow input, body.theme-yellow select, body.theme-yellow textarea {
+        body.theme-day input, body.theme-day select, body.theme-day textarea {
             background-color: #ffffff !important; /* Force white bg for yellow theme inputs */
         }
 
@@ -542,16 +366,16 @@
         body[class*="theme-"] textarea {
             color-scheme: light;
         }
-        body.theme-black input, body.theme-navy input, body.theme-forest input,
-        body.theme-sahara input, body.theme-cyber input, body.theme-slate input,
-        body.theme-midnight input, body.theme-toxic input, body.theme-lava input,
-        body.theme-copper input, body.theme-phantom input, body.theme-nile input,
-        body.theme-carbon input, body.theme-royal input, body.theme-crimson input {
+        body.theme-night input, body.theme-night input, body.theme-night input,
+        body.theme-night input, body.theme-night input, body.theme-night input,
+        body.theme-night input, body.theme-night input, body.theme-night input,
+        body.theme-night input, body.theme-night input, body.theme-night input,
+        body.theme-night input, body.theme-night input, body.theme-night input {
             color-scheme: dark;
         }
-        body.theme-sandstorm input, body.theme-corporate input, body.theme-ocean input,
-        body.theme-mint input, body.theme-arctic input, body.theme-white input,
-        body.theme-rose input, body.theme-emerald-vibrant input {
+        body.theme-day input, body.theme-day input, body.theme-day input,
+        body.theme-day input, body.theme-day input, body.theme-day input,
+        body.theme-day input, body.theme-day input {
             color-scheme: light;
         }
 
