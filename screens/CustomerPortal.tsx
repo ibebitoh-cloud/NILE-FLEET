@@ -42,7 +42,7 @@ const CustomerPortal: React.FC<CustomerPortalProps> = ({ user, type }) => {
     const custOps = db.getCustomerOperations(user.id, user.companyName || user.name);
     const custInvoices = db.getInvoices().filter(i => i.customerId === user.id);
     const custPayments = db.getPayments().filter(p => p.customerId === user.id);
-    const custPrices = db.getCustomerPrices().filter(p => p.customerName === (user.companyName || user.name));
+    const custPrices = db.getCustomerPrices().filter(p => p.customerId === user.id || (!p.customerId && p.customerName === (user.companyName || user.name)));
     
     const unbilled = custOps.filter(o => !o.invoiced && o.status === 'DONE').reduce((s, o) => s + parseFloat(o.rate) + parseFloat(o.vat), 0);
     const unpaidInv = custInvoices.filter(i => i.status === 'UNPAID').reduce((s, i) => s + i.amount, 0);
