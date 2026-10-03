@@ -2008,14 +2008,14 @@ I’ll search with you. 🤖`;
             {isCreator && <span className="hidden md:inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-[#C2A37866] bg-[#C2A37815] text-[#C2A378] text-[8px] font-black uppercase tracking-widest" title="System Creator">👑 {isAr ? 'منشئ النظام' : 'CREATOR'}</span>}
             <button 
               onClick={() => setIsMuted(!isMuted)} 
-              className={`p-1.5 rounded-lg border transition-all ${isDark ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-[#d8d2c8] bg-[#faf9f6]'}`}
+              className={`hidden sm:flex min-h-[44px] min-w-[44px] items-center justify-center p-1.5 rounded-lg border transition-all ${isDark ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-[#d8d2c8] bg-[#faf9f6]'}`}
               title={isMuted ? (isAr ? 'إلغاء كتم التنبيهات' : 'Unmute Notifications') : (isAr ? 'كتم التنبيهات' : 'Mute Notifications')}
             >
                <span className="text-base">{isMuted ? '🔇' : '🔊'}</span>
             </button>
             <button
               onClick={toggleTheme}
-              className={`relative p-1.5 rounded-lg border transition-all overflow-hidden ${isDark ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-slate-200 bg-white'}`}
+              className={`hidden sm:flex relative min-h-[44px] min-w-[44px] items-center justify-center p-1.5 rounded-lg border transition-all overflow-hidden ${isDark ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-slate-200 bg-white'}`}
               title={isDark ? (isAr ? 'الوضع الفاتح' : 'Light Mode') : (isAr ? 'الوضع الداكن' : 'Dark Mode')}
               aria-label={isDark ? 'Light Mode' : 'Dark Mode'}
             >
