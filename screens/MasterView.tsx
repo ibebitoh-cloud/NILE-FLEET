@@ -1808,7 +1808,7 @@ const MasterView: React.FC = () => {
                     <h3 className="text-xl sm:text-2xl font-black italic uppercase tracking-tighter text-[#C2A378] leading-tight">{isAr ? 'حقن بيانات السجل المجمع' : 'Bulk Manifest Staging'}</h3>
                     <button onClick={() => setShowAddModal(false)} aria-label={isAr ? 'إغلاق' : 'Close'} className="sm:hidden shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-white hover:text-rose-400 hover:bg-white/10 text-xl">✕</button>
                   </div>
-                  <p className="mt-2 text-[9px] sm:text-[10px] font-bold tracking-wide leading-relaxed text-slate-300">{isAr ? 'أدخل البيانات يدوياً أو الصق صفوفاً مفصولة بعلامات تبويب. أضف تاريخ العملية ثم تاريخ التركيب كآخر عمودين اختياريين.' : 'Enter rows manually or paste tab-separated data. Optionally append Operation Date, then Clip On Date.'}</p>
+                  
                 </div>
                 <div className="flex w-full sm:w-auto flex-col sm:flex-row gap-2 sm:gap-4 items-stretch sm:items-center min-w-0">
                    <textarea 
@@ -1879,9 +1879,9 @@ const MasterView: React.FC = () => {
                 </table>
                 <button onClick={() => setStagedOps([...stagedOps, { customerName: '', bookingNumber: '', commodity: '', operationDate: todayDate, clipOnDate: todayDate, status: 'UNDER OPERATE', rate: '0', vat: '0', clipOnPort: Location.ALEX, clipOffPort: Location.ALEX, trucker: '', beneficiaryName: '', quantity: 1 }])} className={`mt-4 w-full py-4 border-2 border-dashed rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all ${isDark ? 'border-slate-600 text-slate-200 hover:bg-white/5' : 'border-slate-300 text-slate-700 hover:bg-white'}`}>{isAr ? '+ إضافة سطر فارغ' : '+ Add Empty Row'}</button>
              </div>
-             <div className={`p-8 shrink-0 flex gap-4 border-t ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-                <button type="button" onClick={() => setShowAddModal(false)} className="px-10 py-5 text-[11px] font-black uppercase text-slate-400 tracking-widest hover:text-rose-500 transition-colors">{t.cancel}</button>
-                <button onClick={handleFinalInject} className="flex-1 bg-[#C2A378] text-[#3a3833] py-5 rounded-[2rem] font-black uppercase text-xs tracking-[0.4em] shadow-2xl active:scale-95 transition-all">
+             <div className={`p-3 sm:p-8 shrink-0 flex flex-col-reverse sm:flex-row gap-2 sm:gap-4 border-t ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                <button type="button" onClick={() => setShowAddModal(false)} className="min-h-[44px] px-6 sm:px-10 py-3 sm:py-5 text-[10px] sm:text-[11px] font-black uppercase text-slate-400 tracking-widest hover:text-rose-500 transition-colors rounded-xl">{t.cancel}</button>
+                <button onClick={handleFinalInject} className="flex-1 min-h-[48px] bg-[#C2A378] text-[#3a3833] py-3 sm:py-5 rounded-xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-[0.18em] sm:tracking-[0.4em] shadow-2xl active:scale-95 transition-all">
                   {isAr ? 'اعتماد حقن البيانات' : 'AUTHORIZE BATCH INJECTION'} ({stagedOps.reduce((sum, o) => sum + (o.bookingNumber && o.customerName ? (o.quantity || 1) : 0), 0)} {isAr ? 'وحدة' : 'UNITS'})
                 </button>
              </div>
