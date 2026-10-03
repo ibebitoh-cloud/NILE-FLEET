@@ -1281,8 +1281,30 @@ class SupabaseDB {
 
   // ─── customer prices ───────────────────────────────────────────────────────
 
+  /** Resolve the applicable rate: exact destination+commodity > commodity > destination > base route. */
+  getCustomerPriceForOperation(op: Pick<Operation, 'customerName' | 'clipOnPort' | 'clipOffPort' | 'destination' | 'commodity'>): CustomerPrice | null {
+    const name = String(op.customerName || '').trim();
+    const norm = (v?: string) => String(v || '').trim().toUpperCase();
+    const destination = norm(op.destination);
+    const commodity = norm(op.commodity);
+    const candidates = _customerPrices.filter(p => p.customerName === name && p.portIn === op.clipOnPort && p.portOut === op.clipOffPort);
+    const score = (p: CustomerPrice) => {
+      const d = norm(p.destination), c = norm(p.commodity);
+      if (d && c && d === destination && c === commodity) return 4;
+      if (c && c === commodity) return 3;
+      if (d && d === destination) return 2;
+      if (!d && !c) return 1;
+      return 0;
+    };
+    return candidates.reduce<CustomerPrice | null>((best, p) => score(p) > (best ? score(best) : 0) ? p : best, null);
+  }
+
   async setCustomerPrice(priceData: CustomerPrice): Promise<void> {
-    const existing = _customerPrices.find(p => p.customerName === priceData.customerName && p.portIn === priceData.portIn && p.portOut === priceData.portOut);
+    const normRule = (v?: string) => String(v || '').trim().toUpperCase();
+    const existing = _customerPrices.find(p =>
+      p.customerName === priceData.customerName && p.portIn === priceData.portIn && p.portOut === priceData.portOut &&
+      normRule(p.destination) === normRule(priceData.destination) && normRule(p.commodity) === normRule(priceData.commodity)
+    );
     if (existing) {
       await update('customer_prices', existing.id, priceData);
       _customerPrices = _customerPrices.map(p => p.id === existing.id ? priceData : p);
