@@ -1950,8 +1950,8 @@ I’ll search with you. 🤖`;
         .dali-chat-surface-dark { background-color: rgba(4,14,24,.28); }
         .dali-bg-soft { background-image: radial-gradient(circle at 12% 8%, rgba(194,163,120,.14), transparent 32%), radial-gradient(circle at 88% 82%, rgba(0,31,63,.12), transparent 36%); }
         .dali-bg-grid { background-image: linear-gradient(rgba(194,163,120,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(194,163,120,.055) 1px, transparent 1px); background-size: 22px 22px; }
-        .dali-bg-aurora { background-image: radial-gradient(circle at 18% 18%, rgba(194,163,120,.20), transparent 28%), radial-gradient(circle at 82% 72%, rgba(62,128,190,.18), transparent 30%); }
-        .dali-bg-blueprint { background-image: linear-gradient(rgba(70,130,180,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(70,130,180,.07) 1px, transparent 1px), radial-gradient(circle at 50% 20%, rgba(70,130,180,.10), transparent 38%); background-size: 26px 26px, 26px 26px, auto; }
+        .dali-bg-aurora { background-image: radial-gradient(circle at 18% 18%, rgba(194,163,120,.20), transparent 28%), radial-gradient(circle at 82% 72%, rgba(0,31,63,.12), transparent 30%); }
+        .dali-bg-blueprint { background-image: linear-gradient(rgba(194,163,120,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(194,163,120,.045) 1px, transparent 1px), radial-gradient(circle at 50% 20%, rgba(194,163,120,.07), transparent 38%); background-size: 26px 26px, 26px 26px, auto; }
         .dali-bg-clear { background-image: none; }
       `}</style>
       <div
@@ -1967,7 +1967,7 @@ I’ll search with you. 🤖`;
               <div className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-[#C2A378]/70 to-transparent"></div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="relative h-8 w-8 shrink-0 sm:h-9 sm:w-9"><span className="absolute inset-0 rounded-[13px] bg-cyan-300/15 blur-md"></span><span className="absolute inset-1 rounded-[12px] border border-white/20 bg-white/[0.07]"></span><span className="absolute inset-[11px] rounded-full bg-gradient-to-br from-white via-cyan-200 to-sky-500 shadow-[0_0_18px_rgba(125,211,252,.5)]"></span></div>
+                  <div className="relative h-8 w-8 shrink-0 sm:h-9 sm:w-9"><span className="absolute inset-0 rounded-[13px] bg-[#C2A378]/15 blur-md"></span><span className="absolute inset-1 rounded-[12px] border border-white/20 bg-white/[0.07]"></span><span className="absolute inset-[11px] rounded-full bg-gradient-to-br from-white via-[#E8D8C0] to-[#C2A378] shadow-[0_0_18px_rgba(194,163,120,.42)]"></span></div>
                   <div><p className="text-[12px] font-black tracking-[0.08em] text-white">DALI</p><p className="mt-0.5 text-[7px] font-semibold tracking-[0.08em] text-white/40">{isAr ? 'ذكاء أسطول النيل' : 'NILE FLEET INTELLIGENCE'}</p></div>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -1984,7 +1984,7 @@ I’ll search with you. 🤖`;
                 {daliArchivedChats.length===0?<div className="rounded-2xl border border-white/10 bg-white/[0.035] p-6 text-center text-[10px] text-white/40">{isAr?'لا توجد محادثات سابقة.':'No previous chats.'}</div>:<div className="space-y-2.5">{daliArchivedChats.map((chat:any)=><button key={chat.session_id} type="button" onClick={()=>restoreDaliArchivedChat(chat.session_id)} className="w-full rounded-2xl border border-white/10 bg-white/[0.035] p-3.5 text-left transition hover:bg-white/[0.07]"><div className="flex items-start justify-between gap-3"><span className="line-clamp-2 text-[11px] font-bold leading-5 text-white/90">{chat.title}</span><span className="shrink-0 text-[8px] font-black text-[#C2A378]">{chat.message_count}</span></div><p className="mt-1 line-clamp-2 text-[9px] leading-4 text-white/40">{chat.preview}</p></button>)}</div>}
               </div>}
               {aiChatMessages.length===0&&!daliArchiveOpen&&<div className="flex min-h-full flex-col items-center justify-center text-center">
-                <div className="relative mb-5 h-28 w-32 sm:mb-6 sm:h-36 sm:w-40"><span className="absolute inset-[15%] rounded-full bg-cyan-300/12 blur-3xl"></span><span className="absolute -inset-4 rounded-[45%] bg-sky-400/[0.06] blur-2xl"></span><div className="dali-blob relative h-full w-full overflow-hidden border border-white/20 bg-[radial-gradient(ellipse_at_34%_25%,rgba(255,255,255,.68),rgba(125,211,252,.32)_30%,rgba(56,189,248,.14)_55%,rgba(2,6,23,.72)_100%)] shadow-[0_24px_90px_rgba(14,165,233,.16)] backdrop-blur-3xl"><div className="pointer-events-none absolute inset-[8%] rounded-[48%] bg-[radial-gradient(ellipse_at_32%_24%,rgba(255,255,255,.52),rgba(125,211,252,.12)_34%,transparent_68%)] opacity-80"></div><div className="absolute inset-[16%] rounded-[45%] bg-[radial-gradient(ellipse_at_35%_28%,rgba(255,255,255,.42),rgba(125,211,252,.18)_42%,transparent_75%)] blur-md"></div><div className="absolute left-[19%] top-[17%] h-3 w-3 rounded-full bg-white/70 blur-[2px]"></div><div className="absolute right-[20%] bottom-[21%] h-2 w-2 rounded-full bg-cyan-100/55 blur-[1px]"></div></div></div>
+                <div className="relative mb-5 h-28 w-32 sm:mb-6 sm:h-36 sm:w-40"><span className="absolute inset-[15%] rounded-full bg-[#C2A378]/10 blur-3xl"></span><span className="absolute -inset-4 rounded-[45%] bg-[#C2A378]/[0.045] blur-2xl"></span><div className="dali-blob relative h-full w-full overflow-hidden border border-white/20 bg-[radial-gradient(ellipse_at_34%_25%,rgba(255,255,255,.68),rgba(194,163,120,.24)_30%,rgba(194,163,120,.10)_55%,rgba(2,6,23,.72)_100%)] shadow-[0_24px_90px_rgba(194,163,120,.12)] backdrop-blur-3xl"><div className="pointer-events-none absolute inset-[8%] rounded-[48%] bg-[radial-gradient(ellipse_at_32%_24%,rgba(255,255,255,.52),rgba(194,163,120,.10)_34%,transparent_68%)] opacity-80"></div><div className="absolute inset-[16%] rounded-[45%] bg-[radial-gradient(ellipse_at_35%_28%,rgba(255,255,255,.42),rgba(194,163,120,.14)_42%,transparent_75%)] blur-md"></div><div className="absolute left-[19%] top-[17%] h-3 w-3 rounded-full bg-white/70 blur-[2px]"></div><div className="absolute right-[20%] bottom-[21%] h-2 w-2 rounded-full bg-[#E8D8C0]/50 blur-[1px]"></div></div></div>
                 <p className="text-[9px] font-bold tracking-[0.22em] text-[#C2A378]">{(()=>{const hour=new Date().getHours();return hour<12?(isAr?'صباح الخير':'GOOD MORNING'):hour<18?(isAr?'مساء الخير':'GOOD AFTERNOON'):(isAr?'مساء الخير':'GOOD EVENING')})()}</p>
                 <h2 className="mt-2 text-xl sm:text-2xl font-black tracking-tight text-white">{user.name||(isAr?'مستخدم':'there')}</h2>
                 <p className="mt-2 max-w-[270px] text-[10px] leading-5 text-white/42">{isAr?'أنا دالي. جاهز نشتغل على بيانات النظام.':'I’m DALI. Ready to work through the system with you.'}</p>
@@ -2007,12 +2007,12 @@ I’ll search with you. 🤖`;
           title={isAr ? "دالي — اسحب لتغيير المكان" : "DALI — drag to move"}
           aria-label={isAr ? "فتح دالي" : "Open DALI"}
         >
-          <span className="absolute -inset-1.5 rounded-full bg-[#7dd3fc]/8 blur-lg opacity-80 transition-all duration-500 group-hover:opacity-100 group-hover:scale-110"></span>
+          <span className="absolute -inset-1.5 rounded-full bg-[#C2A378]/8 blur-lg opacity-80 transition-all duration-500 group-hover:opacity-100 group-hover:scale-110"></span>
           <span className={`absolute inset-0 rounded-full border border-white/30 bg-white/[0.08] shadow-[0_12px_36px_rgba(0,0,0,.38)] backdrop-blur-2xl overflow-hidden opacity-80 transition-all duration-300 group-hover:opacity-100 group-hover:scale-[1.06] ${aiChatLoading ? "dali-orb-thinking" : "dali-orb-idle"}`}>
-            <span className="absolute inset-1 rounded-full border border-[#7dd3fc]/35 border-t-transparent dali-orb-ring"></span>
+            <span className="absolute inset-1 rounded-full border border-[#C2A378]/30 border-t-transparent dali-orb-ring"></span>
             <span className="absolute inset-2 rounded-full border border-white/15 border-b-transparent dali-orb-ring" style={{animationDuration:"2.7s", animationDirection:"reverse"}}></span>
-            <span className="absolute inset-[18%] rounded-full bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,.55),rgba(165,243,252,.22)_38%,rgba(100,116,139,.12)_72%,transparent)]"></span>
-            <span className="absolute inset-[34%] rounded-full bg-[#a5f3fc]/35 blur-[5px]"></span>
+            <span className="absolute inset-[18%] rounded-full bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,.55),rgba(194,163,120,.18)_38%,rgba(100,116,139,.12)_72%,transparent)]"></span>
+            <span className="absolute inset-[34%] rounded-full bg-[#C2A378]/28 blur-[5px]"></span>
             <span className="absolute -inset-y-8 left-0 w-1/3 rotate-[18deg] bg-white/15 blur-xl" style={{animation:"daliOrbShimmer 3.6s ease-in-out infinite"}}></span>
             <span className="absolute top-[13%] left-[22%] h-2 w-2 rounded-full bg-white/70 blur-[1px]"></span>
           </span>
