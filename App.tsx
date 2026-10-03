@@ -39,7 +39,7 @@ const getDefaultAllowedScreens = (role: UserRole): string[] => {
   if (role === UserRole.GATE_OPERATOR) return ['port-gate', 'notifications', 'support', 'user-settings'];
   return ['cust-reservations', 'cust-invoices', 'notifications', 'support', 'user-settings'];
 };
-export type ThemeMode = 'black' | 'white' | 'yellow' | 'navy' | 'forest' | 'sahara' | 'cyber' | 'slate' | 'midnight' | 'rose' | 'emerald-vibrant' | 'ocean' | 'lava' | 'phantom' | 'mint' | 'copper' | 'arctic' | 'toxic' | 'nile' | 'carbon' | 'royal' | 'sandstorm' | 'corporate' | 'crimson' | 'custom';
+export type ThemeMode = 'day' | 'night';
 
 interface LanguageContextType {
   lang: Language;
@@ -69,7 +69,7 @@ interface ThemeContextType {
   }) => void;
 }
 export const ThemeContext = createContext<ThemeContextType>({ 
-  theme: 'nile', 
+  theme: 'day', 
   setTheme: () => {},
   scale: 0.85,
   setScale: () => {},
@@ -87,8 +87,8 @@ const App: React.FC = () => {
   
   const [theme, setTheme] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem('theme');
-    if (saved === 'day' || saved === 'white' || saved === 'corporate' || saved === 'sandstorm' || saved === 'ocean' || saved === 'mint' || saved === 'arctic' || saved === 'rose') return 'day';
-    if (saved === 'night' || saved === 'black' || saved === 'navy' || saved === 'forest' || saved === 'sahara' || saved === 'cyber' || saved === 'slate' || saved === 'midnight' || saved === 'toxic' || saved === 'lava' || saved === 'copper' || saved === 'phantom' || saved === 'nile' || saved === 'carbon' || saved === 'royal' || saved === 'crimson') return 'night';
+    if (saved === 'night') return 'night';
+    if (saved === 'day') return 'day';
     return 'day';
   });
 
@@ -101,7 +101,7 @@ const App: React.FC = () => {
     return localStorage.getItem('app_muted') === 'true';
   });
 
-  const [customThemeKey, setCustomThemeKey] = useState<number>(0);
+  // Legacy custom-theme storage is intentionally ignored: the application now has exactly two modes.
 
   const [activeScreen, setActiveScreen] = useState<string>(() => window.location.hash.slice(1).split('?')[0] || 'dashboard');
   const [openScreens, setOpenScreens] = useState<string[]>(() => {
@@ -258,184 +258,12 @@ const App: React.FC = () => {
 
   const isDark = getIsDark(theme);
 
-  const updateCustomTheme = useCallback((colors: {
-    bg: string;
-    text: string;
-    textSec: string;
-    card: string;
-    accent: string;
-    border: string;
-    input: string;
-    isDark: boolean;
-    rowBg?: string;
-    railBg?: string;
+  const updateCustomTheme = useCallback((_colors: {
+    bg: string; text: string; textSec: string; card: string; accent: string;
+    border: string; input: string; isDark: boolean; rowBg?: string; railBg?: string;
   }) => {
-    localStorage.setItem('custom_bg_primary', colors.bg);
-    localStorage.setItem('custom_text_primary', colors.text);
-    localStorage.setItem('custom_text_secondary', colors.textSec);
-    localStorage.setItem('custom_card_bg', colors.card);
-    localStorage.setItem('custom_accent', colors.accent);
-    localStorage.setItem('custom_border_primary', colors.border);
-    localStorage.setItem('custom_input_bg', colors.input);
-    localStorage.setItem('custom_is_dark', colors.isDark ? 'true' : 'false');
-    if (colors.rowBg !== undefined) localStorage.setItem('custom_row_bg', colors.rowBg);
-    if (colors.railBg !== undefined) localStorage.setItem('custom_rail_bg', colors.railBg);
-    setCustomThemeKey(prev => prev + 1);
+    // Kept as a compatibility no-op for older screens/components.
   }, []);
-
-  const themeContextValue = useMemo(() => ({
-    theme, setTheme, scale, setScale, isMuted, setIsMuted, isDark, updateCustomTheme
-  }), [theme, scale, isMuted, isDark, updateCustomTheme]);
-
-  useEffect(() => {
-    localStorage.setItem('app_muted', isMuted.toString());
-  }, [isMuted]);
-
-  useEffect(() => {
-    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = lang;
-  }, [lang]);
-
-  // Apply Arabic typography only to actual Arabic-bearing content. This keeps
-  // English labels, identifiers, booking/container numbers and numeric values
-  // in their existing LTR typography while fixing Arabic shaping globally.
-  useEffect(() => {
-    const arabicPattern = /[\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF\\uFB50-\\uFDFF\\uFE70-\\uFEFF]/;
-    const skipTags = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'SVG', 'PATH']);
-
-    const applyArabicTypography = (element: HTMLElement) => {
-      if (skipTags.has(element.tagName)) return;
-      const value = element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement
-        ? element.value
-        : element.textContent || '';
-      const hasArabic = arabicPattern.test(value);
-      element.classList.toggle('nf-arabic-text', hasArabic);
-      if (hasArabic) {
-        const hasLatin = /[A-Za-z]/.test(value);
-        element.setAttribute('lang', 'ar');
-        element.setAttribute('dir', hasLatin ? 'auto' : 'rtl');
-      } else if (element.classList.contains('nf-arabic-text')) {
-        element.removeAttribute('lang');
-        element.removeAttribute('dir');
-      }
-    };
-
-    const scan = (root: Node = document.body) => {
-      if (!(root instanceof Element) && !(root instanceof Document) && !(root instanceof DocumentFragment)) return;
-      if (root instanceof HTMLElement && (root.matches('input, textarea') || root.childElementCount === 0)) {
-        applyArabicTypography(root);
-      }
-      root.querySelectorAll?.('input, textarea, [data-arabic]').forEach(node => {
-        if (node instanceof HTMLElement) applyArabicTypography(node);
-      });
-      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-      let node: Node | null;
-      while ((node = walker.nextNode())) {
-        const parent = node.parentElement;
-        if (!parent || skipTags.has(parent.tagName)) continue;
-        // Only mark text-bearing elements, not layout containers. This prevents
-        // Arabic inside a mixed card from forcing the whole card into RTL.
-        if (parent.children.length === 0) applyArabicTypography(parent);
-      }
-    };
-
-    scan();
-
-    const observer = new MutationObserver(mutations => {
-      observer.disconnect();
-      for (const mutation of mutations) {
-        if (mutation.type === 'characterData' && mutation.target.parentElement) {
-          applyArabicTypography(mutation.target.parentElement);
-        }
-        mutation.addedNodes.forEach(node => {
-          if (node.nodeType === Node.ELEMENT_NODE) scan(node);
-          else if (node.nodeType === Node.TEXT_NODE && node.parentElement) {
-            applyArabicTypography(node.parentElement);
-          }
-        });
-      }
-      observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-    });
-    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-
-    const handleInput = (event: Event) => {
-      const target = event.target;
-      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
-        applyArabicTypography(target);
-      }
-    };
-    document.addEventListener('input', handleInput, true);
-    document.addEventListener('change', handleInput, true);
-
-    return () => {
-      observer.disconnect();
-      document.removeEventListener('input', handleInput, true);
-      document.removeEventListener('change', handleInput, true);
-    };
-  }, [lang]);
-
-  useEffect(() => {
-    document.body.className = `theme-${theme}`;
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  useEffect(() => {
-    const applyCustomThemeStyles = () => {
-      if (theme === 'custom') {
-        const customBg = localStorage.getItem('custom_bg_primary') || '#ffffff';
-        const customText = localStorage.getItem('custom_text_primary') || '#0f172a';
-        const customSec = localStorage.getItem('custom_text_secondary') || '#475569';
-        const customCard = localStorage.getItem('custom_card_bg') || '#ffffff';
-        const customAccent = localStorage.getItem('custom_accent') || '#3b82f6';
-        const customBorder = localStorage.getItem('custom_border_primary') || '#e2e8f0';
-        const customInput = localStorage.getItem('custom_input_bg') || '#f8fafc';
-        const customRowBg = localStorage.getItem('custom_row_bg') || customCard;
-        const customRailBg = localStorage.getItem('custom_rail_bg') || (localStorage.getItem('custom_is_dark') === 'true' ? '#001224' : '#ffffff');
-        const customIsDarkVal = localStorage.getItem('custom_is_dark') === 'true';
-
-        let styleEl = document.getElementById('theme-custom-style') as HTMLStyleElement;
-        if (!styleEl) {
-          styleEl = document.createElement('style');
-          styleEl.id = 'theme-custom-style';
-          document.head.appendChild(styleEl);
-        }
-        styleEl.innerHTML = `
-          body.theme-custom {
-              --bg-primary: ${customBg};
-              --text-primary: ${customText};
-              --text-secondary: ${customSec};
-              --border-primary: ${customBorder};
-              --card-bg: ${customCard};
-              --accent: ${customAccent};
-              --input-bg: ${customInput};
-              --row-bg: ${customRowBg};
-              --rail-bg: ${customRailBg};
-          }
-          body.theme-custom .bg-white,
-          body.theme-custom .bg-slate-50 { 
-              background-color: var(--card-bg) !important; 
-              color: var(--text-primary) !important; 
-          }
-          body.theme-custom .bg-slate-100 { 
-              background-color: var(--input-bg) !important; 
-              color: var(--text-primary) !important; 
-          }
-          body.theme-custom input, body.theme-custom select, body.theme-custom textarea {
-              background-color: var(--input-bg) !important;
-              color: var(--text-primary) !important;
-              border-color: var(--border-primary) !important;
-          }
-        `;
-      } else {
-        const styleEl = document.getElementById('theme-custom-style');
-        if (styleEl) {
-          styleEl.remove();
-        }
-      }
-    };
-
-    applyCustomThemeStyles();
-  }, [theme, customThemeKey]);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--app-scale', scale.toString());
