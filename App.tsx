@@ -86,7 +86,10 @@ const App: React.FC = () => {
   const [appDataReady, setAppDataReady] = useState(false);
   const loggingInRef = useRef(false);
   
-  const [theme, setTheme] = useState<ThemeMode>(() => 'night');
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    const saved = localStorage.getItem('theme');
+    return saved === 'day' || saved === 'night' ? saved : 'night';
+  });
 
   const [scale, setScale] = useState<number>(() => {
     const saved = localStorage.getItem('app_scale');
@@ -133,7 +136,7 @@ const App: React.FC = () => {
     localStorage.setItem('app_lang', lang);
   }, [lang]);
 
-  const isDark = true;
+  const isDark = theme === 'night';
 
   const updateCustomTheme = useCallback((_colors: {
     bg: string; text: string; textSec: string; card: string; accent: string;
@@ -147,9 +150,10 @@ const App: React.FC = () => {
   }), [theme, scale, isMuted, isDark, updateCustomTheme]);
 
   useEffect(() => {
-    document.body.className = 'theme-night';
-    document.documentElement.style.colorScheme = 'dark';
-    localStorage.setItem('theme', 'night');
+    document.body.classList.remove('theme-day', 'theme-night');
+    document.body.classList.add(isDark ? 'theme-night' : 'theme-day');
+    document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+    localStorage.setItem('theme', theme);
   }, [theme, isDark]);
 
   useEffect(() => {
