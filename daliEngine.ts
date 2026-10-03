@@ -64,7 +64,7 @@ const addDays = (d: Date, n: number) => { const x = new Date(d); x.setDate(x.get
 // ───────────────────────────── ports ─────────────────────────────
 
 const PORT_ALIASES: { codes: string[]; words: string[]; label: string; labelAr: string }[] = [
-  { codes: ['ALEX'], words: ['alex', 'alexandria', 'الاسكندريه', 'اسكندريه', 'اسكندرية', 'الدخيله', 'dekheila'], label: 'Alexandria (ALEX)', labelAr: 'الإسكندرية (ALEX)' },
+  { codes: ['ALEX'], words: ['alex', 'alexandria', 'الاسكندريه', 'اسكندريه', 'اسكندرية'], label: 'Alexandria (ALEX)', labelAr: 'الإسكندرية (ALEX)' },
   { codes: ['DAM'], words: ['dam', 'damietta', 'دمياط'], label: 'Damietta (DAM)', labelAr: 'دمياط (DAM)' },
   { codes: ['GOUDA'], words: ['gouda', 'goda', 'gowda', 'جوده', 'جودا', 'الجوده'], label: 'Gouda', labelAr: 'جودة (GOUDA)' },
   { codes: ['SOKHNA'], words: ['sokhna', 'sukhna', 'ain sokhna', 'السخنه', 'سخنه', 'العين السخنه'], label: 'Sokhna', labelAr: 'السخنة (SOKHNA)' },
@@ -170,6 +170,58 @@ function resolveUnit(question: string, nq: string, data: DaliData): { unit?: str
   return {};
 }
 
+export interface DaliAuditFinding {
+  code: string;
+  severity: 'CRITICAL' | 'WARNING';
+  title: string;
+  details: string;
+}
+
+export function auditDaliData(data: DaliData): DaliAuditFinding[] {
+  const findings: DaliAuditFinding[] = [];
+  const activeStatuses = new Set(['IN PROGRESS', 'UNDER OPERATE', 'ACTIVE', 'RUNNING']);
+  const normalizeId = (v: unknown) => upperId(v);
+  const add = (code: string, severity: 'CRITICAL' | 'WARNING', title: string, details: string) => findings.push({ code, severity, title, details });
+
+  const activeByUnit = new Map<string, Operation[]>();
+  data.operations.forEach(o => {
+    if (!activeStatuses.has(String(o.status || '').toUpperCase())) return;
+    const id = normalizeId(o.gensetNumber); if (!id) return;
+    activeByUnit.set(id, [...(activeByUnit.get(id) || []), o]);
+  });
+  for (const [id, ops] of activeByUnit) if (ops.length > 1) add('DUPLICATE_ACTIVE_GENSET', 'CRITICAL', 'Duplicate active genset', 'Genset ' + id + ' appears in ' + ops.length + ' active operations: ' + ops.map(o => 'booking ' + (o.bookingNumber || '-') + ' / ' + (o.containerNumber || '-')).join('; ') + '.');
+
+  const gensetById = new Map(data.gensets.map(g => [normalizeId(g.unitNumber), g]));
+  for (const o of data.operations) {
+    if (!activeStatuses.has(String(o.status || '').toUpperCase())) continue;
+    const id = normalizeId(o.gensetNumber); if (!id) continue;
+    const g = gensetById.get(id);
+    if (!g) { add('ACTIVE_OPERATION_UNKNOWN_GENSET', 'WARNING', 'Operation references unknown genset', 'Booking ' + (o.bookingNumber || '-') + ' uses genset ' + (o.gensetNumber || '-') + ', but that number is not in the fleet stock table.'); continue; }
+    if (g.status !== 'CLIPPED_ON') add('ACTIVE_OPERATION_STATUS_CONFLICT', 'CRITICAL', 'Genset status conflicts with active operation', 'Genset ' + g.unitNumber + ' is ' + g.status + ' in Stock but is active in booking ' + (o.bookingNumber || '-') + '.');
+    if (g.location && o.clipOnPort && String(g.location) !== String(o.clipOnPort)) add('OPERATION_STOCK_LOCATION_CONFLICT', 'CRITICAL', 'Operation port conflicts with stock location', 'Genset ' + g.unitNumber + ': Stock location ' + g.location + '; operation clip-on port ' + o.clipOnPort + '; booking ' + (o.bookingNumber || '-') + '.');
+  }
+
+  const activeByContainer = new Map<string, Operation[]>();
+  data.operations.forEach(o => {
+    if (!activeStatuses.has(String(o.status || '').toUpperCase())) return;
+    const id = normalizeId(o.containerNumber); if (!id) return;
+    activeByContainer.set(id, [...(activeByContainer.get(id) || []), o]);
+  });
+  for (const [id, ops] of activeByContainer) if (ops.length > 1) add('DUPLICATE_ACTIVE_CONTAINER', 'CRITICAL', 'Duplicate active container', 'Container ' + id + ' appears in ' + ops.length + ' active operations: ' + ops.map(o => o.bookingNumber || '-').join(', ') + '.');
+
+  const linkedOps = new Map<string, Operation[]>();
+  data.operations.forEach(o => { if (!o.reservationId) return; const k = String(o.reservationId); linkedOps.set(k, [...(linkedOps.get(k) || []), o]); });
+  for (const r of data.reservations) {
+    if (r.status === 'CANCELLED') continue;
+    const actual = (linkedOps.get(String(r.id)) || []).length;
+    const expected = Number(r.gensetsNeeded) || 0;
+    if (actual !== expected && (actual > 0 || expected > 0)) add('BOOKING_OPERATION_COUNT_MISMATCH', 'WARNING', 'Booking and operation counts differ', 'Booking ' + (r.bookingNumber || '-') + ' expects ' + expected + ' genset(s); ' + actual + ' operation(s) are linked to it.');
+  }
+
+  const reservationIds = new Set(data.reservations.map(r => String(r.id)));
+  for (const o of data.operations.filter(x => x.reservationId && !reservationIds.has(String(x.reservationId))).slice(0, 20)) add('ORPHAN_OPERATION_RESERVATION', 'WARNING', 'Operation references missing booking record', 'Operation ' + (o.internalSerial || o.id) + ' references reservation ' + o.reservationId + ', but that reservation is not available in the live data.');
+  return findings;
+}
 // ───────────────────────────── main entry ─────────────────────────────
 
 export function answerDali(question: string, data: DaliData): string | null {
@@ -180,6 +232,17 @@ export function answerDali(question: string, data: DaliData): string | null {
   const nq = norm(q);
   const now = data.now || new Date();
   const range = findRange(nq, now);
+
+  // deterministic data audit / consistency checks
+  if (has(nq, ['audit', 'data audit', 'contradiction', 'contradictions', 'conflict', 'conflicts', 'inconsistency', 'inconsistencies', 'راجع السيستم', 'راجع البيانات', 'تعارض', 'تعارضات', 'تناقض', 'تناقضات', 'مشاكل البيانات', 'مراجعه البيانات'])) {
+    const findings = auditDaliData(data);
+    remember('audit');
+    if (!findings.length) return L('Data audit: no contradictions were detected in the live data.', 'مراجعة البيانات: مفيش تعارضات اتكشفت في البيانات الحالية.');
+    const critical = findings.filter(f => f.severity === 'CRITICAL').length;
+    const warning = findings.filter(f => f.severity === 'WARNING').length;
+    const lines = findings.slice(0, 30).map((f, i) => (i + 1) + '. [' + f.severity + '] ' + f.title + ': ' + f.details);
+    return L('Data audit found ' + findings.length + ' finding(s): ' + critical + ' critical, ' + warning + ' warning.\n' + lines.join('\n'), 'مراجعة البيانات لقت ' + findings.length + ' ملاحظة: ' + critical + ' حرجة، ' + warning + ' تحذير.\n' + lines.map(x => x.replace('[CRITICAL]', '[حرج]').replace('[WARNING]', '[تحذير]')).join('\n'));
+  }
 
   // greetings / help
   if (/^(hi|hello|hey|hello dali|hi dali|hey dali|good morning|good evening|thanks|thank you|اهلا|مرحبا|هاي|سلام|السلام عليكم|صباح الخير|مساء الخير|شكرا|تسلم)( dali| دالي)?$/.test(nq)) {
