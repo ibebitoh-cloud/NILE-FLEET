@@ -14,7 +14,7 @@ interface UserSettingsProps {
 
 const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
   const { lang } = useContext(LanguageContext);
-  const { theme, setTheme, scale, setScale } = useContext(ThemeContext);
+  const { theme, setTheme, scale, setScale, isDark } = useContext(ThemeContext);
   const t = translations[lang];
   const isAr = lang === 'ar';
   
