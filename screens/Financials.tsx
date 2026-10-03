@@ -20,7 +20,7 @@ export const ProLedger: React.FC<{
   branding?: InvoiceSettings;
 }> = ({ partner, onClose, branding }) => {
   const { lang } = useContext(LanguageContext);
-  const isDark = useContext(ThemeContext).theme === 'night';
+  const isDark = useContext(ThemeContext).theme === 'black';
   const t = translations[lang];
   const isAr = lang === 'ar';
   
@@ -222,7 +222,7 @@ export const ProLedger: React.FC<{
 const Financials: React.FC = () => {
   const { lang } = useContext(LanguageContext);
   const { theme } = useContext(ThemeContext);
-  const isDark = theme === 'night';
+  const isDark = theme === 'black';
   const t = translations[lang];
   const isAr = lang === 'ar';
   
@@ -268,11 +268,7 @@ const Financials: React.FC = () => {
   useEffect(() => {
     const handleDbChange = () => refreshData();
     window.addEventListener('db-change', handleDbChange);
-    window.addEventListener('db-undo-success', handleDbChange);
-    return () => {
-      window.removeEventListener('db-change', handleDbChange);
-      window.removeEventListener('db-undo-success', handleDbChange);
-    };
+    return () => window.removeEventListener('db-change', handleDbChange);
   }, [selectedUser?.id]);
 
   const customers = useMemo(() => users.filter(u => u.role === UserRole.CUSTOMER), [users]);
@@ -291,7 +287,7 @@ const Financials: React.FC = () => {
     const unbilledOperations = customerOperations.filter(o => !o.invoiced);
     const unbilledTotal = unbilledOperations.reduce((s, o) => s + money(o.rate) + money(o.vat), 0);
     const userInvoices = invoices.filter(i => belongsToCustomer(i, selectedUser));
-    const userPayments = payments.filter(payment => payment.customerId === selectedUser.id);
+    const userPayments = db.getPayments().filter(payment => payment.customerId === selectedUser.id);
     const unpaidInvoicesTotal = userInvoices.filter(i => i.status === 'UNPAID').reduce((s, i) => s + Math.max(0, Number(i.amount || 0) - db.getInvoicePaidAmount(i.id)), 0);
     const payableBalance = Number(selectedUser.pastOutstandingAmount || 0) + unpaidInvoicesTotal;
     const totalExposure = (selectedUser?.pastOutstandingAmount || 0) + unpaidInvoicesTotal + unbilledTotal;
@@ -326,13 +322,13 @@ const Financials: React.FC = () => {
     const q = normalizeCustomerName(customerSearch);
     if (!q) return customers;
     return customers.filter(customer => {
-      const ops = operations.filter(o => o.customerId === customer.id || (!o.customerId && [customer.companyName, customer.name].some(name => normalizeCustomerName(name) === normalizeCustomerName(o.customerName))));
+      const ops = db.getCustomerOperations(customer.id, customer.companyName || customer.name);
       const customerInvoices = invoices.filter(invoice => belongsToCustomer(invoice, customer));
-      const payments = payments.filter(payment => payment.customerId === customer.id);
+      const customerPayments = payments.filter(payment => payment.customerId === customer.id);
       return [customer.name, customer.companyName, customer.email, customer.id,
         ...customerInvoices.flatMap(invoice => [invoice.id, invoice.invoiceNo, invoice.bookingNumber, ...(invoice.containerNumbers || [])]),
         ...ops.flatMap(op => [op.bookingNumber, op.containerNumber, op.gensetNumber]),
-        ...payments.flatMap(payment => [payment.reference, payment.id])]
+        ...customerPayments.flatMap(payment => [payment.reference, payment.id])]
         .some(value => normalizeCustomerName(String(value || '')).includes(q));
     });
   }, [customers, customerSearch, invoices, operations]);
@@ -405,13 +401,13 @@ const Financials: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 no-print">
         {[
           { label: t.unpaidMoney, value: customers.reduce((acc, c) => {
-            const uI = invoices.filter(i => belongsToCustomer(i, c) && i.status === 'UNPAID').reduce((s,i)=>s+Math.max(0, i.amount - db.getInvoicePaidAmount(i.id)), 0);
-            const uO = operations.filter(o => (o.customerId === c.id || (!o.customerId && [c.companyName, c.name].some(name => normalizeCustomerName(name) === normalizeCustomerName(o.customerName)))) && !o.invoiced).reduce((s,o)=>s+money(o.rate)+money(o.vat), 0);
+            const uI = db.getInvoices().filter(i => belongsToCustomer(i, c) && i.status === 'UNPAID').reduce((s,i)=>s+Math.max(0, i.amount - db.getInvoicePaidAmount(i.id)), 0);
+            const uO = db.getCustomerOperations(c.id, c.companyName || c.name).filter(o => !o.invoiced).reduce((s,o)=>s+money(o.rate)+money(o.vat), 0);
             return acc + (c.pastOutstandingAmount || 0) + uI + uO;
           }, 0), color: 'text-rose-600', icon: '🏦', bg: 'bg-rose-50/30' },
           { label: t.liveUnbilled, value: operations.filter(o=>o.status==='DONE'&&!o.invoiced).reduce((s,o)=>s+money(o.rate)+money(o.vat), 0), color: 'text-blue-600', icon: '🚛', bg: 'bg-blue-50/30' },
           { label: t.historicalLoad, value: customers.reduce((a,b)=>a+(b.pastOutstandingAmount||0),0), color: 'text-[#C2A378]', icon: '📜', bg: 'bg-amber-50/30' },
-          { label: 'Settled Month-to-Date', value: payments.filter(p => p.date.startsWith(new Date().toISOString().slice(0, 7))).reduce((s,p)=>s+p.amount,0), color: 'text-emerald-600', icon: '💰', bg: 'bg-emerald-50/30' },
+          { label: 'Settled Month-to-Date', value: db.getPayments().filter(p => p.date.startsWith(new Date().toISOString().slice(0, 7))).reduce((s,p)=>s+p.amount,0), color: 'text-emerald-600', icon: '💰', bg: 'bg-emerald-50/30' },
         ].map((stat, i) => (
           <div key={i} className={`p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-between transition-all hover:scale-105 ${stat.bg} ${isDark ? 'bg-slate-900' : 'bg-white'}`}>
              <div>
@@ -446,7 +442,7 @@ const Financials: React.FC = () => {
                   <input value={customerSearch} onChange={e => setCustomerSearch(e.target.value)} placeholder={isAr ? 'ابحث باسم العميل أو الفاتورة أو الحجز أو الحاوية أو مرجع الدفع' : 'Search customer, invoice, booking, container, or payment reference'} className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-xs font-bold outline-none focus:border-blue-500" />
                 </label>
                 {visibleCustomers.map(cust => {
-                  const uI = invoices.filter(i => belongsToCustomer(i, cust) && i.status === 'UNPAID').reduce((s,i)=>s+Math.max(0, i.amount - db.getInvoicePaidAmount(i.id)), 0);
+                  const uI = db.getInvoices().filter(i => belongsToCustomer(i, cust) && i.status === 'UNPAID').reduce((s,i)=>s+Math.max(0, i.amount - db.getInvoicePaidAmount(i.id)), 0);
                   const uO = db.getCustomerOperations(cust.id, cust.companyName || cust.name).filter(o => !o.invoiced).reduce((s,o)=>s+money(o.rate)+money(o.vat), 0);
                   const total = (cust.pastOutstandingAmount || 0) + uI + uO;
                   const isSelected = selectedUser?.id === cust.id;
