@@ -1230,29 +1230,54 @@ const MasterView: React.FC = () => {
   const handleUpdateCell = async (op: Operation, field: keyof Operation, val: any) => {
     if (isReadOnly) return;
 
-    // Do not rebuild the whole Master View after an inline edit. The database
-    // service already updates its in-memory operation and emits db-change;
-    // rebuilding the table is what causes the browser to lose its horizontal
-    // scroll position and jump back to the far-left edge.
+    // Capture every possible horizontal scroll owner. Some browsers scroll
+    // the page/main shell instead of the table wrapper when an inline editor
+    // is replaced after blur.
+    const scrollPositions: Array<{ element: HTMLElement; left: number; top: number }> = [];
+    let node: HTMLElement | null = masterTableScrollRef.current;
+    while (node) {
+      scrollPositions.push({ element: node, left: node.scrollLeft, top: node.scrollTop });
+      node = node.parentElement;
+    }
+    const root = document.scrollingElement as HTMLElement | null;
+    if (root) scrollPositions.push({ element: root, left: root.scrollLeft, top: root.scrollTop });
+
+    const restoreScroll = () => {
+      scrollPositions.forEach(position => {
+        if (position.element.isConnected) {
+          position.element.scrollLeft = position.left;
+          position.element.scrollTop = position.top;
+        }
+      });
+    };
+
     skipNextDbChangeRefreshRef.current = true;
     const saved = await db.updateOperation({ ...op, [field]: val });
 
     if (!saved) {
       skipNextDbChangeRefreshRef.current = false;
+      restoreScroll();
       window.alert(isAr
         ? `فشل حفظ التعديل: ${db.getLastDbError() || ''}`
         : `Failed to save change: ${db.getLastDbError() || ''}`);
       return;
     }
 
-    // db.updateOperation has already merged the authoritative cached row.
-    // Use that exact row so related fields (for example customerId) stay in sync.
+    // Update only this operation. No full Master View refresh.
     skipNextDbChangeRefreshRef.current = false;
     const updatedOperation = db.getOperations().find(item => item.id === op.id) || ({ ...op, [field]: val } as Operation);
     setOperations(current =>
       current.map(item => item.id === updatedOperation.id ? updatedOperation : item)
     );
     setInvoices([...db.getInvoices()]);
+
+    // Restore after React commits the edited cell, including WebKit's delayed
+    // scroll correction when an input is replaced by its display element.
+    restoreScroll();
+    requestAnimationFrame(restoreScroll);
+    window.setTimeout(restoreScroll, 0);
+    window.setTimeout(restoreScroll, 80);
+    window.setTimeout(restoreScroll, 250);
   };
 
   const handleUpdateGensetGas = (unitNumber: string, value: string) => {
