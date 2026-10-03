@@ -11,6 +11,16 @@ import { getDaliCustomerAliases } from '../services/daliCustomerAliases';
 import { getTerminology, matchTerminology, recordTerminologyUsage, recordCorrection } from '../services/daliTerminology';
 
 const Intelligence: React.FC = () => {
+  const [, setDataVersion] = useState(0);
+  useEffect(() => {
+    const refresh = () => setDataVersion(v => v + 1);
+    window.addEventListener('db-change', refresh);
+    window.addEventListener('db-undo-success', refresh);
+    return () => {
+      window.removeEventListener('db-change', refresh);
+      window.removeEventListener('db-undo-success', refresh);
+    };
+  }, []);
   const { lang } = useContext(LanguageContext);
   const { theme } = useContext(ThemeContext);
   const isDark = ['black', 'midnight', 'nile', 'carbon', 'royal', 'crimson'].includes(theme);
