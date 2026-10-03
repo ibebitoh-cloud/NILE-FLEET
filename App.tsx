@@ -83,12 +83,10 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [showCompanyHome, setShowCompanyHome] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
+  const [appDataReady, setAppDataReady] = useState(false);
   const loggingInRef = useRef(false);
   
-  const [theme, setTheme] = useState<ThemeMode>(() => {
-    // NILE FLEET uses the Night system surface as the permanent application theme.
-    return 'night';
-  });
+  const [theme, setTheme] = useState<ThemeMode>(() => 'night');
 
   const [scale, setScale] = useState<number>(() => {
     const saved = localStorage.getItem('app_scale');
@@ -135,7 +133,7 @@ const App: React.FC = () => {
     localStorage.setItem('app_lang', lang);
   }, [lang]);
 
-  const isDark = theme === 'night';
+  const isDark = true;
 
   const updateCustomTheme = useCallback((_colors: {
     bg: string; text: string; textSec: string; card: string; accent: string;
@@ -149,9 +147,9 @@ const App: React.FC = () => {
   }), [theme, scale, isMuted, isDark, updateCustomTheme]);
 
   useEffect(() => {
-    document.body.className = `theme-${theme}`;
-    document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
-    localStorage.setItem('theme', theme);
+    document.body.className = 'theme-night';
+    document.documentElement.style.colorScheme = 'dark';
+    localStorage.setItem('theme', 'night');
   }, [theme, isDark]);
 
   useEffect(() => {
@@ -242,6 +240,7 @@ const App: React.FC = () => {
 
         // Load protected business data only after authentication succeeds.
         await db.loadAll().catch(err => console.error('Failed to load data from Supabase:', err));
+        if (!cancelled) setAppDataReady(true);
 
         if (sessionUser.revoked) {
           await supabaseLogout();
@@ -585,7 +584,7 @@ const App: React.FC = () => {
     sessionStorage.setItem('openScreens', JSON.stringify(openScreens));
   }, [openScreens]);
 
-  if (!authChecked) {
+  if (!authChecked || (user && !appDataReady)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#05070a] text-white overflow-hidden">
         <div className="relative text-center">
@@ -596,7 +595,7 @@ const App: React.FC = () => {
           </div>
           <p className="text-[11px] font-black uppercase tracking-[0.35em] text-[#C2A378]">NILE FLEET</p>
           <p className="mt-2 text-[9px] font-bold uppercase tracking-[0.28em] text-white/55">
-            {lang === 'ar' ? 'جاري التحقق من الجلسة' : 'VERIFYING SESSION'}
+            {lang === 'ar' ? (user ? 'جاري تحميل بيانات النظام' : 'جاري التحقق من الجلسة') : (user ? 'LOADING SYSTEM DATA' : 'VERIFYING SESSION')}
           </p>
           <div className="mx-auto mt-4 h-px w-20 overflow-hidden bg-white/10">
             <div className="h-full w-1/2 bg-[#C2A378] animate-pulse" />
