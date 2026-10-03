@@ -361,11 +361,14 @@ const App: React.FC = () => {
     const syncFromUrl = () => {
       const screen = window.location.hash.slice(1).split('?')[0];
       if (!user) return;
+      const rememberedScreen = getRememberedScreen(user);
       const destination = permittedScreens.has(screen)
         ? screen
-        : permittedScreens.has(homeScreen)
-          ? homeScreen
-          : permittedScreens.values().next().value || 'no-access';
+        : rememberedScreen && permittedScreens.has(rememberedScreen)
+          ? rememberedScreen
+          : permittedScreens.has(homeScreen)
+            ? homeScreen
+            : permittedScreens.values().next().value || 'no-access';
       if (destination === 'no-access') {
         if (window.location.hash) window.location.hash = '';
       } else if (screen !== destination) {
@@ -585,14 +588,20 @@ const App: React.FC = () => {
           setUser(u);
           localStorage.setItem('user', JSON.stringify(u));
           const rememberedScreen = getRememberedScreen(u);
-          setActiveScreen(
+          const targetScreen =
             rememberedScreen ||
             (u.role === UserRole.GATE_OPERATOR
               ? 'port-gate'
               : u.role === UserRole.CUSTOMER
                 ? 'cust-reservations'
-                : 'dashboard')
-          );
+                : 'dashboard');
+          setActiveScreen(targetScreen);
+          // Keep the URL and remembered screen in agreement. Otherwise the
+          // auth/hash synchronization effect can immediately overwrite the
+          // remembered screen with the old login URL (usually dashboard).
+          if (window.location.hash !== `#${targetScreen}`) {
+            window.location.hash = targetScreen;
+          }
         };
       }
       loggingInRef.current = false;
