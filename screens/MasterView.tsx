@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useContext, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useContext, useEffect, useLayoutEffect, useRef } from 'react';
 import { db } from '../services/supabaseDb';
 import { Operation, Location, GensetStatus, UserRole, User, CustomerPrice, Invoice, hasReadOnlyAccess } from '../types';
 import { LanguageContext, ThemeContext } from '../App';
@@ -628,6 +628,9 @@ const MasterView: React.FC = () => {
   const [rawPasteBuffer, setRawPasteBuffer] = useState('');
   const [stagingColWidths, setStagingColWidths] = useState<Record<string, number>>({});
 
+  const masterTableScrollRef = useRef<HTMLDivElement | null>(null);
+  const pendingMasterScrollRef = useRef<{ left: number; top: number } | null>(null);
+
   const [viewPrefs, setViewPrefs] = useState<{
     density: number;
     scale: number;
@@ -825,27 +828,25 @@ const MasterView: React.FC = () => {
   const [invoices, setInvoices] = useState<Invoice[]>(() => db.getInvoices());
 
   const refresh = () => {
-    const scrollPositions = new Map<HTMLElement, { top: number; left: number }>();
-    document.querySelectorAll<HTMLElement>('*').forEach((element) => {
-      if (element.scrollTop > 0 || element.scrollLeft > 0) {
-        scrollPositions.set(element, { top: element.scrollTop, left: element.scrollLeft });
-      }
-    });
-    const windowTop = window.scrollY;
-    const windowLeft = window.scrollX;
-
     setOperations([...db.getOperations()]);
     setInvoices([...db.getInvoices()]);
-
-    requestAnimationFrame(() => {
-      window.scrollTo({ top: windowTop, left: windowLeft, behavior: 'instant' as ScrollBehavior });
-      scrollPositions.forEach((position, element) => {
-        if (!element.isConnected) return;
-        element.scrollTop = position.top;
-        element.scrollLeft = position.left;
-      });
-    });
   };
+
+  useLayoutEffect(() => {
+    const position = pendingMasterScrollRef.current;
+    if (!position) return;
+    const restore = () => {
+      const container = masterTableScrollRef.current;
+      if (!container) return;
+      container.scrollLeft = position.left;
+      container.scrollTop = position.top;
+    };
+    restore();
+    requestAnimationFrame(restore);
+    const timer = window.setTimeout(restore, 80);
+    pendingMasterScrollRef.current = null;
+    return () => window.clearTimeout(timer);
+  }, [operations]);
 
   useEffect(() => {
     const sync = () => refresh();
@@ -1221,6 +1222,13 @@ const MasterView: React.FC = () => {
 
   const handleUpdateCell = async (op: Operation, field: keyof Operation, val: any) => {
     if (isReadOnly) return;
+    const scrollContainer = masterTableScrollRef.current;
+    if (scrollContainer) {
+      pendingMasterScrollRef.current = {
+        left: scrollContainer.scrollLeft,
+        top: scrollContainer.scrollTop
+      };
+    }
     const saved = await db.updateOperation({ ...op, [field]: val });
     if (!saved) {
       window.alert(isAr
@@ -1470,7 +1478,7 @@ const MasterView: React.FC = () => {
       </div>
 
       <div className={`rounded-3xl shadow-xl border overflow-hidden w-full ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'}`}>
-        <div className="overflow-x-auto overflow-y-visible">
+        <div ref={masterTableScrollRef} className="overflow-x-auto overflow-y-visible">
           <table className={`w-full ${isAr ? 'text-right' : 'text-left'} whitespace-nowrap border-collapse`}>
             <thead className={`text-white font-black uppercase tracking-widest sticky top-0 z-40 text-[9px] ${isDark ? 'bg-[#001224]' : 'bg-[#3a3833]'}`}>
               <tr>
