@@ -156,13 +156,13 @@ const CustomerDossier: React.FC<{
   const ports = Object.values(Location).filter(l => l !== Location.MAL);
 
   return (
-    <div className="fixed inset-0 bg-[#001F3F]/95 backdrop-blur-2xl z-[500] flex items-center justify-center p-4 lg:p-10 animate-in fade-in">
+    <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-2xl z-[500] flex items-center justify-center p-4 lg:p-10 animate-in fade-in">
       <div className={`w-full max-w-7xl h-full rounded-[4rem] border-[10px] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 ${isDark ? 'bg-slate-900 border-slate-950' : 'bg-white border-slate-900'}`}>
         
         {/* Header Block */}
         <div className={`p-10 flex flex-col lg:flex-row justify-between items-center gap-8 shrink-0 ${isDark ? 'bg-slate-950 text-white' : 'bg-slate-900 text-white'}`}>
            <div className="flex items-center gap-6">
-              <div className="w-20 h-20 bg-[#C2A378] text-[#001F3F] rounded-[2rem] flex items-center justify-center text-4xl font-black shadow-xl">
+              <div className="w-20 h-20 bg-[#C2A378] text-[#3a3833] rounded-[2rem] flex items-center justify-center text-4xl font-black shadow-xl">
                 {(customer.companyName || customer.name)[0]}
               </div>
               <div>
@@ -195,7 +195,7 @@ const CustomerDossier: React.FC<{
              <button 
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-3 py-3 px-6 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === tab.id ? 'bg-[#001F3F] text-white shadow-xl' : 'text-slate-400 hover:text-blue-500'}`}
+              className={`flex items-center gap-3 py-3 px-6 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === tab.id ? 'bg-[#3a3833] text-white shadow-xl' : 'text-slate-400 hover:text-blue-500'}`}
              >
                <span className="text-base">{tab.icon}</span>
                {tab.label}
@@ -231,12 +231,12 @@ const CustomerDossier: React.FC<{
                        </div>
                     </div>
                     {!isReadOnly && (
-                      <button type="submit" className="mt-10 w-full py-5 bg-[#001F3F] text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.4em] shadow-2xl transition-all active:scale-95">Commit Information Matrix</button>
+                      <button type="submit" className="mt-10 w-full py-5 bg-[#3a3833] text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.4em] shadow-2xl transition-all active:scale-95">Commit Information Matrix</button>
                     )}
                  </form>
               </div>
               <div className="lg:col-span-4 space-y-8">
-                 <div className="bg-[#001F3F] p-8 rounded-[3rem] text-white relative overflow-hidden">
+                 <div className="bg-[#3a3833] p-8 rounded-[3rem] text-white relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#C2A378]/10 rounded-full blur-2xl -mr-16 -mt-16"></div>
                     <h4 className="text-lg font-black uppercase italic text-[#C2A378] mb-6">Financial Summary</h4>
                     <div className="space-y-4">
@@ -264,7 +264,7 @@ const CustomerDossier: React.FC<{
             <div className="animate-in slide-in-from-bottom-4">
                <div className={`rounded-[3rem] border-2 overflow-hidden ${isDark ? 'bg-slate-800/40 border-white/5' : 'bg-white border-slate-100'}`}>
                   <table className="w-full text-left border-collapse">
-                    <thead className="bg-[#001F3F] text-white text-[9px] font-black uppercase tracking-widest">
+                    <thead className="bg-[#3a3833] text-white text-[9px] font-black uppercase tracking-widest">
                        <tr>
                           <th className="p-6">Booking #</th>
                           <th className="p-6">Container ID</th>
@@ -387,7 +387,7 @@ const CustomerDossier: React.FC<{
           {/* Dossier Branding Footer */}
           <div className="mt-20 mb-4 flex flex-col items-center gap-3 opacity-20 pointer-events-none text-center">
              <div className="w-16 h-px bg-slate-300"></div>
-             <p className={`text-[8px] font-black uppercase tracking-[0.6em] ${isDark ? 'text-white' : 'text-[#001F3F]'}`}>POWERED BY BEBITO</p>
+             <p className={`text-[8px] font-black uppercase tracking-[0.6em] ${isDark ? 'text-white' : 'text-[#3a3833]'}`}>POWERED BY BEBITO</p>
              <p className={`text-[7px] font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'} uppercase italic mt-1 leading-none`}>Mohamed A-Alawy | +20 114 647 5759</p>
           </div>
         </div>
@@ -421,7 +421,7 @@ const Customers: React.FC = () => {
     <div className="space-y-6 animate-in fade-in duration-500 text-start pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
-           <h2 className="text-3xl font-black text-[#001F3F] dark:text-white uppercase tracking-tighter italic">{t.customers}</h2>
+           <h2 className="text-3xl font-black text-[#3a3833] dark:text-white uppercase tracking-tighter italic">{t.customers}</h2>
            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Portfolio & Ledger Command</p>
         </div>
         <div className="relative w-full md:w-96">
@@ -444,7 +444,7 @@ const Customers: React.FC = () => {
             className={`p-8 rounded-[3rem] border-2 transition-all cursor-pointer group hover:scale-[1.02] hover:shadow-2xl ${isDark ? 'bg-slate-800 border-white/5 hover:border-[#C2A378]' : 'bg-white border-slate-100 hover:border-[#C2A378]'}`}
           >
              <div className="flex items-center gap-5 mb-6">
-                <div className="w-16 h-16 bg-[#001F3F] text-[#C2A378] rounded-2xl flex items-center justify-center text-2xl font-black shadow-lg">
+                <div className="w-16 h-16 bg-[#3a3833] text-[#C2A378] rounded-2xl flex items-center justify-center text-2xl font-black shadow-lg">
                    {(cust.companyName || cust.name)[0]}
                 </div>
                 <div>
