@@ -68,6 +68,8 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   const [daliFirstMessageAnimation, setDaliFirstMessageAnimation] = useState(false);
   const [daliThinkingPhase, setDaliThinkingPhase] = useState(0);
   const [daliSuggestedSet, setDaliSuggestedSet] = useState(0);
+  const [daliIntroCompleted, setDaliIntroCompleted] = useState(() => { try { return localStorage.getItem('nile-dali-intro-completed-' + (user.id || user.email || 'user')) === 'true'; } catch { return false; } });
+  const [daliPostIntroSuggestion, setDaliPostIntroSuggestion] = useState(false);
   const [daliArchiveOpen, setDaliArchiveOpen] = useState(false);
   const [daliArchivedChats, setDaliArchivedChats] = useState<any[]>([]);
   const [daliHistoryLoading, setDaliHistoryLoading] = useState(false);
@@ -272,6 +274,8 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   // Every new DALI chat opens blank. Older chats are persistent, but are only
   // brought back deliberately from Archive so the assistant never silently
   // mixes an old conversation into a new question.
+  const completeDaliIntro = () => { setDaliIntroCompleted(true); setDaliPostIntroSuggestion(true); try { localStorage.setItem('nile-dali-intro-completed-' + (user.id || user.email || 'user'), 'true'); } catch {} };
+
   const clearDaliChat = async () => {
     if (aiChatLoading) return;
     // Starting a new chat archives the current session first. This keeps the
@@ -285,6 +289,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
     setAiChatInput('');
     setDaliMemory([]);
     setDaliArchiveOpen(false);
+    setDaliPostIntroSuggestion(false);
     daliSessionIdRef.current = crypto.randomUUID();
   };
 
@@ -353,6 +358,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   const askNileAi = async () => {
     const question = aiChatInput.trim();
     if (!question || aiChatLoading) return;
+    const identityQuestion = /^(?:مين\s+دالي|من\s+هو\s+دالي|ما\s+هو\s+دالي|مين\s+انت|من\s+انت|who\s+is\s+dali|what\s+is\s+dali|who\s+are\s+you|tell\s+me\s+about\s+yourself)$/i.test(question.trim().replace(/[؟?!.,،]+$/g, ''));
     // DALI replies in the language the user is actually using. This is independent
     // from the application's UI language, so an Arabic question gets an Arabic answer.
     const questionHasArabic = /[\u0600-\u06FF]/.test(question);
@@ -1489,6 +1495,7 @@ I’ll search with you. 🤖`;
       }
       const finalAnswer = answer || (isAr ? 'مش لاقي رد واضح من البيانات الحالية.' : 'I could not get a clear answer from the current data.');
       setAiChatMessages(prev => [...prev, { role: 'ai', text: finalAnswer }]);
+      if (identityQuestion) completeDaliIntro();
       setDaliMemory(prev => [...prev, { role: 'assistant', message: finalAnswer }].slice(-30));
       void saveDaliMemory('assistant', finalAnswer);
     } catch (e) {
@@ -1969,7 +1976,7 @@ I’ll search with you. 🤖`;
                 <button type="button" onClick={clearDaliChat} disabled={aiChatLoading} className={`w-8 h-8 rounded-xl border text-sm transition-all disabled:opacity-30 ${isTerminal ? 'bg-white/5 border-white/10 text-[#C2A378]' : 'bg-white/35 border-white/55 text-[#001F3F]'}`} title={isAr ? 'محادثة جديدة' : 'New chat'} aria-label={isAr ? 'محادثة جديدة' : 'New chat'}>＋</button>
                 <button type="button" onClick={loadDaliArchive} disabled={daliHistoryLoading} className={`w-8 h-8 rounded-xl border text-sm transition-all disabled:opacity-30 ${isTerminal ? 'bg-white/5 border-white/10 text-[#C2A378]' : 'bg-white/35 border-white/55 text-[#001F3F]'}`} title={isAr ? 'المحادثات المؤرشفة' : 'Archived chats'} aria-label={isAr ? 'المحادثات المؤرشفة' : 'Archived chats'}>▣</button>
                 <button type="button" onClick={archiveCurrentDaliChat} disabled={aiChatLoading || aiChatMessages.length === 0} className={`w-8 h-8 rounded-xl border text-sm transition-all disabled:opacity-30 ${isTerminal ? 'bg-[#C2A378]/10 border-[#C2A378]/20 text-[#C2A378]' : 'bg-white/35 border-white/55 text-[#001F3F]'}`} title={isAr ? 'أرشفة المحادثة الحالية' : 'Archive current chat'} aria-label={isAr ? 'أرشفة المحادثة الحالية' : 'Archive current chat'}>↧</button>
-                <button type="button" onClick={() => setIsAiChatOpen(false)} className={`w-8 h-8 rounded-xl border transition-all ${isTerminal ? 'bg-white/5 border-white/10 text-white' : 'bg-white/35 border-white/55 text-slate-700'}`} aria-label={isAr ? 'إغلاق' : 'Close'}>✕</button>
+                <button type="button" onClick={async () => { await clearDaliChat(); setIsAiChatOpen(false); }} disabled={aiChatLoading} className={`w-8 h-8 rounded-xl border transition-all disabled:opacity-30 ${isTerminal ? 'bg-white/5 border-white/10 text-white' : 'bg-white/35 border-white/55 text-slate-700'}`} aria-label={isAr ? 'إغلاق' : 'Close'}>✕</button>
               </div>
             </div>
 
