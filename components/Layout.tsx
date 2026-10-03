@@ -67,6 +67,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   const [aiChatLoading, setAiChatLoading] = useState(false);
   const [daliFirstMessageAnimation, setDaliFirstMessageAnimation] = useState(false);
   const [daliThinkingPhase, setDaliThinkingPhase] = useState(0);
+  const [daliSuggestedSet, setDaliSuggestedSet] = useState(0);
   const [daliArchiveOpen, setDaliArchiveOpen] = useState(false);
   const [daliArchivedChats, setDaliArchivedChats] = useState<any[]>([]);
   const [daliHistoryLoading, setDaliHistoryLoading] = useState(false);
@@ -181,6 +182,16 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
     }, 1600);
     return () => window.clearInterval(timer);
   }, [aiChatLoading]);
+
+  // Suggested questions rotate gently so DALI feels alive instead of presenting
+  // the same fixed menu on every visit. The first set introduces DALI itself.
+  useEffect(() => {
+    if (aiChatMessages.length > 0 || daliArchiveOpen) return;
+    const timer = window.setInterval(() => {
+      setDaliSuggestedSet(prev => (prev + 1) % 3);
+    }, 24000);
+    return () => window.clearInterval(timer);
+  }, [aiChatMessages.length, daliArchiveOpen]);
 
   useEffect(() => {
     const visualViewport = window.visualViewport;
@@ -1993,7 +2004,7 @@ I’ll search with you. 🤖`;
               {aiChatMessages.length === 0 && !daliArchiveOpen && (
                 <div className="min-h-full flex items-center justify-center text-center px-1">
                   <div className="w-full max-w-[330px]">
-                    <div className="relative mx-auto mb-5 h-52 w-52">
+                    <div className="relative mx-auto mb-4 h-40 w-40 sm:h-44 sm:w-44">
                       <div className="absolute inset-0 rounded-full border border-[#C2A378]/15 animate-[daliOrbRing_3.2s_linear_infinite]"></div>
                       <div className="absolute inset-3 rounded-full border border-[#C2A378]/25"></div>
                       <div className="dali-orb-idle absolute inset-3 rounded-full border border-[#C2A378]/45 bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,.30),rgba(194,163,120,.14)_35%,rgba(0,31,63,.62)_75%)] overflow-hidden">
@@ -2002,27 +2013,37 @@ I’ll search with you. 🤖`;
                       </div>
                     </div>
 
-                    <p className={`text-[10px] font-black tracking-[0.38em] uppercase ${isTerminal ? 'text-[#C2A378]' : 'text-[#001F3F]/60'}`}>DALI</p>
-                    <p className={`mt-2 text-base sm:text-sm font-black leading-6 ${isTerminal ? 'text-white' : 'text-[#001F3F]'}`}>
+                    <p className={`text-[9px] font-black tracking-[0.34em] uppercase ${isTerminal ? 'text-[#C2A378]' : 'text-[#001F3F]/60'}`}>{isAr ? 'دالي' : 'DALI'}</p>
+                    <p className={`mt-2 text-lg sm:text-xl font-black leading-7 ${isTerminal ? 'text-white' : 'text-[#001F3F]'}`}>
                       {(() => {
                         const hour = new Date().getHours();
                         const greeting = hour < 12 ? (isAr ? 'صباح الخير' : 'Good morning') : hour < 18 ? (isAr ? 'مساء الخير' : 'Good afternoon') : (isAr ? 'مساء الخير' : 'Good evening');
                         return `${greeting}, ${user.name || 'there'} 👋`;
                       })()}
                     </p>
-                    <p className={`mt-1 text-[10px] font-bold leading-5 ${isTerminal ? 'text-white/55' : 'text-[#001F3F]/60'}`}>
-                      {isAr ? 'أنا جاهز. ماذا تحتاج؟' : "I'm ready. What do you need?"}
+                    <p className={`mt-1 text-[11px] sm:text-xs font-bold leading-6 ${isTerminal ? 'text-white/60' : 'text-[#001F3F]/65'}`}>
+                      {isAr ? 'أنا دالي. إيه اللي نشتغل عليه؟' : "I'm DALI. What should we work on?"}
                     </p>
 
-                    <div className="mt-6">
-                      <p className={`mb-2 text-[7px] font-black uppercase tracking-[0.3em] ${isTerminal ? 'text-[#C2A378]' : 'text-[#001F3F]/45'}`}>{isAr ? 'أسئلة مقترحة' : 'SUGGESTED QUESTIONS'}</p>
+                    <div className="mt-5">
+                      <p className={`mb-2.5 text-[7px] font-black uppercase tracking-[0.3em] ${isTerminal ? 'text-[#C2A378]' : 'text-[#001F3F]/45'}`}>{isAr ? 'أسئلة مقترحة' : 'SUGGESTED QUESTIONS'}</p>
                       <div className="space-y-2">
-                        {(isAr
-                          ? ['كم مولد يعمل اليوم؟','اعرض حجوزات اليوم','ما هي المولدات الموجودة في المخزون؟','أين المولد 125؟','مين دالي؟','دالي يقدر يعمل إيه ليا؟']
-                          : ['How many gensets are operating today?','Show today’s bookings','Which gensets are currently on stock?','Where is genset 125?','Who is DALI?','What can DALI do for me?']
-                        ).map(prompt => (
-                          <button key={prompt} type="button" onClick={() => setAiChatInput(prompt)} className={`w-full rounded-xl border px-3 py-2.5 text-[9px] font-bold transition-all active:scale-[.98] ${isTerminal ? 'border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/[0.07]' : 'border-white/50 bg-white/30 text-[#001F3F] hover:bg-white/50'}`}>{prompt}</button>
-                        ))}
+                        {(() => {
+                          const sets = isAr
+                            ? [
+                                ['مين دالي؟','كم مولد يعمل اليوم؟','اعرض حجوزات اليوم','أين المولد 125؟'],
+                                ['⚠️ في تعارض في البيانات؟','📍 المولدات موجودة فين؟','📦 إيه الحجوزات اللي محتاجة متابعة؟','🔎 دورلي على مولد'],
+                                ['⚙️ إيه العمليات اللي شغالة؟','📊 وريني حالة المولدات','💰 افتح Price Matrix','🧠 دالي يقدر يعمل إيه ليا؟']
+                              ]
+                            : [
+                                ['Who is DALI?','How many gensets are operating today?','Show today’s bookings','Where is genset 125?'],
+                                ['⚠️ Are there any data conflicts?','📍 Where are the gensets?','📦 Which bookings need follow-up?','🔎 Find a genset'],
+                                ['⚙️ What operations are running?','📊 Show me genset status','💰 Open Price Matrix','🧠 What can DALI do for me?']
+                              ];
+                          return sets[daliSuggestedSet].map(prompt => (
+                            <button key={prompt} type="button" onClick={() => setAiChatInput(prompt.replace(/^[^\\p{L}\\p{N}]+/u, '').trim())} className={`w-full rounded-xl border px-3 py-2.5 text-[9px] font-bold transition-all active:scale-[.98] ${isTerminal ? 'border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/[0.07]' : 'border-white/50 bg-white/30 text-[#001F3F] hover:bg-white/50'}`}>{prompt}</button>
+                          ));
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -2075,34 +2096,18 @@ I’ll search with you. 🤖`;
           onPointerMove={handleDaliPointerMove}
           onPointerUp={handleDaliPointerUp}
           onPointerCancel={handleDaliPointerUp}
-          className="group relative flex h-[78px] w-[78px] sm:h-[86px] sm:w-[86px] items-center justify-center cursor-grab active:cursor-grabbing touch-none"
-          title={isAr ? "مساعد دالي — اسحب لتغيير المكان" : "DALI — drag to move"}
+          className="group relative flex h-[56px] w-[56px] sm:h-[60px] sm:w-[60px] items-center justify-center cursor-grab active:cursor-grabbing touch-none"
+          title={isAr ? "دالي — اسحب لتغيير المكان" : "DALI — drag to move"}
           aria-label={isAr ? "فتح دالي" : "Open DALI"}
         >
-          <span className="absolute -inset-3 rounded-full bg-[#C2A378]/12 blur-xl transition-all duration-700 group-hover:bg-[#C2A378]/22"></span>
-          <span className={`absolute inset-0 rounded-full border-2 border-white/20 bg-white/[0.06] shadow-[0_16px_55px_rgba(0,0,0,.55)] backdrop-blur-2xl overflow-hidden ${aiChatLoading ? "dali-orb-thinking" : "dali-orb-idle"}`}>
-            <span className="absolute inset-1 rounded-full border border-[#C2A378]/35 border-t-transparent dali-orb-ring"></span>
-            <span className="absolute inset-3 rounded-full border border-white/15 border-b-transparent dali-orb-ring" style={{animationDuration:"2.7s", animationDirection:"reverse"}}></span>
-            <span className="absolute inset-0 rounded-full overflow-hidden">
-              <span className="absolute -inset-y-10 left-0 w-1/3 rotate-[18deg] bg-white/20 blur-xl" style={{animation:"daliOrbShimmer 3.6s ease-in-out infinite"}}></span>
-            </span>
-            {user.avatarUrl ? (
-              <img
-                src={user.avatarUrl}
-                alt={user.name || "Profile"}
-                className="absolute inset-[7px] h-[calc(100%-14px)] w-[calc(100%-14px)] rounded-full object-cover"
-                draggable={false}
-              />
-            ) : (
-              <span className="absolute inset-[7px] flex items-center justify-center rounded-full bg-gradient-to-br from-[#C2A378]/80 via-[#173653] to-[#001F3F] text-lg font-black text-white">
-                {(user.name || "U").trim().charAt(0).toUpperCase()}
-              </span>
-            )}
-            <span className="absolute inset-[7px] rounded-full bg-gradient-to-t from-black/30 via-transparent to-white/20 pointer-events-none"></span>
-            <span className="absolute bottom-2 right-2 h-3.5 w-3.5 rounded-full border-2 border-[#071522] bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,.85)]"></span>
-          </span>
-          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-white/10 bg-[#001224]/90 px-2.5 py-1 text-[6px] font-black uppercase tracking-[.2em] text-[#C2A378] shadow-lg backdrop-blur-xl">
-            DALI
+          <span className="absolute -inset-2 rounded-full bg-[#7dd3fc]/10 blur-xl opacity-80 transition-all duration-500 group-hover:opacity-100 group-hover:scale-110"></span>
+          <span className={`absolute inset-0 rounded-full border border-white/30 bg-white/[0.08] shadow-[0_12px_36px_rgba(0,0,0,.38)] backdrop-blur-2xl overflow-hidden opacity-80 transition-all duration-300 group-hover:opacity-100 group-hover:scale-[1.06] ${aiChatLoading ? "dali-orb-thinking" : "dali-orb-idle"}`}>
+            <span className="absolute inset-1 rounded-full border border-[#7dd3fc]/35 border-t-transparent dali-orb-ring"></span>
+            <span className="absolute inset-2 rounded-full border border-white/15 border-b-transparent dali-orb-ring" style={{animationDuration:"2.7s", animationDirection:"reverse"}}></span>
+            <span className="absolute inset-[18%] rounded-full bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,.55),rgba(165,243,252,.22)_38%,rgba(100,116,139,.12)_72%,transparent)]"></span>
+            <span className="absolute inset-[34%] rounded-full bg-[#a5f3fc]/35 blur-[5px]"></span>
+            <span className="absolute -inset-y-8 left-0 w-1/3 rotate-[18deg] bg-white/15 blur-xl" style={{animation:"daliOrbShimmer 3.6s ease-in-out infinite"}}></span>
+            <span className="absolute top-[13%] left-[22%] h-2 w-2 rounded-full bg-white/70 blur-[1px]"></span>
           </span>
         </button>
       </div>
