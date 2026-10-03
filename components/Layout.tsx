@@ -1977,10 +1977,10 @@ I’ll search with you. 🤖`;
           title={isAr ? "دالي — اسحب لتغيير المكان" : "DALI — drag to move"}
           aria-label={isAr ? "فتح دالي" : "Open DALI"}
         >
-          <span className="absolute -inset-1.5 rounded-full bg-[#C2A378]/8 blur-lg opacity-80 transition-all duration-500 group-hover:opacity-100 group-hover:scale-110"></span>
-          <span className={`absolute inset-0 rounded-full border border-white/30 bg-white/[0.08] shadow-[0_12px_36px_rgba(0,0,0,.38)] backdrop-blur-2xl overflow-hidden opacity-80 transition-all duration-300 group-hover:opacity-100 group-hover:scale-[1.06] ${aiChatLoading ? "dali-orb-thinking" : "dali-orb-idle"}`}>
-            <span className="absolute inset-1 rounded-full border border-[#C2A378]/30 border-t-transparent dali-orb-ring"></span>
-            <span className="absolute inset-2 rounded-full border border-white/15 border-b-transparent dali-orb-ring" style={{animationDuration:"2.7s", animationDirection:"reverse"}}></span>
+          <span className="absolute -inset-1.5 rounded-[44%_56%_62%_38%/42%_38%_62%_58%] bg-[#C2A378]/10 blur-lg opacity-80 transition-all duration-500 group-hover:opacity-100 group-hover:scale-110"></span>
+          <span className={`dali-blob absolute inset-0 rounded-[44%_56%_62%_38%/42%_38%_62%_58%] border border-white/30 bg-white/[0.08] shadow-[0_12px_36px_rgba(0,0,0,.38)] backdrop-blur-2xl overflow-hidden opacity-80 transition-all duration-300 group-hover:opacity-100 group-hover:scale-[1.06] ${aiChatLoading ? "dali-orb-thinking" : "dali-orb-idle"}`}>
+            <span className="absolute inset-1 rounded-[46%_54%_60%_40%/44%_40%_60%_56%] border border-[#C2A378]/30 border-t-transparent dali-orb-ring"></span>
+            <span className="absolute inset-2 rounded-[48%_52%_58%_42%/46%_42%_58%_54%] border border-white/15 border-b-transparent dali-orb-ring" style={{animationDuration:"2.7s", animationDirection:"reverse"}}></span>
             <span className="absolute inset-[18%] rounded-full bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,.55),rgba(194,163,120,.18)_38%,rgba(100,116,139,.12)_72%,transparent)]"></span>
             <span className="absolute inset-[34%] rounded-full bg-[#C2A378]/28 blur-[5px]"></span>
             <span className="absolute -inset-y-8 left-0 w-1/3 rotate-[18deg] bg-white/15 blur-xl" style={{animation:"daliOrbShimmer 3.6s ease-in-out infinite"}}></span>
