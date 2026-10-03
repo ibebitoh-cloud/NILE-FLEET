@@ -386,6 +386,67 @@
         body[class*="theme-"] [class~="border-slate-100"],
         body[class*="theme-"] [class~="border-slate-200"] { border-color: var(--border-primary) !important; }
 
+        /* FINAL THEME CONTRACT — only Day and Night */
+        body.theme-day .bg-slate-900,
+        body.theme-day .bg-slate-950,
+        body.theme-day .bg-black { background-color: #102a43 !important; color: #ffffff !important; }
+        body.theme-day .bg-slate-800 { background-color: #183b56 !important; color: #ffffff !important; }
+        body.theme-night .bg-slate-900,
+        body.theme-night .bg-slate-950,
+        body.theme-night .bg-black { background-color: var(--card-bg) !important; color: var(--text-primary) !important; }
+        body.theme-night .bg-slate-800 { background-color: var(--input-bg) !important; color: var(--text-primary) !important; }
+
+        body.theme-day .bg-white,
+        body.theme-day .bg-slate-50 { background-color: #ffffff !important; color: var(--text-primary) !important; }
+        body.theme-day .bg-slate-100 { background-color: var(--input-bg) !important; color: var(--text-primary) !important; }
+        body.theme-night .bg-white,
+        body.theme-night .bg-slate-50 { background-color: var(--card-bg) !important; color: var(--text-primary) !important; }
+        body.theme-night .bg-slate-100 { background-color: var(--input-bg) !important; color: var(--text-primary) !important; }
+
+        body.theme-day .text-slate-900,
+        body.theme-day .text-slate-800,
+        body.theme-day .text-slate-700 { color: var(--text-primary) !important; }
+        body.theme-night .text-slate-900,
+        body.theme-night .text-slate-800,
+        body.theme-night .text-slate-700 { color: var(--text-primary) !important; }
+        body.theme-day .text-slate-600,
+        body.theme-day .text-slate-500,
+        body.theme-day .text-slate-400,
+        body.theme-night .text-slate-600,
+        body.theme-night .text-slate-500,
+        body.theme-night .text-slate-400 { color: var(--text-secondary) !important; }
+
+        /* Nile Fleet brand actions use gold; semantic status colors remain untouched. */
+        body.theme-day .bg-blue-600,
+        body.theme-day .bg-blue-500,
+        body.theme-night .bg-blue-600,
+        body.theme-night .bg-blue-500 { background-color: var(--accent) !important; color: #102a43 !important; }
+        body.theme-day .text-blue-600,
+        body.theme-day .text-blue-500,
+        body.theme-night .text-blue-600,
+        body.theme-night .text-blue-500 { color: var(--accent) !important; }
+        body.theme-day .border-blue-600,
+        body.theme-day .border-blue-500,
+        body.theme-night .border-blue-600,
+        body.theme-night .border-blue-500 { border-color: var(--accent) !important; }
+
+        body.theme-day .hover\\:bg-blue-700:hover,
+        body.theme-day .hover\\:bg-blue-600:hover,
+        body.theme-night .hover\\:bg-blue-700:hover,
+        body.theme-night .hover\\:bg-blue-600:hover { background-color: color-mix(in srgb, var(--accent) 88%, #000) !important; }
+
+        body.theme-day .bg-\\[\\#001F3F\\],
+        body.theme-night .bg-\\[\\#001F3F\\] { background-color: #102a43 !important; }
+        body.theme-day .text-\\[\\#001F3F\\],
+        body.theme-night .text-\\[\\#001F3F\\] { color: #102a43 !important; }
+
+        body.theme-day .border-white\\/5,
+        body.theme-day .border-white\\/10,
+        body.theme-day .border-white\\/20 { border-color: var(--border-primary) !important; }
+        body.theme-night .border-white\\/5,
+        body.theme-night .border-white\\/10,
+        body.theme-night .border-white\\/20 { border-color: var(--border-primary) !important; }
+
         @media (max-width: 1023px) {
             main { padding-bottom: 76px; }
         }
