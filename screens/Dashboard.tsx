@@ -39,8 +39,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const portData = useMemo(() => {
     const locations = ['DAM', 'ALEX', 'GOUDA', 'SOKHNA', 'SCCT', 'PSD', 'MAL', 'WORKSHOP'] as const;
     const activeOperationUnits = new Set(ops.filter(o => o.status === 'IN PROGRESS' && o.gensetNumber?.trim()).map(o => o.gensetNumber.trim().toUpperCase()));
-    const byPort: Record<string, { stockCount: number; maintenanceCount: number; preorderCount: number; active: number }> = {};
-    locations.forEach(port => { byPort[port] = { stockCount: 0, maintenanceCount: 0, preorderCount: 0, active: 0 }; });
+    const byPort: Record<string, { stockCount: number; maintenanceCount: number; preorderCount: number; active: number; surplus: number; deficit: number }> = {};
+    locations.forEach(port => { byPort[port] = { stockCount: 0, maintenanceCount: 0, preorderCount: 0, active: 0, surplus: 0, deficit: 0 }; });
 
     stock.forEach(g => {
       const p = String(g.location || '');
@@ -54,7 +54,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       if (o.status === 'UNDER OPERATE') byPort[p].preorderCount++;
       if (o.status === 'IN PROGRESS') byPort[p].active++;
     });
-    return locations.map(port => ({ port, ...byPort[port] }));
+    locations.forEach(port => {\n      const available = byPort[port].stockCount;\n      const demand = byPort[port].preorderCount;\n      byPort[port].surplus = Math.max(available - demand, 0);\n      byPort[port].deficit = Math.max(demand - available, 0);\n    });\n    return locations.map(port => ({ port, ...byPort[port] }));
   }, [stock, ops]);
 
   // Customer financials are intentionally calculated from the same rules used by
@@ -127,10 +127,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const smartAlerts = useMemo(() => {
     const alerts: { level: 'HIGH' | 'MEDIUM' | 'INFO'; text: string; action?: () => void }[] = [];
     portData.forEach(p => {
-      if (p.preorderCount > p.stockCount) {
+      if (p.deficit > 0) {
         alerts.push({
           level: 'HIGH',
-          text: `${translateEntity(p.port, lang)}: ${p.preorderCount} pending operations / ${p.stockCount} stock`,
+          text: `${translateEntity(p.port, lang)}: ${p.deficit} genset deficit — ${p.preorderCount} demand / ${p.stockCount} available`,
           action: () => onNavigate('operations', p.port)
         });
       }
@@ -169,7 +169,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         <div className="flex items-end justify-between mb-3 px-1">
           <div>
             <h2 className="text-xl md:text-2xl font-black text-[#3a3833] dark:text-white uppercase italic tracking-tight">{translateEntity('Port Control', lang)}</h2>
-            <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.25em]">{translateEntity('Stock • Maintenance • Under Operate', lang)}</p>
+            <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.25em]">{translateEntity('Available • Demand • Surplus / Deficit', lang)}</p>
           </div>
           <button onClick={() => onNavigate('stock')} className="text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Fleet</button>
         </div>
@@ -189,7 +189,17 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                 <div><span className="block text-[8px] text-slate-400 font-black uppercase">{translateEntity('Maint.', lang)}</span><b className="text-xl text-rose-500">{port.maintenanceCount}</b></div>
                 <div><span className="block text-[8px] text-slate-400 font-black uppercase">{translateEntity('Under Operate', lang)}</span><b className="text-xl text-amber-500">{port.preorderCount}</b></div>
               </div>
-              <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-700 flex justify-between text-[8px] font-black uppercase">
+              <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-700 grid grid-cols-2 gap-2 text-[8px] font-black uppercase">
+                <div className={`rounded-lg px-2 py-1.5 ${port.deficit > 0 ? 'bg-rose-50 dark:bg-rose-900/20' : 'bg-emerald-50 dark:bg-emerald-900/20'}`}>
+                  <span className="block text-slate-400">{translateEntity('Deficit', lang)}</span>
+                  <span className={`text-sm ${port.deficit > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>{port.deficit}</span>
+                </div>
+                <div className="rounded-lg px-2 py-1.5 bg-blue-50 dark:bg-blue-900/20">
+                  <span className="block text-slate-400">{translateEntity('Surplus', lang)}</span>
+                  <span className="text-sm text-blue-500">{port.surplus}</span>
+                </div>
+              </div>
+              <div className="mt-2 flex justify-between text-[8px] font-black uppercase">
                 <span className="text-slate-400">{translateEntity('Live', lang)}</span><span className="text-emerald-500">{port.active}</span>
               </div>
             </button>
