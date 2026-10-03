@@ -20,7 +20,7 @@ export const ProLedger: React.FC<{
   branding?: InvoiceSettings;
 }> = ({ partner, onClose, branding }) => {
   const { lang } = useContext(LanguageContext);
-  const isDark = useContext(ThemeContext).theme === 'black';
+  const isDark = useContext(ThemeContext).theme === 'night';
   const t = translations[lang];
   const isAr = lang === 'ar';
   
@@ -222,7 +222,7 @@ export const ProLedger: React.FC<{
 const Financials: React.FC = () => {
   const { lang } = useContext(LanguageContext);
   const { theme } = useContext(ThemeContext);
-  const isDark = theme === 'black';
+  const isDark = theme === 'night';
   const t = translations[lang];
   const isAr = lang === 'ar';
   
@@ -268,7 +268,11 @@ const Financials: React.FC = () => {
   useEffect(() => {
     const handleDbChange = () => refreshData();
     window.addEventListener('db-change', handleDbChange);
-    return () => window.removeEventListener('db-change', handleDbChange);
+    window.addEventListener('db-undo-success', handleDbChange);
+    return () => {
+      window.removeEventListener('db-change', handleDbChange);
+      window.removeEventListener('db-undo-success', handleDbChange);
+    };
   }, [selectedUser?.id]);
 
   const customers = useMemo(() => users.filter(u => u.role === UserRole.CUSTOMER), [users]);
