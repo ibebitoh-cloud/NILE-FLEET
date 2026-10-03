@@ -254,8 +254,8 @@ export function answerDali(question: string, data: DaliData, contextKey: string 
   })();
   const daliAgeAr = daliAge === 0 ? 'لسه ما كملتش سنة' : daliAge === 1 ? 'سنة واحدة' : daliAge === 2 ? 'سنتين' : `${daliAge} سنة`;
 
-  const isWhoDali = /^(who are you|who is dali|what is dali|tell me about yourself|مين انت|مين دالي|من هو دالي|ما هو دالي|انت مين|دالي مين)$/.test(nq);
-  const isCapabilities = /^(what can you do|what can dali do|what are you capable of|what do you do|help|تقدر تعمل ايه|تقدر تعمل اية|دالي يقدر يعمل ايه|دالي يقدر يعمل اية|دالي يعمل ايه|دالي يعمل اية|ايه اللي تقدر تعمله|ايه اللي تقدر تعملها|ماذا تستطيع|قدرات دالي)$/.test(nq);
+  const isWhoDali = /^(who are you|who is dali|what is dali|tell me about yourself|مين انت|مين دالي|من هو دالي|ما هو دالي|انت مين|دالي مين|دالي هو مين)$/.test(nq);
+  const isCapabilities = /^(what can you do|what can dali do|what are you capable of|what do you do|help|تقدر تعمل ايه|تقدر تعمل اية|دالي يقدر يعمل ايه|دالي يقدر يعمل اية|دالي يقدر يعمل اي|دالي يعمل ايه|دالي يعمل اية|دالي يعمل اي|ايه اللي تقدر تعمله|ايه اللي تقدر تعملها|ايه اللي دالي يقدر يعمله|ماذا تستطيع|قدرات دالي|قدراتك ايه|قدراتك ايه يا دالي)$/.test(nq);
   const isLearning = /^(what have you learned|what did you learn|what do you know about nile fleet|what do you know|ايه اللي اتعلمته|إيه اللي اتعلمته|ماذا تعلمت|اتعلمت ايه|دالي اتعلم ايه|ايه اللي دالي اتعلمه)$/.test(nq);
   const isHowWorks = /^(how does dali work|how do you work|how does it work|ازاي دالي بيشتغل|ازاى دالي بيشتغل|ازاي بتشتغل|إزاي دالي بيشتغل|ازاي بتفكر|كيف يعمل دالي|طريقة شغل دالي)$/.test(nq);
   const isChanges = /^(do you change data|does dali change data|can you change data|هل دالي بيغير البيانات|هل دالي يغير البيانات|دالي بيغير البيانات|دالي يقدر يغير البيانات|هل بتغير البيانات|هل تستطيع تغيير البيانات)$/.test(nq);
