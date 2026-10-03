@@ -587,12 +587,20 @@ const App: React.FC = () => {
 
   if (!authChecked) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary,#f8fafc)] text-[var(--text-primary,#26231f)]">
-        <div className="text-center">
-          <img src="/nile-fleet-logo.png" className="h-20 w-20 object-contain mx-auto mb-4" alt="Nile Fleet" />
-          <div className="w-10 h-10 border-4 border-slate-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-[10px] font-black uppercase tracking-[0.25em]">NILE FLEET</p>
-          <p className="text-[9px] text-slate-400 uppercase tracking-widest mt-1">Verifying session...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#05070a] text-white overflow-hidden">
+        <div className="relative text-center">
+          <div className="absolute -inset-16 rounded-full bg-[#C2A378]/5 blur-3xl pointer-events-none" />
+          <div className="relative mx-auto mb-7 h-24 w-24 rounded-full border border-[#C2A378]/25 bg-[#0b0e12] flex items-center justify-center shadow-[0_0_55px_rgba(194,163,120,.08)]">
+            <img src="/nile-fleet-logo.png" className="h-16 w-16 object-contain" alt="Nile Fleet" />
+            <span className="absolute inset-1 rounded-full border-2 border-transparent border-t-[#C2A378] animate-spin" />
+          </div>
+          <p className="text-[11px] font-black uppercase tracking-[0.35em] text-[#C2A378]">NILE FLEET</p>
+          <p className="mt-2 text-[9px] font-bold uppercase tracking-[0.28em] text-white/55">
+            {lang === 'ar' ? 'جاري التحقق من الجلسة' : 'VERIFYING SESSION'}
+          </p>
+          <div className="mx-auto mt-4 h-px w-20 overflow-hidden bg-white/10">
+            <div className="h-full w-1/2 bg-[#C2A378] animate-pulse" />
+          </div>
         </div>
       </div>
     );
