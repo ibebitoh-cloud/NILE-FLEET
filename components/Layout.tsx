@@ -1315,8 +1315,8 @@ DATA BEHAVIOR:
             .join('\n');
           const workshop = stockByPort.find(x => x.port.toUpperCase() === 'WORKSHOP');
           answer = responseIsAr
-            ? 'المخزون حسب الموقع:\n' + portRows + (workshop ? '\n\nالورشة: ' + workshop.total + ' إجمالي (مخزون ' + workshop.inStock + '، مركبة ' + workshop.clippedOn + '، صيانة ' + workshop.maintenance + '، متقاعد ' + ((workshop as any).retired ?? 0) + ')' : '')
-            : 'Stock by port/location:\n' + portRows + (workshop ? '\n\nWORKSHOP: ' + workshop.total + ' total (in stock ' + workshop.inStock + ', clipped on ' + workshop.clippedOn + ', maintenance ' + workshop.maintenance + ', retired ' + ((workshop as any).retired ?? 0) + ')' : '');
+            ? 'المخزون حسب الموقع:\n' + portRows + (workshop ? '\n\nالورشة: ' + workshop.total + ' إجمالي (مخزون ' + workshop.inStock + '، مركبة ' + workshop.clippedOn + '، صيانة ' + workshop.maintenance + '، متقاعد ' + ((workshop as any).retired != null ? (workshop as any).retired : 'غير محدد') + ')' : '')
+            : 'Stock by port/location:\n' + portRows + (workshop ? '\n\nWORKSHOP: ' + workshop.total + ' total (in stock ' + workshop.inStock + ', clipped on ' + workshop.clippedOn + ', maintenance ' + workshop.maintenance + ', retired ' + ((workshop as any).retired != null ? (workshop as any).retired : 'unspecified') + ')' : '');
         } else if (/maintenance|maintain|service|repair|صيانة/.test(normalizedQuestion)) {
           const maintenanceUnits = gensets
             .filter(g => String(g.status || '').toUpperCase() === 'MAINTENANCE')
