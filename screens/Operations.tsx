@@ -81,9 +81,9 @@ const EditOperationModal: React.FC<{
   const labelClass = "text-[10px] font-black uppercase text-slate-400 block mb-2 px-1 tracking-widest";
 
   return (
-    <div className="fixed inset-0 bg-[#001F3F]/95 backdrop-blur-xl z-[600] flex items-center justify-center p-4">
-      <div className={`bg-white dark:bg-slate-900 rounded-[3.5rem] shadow-2xl max-w-5xl w-full overflow-hidden border-[10px] border-[#001F3F] animate-in zoom-in-95 ${isAr ? 'rtl font-cairo' : 'ltr'}`}>
-        <div className="p-8 bg-[#001F3F] text-white flex justify-between items-center text-start">
+    <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-xl z-[600] flex items-center justify-center p-4">
+      <div className={`bg-white dark:bg-slate-900 rounded-[3.5rem] shadow-2xl max-w-5xl w-full overflow-hidden border-[10px] border-[#3a3833] animate-in zoom-in-95 ${isAr ? 'rtl font-cairo' : 'ltr'}`}>
+        <div className="p-8 bg-[#3a3833] text-white flex justify-between items-center text-start">
           <div>
             <h3 className="text-xl font-black uppercase italic tracking-widest">{isAr ? 'تعديل بيانات العملية' : 'Absolute Manifest Override'}</h3>
             <p className="text-[9px] text-[#C2A378] font-black uppercase tracking-widest mt-1">Global Admin Clearance Active</p>
@@ -143,7 +143,7 @@ const EditOperationModal: React.FC<{
              <button onClick={onClose} className="px-10 py-6 text-[11px] font-black uppercase text-slate-400 tracking-widest hover:text-rose-600 transition-colors">Discard Changes</button>
              <button 
               onClick={() => onSave(formData)} 
-              className="flex-1 bg-[#C2A378] text-[#001F3F] py-6 rounded-[2rem] font-black uppercase text-xs tracking-[0.4em] shadow-2xl active:scale-95 transition-all"
+              className="flex-1 bg-[#C2A378] text-[#3a3833] py-6 rounded-[2rem] font-black uppercase text-xs tracking-[0.4em] shadow-2xl active:scale-95 transition-all"
              >
               {isAr ? 'حفظ التعديلات النهائية' : 'AUTHORIZE MANIFEST UPDATE'}
              </button>
@@ -291,7 +291,7 @@ const Operations: React.FC<{ highlightId?: string | null; clearHighlight?: () =>
       <div className="bg-white dark:bg-slate-800 p-8 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-700">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 mb-10">
            <div>
-              <h3 className="text-2xl font-black text-[#001F3F] dark:text-white uppercase italic tracking-tighter">Fleet Manifest</h3>
+              <h3 className="text-2xl font-black text-[#3a3833] dark:text-white uppercase italic tracking-tighter">Fleet Manifest</h3>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Operational Registry • {todayStr}</p>
            </div>
            <div className="flex flex-wrap gap-3">
@@ -304,7 +304,7 @@ const Operations: React.FC<{ highlightId?: string | null; clearHighlight?: () =>
                 <button 
                   key={q.id}
                   onClick={() => setActiveQuickFilter(q.id as any)}
-                  className={`px-5 py-2.5 rounded-xl border-2 transition-all flex items-center gap-4 ${activeQuickFilter === q.id ? 'bg-[#001F3F] border-[#001F3F] text-white shadow-xl ' + (q.glow || '') : 'bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-500'}`}
+                  className={`px-5 py-2.5 rounded-xl border-2 transition-all flex items-center gap-4 ${activeQuickFilter === q.id ? 'bg-[#3a3833] border-[#3a3833] text-white shadow-xl ' + (q.glow || '') : 'bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-500'}`}
                 >
                    <span className={`text-[10px] font-black uppercase tracking-wider ${activeQuickFilter !== q.id ? q.color || '' : ''}`}>{q.label}</span>
                    <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black ${activeQuickFilter === q.id ? 'bg-white/20' : 'bg-slate-200 dark:bg-slate-700'}`}>{q.count}</span>
@@ -402,7 +402,7 @@ const Operations: React.FC<{ highlightId?: string | null; clearHighlight?: () =>
                   <div className="grid grid-cols-5 gap-1.5">
                     {statDefs.map(([key, label]) => (
                       <div key={key} className={`rounded-xl border p-2 text-center ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-                        <div className={`text-lg font-black leading-none ${isDark ? 'text-white' : 'text-[#001F3F]'}`}>{stats[key]}</div>
+                        <div className={`text-lg font-black leading-none ${isDark ? 'text-white' : 'text-[#3a3833]'}`}>{stats[key]}</div>
                         <div className="mt-1 text-[7px] font-black uppercase leading-tight text-slate-500">{label}</div>
                       </div>
                     ))}
@@ -430,7 +430,7 @@ const Operations: React.FC<{ highlightId?: string | null; clearHighlight?: () =>
                 return (
                   <div key={port} className={`rounded-xl border p-2 text-center ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
                     <div className="text-[9px] font-black text-slate-400">{translateEntity(port, lang)}</div>
-                    <div className={`text-xl font-black ${isDark ? 'text-white' : 'text-[#001F3F]'}`}>{count}</div>
+                    <div className={`text-xl font-black ${isDark ? 'text-white' : 'text-[#3a3833]'}`}>{count}</div>
                     <div className="text-[7px] font-bold text-slate-500">UNITS</div>
                   </div>
                 );
@@ -455,7 +455,7 @@ const Operations: React.FC<{ highlightId?: string | null; clearHighlight?: () =>
       <div className="bg-white dark:bg-slate-800 rounded-[3.5rem] shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left whitespace-nowrap border-collapse">
-            <thead className="bg-[#001F3F] dark:bg-slate-950 text-white text-[9px] font-black uppercase tracking-widest sticky top-0 z-20">
+            <thead className="bg-[#3a3833] dark:bg-slate-950 text-white text-[9px] font-black uppercase tracking-widest sticky top-0 z-20">
               <tr>
                 <th className="p-5 w-10 text-center"></th>
                 <th className="p-5">Booking Ref</th>
@@ -613,7 +613,7 @@ const Operations: React.FC<{ highlightId?: string | null; clearHighlight?: () =>
                                            <div className="flex gap-2 mt-4">
                                               <button 
                                                 onClick={() => handleConfirmRecord(item.id)}
-                                                className="flex-1 py-4 bg-[#001F3F] text-[#C2A378] hover:bg-emerald-600 hover:text-white rounded-2xl border-2 border-[#C2A378] transition-all font-black uppercase text-[9px] tracking-widest shadow-xl flex items-center justify-center gap-2"
+                                                className="flex-1 py-4 bg-[#3a3833] text-[#C2A378] hover:bg-emerald-600 hover:text-white rounded-2xl border-2 border-[#C2A378] transition-all font-black uppercase text-[9px] tracking-widest shadow-xl flex items-center justify-center gap-2"
                                               >
                                                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
                                                   {t.authorizeRecord}
