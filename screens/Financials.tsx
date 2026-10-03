@@ -262,11 +262,28 @@ const Financials: React.FC = () => {
     }
   };
 
+  // Financials must react immediately when Operations/Master View changes data.
+  // Without this listener, the screen can keep the old zero-valued snapshot until
+  // it is remounted, even though the operation is already saved in Supabase.
+  useEffect(() => {
+    const handleDbChange = () => refreshData();
+    window.addEventListener('db-change', handleDbChange);
+    return () => window.removeEventListener('db-change', handleDbChange);
+  }, [selectedUser?.id]);
+
   const customers = useMemo(() => users.filter(u => u.role === UserRole.CUSTOMER), [users]);
 
   const accountBreakdown = useMemo(() => {
     if (!selectedUser) return { totalExposure: 0, unbilledTotal: 0, unpaidInvoicesTotal: 0 };
-    const customerOperations = db.getCustomerOperations(selectedUser.id, selectedUser.companyName || selectedUser.name);
+
+    // Use the screen's live operation state so Financials and Operations share
+    // the same current dataset instead of reading a stale cache directly.
+    const customerOperations = operations.filter(o =>
+      o.customerId === selectedUser.id ||
+      (!o.customerId &&
+        [selectedUser.companyName, selectedUser.name]
+          .some(name => normalizeCustomerName(name) === normalizeCustomerName(o.customerName)))
+    );
     const unbilledOperations = customerOperations.filter(o => !o.invoiced);
     const unbilledTotal = unbilledOperations.reduce((s, o) => s + money(o.rate) + money(o.vat), 0);
     const userInvoices = invoices.filter(i => belongsToCustomer(i, selectedUser));
