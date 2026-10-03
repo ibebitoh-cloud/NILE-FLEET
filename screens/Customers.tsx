@@ -22,13 +22,12 @@ const CustomerDossier: React.FC<{
   const [profile, setProfile] = useState<Partial<User>>({ ...customer });
   
   // Data Fetches
-  const customerOps = useMemo(() => 
-    db.getOperations().filter(o => o.customerName === (customer.companyName || customer.name))
-  , [customer]);
+  const customerOps = useMemo(() => db.getCustomerOperations(customer.id, customer.companyName || customer.name), [customer]);
 
-  const customerInvoices = useMemo(() => 
-    db.getInvoices().filter(i => i.customerName === (customer.companyName || customer.name))
-  , [customer]);
+  const customerInvoices = useMemo(() => db.getInvoices().filter(i =>
+    i.customerId === customer.id ||
+    (!i.customerId && String(i.customerName || '').trim().toLocaleLowerCase() === String(customer.companyName || customer.name || '').trim().toLocaleLowerCase())
+  ), [customer]);
 
   const customerPayments = useMemo(() => 
     db.getPayments().filter(p => p.customerId === customer.id)
