@@ -1618,17 +1618,17 @@ I’ll search with you. 🤖`;
       ? allPossibleMenuItems.filter(item => roleDefaultScreenIds.includes(item.id))
       : defaultMenu;
 
-    const sidebarBg = isDark ? 'bg-[#001224]' : 'bg-white shadow-xl';
-  const mainBg = isDark ? 'bg-[#000b14]' : 'bg-slate-50';
-  const borderClass = isDark ? 'border-[#C2A37822]' : 'border-slate-200';
-  const textPrimary = isDark ? 'text-white' : 'text-[#001F3F]';
-  const textSecondary = isDark ? 'text-[#C2A37888]' : 'text-slate-400';
-  const headerBg = isDark ? 'bg-[#001224bb] border-[#C2A37822]' : 'bg-white/80 border-slate-200';
+    const sidebarBg = isDark ? 'bg-[#001224]' : 'bg-[#e9e5de] shadow-xl';
+  const mainBg = isDark ? 'bg-[#000b14]' : 'bg-[#f3f1ec]';
+  const borderClass = isDark ? 'border-[#C2A37822]' : 'border-[#d8d2c8]';
+  const textPrimary = isDark ? 'text-white' : 'text-[#26231f]';
+  const textSecondary = isDark ? 'text-[#C2A37888]' : 'text-[#5f5a52]';
+  const headerBg = isDark ? 'bg-[#001224bb] border-[#C2A37822]' : 'bg-[#faf9f6]/90 border-[#d8d2c8]';
 
   const getNavItemClass = (itemId: string) => {
     const isActive = activeScreen === itemId;
-    if (isDark) return isActive ? 'bg-[#C2A378] text-[#001F3F] shadow-[0_0_20px_rgba(194,163,120,0.4)]' : 'text-[#C2A378aa] hover:bg-white/5 hover:text-white';
-    return isActive ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-200';
+    if (isDark) return isActive ? 'bg-[#C2A378] text-[#26231f] shadow-[0_0_20px_rgba(194,163,120,0.4)]' : 'text-[#C2A378aa] hover:bg-white/5 hover:text-white';
+    return isActive ? 'bg-[#C2A378] text-[#26231f] shadow-md' : 'text-[#5f5a52] hover:bg-[#e4dfd6]';
   };
 
   const forceBanners = notifications.filter(n => n.forceBanner);
@@ -1720,7 +1720,7 @@ I’ll search with you. 🤖`;
                   ].map(sub => {
                     const isSubActive = activeScreen === 'port-gate' && activePortGateTab === sub.tab;
                     const subClass = isSubActive 
-                      ? (isDark ? 'text-[#C2A378] font-bold' : 'text-blue-600 font-bold') 
+                      ? (isDark ? 'text-[#C2A378] font-bold' : 'text-[#9b7438] font-bold') 
                       : 'text-[#C2A378aa] hover:text-white dark:hover:text-white';
                     return (
                       <button 
@@ -1766,7 +1766,7 @@ I’ll search with you. 🤖`;
         <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className={`absolute -right-3 top-16 bg-[#C2A378] text-[#001F3F] w-6 h-6 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-50 border-2 border-[#001224]`}>
           <span className="text-[10px] font-bold">{isSidebarCollapsed ? '→' : '←'}</span>
         </button>
-        <div className={`p-3 border-t ${borderClass} ${isDark ? 'bg-black/40' : 'bg-slate-50'}`}>
+        <div className={`p-3 border-t ${borderClass} ${isDark ? 'bg-black/40' : 'bg-[#f3f1ec]'}`}>
           <div className={`mb-3 flex items-center gap-2 px-1 ${isSidebarCollapsed ? 'flex-col px-0' : ''}`}>
             <div className={`w-8 h-8 rounded-lg bg-[#C2A378] overflow-hidden flex items-center justify-center text-[#001F3F] text-[10px] font-black border border-white/20 cursor-pointer uppercase`} onClick={() => setActiveScreen('user-settings')}>
               {user.avatarUrl ? <img src={user.avatarUrl} alt="profile" className="w-full h-full object-cover" /> : user.name[0]}
@@ -2008,7 +2008,7 @@ I’ll search with you. 🤖`;
             {isCreator && <span className="hidden md:inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-[#C2A37866] bg-[#C2A37815] text-[#C2A378] text-[8px] font-black uppercase tracking-widest" title="System Creator">👑 {isAr ? 'منشئ النظام' : 'CREATOR'}</span>}
             <button 
               onClick={() => setIsMuted(!isMuted)} 
-              className={`p-1.5 rounded-lg border transition-all ${isDark ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-slate-200 bg-white'}`}
+              className={`p-1.5 rounded-lg border transition-all ${isDark ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-[#d8d2c8] bg-[#faf9f6]'}`}
               title={isMuted ? (isAr ? 'إلغاء كتم التنبيهات' : 'Unmute Notifications') : (isAr ? 'كتم التنبيهات' : 'Mute Notifications')}
             >
                <span className="text-base">{isMuted ? '🔇' : '🔊'}</span>
