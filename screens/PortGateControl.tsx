@@ -352,7 +352,7 @@ const PortGateControl: React.FC = () => {
   return (
     <div className="h-full flex flex-col gap-2 text-start animate-in fade-in duration-300 overflow-hidden -mt-4 lg:mt-0">
       
-      <div className="bg-[#001F3F] p-4 pb-6 rounded-b-[2.5rem] shadow-2xl relative overflow-hidden shrink-0 mx-[-1rem]">
+      <div className="bg-[#3a3833] p-4 pb-6 rounded-b-[2.5rem] shadow-2xl relative overflow-hidden shrink-0 mx-[-1rem]">
         <div className="relative z-10 flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -367,13 +367,13 @@ const PortGateControl: React.FC = () => {
               </div>
             </div>
             <div className="flex bg-white/10 p-1 rounded-xl">
-              <button onClick={() => setViewTab('GATE')} className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase transition-all ${viewTab === 'GATE' ? 'bg-[#C2A378] text-[#001F3F]' : 'text-slate-400'}`}>
+              <button onClick={() => setViewTab('GATE')} className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase transition-all ${viewTab === 'GATE' ? 'bg-[#C2A378] text-[#3a3833]' : 'text-slate-400'}`}>
                 {isAr ? 'البوابة' : 'GATE'}
               </button>
-              <button onClick={() => setViewTab('TRANSIT')} className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase transition-all ${viewTab === 'TRANSIT' ? 'bg-[#C2A378] text-[#001F3F]' : 'text-slate-400'}`}>
+              <button onClick={() => setViewTab('TRANSIT')} className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase transition-all ${viewTab === 'TRANSIT' ? 'bg-[#C2A378] text-[#3a3833]' : 'text-slate-400'}`}>
                 {isAr ? 'الرحلات' : 'ACTIVE'}
               </button>
-              <button onClick={() => setViewTab('UPCOMING')} className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase transition-all ${viewTab === 'UPCOMING' ? 'bg-[#C2A378] text-[#001F3F]' : 'text-slate-400'}`}>
+              <button onClick={() => setViewTab('UPCOMING')} className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase transition-all ${viewTab === 'UPCOMING' ? 'bg-[#C2A378] text-[#3a3833]' : 'text-slate-400'}`}>
                 {isAr ? 'القادمة' : 'NEXT'}
               </button>
             </div>
@@ -471,7 +471,7 @@ const PortGateControl: React.FC = () => {
 
                <div className="grid grid-cols-2 xs:grid-cols-3 gap-3">
                  {availableGensets.map(unit => (
-                   <button key={unit.id} onClick={() => toggleGensetSelection(unit.unitNumber)} className={`py-6 rounded-2xl border-2 font-black transition-all ${selectedGensets.includes(unit.unitNumber) ? 'bg-[#001F3F] border-[#C2A378] text-white shadow-xl scale-[1.02]' : (isDark ? 'bg-slate-700 border-slate-600 text-slate-200' : 'bg-slate-50 border-slate-100 text-slate-700')}`}>
+                   <button key={unit.id} onClick={() => toggleGensetSelection(unit.unitNumber)} className={`py-6 rounded-2xl border-2 font-black transition-all ${selectedGensets.includes(unit.unitNumber) ? 'bg-[#3a3833] border-[#C2A378] text-white shadow-xl scale-[1.02]' : (isDark ? 'bg-slate-700 border-slate-600 text-slate-200' : 'bg-slate-50 border-slate-100 text-slate-700')}`}>
                      <span className="text-xs">{unit.unitNumber.split('-').pop()}</span>
                    </button>
                  ))}
@@ -494,7 +494,7 @@ const PortGateControl: React.FC = () => {
                {mode === 'PORT_MOVE' ? (
                  <div className="grid grid-cols-2 gap-3">
                    {Object.values(Location).filter(loc => loc !== selectedPort && loc !== Location.MAL).map(loc => (
-                     <button key={loc} onClick={() => setTargetPort(loc)} className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 ${targetPort === loc ? 'bg-[#001F3F] border-[#C2A378] text-white shadow-lg' : (isDark ? 'bg-slate-700 border-slate-600 text-slate-300' : 'bg-slate-50 border-slate-100 text-slate-700')}`}>
+                     <button key={loc} onClick={() => setTargetPort(loc)} className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 ${targetPort === loc ? 'bg-[#3a3833] border-[#C2A378] text-white shadow-lg' : (isDark ? 'bg-slate-700 border-slate-600 text-slate-300' : 'bg-slate-50 border-slate-100 text-slate-700')}`}>
                         <span className="text-[10px] font-black uppercase tracking-widest">{translateEntity(loc, lang)}</span>
                      </button>
                    ))}
@@ -542,7 +542,7 @@ const PortGateControl: React.FC = () => {
                        <div className="w-full aspect-video relative rounded-[2rem] overflow-hidden border-4 border-slate-100 shadow-lg animate-in zoom-in-95">
                           <img src={previewImage} alt="OCR Preview" className="w-full h-full object-cover" />
                           {isScanning && (
-                            <div className="absolute inset-0 bg-[#001F3F]/60 backdrop-blur-sm flex flex-col items-center justify-center text-white">
+                            <div className="absolute inset-0 bg-[#3a3833]/60 backdrop-blur-sm flex flex-col items-center justify-center text-white">
                               <div className="w-8 h-8 border-4 border-white/20 border-t-white rounded-full animate-spin mb-2"></div>
                               <p className="text-[8px] font-black uppercase tracking-widest">{analysisStatus}</p>
                             </div>
@@ -695,7 +695,7 @@ const PortGateControl: React.FC = () => {
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                         addNotification(isAr ? 'تم تحميل بيانات الحجز في البوابة' : 'Booking loaded into Gate terminal');
                       }} 
-                      className="w-full py-4 bg-[#001F3F] text-white rounded-2xl text-[9px] font-black uppercase tracking-[0.3em] shadow-xl hover:bg-blue-600 transition-all active:scale-95 flex items-center justify-center gap-2"
+                      className="w-full py-4 bg-[#3a3833] text-white rounded-2xl text-[9px] font-black uppercase tracking-[0.3em] shadow-xl hover:bg-blue-600 transition-all active:scale-95 flex items-center justify-center gap-2"
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                       {isAr ? 'بدء معالجة الخروج' : 'PROCESS DISPATCH NOW'}
@@ -746,9 +746,9 @@ const PortGateControl: React.FC = () => {
       <input type="file" ref={evidenceInputRef} className="hidden" accept="image/*" onChange={handleEvidenceUpload} />
 
       {clipOffCandidate && (
-        <div className="fixed inset-0 bg-[#001F3F]/95 backdrop-blur-2xl z-[200] flex items-center justify-center p-6 font-cairo no-print">
+        <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-2xl z-[200] flex items-center justify-center p-6 font-cairo no-print">
           <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-10 text-center space-y-6 animate-in zoom-in-95">
-             <h3 className="text-2xl font-black text-[#001F3F] uppercase italic tracking-tighter text-start">
+             <h3 className="text-2xl font-black text-[#3a3833] uppercase italic tracking-tighter text-start">
                {isAr ? 'تأكيد الاستلام' : 'COMMIT RETURN'}
              </h3>
              <div className="bg-slate-50 p-6 rounded-2xl border-2 border-slate-100 text-start space-y-4">
@@ -766,9 +766,9 @@ const PortGateControl: React.FC = () => {
       )}
 
       {showDoubleConfirm && (
-        <div className="fixed inset-0 bg-[#001F3F]/95 backdrop-blur-2xl z-[200] flex items-center justify-center p-6 font-cairo no-print">
+        <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-2xl z-[200] flex items-center justify-center p-6 font-cairo no-print">
           <div className="bg-white rounded-3xl shadow-2xl max-sm w-full p-10 text-center space-y-8 animate-in zoom-in-95">
-             <h3 className="text-2xl font-black text-[#001F3F] uppercase italic tracking-tighter text-start">
+             <h3 className="text-2xl font-black text-[#3a3833] uppercase italic tracking-tighter text-start">
                {isAr ? 'مراجعة البيانات' : 'VERIFY SYNC'}
              </h3>
              <div className="bg-slate-50 p-8 rounded-2xl border-2 border-slate-100 space-y-5 text-start">
@@ -784,12 +784,12 @@ const PortGateControl: React.FC = () => {
                    <span className="font-black text-slate-400 uppercase">{isAr ? 'وحدة المولد' : 'POWER UNIT'}</span>
                    <span className="font-black text-amber-600 uppercase italic">{selectedGensets[0]}</span>
                 </div>
-                <div className="p-4 bg-[#001F3F] text-white rounded-xl mt-4">
+                <div className="p-4 bg-[#3a3833] text-white rounded-xl mt-4">
                    <p className="text-[10px] font-black uppercase tracking-widest text-[#C2A378]">Warning</p>
                    <p className="text-[9px] font-bold">This unit will be removed from stock and assigned to this container immediately.</p>
                 </div>
              </div>
-             <button onClick={handleProcessAction} className="w-full bg-[#001F3F] text-white py-7 rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl active:scale-95 transition-all">
+             <button onClick={handleProcessAction} className="w-full bg-[#3a3833] text-white py-7 rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl active:scale-95 transition-all">
                {isAr ? 'اعتماد نهائي للنظام' : 'SYSTEM COMMIT'}
              </button>
              <button onClick={() => setShowDoubleConfirm(false)} className="w-full py-2 text-[10px] font-black uppercase text-slate-400 tracking-widest">
