@@ -519,7 +519,7 @@ const StockManagement: React.FC = () => {
                       return (
                         <button
                           key={unit.id}
-                          title={activeOp ? `#${activeOp.bookingNumber}` : unit.status}
+                          title={activeOp ? `#${activeOp.bookingNumber}` : (unit.status === GensetStatus.CLIPPED_ON && !linkedActive ? (isAr ? "غير مرتبط بعملية" : "NO OPERATION") : unit.status)}
                           onClick={() => setEditingGenset({...unit})}
                           className={`min-h-[58px] rounded-xl border-2 ${statusClass} shadow-md hover:scale-105 transition-transform px-1.5 py-2 flex flex-col items-center justify-center`}
                         >
@@ -567,7 +567,7 @@ const StockManagement: React.FC = () => {
               </select>
               <select className="bg-white dark:bg-slate-900 text-black dark:text-white border-2 border-slate-100 dark:border-slate-700 rounded-xl px-4 py-2 font-black uppercase text-[9px] outline-none focus:border-blue-400" value={filterStat} onChange={e => setFilterStat(e.target.value)}>
                 <option value="ALL">{isAr ? 'جميع الحالات' : 'All Status'}</option>
-                {Object.values(GensetStatus).map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
+                {Object.values(GensetStatus).map(s => <option key={s} value={s}>{s === GensetStatus.CLIPPED_ON && editingGenset && !activeOperationUnits.has(editingGenset.unitNumber.trim().toUpperCase()) ? (isAr ? "غير مرتبط بعملية" : "NO OPERATION") : s.replace('_', ' ')}</option>)}
               </select>
             </div>
           </div>
@@ -616,7 +616,7 @@ const StockManagement: React.FC = () => {
                         <td className="p-4">
                           <span className={`${portStyle.bg} ${portStyle.text} border ${portStyle.border} px-2 py-0.5 rounded font-black text-[8px]`}>{unit.location} HUB</span>
                         </td>
-                        <td className="p-4">{getStatusBadge(unit.status)}</td>
+                        <td className="p-4">{getStatusBadge(unit.status, unit.unitNumber)}</td>
                         <td className="p-4 font-bold text-slate-700 dark:text-slate-300">
                           {activeOp ? <span className="font-mono text-blue-600">#{activeOp.bookingNumber}</span> : <span className="text-slate-200">---</span>}
                         </td>
@@ -962,7 +962,7 @@ const StockManagement: React.FC = () => {
                     <h2 className="text-xl font-black italic uppercase tracking-wider text-[#C2A378]">
                       {selectedUnitForMaint.unitNumber}
                     </h2>
-                    {getStatusBadge(selectedUnitForMaint.status)}
+                    {getStatusBadge(selectedUnitForMaint.status, selectedUnitForMaint.unitNumber)}
                     <span className="bg-white/10 text-white px-2 py-0.5 rounded text-[8px] font-black uppercase">
                       {selectedUnitForMaint.location} HUB
                     </span>
