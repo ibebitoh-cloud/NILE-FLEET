@@ -58,6 +58,16 @@ const BookingInvoices: React.FC = () => {
     setAllInvoices(db.getInvoices());
   };
 
+  React.useEffect(() => {
+    const sync = () => refreshData();
+    window.addEventListener('db-change', sync);
+    window.addEventListener('db-undo-success', sync);
+    return () => {
+      window.removeEventListener('db-change', sync);
+      window.removeEventListener('db-undo-success', sync);
+    };
+  }, []);
+
   const handleOpenEdit = (inv: Invoice) => {
     setEditingInvoice(inv);
     setEditAmount(inv.amount);
