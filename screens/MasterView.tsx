@@ -1810,23 +1810,14 @@ const MasterView: React.FC = () => {
                   </div>
                   
                 </div>
-                <div className="flex w-full sm:w-auto flex-col sm:flex-row gap-2 sm:gap-4 items-stretch sm:items-center min-w-0">
-                   <textarea 
-                     className="w-full sm:w-48 h-12 sm:h-10 p-2 bg-slate-800 border border-slate-500 rounded-xl text-[10px] sm:text-[10px] font-bold text-white placeholder:text-slate-300 outline-none focus:ring-2 focus:ring-[#C2A378] transition-all resize-none sm:focus:w-80 sm:focus:h-20"
-                     placeholder={isAr ? 'الصق البيانات هنا...' : 'Paste tab-separated rows...'}
-                     value={rawPasteBuffer} 
-                     onChange={(e) => setRawPasteBuffer(e.target.value)}
-                   />
-                   <div className="flex w-full sm:w-auto gap-2">
-                     <button type="button" onClick={() => fallbackParse(rawPasteBuffer)} className="flex-1 sm:flex-none min-h-[44px] px-4 py-2 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 text-white text-[9px] font-black uppercase tracking-wider">{isAr ? 'تحميل الصفوف' : 'Load Rows'}</button>
-                     <button onClick={() => setShowAddModal(false)} aria-label={isAr ? 'إغلاق' : 'Close'} className="hidden sm:flex min-h-[44px] min-w-[44px] items-center justify-center text-white hover:text-rose-500 p-2 rounded-xl hover:bg-white/10 text-lg">✕</button>
-                   </div>
+                <div className="flex w-full sm:w-auto items-center justify-end">
+                   <button onClick={() => setShowAddModal(false)} aria-label={isAr ? 'إغلاق' : 'Close'} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-white hover:text-rose-400 hover:bg-white/10 text-xl">✕</button>
                 </div>
              </div>
-             <div className="nf-mobile-scroll-container flex-1 overflow-auto p-2 sm:p-4 relative" style={{ backgroundColor: isDark ? '#0b1220' : '#f1f5f9' }}>
-                <table className="manifest-staging-table w-max min-w-full text-start whitespace-nowrap border-collapse" style={{ tableLayout: 'fixed' }}>
+             <div className="nf-mobile-scroll-container flex-1 min-h-0 overflow-auto overscroll-contain p-1 sm:p-4 relative" style={{ backgroundColor: isDark ? '#0b1220' : '#f1f5f9' }}> flex-1 overflow-auto p-2 sm:p-4 relative" style={{ backgroundColor: isDark ? '#0b1220' : '#f1f5f9' }}>
+                <table className="manifest-staging-table w-max min-w-full text-start whitespace-nowrap border-collapse text-[11px] sm:text-[10px]" style={{ tableLayout: 'fixed' }}>
                    <colgroup>{stagingColumnHeaders.map(column => <col key={column.key} style={{ width: stagingColWidths[column.key] ?? stagingColumnDefaults[column.key] }} />)}</colgroup>
-                   <thead className="bg-[#3a3833] text-white text-[9px] font-black uppercase tracking-widest sticky top-0 z-10">
+                   <thead className="bg-[#3a3833] text-white text-[9px] font-black uppercase tracking-widest sticky top-0 z-30">
                       <tr>{stagingColumnHeaders.map(column => <th key={column.key} className="p-3 relative text-start" style={{ width: stagingColWidths[column.key] ?? stagingColumnDefaults[column.key], minWidth: stagingColWidths[column.key] ?? stagingColumnDefaults[column.key] }}>
                         <span>{column.label}</span>
                         {column.key !== 'row' && <span onMouseDown={event => startStagingColumnResize(event, column.key)} className="absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-[#C2A378]" title={isAr ? 'اسحب لتغيير العرض بحرية' : 'Drag to resize this column'} />}
@@ -1835,17 +1826,17 @@ const MasterView: React.FC = () => {
                    <tbody className={`divide-y ${isDark ? 'divide-slate-800' : 'divide-slate-100'}`}>
                       {stagedOps.map((o, idx) => (
                         <tr key={idx} className={`${isDark ? 'hover:bg-white/5' : 'hover:bg-blue-50/50'}`}>
-                           <td className={`p-4 font-black text-[9px] ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{idx + 1}</td>
-                           <td className="p-2"><input type="number" className={`${stagingFieldClass} text-center`} value={o.quantity} onChange={e => updateStagedRow(idx, 'quantity', parseInt(e.target.value) || 1)} /></td>
+                           <td className={`p-3 sm:p-4 font-black text-[9px] sticky left-0 z-20 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{idx + 1}</td>
+                           <td className="p-2 sticky left-[36px] z-20" style={{ backgroundColor: isDark ? "#0f172a" : "#ffffff" }}><input type="number" className={`${stagingFieldClass} text-center min-h-[44px]`} value={o.quantity} onChange={e => updateStagedRow(idx, 'quantity', parseInt(e.target.value) || 1)} /></td>
                            <td className="p-2">
-                             <input list="partners" className={`${stagingFieldClass} uppercase`} value={o.customerName} onChange={e => updateStagedRow(idx, 'customerName', e.target.value.toUpperCase())} />
+                             <input inputMode="text" enterKeyHint="next" onFocus={(e) => requestAnimationFrame(() => e.currentTarget.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" }))} list="partners" className={`${stagingFieldClass} uppercase min-h-[44px]`} value={o.customerName} onChange={e => updateStagedRow(idx, 'customerName', e.target.value.toUpperCase())} />
                              {isAr && <p className={`text-[8px] font-bold mt-1 ${isDark ? 'text-sky-300' : 'text-blue-700'}`}>{translateEntity(o.customerName, 'ar')}</p>}
                            </td>
-                           <td className="p-2"><input className={`${stagingFieldClass} uppercase`} value={o.bookingNumber} onChange={e => updateStagedRow(idx, 'bookingNumber', e.target.value.toUpperCase())} /></td>
-                           <td className="p-2"><input type="date" className={stagingFieldClass} style={{ colorScheme: isDark ? 'dark' : 'light' }} value={o.operationDate || todayDate} onChange={e => updateStagedRow(idx, 'operationDate', e.target.value)} /></td>
+                           <td className="p-2"><input inputMode="text" enterKeyHint="next" onFocus={(e) => requestAnimationFrame(() => e.currentTarget.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" }))} className={`${stagingFieldClass} uppercase min-h-[44px]`} value={o.bookingNumber} onChange={e => updateStagedRow(idx, 'bookingNumber', e.target.value.toUpperCase())} /></td>
+                           <td className="p-2"><input type="date" onFocus={(e) => requestAnimationFrame(() => e.currentTarget.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" }))} className={`${stagingFieldClass} min-h-[44px]`} style={{ colorScheme: isDark ? 'dark' : 'light' }} value={o.operationDate || todayDate} onChange={e => updateStagedRow(idx, 'operationDate', e.target.value)} /></td>
                            <td className="p-2"><input type="date" className={stagingFieldClass} style={{ colorScheme: isDark ? 'dark' : 'light' }} value={o.clipOnDate} onChange={e => updateStagedRow(idx, 'clipOnDate', e.target.value)} /></td>
                            <td className="p-2">
-                              <select className={stagingFieldClass} value={o.clipOnPort} onChange={e => updateStagedRow(idx, 'clipOnPort', e.target.value as any)}>
+                              <select onFocus={(e) => requestAnimationFrame(() => e.currentTarget.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" }))} className={`${stagingFieldClass} min-h-[44px]`} value={o.clipOnPort} onChange={e => updateStagedRow(idx, 'clipOnPort', e.target.value as any)}>
                                 {allPorts.map(p => <option key={p} value={p}>{translateEntity(p, lang)}</option>)}
                               </select>
                            </td>
@@ -1855,18 +1846,18 @@ const MasterView: React.FC = () => {
                               </select>
                            </td>
                            <td className="p-2">
-                             <input className={`${stagingFieldClass} uppercase`} placeholder={isAr ? 'الوجهة النهائية' : 'Final destination'} value={o.destination || ''} onChange={e => updateStagedRow(idx, 'destination', e.target.value)} />
+                             <input inputMode="text" onFocus={(e) => requestAnimationFrame(() => e.currentTarget.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" }))} className={`${stagingFieldClass} uppercase min-h-[44px]`} placeholder={isAr ? 'الوجهة النهائية' : 'Final destination'} value={o.destination || ''} onChange={e => updateStagedRow(idx, 'destination', e.target.value)} />
                            </td>
-                           <td className="p-2"><input type="number" className={`${stagingFieldClass} text-right`} value={o.rate} onChange={e => updateStagedRow(idx, 'rate', e.target.value)} /></td>
+                           <td className="p-2"><input type="number" inputMode="decimal" onFocus={(e) => requestAnimationFrame(() => e.currentTarget.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" }))} className={`${stagingFieldClass} text-right min-h-[44px]`} value={o.rate} onChange={e => updateStagedRow(idx, 'rate', e.target.value)} /></td>
                            <td className="p-2">
-                             <input list="shippers" className={`${stagingFieldClass} uppercase`} value={o.beneficiaryName} onChange={e => updateStagedRow(idx, 'beneficiaryName', e.target.value.toUpperCase())} />
+                             <input inputMode="text" enterKeyHint="next" onFocus={(e) => requestAnimationFrame(() => e.currentTarget.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" }))} list="shippers" className={`${stagingFieldClass} uppercase min-h-[44px]`} value={o.beneficiaryName} onChange={e => updateStagedRow(idx, 'beneficiaryName', e.target.value.toUpperCase())} />
                              {isAr && <p className={`text-[8px] font-bold mt-1 ${isDark ? 'text-sky-300' : 'text-blue-700'}`}>{translateEntity(o.beneficiaryName, 'ar')}</p>}
                            </td>
                            <td className="p-2">
-                             <input list="truckers" className={`${stagingFieldClass} uppercase`} value={o.trucker} onChange={e => updateStagedRow(idx, 'trucker', e.target.value.toUpperCase())} />
+                             <input inputMode="text" enterKeyHint="next" onFocus={(e) => requestAnimationFrame(() => e.currentTarget.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" }))} list="truckers" className={`${stagingFieldClass} uppercase min-h-[44px]`} value={o.trucker} onChange={e => updateStagedRow(idx, 'trucker', e.target.value.toUpperCase())} />
                              {isAr && <p className={`text-[8px] font-bold mt-1 ${isDark ? 'text-sky-300' : 'text-blue-700'}`}>{translateEntity(o.trucker, 'ar')}</p>}
                            </td>
-                           <td className="p-2"><input className={`${stagingFieldClass} uppercase`} placeholder="e.g. CITRUS" value={o.commodity || ''} onChange={e => updateStagedRow(idx, 'commodity', e.target.value.toUpperCase())} /></td>
+                           <td className="p-2"><input inputMode="text" onFocus={(e) => requestAnimationFrame(() => e.currentTarget.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" }))} className={`${stagingFieldClass} uppercase min-h-[44px]`} placeholder="e.g. CITRUS" value={o.commodity || ''} onChange={e => updateStagedRow(idx, 'commodity', e.target.value.toUpperCase())} /></td>
                            <td className="p-2 text-center"><div className="flex items-center justify-center gap-2">
                               <button onClick={() => duplicateRow(idx)} className={`hover:scale-125 transition-transform p-2 rounded-lg shadow-sm ${isDark ? 'text-sky-200 bg-sky-950 hover:bg-sky-900' : 'text-blue-700 bg-blue-50 hover:bg-blue-100'}`} title={isAr ? 'تكرار الصف' : 'Duplicate Row'}>
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
@@ -1879,7 +1870,7 @@ const MasterView: React.FC = () => {
                 </table>
                 <button onClick={() => setStagedOps([...stagedOps, { customerName: '', bookingNumber: '', commodity: '', operationDate: todayDate, clipOnDate: todayDate, status: 'UNDER OPERATE', rate: '0', vat: '0', clipOnPort: Location.ALEX, clipOffPort: Location.ALEX, trucker: '', beneficiaryName: '', quantity: 1 }])} className={`mt-4 w-full py-4 border-2 border-dashed rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all ${isDark ? 'border-slate-600 text-slate-200 hover:bg-white/5' : 'border-slate-300 text-slate-700 hover:bg-white'}`}>{isAr ? '+ إضافة سطر فارغ' : '+ Add Empty Row'}</button>
              </div>
-             <div className={`p-3 sm:p-8 shrink-0 flex flex-col-reverse sm:flex-row gap-2 sm:gap-4 border-t ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+             <div className={`p-3 sm:p-8 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:pb-8 shrink-0 flex flex-col-reverse sm:flex-row gap-2 sm:gap-4 border-t ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
                 <button type="button" onClick={() => setShowAddModal(false)} className="min-h-[44px] px-6 sm:px-10 py-3 sm:py-5 text-[10px] sm:text-[11px] font-black uppercase text-slate-400 tracking-widest hover:text-rose-500 transition-colors rounded-xl">{t.cancel}</button>
                 <button onClick={handleFinalInject} className="flex-1 min-h-[48px] bg-[#C2A378] text-[#3a3833] py-3 sm:py-5 rounded-xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-[0.18em] sm:tracking-[0.4em] shadow-2xl active:scale-95 transition-all">
                   {isAr ? 'اعتماد حقن البيانات' : 'AUTHORIZE BATCH INJECTION'} ({stagedOps.reduce((sum, o) => sum + (o.bookingNumber && o.customerName ? (o.quantity || 1) : 0), 0)} {isAr ? 'وحدة' : 'UNITS'})
