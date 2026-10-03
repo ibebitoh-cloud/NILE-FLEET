@@ -54,7 +54,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       if (o.status === 'UNDER OPERATE') byPort[p].preorderCount++;
       if (o.status === 'IN PROGRESS') byPort[p].active++;
     });
-    locations.forEach(port => {\n      const available = byPort[port].stockCount;\n      const demand = byPort[port].preorderCount;\n      byPort[port].surplus = Math.max(available - demand, 0);\n      byPort[port].deficit = Math.max(demand - available, 0);\n    });\n    return locations.map(port => ({ port, ...byPort[port] }));
+    locations.forEach(port => {
+      const available = byPort[port].stockCount;
+      const demand = byPort[port].preorderCount;
+      byPort[port].surplus = Math.max(available - demand, 0);
+      byPort[port].deficit = Math.max(demand - available, 0);
+    });
+    return locations.map(port => ({ port, ...byPort[port] }));
   }, [stock, ops]);
 
   // Customer financials are intentionally calculated from the same rules used by
