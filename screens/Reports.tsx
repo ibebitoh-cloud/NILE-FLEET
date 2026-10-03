@@ -89,7 +89,7 @@ const Reports: React.FC = () => {
       {/* Header & Filters */}
       <div className="bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col xl:flex-row justify-between items-center gap-6">
         <div>
-           <h2 className="text-2xl font-black text-[#001F3F] dark:text-white uppercase tracking-tight">{lang === 'ar' ? 'التقارير المالية والتدقيق' : 'Financial Audit Reports'}</h2>
+           <h2 className="text-2xl font-black text-[#3a3833] dark:text-white uppercase tracking-tight">{lang === 'ar' ? 'التقارير المالية والتدقيق' : 'Financial Audit Reports'}</h2>
            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Audit by date range, partner, or asset ID</p>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full xl:w-auto">
@@ -131,7 +131,7 @@ const Reports: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-700">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{lang === 'ar' ? 'الحجوزات' : 'Bookings'}</p>
-          <p className="text-xl md:text-2xl font-black text-[#001F3F] dark:text-white">{summary.count}</p>
+          <p className="text-xl md:text-2xl font-black text-[#3a3833] dark:text-white">{summary.count}</p>
         </div>
         <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-700">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{lang === 'ar' ? 'الإيراد الأساسي' : 'Base Rate'}</p>
@@ -141,7 +141,7 @@ const Reports: React.FC = () => {
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{lang === 'ar' ? 'الضريبة' : 'VAT'}</p>
           <p className="text-xl md:text-2xl font-black text-[#C2A378]">EGP {summary.vat.toLocaleString()}</p>
         </div>
-        <div className="bg-[#001F3F] p-6 rounded-3xl shadow-xl col-span-2 md:col-span-1">
+        <div className="bg-[#3a3833] p-6 rounded-3xl shadow-xl col-span-2 md:col-span-1">
           <p className="text-[10px] font-black text-[#C2A378] uppercase tracking-widest">{lang === 'ar' ? 'الإجمالي' : 'Total'}</p>
           <p className="text-xl md:text-2xl font-black text-white italic">EGP {summary.grandTotal.toLocaleString()}</p>
         </div>
@@ -212,9 +212,9 @@ const Reports: React.FC = () => {
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] shadow-2xl border-4 border-slate-50 dark:border-slate-700 flex flex-col h-full">
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 bg-[#001F3F] text-[#C2A378] rounded-2xl flex items-center justify-center text-xl shadow-lg">🛡️</div>
+              <div className="w-12 h-12 bg-[#3a3833] text-[#C2A378] rounded-2xl flex items-center justify-center text-xl shadow-lg">🛡️</div>
               <div>
-                <h3 className="text-lg font-black text-[#001F3F] dark:text-white uppercase italic leading-none">DALI 1.0</h3>
+                <h3 className="text-lg font-black text-[#3a3833] dark:text-white uppercase italic leading-none">DALI 1.0</h3>
                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">Financial Integrity AI</p>
               </div>
             </div>
@@ -243,7 +243,7 @@ const Reports: React.FC = () => {
             <button 
               onClick={runDaliAuditor}
               disabled={isThinking}
-              className="w-full bg-[#001F3F] text-white py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl hover:bg-[#002b57] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+              className="w-full bg-[#3a3833] text-white py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl hover:bg-[#002b57] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
             >
               {isThinking ? 'Analyzing Ledger...' : 'Verify Dataset Accuracy'}
             </button>
