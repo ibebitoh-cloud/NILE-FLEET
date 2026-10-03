@@ -234,6 +234,16 @@ export function answerDali(question: string, data: DaliData, contextKey: string 
   const lastCtx = lastCtxByKey.get(contextKey) || {};
   const range = findRange(nq, now);
 
+  // Context state must exist before any early-return intent (audit/profile).
+  // The previous implementation declared this below those intents, causing a
+  // temporal-dead-zone runtime error and sending DALI questions to fallback.
+  let customer: string | undefined;
+  let ports: string[] | undefined;
+  let unit: string | undefined;
+  const remember = (intent: string) => {
+    lastCtxByKey.set(contextKey, { customer, ports, unit, intent });
+  };
+
   // deterministic data audit / consistency checks
   if (has(nq, ['audit', 'data audit', 'contradiction', 'contradictions', 'conflict', 'conflicts', 'inconsistency', 'inconsistencies', 'راجع السيستم', 'راجع البيانات', 'تعارض', 'تعارضات', 'تناقض', 'تناقضات', 'مشاكل البيانات', 'مراجعه البيانات'])) {
     const findings = auditDaliData(data);
@@ -620,9 +630,9 @@ searching, connecting, analyzing, checking, and explaining data so the authorize
   const containerM = q.toUpperCase().match(/\b[A-Z]{4}[\s-]?\d{7}\b/)?.[0].replace(/[\s-]/g, '') ? [q.toUpperCase().match(/\b[A-Z]{4}[\s-]?\d{7}\b/)![0].replace(/[\s-]/g, '')] : null;
   const bookingM = q.replace(/[,\s]/g, '').match(/\d{6,}/);
   const unitHit = resolveUnit(q, nq, data);
-  let customer = resolveCustomer(nq, data);
-  let ports = findPorts(nq);
-  let unit = unitHit.unit;
+  customer = resolveCustomer(nq, data);
+  ports = findPorts(nq);
+  unit = unitHit.unit;
 
   // ---- subject words ----
   let wOps = has(nq, ['operation', 'operations', 'job', 'jobs', 'work', 'شغل', 'عمليات', 'عمليه', 'العمليات', 'العمليه']);
@@ -662,7 +672,6 @@ searching, connecting, analyzing, checking, and explaining data so the authorize
       }
     }
   }
-  const remember = (intent: string) => { lastCtxByKey.set(contextKey, { customer, ports, unit, intent }); };
   const rangeLabel = range ? L(range.label, range.labelAr) : '';
   const portSet = ports ? new Set(ports) : undefined;
   const portText = ports ? (ports.length > 1 ? L('Port Said (PSD + SCCT)', 'بورسعيد (PSD + SCCT)') : portLabel(ports[0], ar)) : '';
