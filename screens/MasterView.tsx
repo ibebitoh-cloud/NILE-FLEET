@@ -41,6 +41,14 @@ const DEFAULT_COLUMN_WIDTHS: Record<string, number> = {
 const allPorts: string[] = ['DAM', 'ALEX', 'GOUDA', 'SOKHNA', 'SCCT', 'PSD'];
 const STATUS_CYCLE: string[] = ['UNDER OPERATE', 'IN PROGRESS', 'DONE', 'HOLD', 'CANCEL'];
 
+const scrollFieldIntoView = (element: HTMLElement | null) => {
+  if (!element) return;
+  requestAnimationFrame(() => {
+    if (!element.isConnected) return;
+    element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+  });
+};
+
 const getContrastColor = (bgClass: string, isDarkTerminal: boolean) => {
   if (isDarkTerminal) {
     if (bgClass.includes('slate-900') || bgClass.includes('slate-950') || bgClass.includes('blue-900')) return 'text-white';
@@ -1829,14 +1837,14 @@ const MasterView: React.FC = () => {
                            <td className={`p-3 sm:p-4 font-black text-[9px] sticky left-0 z-20 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{idx + 1}</td>
                            <td className="p-2 sticky left-[36px] z-20" style={{ backgroundColor: isDark ? "#0f172a" : "#ffffff" }}><input type="number" className={`${stagingFieldClass} text-center min-h-[44px]`} value={o.quantity} onChange={e => updateStagedRow(idx, 'quantity', parseInt(e.target.value) || 1)} /></td>
                            <td className="p-2">
-                             <input inputMode="text" enterKeyHint="next" onFocus={(e) => requestAnimationFrame(() => e.currentTarget.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" }))} list="partners" className={`${stagingFieldClass} uppercase min-h-[44px]`} value={o.customerName} onChange={e => updateStagedRow(idx, 'customerName', e.target.value.toUpperCase())} />
+                             <input inputMode="text" enterKeyHint="next" onFocus={(e) => scrollFieldIntoView(e.currentTarget)} list="partners" className={`${stagingFieldClass} uppercase min-h-[44px]`} value={o.customerName} onChange={e => updateStagedRow(idx, 'customerName', e.target.value.toUpperCase())} />
                              {isAr && <p className={`text-[8px] font-bold mt-1 ${isDark ? 'text-sky-300' : 'text-blue-700'}`}>{translateEntity(o.customerName, 'ar')}</p>}
                            </td>
-                           <td className="p-2"><input inputMode="text" enterKeyHint="next" onFocus={(e) => requestAnimationFrame(() => e.currentTarget.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" }))} className={`${stagingFieldClass} uppercase min-h-[44px]`} value={o.bookingNumber} onChange={e => updateStagedRow(idx, 'bookingNumber', e.target.value.toUpperCase())} /></td>
-                           <td className="p-2"><input type="date" onFocus={(e) => requestAnimationFrame(() => e.currentTarget.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" }))} className={`${stagingFieldClass} min-h-[44px]`} style={{ colorScheme: isDark ? 'dark' : 'light' }} value={o.operationDate || todayDate} onChange={e => updateStagedRow(idx, 'operationDate', e.target.value)} /></td>
+                           <td className="p-2"><input inputMode="text" enterKeyHint="next" onFocus={(e) => scrollFieldIntoView(e.currentTarget)} className={`${stagingFieldClass} uppercase min-h-[44px]`} value={o.bookingNumber} onChange={e => updateStagedRow(idx, 'bookingNumber', e.target.value.toUpperCase())} /></td>
+                           <td className="p-2"><input type="date" onFocus={(e) => scrollFieldIntoView(e.currentTarget)} className={`${stagingFieldClass} min-h-[44px]`} style={{ colorScheme: isDark ? 'dark' : 'light' }} value={o.operationDate || todayDate} onChange={e => updateStagedRow(idx, 'operationDate', e.target.value)} /></td>
                            <td className="p-2"><input type="date" className={stagingFieldClass} style={{ colorScheme: isDark ? 'dark' : 'light' }} value={o.clipOnDate} onChange={e => updateStagedRow(idx, 'clipOnDate', e.target.value)} /></td>
                            <td className="p-2">
-                              <select onFocus={(e) => requestAnimationFrame(() => e.currentTarget.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" }))} className={`${stagingFieldClass} min-h-[44px]`} value={o.clipOnPort} onChange={e => updateStagedRow(idx, 'clipOnPort', e.target.value as any)}>
+                              <select onFocus={(e) => scrollFieldIntoView(e.currentTarget)} className={`${stagingFieldClass} min-h-[44px]`} value={o.clipOnPort} onChange={e => updateStagedRow(idx, 'clipOnPort', e.target.value as any)}>
                                 {allPorts.map(p => <option key={p} value={p}>{translateEntity(p, lang)}</option>)}
                               </select>
                            </td>
@@ -1846,18 +1854,18 @@ const MasterView: React.FC = () => {
                               </select>
                            </td>
                            <td className="p-2">
-                             <input inputMode="text" onFocus={(e) => requestAnimationFrame(() => e.currentTarget.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" }))} className={`${stagingFieldClass} uppercase min-h-[44px]`} placeholder={isAr ? 'الوجهة النهائية' : 'Final destination'} value={o.destination || ''} onChange={e => updateStagedRow(idx, 'destination', e.target.value)} />
+                             <input inputMode="text" onFocus={(e) => scrollFieldIntoView(e.currentTarget)} className={`${stagingFieldClass} uppercase min-h-[44px]`} placeholder={isAr ? 'الوجهة النهائية' : 'Final destination'} value={o.destination || ''} onChange={e => updateStagedRow(idx, 'destination', e.target.value)} />
                            </td>
-                           <td className="p-2"><input type="number" inputMode="decimal" onFocus={(e) => requestAnimationFrame(() => e.currentTarget.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" }))} className={`${stagingFieldClass} text-right min-h-[44px]`} value={o.rate} onChange={e => updateStagedRow(idx, 'rate', e.target.value)} /></td>
+                           <td className="p-2"><input type="number" inputMode="decimal" onFocus={(e) => scrollFieldIntoView(e.currentTarget)} className={`${stagingFieldClass} text-right min-h-[44px]`} value={o.rate} onChange={e => updateStagedRow(idx, 'rate', e.target.value)} /></td>
                            <td className="p-2">
-                             <input inputMode="text" enterKeyHint="next" onFocus={(e) => requestAnimationFrame(() => e.currentTarget.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" }))} list="shippers" className={`${stagingFieldClass} uppercase min-h-[44px]`} value={o.beneficiaryName} onChange={e => updateStagedRow(idx, 'beneficiaryName', e.target.value.toUpperCase())} />
+                             <input inputMode="text" enterKeyHint="next" onFocus={(e) => scrollFieldIntoView(e.currentTarget)} list="shippers" className={`${stagingFieldClass} uppercase min-h-[44px]`} value={o.beneficiaryName} onChange={e => updateStagedRow(idx, 'beneficiaryName', e.target.value.toUpperCase())} />
                              {isAr && <p className={`text-[8px] font-bold mt-1 ${isDark ? 'text-sky-300' : 'text-blue-700'}`}>{translateEntity(o.beneficiaryName, 'ar')}</p>}
                            </td>
                            <td className="p-2">
-                             <input inputMode="text" enterKeyHint="next" onFocus={(e) => requestAnimationFrame(() => e.currentTarget.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" }))} list="truckers" className={`${stagingFieldClass} uppercase min-h-[44px]`} value={o.trucker} onChange={e => updateStagedRow(idx, 'trucker', e.target.value.toUpperCase())} />
+                             <input inputMode="text" enterKeyHint="next" onFocus={(e) => scrollFieldIntoView(e.currentTarget)} list="truckers" className={`${stagingFieldClass} uppercase min-h-[44px]`} value={o.trucker} onChange={e => updateStagedRow(idx, 'trucker', e.target.value.toUpperCase())} />
                              {isAr && <p className={`text-[8px] font-bold mt-1 ${isDark ? 'text-sky-300' : 'text-blue-700'}`}>{translateEntity(o.trucker, 'ar')}</p>}
                            </td>
-                           <td className="p-2"><input inputMode="text" onFocus={(e) => requestAnimationFrame(() => e.currentTarget.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" }))} className={`${stagingFieldClass} uppercase min-h-[44px]`} placeholder="e.g. CITRUS" value={o.commodity || ''} onChange={e => updateStagedRow(idx, 'commodity', e.target.value.toUpperCase())} /></td>
+                           <td className="p-2"><input inputMode="text" onFocus={(e) => scrollFieldIntoView(e.currentTarget)} className={`${stagingFieldClass} uppercase min-h-[44px]`} placeholder="e.g. CITRUS" value={o.commodity || ''} onChange={e => updateStagedRow(idx, 'commodity', e.target.value.toUpperCase())} /></td>
                            <td className="p-2 text-center"><div className="flex items-center justify-center gap-2">
                               <button onClick={() => duplicateRow(idx)} className={`hover:scale-125 transition-transform p-2 rounded-lg shadow-sm ${isDark ? 'text-sky-200 bg-sky-950 hover:bg-sky-900' : 'text-blue-700 bg-blue-50 hover:bg-blue-100'}`} title={isAr ? 'تكرار الصف' : 'Duplicate Row'}>
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
