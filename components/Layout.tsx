@@ -86,38 +86,8 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   const daliDraggingRef = useRef(false);
   const daliDraggedRef = useRef(false);
   const daliDragStartRef = useRef({ x: 0, y: 0, right: 24, bottom: 24 });
-  type DaliVisualStyle = 'glass' | 'phantom' | 'terminal' | 'aurora' | 'blueprint';
-  type DaliBackgroundStyle = 'soft' | 'grid' | 'aurora' | 'blueprint' | 'clear';
-  type DaliThinkingStyle = 'clean' | 'technical' | 'friendly' | 'silent';
-  type DaliAnimationStyle = 'float' | 'pulse' | 'orb' | 'none';
-  const daliPreferenceKey = (name: string) => `nile-dali-${name}-${user.id || user.email || 'user'}`;
-  const [daliVisualStyle, setDaliVisualStyle] = useState<DaliVisualStyle>(() => {
-    try { return (localStorage.getItem(daliPreferenceKey('style')) as DaliVisualStyle) || 'glass'; } catch { return 'glass'; }
-  });
-  const [daliBackgroundStyle, setDaliBackgroundStyle] = useState<DaliBackgroundStyle>(() => {
-    try { return (localStorage.getItem(daliPreferenceKey('background')) as DaliBackgroundStyle) || 'soft'; } catch { return 'soft'; }
-  });
-  const [daliThinkingStyle, setDaliThinkingStyle] = useState<DaliThinkingStyle>(() => {
-    try { return (localStorage.getItem(daliPreferenceKey('thinking')) as DaliThinkingStyle) || 'clean'; } catch { return 'clean'; }
-  });
-  const [daliAnimationStyle, setDaliAnimationStyle] = useState<DaliAnimationStyle>(() => {
-    try { return (localStorage.getItem(daliPreferenceKey('animation')) as DaliAnimationStyle) || 'float'; } catch { return 'float'; }
-  });
   const [themeIslandOpen, setThemeIslandOpen] = useState(false);
   const themeIslandTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    const syncDaliPreferences = () => {
-      try {
-        setDaliVisualStyle((localStorage.getItem(daliPreferenceKey('style')) as DaliVisualStyle) || 'glass');
-        setDaliBackgroundStyle((localStorage.getItem(daliPreferenceKey('background')) as DaliBackgroundStyle) || 'soft');
-        setDaliThinkingStyle((localStorage.getItem(daliPreferenceKey('thinking')) as DaliThinkingStyle) || 'clean');
-        setDaliAnimationStyle((localStorage.getItem(daliPreferenceKey('animation')) as DaliAnimationStyle) || 'float');
-      } catch {}
-    };
-    window.addEventListener('dali-preferences-change', syncDaliPreferences);
-    return () => window.removeEventListener('dali-preferences-change', syncDaliPreferences);
-  }, [user.id, user.email]);
 
   useEffect(() => {
     const handleFsChange = () => {
@@ -1525,7 +1495,7 @@ I’ll search with you. 🤖`;
   };
 
   const toggleTheme = () => {
-    const nextTheme = isDark ? 'white' : 'black';
+    const nextTheme = isDark ? 'day' : 'night';
     setTheme(nextTheme);
     setThemeIslandOpen(true);
     if (themeIslandTimerRef.current) clearTimeout(themeIslandTimerRef.current);
