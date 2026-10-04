@@ -583,7 +583,6 @@ const Operations: React.FC<{ highlightId?: string | null; clearHighlight?: () =>
                                                   onSave={(v) => handleUpdateCell(item, 'clipOnPort', v)}
                                                   renderValue={(v) => <p className="text-[8px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded uppercase mb-1">{v}</p>}
                                                />
-                                               <p className="text-[10px] font-bold">{item.clipOnDate}</p>
                                                <p className="text-[7px] font-black text-slate-300 uppercase">Clip On</p>
                                             </div>
                                             <div className="flex-1 h-px bg-slate-100 relative">
@@ -597,9 +596,19 @@ const Operations: React.FC<{ highlightId?: string | null; clearHighlight?: () =>
                                                   onSave={(v) => handleUpdateCell(item, 'clipOffPort', v)}
                                                   renderValue={(v) => <p className="text-[8px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase mb-1">{v}</p>}
                                                />
-                                               <p className="text-[10px] font-bold">{item.clipOffDate || '---'}</p>
                                                <p className="text-[7px] font-black text-slate-300 uppercase">Release</p>
                                             </div>
+                                         </div>
+                                         <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/60 p-2">
+                                            <div className="text-center border-r border-slate-200 dark:border-slate-700">
+                                               <p className="text-[6px] font-black uppercase tracking-widest text-amber-500">Clip-On Date</p>
+                                               <p className="text-[9px] font-black text-slate-700 dark:text-slate-200">{item.clipOnDate || '---'}</p>
+                                            </div>
+                                            <div className="text-center">
+                                               <p className="text-[6px] font-black uppercase tracking-widest text-blue-500">Clip-Off Date</p>
+                                               <p className="text-[9px] font-black text-slate-700 dark:text-slate-200">{item.clipOffDate || '---'}</p>
+                                            </div>
+                                         </div>
                                          </div>
                                          <div className="pt-4 flex justify-between items-center text-[9px] font-bold text-slate-400 border-t border-slate-50 dark:border-slate-700 mt-4">
                                             <span>{t.trucker.toUpperCase()}: {translateEntity(item.trucker, lang)}</span>
