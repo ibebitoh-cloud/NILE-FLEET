@@ -1937,9 +1937,9 @@ const MasterView: React.FC = () => {
       </div>
 
       {masterScrollWidth > 0 && (
-        <div className="hidden md:block fixed left-3 right-3 bottom-3 z-[90] rounded-xl border border-slate-300 dark:border-slate-700 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md shadow-xl px-2 py-1" title={isAr ? 'شريط تمرير أفقي ثابت للسجل الرئيسي' : 'Fixed horizontal scrollbar for Master View'}>
-          <div ref={masterScrollbarRef} className="overflow-x-auto overflow-y-hidden h-4">
-            <div style={{ width: masterScrollWidth, height: 1 }} />
+        <div className={`hidden md:block w-full px-3 py-2 border-t ${isDark ? 'border-slate-800 bg-slate-950' : 'border-slate-200 bg-white'}`} title={isAr ? 'شريط تمرير أفقي للسجل الرئيسي' : 'Master View horizontal scrollbar'}>
+          <div ref={masterScrollbarRef} className="overflow-x-auto overflow-y-hidden h-3 rounded-full">
+            <div style={{ width: masterScrollWidth, minWidth: '100%', height: 1 }} />
           </div>
         </div>
       )}
