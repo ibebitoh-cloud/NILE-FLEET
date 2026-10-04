@@ -620,7 +620,6 @@ const Operations: React.FC<{ highlightId?: string | null; clearHighlight?: () =>
                                                <p className="text-[9px] font-black text-slate-700 dark:text-slate-200">{item.clipOffDate || '---'}</p>
                                             </div>
                                          </div>
-                                         </div>
                                          <div className="pt-4 flex justify-between items-center text-[9px] font-bold text-slate-400 border-t border-slate-50 dark:border-slate-700 mt-4">
                                             <span>{t.trucker.toUpperCase()}: {translateEntity(item.trucker, lang)}</span>
                                             <span className="text-blue-600 font-black">FUEL: {item.gaz}L</span>
