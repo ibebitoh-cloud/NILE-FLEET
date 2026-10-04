@@ -79,10 +79,12 @@ interface EditableCellProps {
   disabled?: boolean;
   strict?: boolean;
   isDark: boolean;
-  renderValue?: (val: string) => React.ReactNode; 
+  renderValue?: (val: string) => React.ReactNode;
+  onEditStart?: () => void;
+  onEditEnd?: () => void;
 }
 
-const EditableCell: React.FC<EditableCellProps> = ({ value, onSave, type, suggestions, options, placeholder, className, isError, disabled, strict, isDark, renderValue }) => {
+const EditableCell: React.FC<EditableCellProps> = ({ value, onSave, type, suggestions, options, placeholder, className, isError, disabled, strict, isDark, renderValue, onEditStart, onEditEnd }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentValue, setCurrentValue] = useState(value);
   const inputRef = useRef<HTMLInputElement | HTMLSelectElement>(null);
@@ -94,8 +96,14 @@ const EditableCell: React.FC<EditableCellProps> = ({ value, onSave, type, sugges
     }
   }, [isEditing]);
 
+  const startEditing = () => {
+    setIsEditing(true);
+    onEditStart?.();
+  };
+
   const handleBlur = () => {
     setIsEditing(false);
+    onEditEnd?.();
     if (strict && suggestions && currentValue && !suggestions.includes(currentValue)) {
       setCurrentValue(value);
       return;
@@ -105,7 +113,7 @@ const EditableCell: React.FC<EditableCellProps> = ({ value, onSave, type, sugges
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleBlur();
-    else if (e.key === 'Escape') { setCurrentValue(value); setIsEditing(false); }
+    else if (e.key === 'Escape') { setCurrentValue(value); setIsEditing(false); onEditEnd?.(); }
   };
 
   if (isEditing && !disabled) {
@@ -147,7 +155,7 @@ const EditableCell: React.FC<EditableCellProps> = ({ value, onSave, type, sugges
 
   return (
     <div 
-      onClick={(e) => { if(!disabled) { e.stopPropagation(); setIsEditing(true); } }}
+      onClick={(e) => { if(!disabled) { e.stopPropagation(); startEditing(); } }}
       className={`group min-h-[1.2rem] flex items-center px-1 rounded transition-colors ${!disabled ? 'cursor-pointer' : 'cursor-default'} ${isDark ? 'hover:bg-white/5 border-transparent' : 'hover:bg-black/5 border-transparent'} ${isError ? 'bg-red-600 text-white animate-pulse' : ''} ${className}`}
     >
       <div className="flex-1 whitespace-nowrap overflow-visible">
@@ -816,7 +824,19 @@ const MasterView: React.FC = () => {
 
   const [invoices, setInvoices] = useState<Invoice[]>(() => db.getInvoices());
 
-  const refresh = () => {
+  // Track whether a cell is currently being edited inline. Refreshes triggered
+  // by db-change events skip the state update while an edit is in progress so
+  // the editor focus and scroll position are not lost. A deferred refresh fires
+  // once the user commits or cancels the edit.
+  const editingCellRef = useRef(false);
+  const pendingRefreshRef = useRef(false);
+
+  const refresh = (force = false) => {
+    if (!force && editingCellRef.current) {
+      pendingRefreshRef.current = true;
+      return;
+    }
+    pendingRefreshRef.current = false;
     setOperations([...db.getOperations()]);
     setInvoices([...db.getInvoices()]);
   };
@@ -1219,8 +1239,16 @@ const MasterView: React.FC = () => {
           : `Could not save gas amount. ${detail || 'Make sure the database update has been applied.'}`);
         return;
       }
-      refresh();
+      refresh(true);
     });
+  };
+
+  // Shared callbacks passed to every EditableCell so background db-change
+  // events don't interrupt the user while they are typing.
+  const onCellEditStart = () => { editingCellRef.current = true; };
+  const onCellEditEnd = () => {
+    editingCellRef.current = false;
+    if (pendingRefreshRef.current) refresh(true);
   };
 
   const requestSort = (key: keyof Operation) => {
@@ -1583,16 +1611,16 @@ const MasterView: React.FC = () => {
                               }} disabled={isReadOnly} />
                           </td>
                           <td style={{ ...dynamicCellStyle, ...getColStyle('bookingNumber') }} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
-                            <EditableCell value={op.bookingNumber} onSave={(val) => handleUpdateCell(op, 'bookingNumber', val)} disabled={isReadOnly} isDark={isDark} className={`font-black ${isSelected ? 'text-white' : op.reviewedByManager ? 'text-emerald-500' : (isDark ? 'text-blue-400' : 'text-blue-600')}`} />
+                            <EditableCell value={op.bookingNumber} onSave={(val) => handleUpdateCell(op, 'bookingNumber', val)} disabled={isReadOnly} isDark={isDark} onEditStart={onCellEditStart} onEditEnd={onCellEditEnd} className={`font-black ${isSelected ? 'text-white' : op.reviewedByManager ? 'text-emerald-500' : (isDark ? 'text-blue-400' : 'text-blue-600')}`} />
                           </td>
                           <td style={{ ...dynamicCellStyle, ...getColStyle('customerName') }} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
-                            <EditableCell value={op.customerName} onSave={(val) => handleUpdateCell(op, 'customerName', val)} disabled={isReadOnly} suggestions={systemSuggestions.customers} isDark={isDark} renderValue={(v) => translateEntity(v, lang)} className={`${isSelected ? 'text-white' : ((op.customerName || '').trim() && !customerNameKeys.has((op.customerName || '').trim().toLowerCase()) ? 'text-red-500 font-black' : (isDark ? 'text-slate-300' : 'text-slate-800'))} font-bold uppercase`} />
+                            <EditableCell value={op.customerName} onSave={(val) => handleUpdateCell(op, 'customerName', val)} disabled={isReadOnly} suggestions={systemSuggestions.customers} isDark={isDark} onEditStart={onCellEditStart} onEditEnd={onCellEditEnd} renderValue={(v) => translateEntity(v, lang)} className={`${isSelected ? 'text-white' : ((op.customerName || '').trim() && !customerNameKeys.has((op.customerName || '').trim().toLowerCase()) ? 'text-red-500 font-black' : (isDark ? 'text-slate-300' : 'text-slate-800'))} font-bold uppercase`} />
                           </td>
                           <td style={{ ...dynamicCellStyle, ...getColStyle('trucker') }} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
-                            <EditableCell value={op.trucker} onSave={(val) => handleUpdateCell(op, 'trucker', val)} disabled={isReadOnly} isDark={isDark} renderValue={(v) => translateEntity(v, lang)} className={`${isSelected ? 'text-white' : 'text-slate-500'} font-bold uppercase text-[9px]`} placeholder={t.trucker} />
+                            <EditableCell value={op.trucker} onSave={(val) => handleUpdateCell(op, 'trucker', val)} disabled={isReadOnly} isDark={isDark} onEditStart={onCellEditStart} onEditEnd={onCellEditEnd} renderValue={(v) => translateEntity(v, lang)} className={`${isSelected ? 'text-white' : 'text-slate-500'} font-bold uppercase text-[9px]`} placeholder={t.trucker} />
                           </td>
                           <td style={{ ...dynamicCellStyle, ...getColStyle('shipper') }} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
-                            <EditableCell value={op.beneficiaryName} onSave={(val) => handleUpdateCell(op, 'beneficiaryName', val)} disabled={isReadOnly} isDark={isDark} renderValue={(v) => translateEntity(v, lang)} className={`${isSelected ? 'text-white' : 'text-slate-500'} font-bold uppercase text-[9px]`} placeholder={t.shipper} />
+                            <EditableCell value={op.beneficiaryName} onSave={(val) => handleUpdateCell(op, 'beneficiaryName', val)} disabled={isReadOnly} isDark={isDark} onEditStart={onCellEditStart} onEditEnd={onCellEditEnd} renderValue={(v) => translateEntity(v, lang)} className={`${isSelected ? 'text-white' : 'text-slate-500'} font-bold uppercase text-[9px]`} placeholder={t.shipper} />
                           </td>
                           <td style={{ ...dynamicCellStyle, ...getColStyle('clipOnPort') }} className={`text-center border-r ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
                              <EditableCell 
@@ -1624,7 +1652,7 @@ const MasterView: React.FC = () => {
                           >
                             <div className="flex items-center gap-1">
                               {isContainerDup && <span className="text-[10px] shrink-0">⚠️</span>}
-                              <EditableCell value={op.containerNumber} onSave={(val) => handleUpdateCell(op, 'containerNumber', val)} disabled={isReadOnly} isDark={isDark} className={`font-mono font-black ${isContainerDup ? '!text-black font-extrabold' : isSelected ? 'text-white' : (isDark ? 'text-slate-200' : 'text-slate-900')}`} placeholder="CONT#" />
+                              <EditableCell value={op.containerNumber} onSave={(val) => handleUpdateCell(op, 'containerNumber', val)} disabled={isReadOnly} isDark={isDark} onEditStart={onCellEditStart} onEditEnd={onCellEditEnd} className={`font-mono font-black ${isContainerDup ? '!text-black font-extrabold' : isSelected ? 'text-white' : (isDark ? 'text-slate-200' : 'text-slate-900')}`} placeholder="CONT#" />
                             </div>
                           </td>
                           <td 
@@ -1634,7 +1662,7 @@ const MasterView: React.FC = () => {
                           >
                             <div className="flex items-center justify-center gap-1">
                               {isGensetDup && <span className="text-[10px] shrink-0">⚡</span>}
-                              <EditableCell value={op.gensetNumber} suggestions={systemSuggestions.gensets} onSave={(val) => handleUpdateCell(op, 'gensetNumber', val)} disabled={isReadOnly} className={`font-black ${isGensetDup ? '!text-black font-extrabold' : isSelected ? 'text-blue-100' : 'text-[#C2A378]'}`} placeholder="UNIT" isDark={isDark} />
+                              <EditableCell value={op.gensetNumber} suggestions={systemSuggestions.gensets} onSave={(val) => handleUpdateCell(op, 'gensetNumber', val)} disabled={isReadOnly} onEditStart={onCellEditStart} onEditEnd={onCellEditEnd} className={`font-black ${isGensetDup ? '!text-black font-extrabold' : isSelected ? 'text-blue-100' : 'text-[#C2A378]'}`} placeholder="UNIT" isDark={isDark} />
                             </div>
                           </td>
                           <td style={{ ...dynamicCellStyle, ...getColStyle('rate') }} className={`border-r text-right px-2 font-bold ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
@@ -1705,6 +1733,8 @@ const MasterView: React.FC = () => {
                               onSave={(value) => handleUpdateCell(op, 'gaz', value)}
                               disabled={isReadOnly}
                               isDark={isDark}
+                              onEditStart={onCellEditStart}
+                              onEditEnd={onCellEditEnd}
                               className={`font-black ${isSelected ? 'text-white' : 'text-cyan-600 dark:text-cyan-300'}`}
                               placeholder="0"
                             />

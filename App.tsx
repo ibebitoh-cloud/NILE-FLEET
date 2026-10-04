@@ -102,7 +102,12 @@ const App: React.FC = () => {
 
   // Legacy custom-theme storage is intentionally ignored: the application now has exactly two modes.
 
-  const [activeScreen, setActiveScreen] = useState<string>(() => window.location.hash.slice(1).split('?')[0] || 'dashboard');
+  const [activeScreen, setActiveScreen] = useState<string>(() => {
+    const fromHash = window.location.hash.slice(1).split('?')[0];
+    // If there is no hash (e.g. after a logout redirect cleared it), fall back
+    // to the last screen the user was on so they land where they left off.
+    return fromHash || localStorage.getItem('nf_last_screen') || 'dashboard';
+  });
   const [openScreens, setOpenScreens] = useState<string[]>(() => {
     try {
       const saved = JSON.parse(sessionStorage.getItem('openScreens') || '[]');
@@ -319,7 +324,11 @@ const App: React.FC = () => {
             )
         );
     const syncFromUrl = () => {
-      const screen = window.location.hash.slice(1).split('?')[0];
+      const rawHash = window.location.hash.slice(1).split('?')[0];
+      // When the hash is empty (cleared during logout / login redirect), try
+      // restoring the last screen the user visited instead of forcing them to
+      // dashboard — this is the remembered-screen race fix.
+      const screen = rawHash || (user ? localStorage.getItem('nf_last_screen') || homeScreen : homeScreen);
       if (!user) return;
       const destination = permittedScreens.has(screen)
         ? screen
@@ -328,9 +337,10 @@ const App: React.FC = () => {
           : permittedScreens.values().next().value || 'no-access';
       if (destination === 'no-access') {
         if (window.location.hash) window.location.hash = '';
-      } else if (screen !== destination) {
+      } else if (rawHash !== destination) {
         window.location.hash = destination;
       }
+      localStorage.setItem('nf_last_screen', destination);
       setActiveScreen(destination);
       setOpenScreens(current => {
         const permittedOpen = current.filter(openScreen => permittedScreens.has(openScreen));
