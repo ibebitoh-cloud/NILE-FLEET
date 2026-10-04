@@ -229,7 +229,7 @@ const StockManagement: React.FC = () => {
           : bulkTargetStatus === 'RETIRED'
             ? (isAr ? 'خارج الخدمة' : 'SCRAP')
             : '';
-    const targetPortLabel = bulkTargetPort ? translateEntity(bulkTargetPort, lang) : '';
+    const targetPortLabel = bulkTargetPort ? String(translateEntity(bulkTargetPort, lang) ?? bulkTargetPort) : '';
     const changes = [
       bulkTargetPort ? (isAr ? 'نقل إلى ' + targetPortLabel : 'Move to ' + targetPortLabel) : '',
       bulkTargetStatus ? (isAr ? 'تغيير الحالة إلى ' + targetStatusLabel : 'Set status to ' + targetStatusLabel) : ''
