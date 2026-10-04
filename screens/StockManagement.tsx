@@ -221,6 +221,74 @@ const StockManagement: React.FC = () => {
 
   const [bulkTargetStatus, setBulkTargetStatus] = useState<'IN_STOCK' | 'IN_PROGRESS' | 'MAINTENANCE' | 'RETIRED' | null>(null);
   const [bulkTargetPort, setBulkTargetPort] = useState<Location | ''>('');
+  const [bulkMaintenanceType, setBulkMaintenanceType] = useState<MaintenanceServiceType>('ROUTINE_INSPECTION');
+  const [showBulkMaintenanceModal, setShowBulkMaintenanceModal] = useState(false);
+  const [bulkMaintenanceStatus, setBulkMaintenanceStatus] = useState<'COMPLETED' | 'IN_PROGRESS' | 'SCHEDULED'>('COMPLETED');
+  const [bulkMaintenanceDate, setBulkMaintenanceDate] = useState(new Date().toISOString().slice(0, 10));
+  const [bulkMaintenanceTechnician, setBulkMaintenanceTechnician] = useState(currentUser.name || '');
+  const [bulkMaintenanceDescription, setBulkMaintenanceDescription] = useState('');
+  const [bulkMaintenanceParts, setBulkMaintenanceParts] = useState('');
+
+  const handleBulkMaintenanceTypeUpdate = async () => {
+    if (isReadOnly || selectedIds.size === 0) return;
+    const selectedUnits = stock.filter(unit => selectedIds.has(unit.id));
+    const latestByUnit = new Map<string, GensetMaintenanceLog>();
+    maintenanceLogs
+      .slice()
+      .sort((a, b) => (b.serviceDate || '').localeCompare(a.serviceDate || ''))
+      .forEach(log => {
+        const key = log.gensetNumber.trim().toUpperCase();
+        if (!latestByUnit.has(key)) latestByUnit.set(key, log);
+      });
+    const existing = selectedUnits.filter(unit => latestByUnit.has(unit.unitNumber.trim().toUpperCase()));
+    if (!existing.length) {
+      window.alert(isAr ? 'لا توجد سجلات صيانة حالية للمولدات المحددة. استخدم إضافة سجلات صيانة.' : 'No existing maintenance records found. Use ADD MAINT RECORDS.');
+      return;
+    }
+    if (!window.confirm(isAr ? 'سيتم تحديث نوع الصيانة لآخر سجل لكل مولد محدد لديه سجل. هل تريد المتابعة؟' : 'Update the service type of the latest maintenance record for each selected genset that has a record?')) return;
+    for (const unit of existing) {
+      const log = latestByUnit.get(unit.unitNumber.trim().toUpperCase());
+      if (log) await db.updateMaintenanceLog({ ...log, serviceType: bulkMaintenanceType });
+    }
+    setDbVersion(v => v + 1);
+    setSelectedIds(new Set());
+    setBulkTargetStatus(null);
+    setBulkTargetPort('');
+    window.alert(isAr ? 'تم تحديث نوع الصيانة بنجاح.' : 'Maintenance service type updated successfully.');
+  };
+
+  const handleBulkMaintenanceAdd = async () => {
+    if (isReadOnly || selectedIds.size === 0) return;
+    const selectedUnits = stock.filter(unit => selectedIds.has(unit.id));
+    if (!selectedUnits.length) return;
+    if (!window.confirm(isAr ? 'إضافة سجل صيانة جديد لكل مولد محدد؟' : 'Add a new maintenance record for every selected genset?')) return;
+    for (const unit of selectedUnits) {
+      await db.addMaintenanceLog({
+        id: `maint-bulk-${unit.id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        gensetNumber: unit.unitNumber.toUpperCase().trim(),
+        serviceDate: bulkMaintenanceDate,
+        serviceType: bulkMaintenanceType,
+        technician: bulkMaintenanceTechnician || currentUser.name || 'Technician',
+        location: bulkTargetPort || unit.location,
+        runningHours: unit.runningHours || 0,
+        cost: 0,
+        completedDate: bulkMaintenanceStatus === 'COMPLETED' ? bulkMaintenanceDate : '',
+        status: bulkMaintenanceStatus,
+        description: bulkMaintenanceDescription.trim(),
+        partsReplaced: bulkMaintenanceParts.trim(),
+        nextServiceDue: '',
+        createdAt: new Date().toISOString()
+      });
+    }
+    setDbVersion(v => v + 1);
+    setShowBulkMaintenanceModal(false);
+    setSelectedIds(new Set());
+    setBulkTargetStatus(null);
+    setBulkTargetPort('');
+    setBulkMaintenanceDescription('');
+    setBulkMaintenanceParts('');
+    window.alert(isAr ? 'تمت إضافة سجلات الصيانة للمولدات المحددة.' : 'Maintenance records added successfully.');
+  };
 
   const handleFleetBoardBulkApply = async () => {
     if (isReadOnly || selectedIds.size === 0 || (!bulkTargetStatus && !bulkTargetPort)) return;
@@ -633,6 +701,15 @@ const StockManagement: React.FC = () => {
                 >
                   ⚠ {isAr ? 'تحديث مفقود' : 'MISSING UPDATE'}
                 </button>
+                <select value={bulkMaintenanceType} onChange={e => setBulkMaintenanceType(e.target.value as MaintenanceServiceType)} className="h-7 max-w-[170px] rounded-lg border border-amber-400/30 bg-black/20 px-2 text-[8px] font-black uppercase text-white outline-none" aria-label="MAINTENANCE SERVICE TYPE">
+                  {Object.entries(SERVICE_TYPE_CONFIG).map(([key, cfg]) => <option key={key} value={key} className="bg-slate-900">{isAr ? cfg.labelAr : cfg.labelEn}</option>)}
+                </select>
+                <button type="button" onClick={handleBulkMaintenanceTypeUpdate} className="px-2.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-[8px] font-black uppercase">
+                  {isAr ? 'تحديث النوع' : 'UPDATE SERVICE TYPE'}
+                </button>
+                <button type="button" onClick={() => setShowBulkMaintenanceModal(true)} className="px-2.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-[8px] font-black uppercase">
+                  + {isAr ? 'إضافة سجلات صيانة' : 'ADD MAINT RECORDS'}
+                </button>
                 <button type="button" disabled={!bulkTargetStatus && !bulkTargetPort} onClick={handleFleetBoardBulkApply} className="px-3 py-1.5 rounded-lg bg-[#C2A378] text-black text-[8px] font-black uppercase disabled:opacity-30 disabled:cursor-not-allowed">
                   ✓ {isAr ? 'تأكيد التغييرات' : 'CONFIRM CHANGES'}
                 </button>
@@ -880,6 +957,49 @@ const StockManagement: React.FC = () => {
                   })}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showBulkMaintenanceModal && (
+        <div className="fixed inset-0 bg-[#3a3833]/80 backdrop-blur-md z-[200] flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-lg w-full border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div className="p-4 bg-[#3a3833] text-white flex items-center justify-between">
+              <div><h3 className="font-black uppercase text-sm">{isAr ? 'إضافة سجلات صيانة جماعية' : 'BULK MAINTENANCE RECORDS'}</h3><p className="text-[8px] text-[#C2A378] font-bold">{selectedIds.size} {isAr ? 'مولد محدد' : 'GENSET(S) SELECTED'}</p></div>
+              <button type="button" onClick={() => setShowBulkMaintenanceModal(false)} className="text-white">✕</button>
+            </div>
+            <div className="p-5 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <label className="text-[8px] font-black uppercase text-slate-400">{isAr ? 'نوع الصيانة' : 'Service Type'}
+                  <select value={bulkMaintenanceType} onChange={e => setBulkMaintenanceType(e.target.value as MaintenanceServiceType)} className="mt-1 w-full p-2.5 rounded-xl border bg-white dark:bg-slate-800 text-black dark:text-white font-black text-xs">
+                    {Object.entries(SERVICE_TYPE_CONFIG).map(([key, cfg]) => <option key={key} value={key}>{isAr ? cfg.labelAr : cfg.labelEn}</option>)}
+                  </select>
+                </label>
+                <label className="text-[8px] font-black uppercase text-slate-400">{isAr ? 'تاريخ الخدمة' : 'Service Date'}
+                  <input type="date" value={bulkMaintenanceDate} onChange={e => setBulkMaintenanceDate(e.target.value)} className="mt-1 w-full p-2.5 rounded-xl border bg-white dark:bg-slate-800 text-black dark:text-white font-black text-xs" />
+                </label>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="text-[8px] font-black uppercase text-slate-400">{isAr ? 'حالة الصيانة' : 'Job Status'}
+                  <select value={bulkMaintenanceStatus} onChange={e => setBulkMaintenanceStatus(e.target.value as any)} className="mt-1 w-full p-2.5 rounded-xl border bg-white dark:bg-slate-800 text-black dark:text-white font-black text-xs">
+                    <option value="COMPLETED">{isAr ? 'مكتمل' : 'COMPLETED'}</option><option value="IN_PROGRESS">{isAr ? 'قيد التنفيذ' : 'IN PROGRESS'}</option><option value="SCHEDULED">{isAr ? 'مجدول' : 'SCHEDULED'}</option>
+                  </select>
+                </label>
+                <label className="text-[8px] font-black uppercase text-slate-400">{isAr ? 'الفني' : 'Technician'}
+                  <input value={bulkMaintenanceTechnician} onChange={e => setBulkMaintenanceTechnician(e.target.value)} className="mt-1 w-full p-2.5 rounded-xl border bg-white dark:bg-slate-800 text-black dark:text-white font-bold text-xs" />
+                </label>
+              </div>
+              <label className="block text-[8px] font-black uppercase text-slate-400">{isAr ? 'تفاصيل العمل' : 'Work Details'}
+                <textarea rows={2} value={bulkMaintenanceDescription} onChange={e => setBulkMaintenanceDescription(e.target.value)} className="mt-1 w-full p-2.5 rounded-xl border bg-white dark:bg-slate-800 text-black dark:text-white text-xs resize-none" />
+              </label>
+              <label className="block text-[8px] font-black uppercase text-slate-400">{isAr ? 'قطع الغيار / المستهلكات' : 'Parts / Consumables'}
+                <input value={bulkMaintenanceParts} onChange={e => setBulkMaintenanceParts(e.target.value)} className="mt-1 w-full p-2.5 rounded-xl border bg-white dark:bg-slate-800 text-black dark:text-white text-xs" />
+              </label>
+              <div className="flex gap-2 pt-1">
+                <button type="button" onClick={() => setShowBulkMaintenanceModal(false)} className="w-1/3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-black text-[9px] uppercase">{isAr ? 'إلغاء' : 'CANCEL'}</button>
+                <button type="button" onClick={handleBulkMaintenanceAdd} className="w-2/3 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-[9px] uppercase">{isAr ? 'حفظ السجلات' : 'ADD RECORDS'}</button>
+              </div>
             </div>
           </div>
         </div>
