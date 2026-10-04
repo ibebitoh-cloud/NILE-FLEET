@@ -1892,8 +1892,8 @@ const MasterView: React.FC = () => {
               <div className="flex items-center gap-3">
                  <span className="w-10 h-10 bg-[#C2A378] text-[#3a3833] rounded-full flex items-center justify-center font-black text-sm">{selectedRowIds.size}</span>
                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-[#C2A378]">{isAr ? 'وضع الإجراء المجمع' : 'Bulk Action Mode'}</p>
-                    <p className="text-[9px] font-bold text-slate-400">{isAr ? 'عمليات مختارة' : 'Selected Entries'}</p>
+                    <p className="text-[10px] font-black uppercase tracking-tight text-[#C2A378]">{isAr ? 'إجراء مجمع' : 'BULK ACTION'}</p>
+                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">{isAr ? 'محدد' : 'SELECTED'}</p>
                  </div>
               </div>
               <div className="h-10 w-px bg-white/10"></div>
