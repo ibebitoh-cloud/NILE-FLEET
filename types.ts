@@ -264,6 +264,19 @@ export interface Reservation {
   shipperAddress?: string;
 }
 
+export interface GensetReplacement {
+  id: string;
+  operationId: string;
+  originalGensetNumber: string;
+  originalPort: Location;
+  replacementGensetNumber: string;
+  replacementSourcePort: Location;
+  reason: 'BREAKDOWN' | 'DAMAGED' | 'OTHER';
+  replacedAt: string;
+  replacedBy?: string;
+  notes?: string;
+}
+
 export interface Operation {
   id: string;
   customerId?: string;
