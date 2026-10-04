@@ -37,7 +37,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo' }).format(new Date());
 
   const portData = useMemo(() => {
-    const locations = ['DAM', 'ALEX', 'GOUDA', 'SOKHNA', 'SCCT', 'PSD', 'MAL', 'WORKSHOP'] as const;
+    const locations = ['DAM', 'ALEX', 'GOUDA', 'SOKHNA', 'SCCT', 'PSD', 'WORKSHOP'] as const;
     const activeOperationUnits = new Set(ops.filter(o => o.status === 'IN PROGRESS' && o.gensetNumber?.trim()).map(o => o.gensetNumber.trim().toUpperCase()));
     const byPort: Record<string, { stockCount: number; maintenanceCount: number; preorderCount: number; active: number; surplus: number; deficit: number }> = {};
     locations.forEach(port => { byPort[port] = { stockCount: 0, maintenanceCount: 0, preorderCount: 0, active: 0, surplus: 0, deficit: 0 }; });
