@@ -407,17 +407,17 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBackToHome }) => {
                   </div>
                 ) : (
                   <div className="w-full flex-1 min-h-[390px] flex flex-col items-center justify-center text-center relative overflow-hidden">
-                    <div className="relative z-10 w-full max-w-sm" dir={isAr ? 'rtl' : 'ltr'}>
-                      <div className="relative">
+                    <div className="relative z-10 w-full max-w-md mx-auto flex flex-col items-center text-center" dir={isAr ? 'rtl' : 'ltr'}>
+                      <div className="relative w-full flex flex-col items-center text-center">
                         <p className="relative z-10 text-[#C2A378] text-[9px] sm:text-[10px] font-black tracking-[0.28em] leading-none">{isAr ? 'أسطول النيل' : 'NILE FLEET'}</p>
-                        <h3 className={`relative z-10 mt-3 text-white text-[2rem] sm:text-4xl font-black tracking-[-0.045em] leading-tight ${isAr ? 'not-italic' : 'uppercase italic'}`}>{isAr ? <>مرحباً <span className="text-[#C2A378]">بعودتكم</span></> : <>WELCOME <span className="inline-block text-[#C2A378]">BACK</span></>}</h3>
-                        <div className="relative z-10 mt-4 inline-flex items-center gap-2 text-xl sm:text-2xl font-black tracking-[0.18em] text-white">
+                        <h3 className={`relative z-10 mt-3 w-full text-white text-[2rem] sm:text-4xl font-black tracking-[-0.045em] leading-tight text-center ${isAr ? 'not-italic' : 'uppercase italic'}`}>{isAr ? <>مرحباً <span className="text-[#C2A378]">بعودتكم</span></> : <>WELCOME <span className="inline-block text-[#C2A378]">BACK</span></>}</h3>
+                        <div className="relative z-10 mt-4 inline-flex items-center justify-center gap-2 text-xl sm:text-2xl font-black tracking-[0.18em] text-white text-center">
                           <span>{isAr ? 'بيبِيتو' : 'B'}</span>{!isAr && <><span>E</span><span>B</span><span>I</span><span>T</span><span>O</span></>}
                         </div>
-                        <p className="relative z-10 max-w-xs mx-auto mt-4 text-slate-300 text-[10px] sm:text-xs font-bold leading-relaxed tracking-wide">{welcomeQuote}</p>
+                        <p className="relative z-10 w-full max-w-md mx-auto mt-4 text-slate-300 text-[10px] sm:text-xs font-bold leading-relaxed tracking-wide">{welcomeQuote}</p>
                       </div>
-                      <button type="button" onClick={enterApp} className="mt-5 px-9 py-3 bg-[#001F3F] hover:bg-[#002b57] border border-[#C2A378]/40 text-white font-black rounded-full uppercase tracking-[0.3em] text-[9px] transition-all active:scale-[0.97] shadow-[0_0_30px_rgba(194,163,120,.12)]">{isAr ? 'دخول إلى النظام' : 'ENTER SYSTEM'}</button>
-                      <div className="mt-5 text-[9px] font-black uppercase tracking-[0.35em] text-[#C2A378]">POWERED BY <span className="text-white">BEBITO</span></div>
+                      <button type="button" onClick={enterApp} className="mt-6 px-9 py-3 bg-[#001F3F] hover:bg-[#002b57] border border-[#C2A378]/40 text-white font-black rounded-full uppercase tracking-[0.3em] text-[9px] transition-all active:scale-[0.97] shadow-[0_0_30px_rgba(194,163,120,.12)]">{isAr ? 'دخول إلى النظام' : 'ENTER SYSTEM'}</button>
+                      <div className="mt-5 w-full text-center text-[9px] font-black uppercase tracking-[0.35em] text-[#C2A378]">POWERED BY <span className="text-white">BEBITO</span></div>
 
                   </div>
                                    </div>
