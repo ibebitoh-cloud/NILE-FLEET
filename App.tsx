@@ -8,6 +8,26 @@ import { loginWithPassword, logout as supabaseLogout, getCurrentSessionUser } fr
 import { discoveryQueue, registerDynamicTranslations, translateUiText } from './translations';
 import { translateBusinessEntities, getSafeApiKey } from './services/aiService';
 
+const lazyWithChunkRecovery = <T extends React.ComponentType<any>>(loader: () => Promise<{ default: T }>) =>
+  lazy(async () => {
+    try {
+      return await loader();
+    } catch (error) {
+      // Cloudflare Pages can briefly serve an older HTML shell whose hashed
+      // lazy chunk was removed by a newer deployment. Reload once so the
+      // browser gets the current asset manifest instead of leaving the app
+      // stuck on "Failed to fetch dynamically imported module".
+      const key = 'nilefleet_chunk_recovery';
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1');
+        window.location.reload();
+        await new Promise<never>(() => {});
+      }
+      sessionStorage.removeItem(key);
+      throw error;
+    }
+  });
+
 const Login = lazyWithChunkRecovery(() => import('./screens/Login'));
 const CompanyHome = lazyWithChunkRecovery(() => import('./screens/CompanyHomeV4'));
 const Dashboard = lazyWithChunkRecovery(() => import('./screens/Dashboard'));
@@ -31,26 +51,6 @@ const BookingInvoices = lazyWithChunkRecovery(() => import('./screens/BookingInv
 const DaliKnowledgeCenter = lazyWithChunkRecovery(() => import('./screens/DaliKnowledgeCenter'));
 const Organization = lazyWithChunkRecovery(() => import('./screens/Organization'));
 const Notifications = lazyWithChunkRecovery(() => import('./screens/Notifications'));
-const lazyWithChunkRecovery = <T extends React.ComponentType<any>>(loader: () => Promise<{ default: T }>) =>
-  lazy(async () => {
-    try {
-      return await loader();
-    } catch (error) {
-      // Cloudflare Pages can briefly serve an older HTML shell whose hashed
-      // lazy chunk was removed by a newer deployment. Reload once so the
-      // browser gets the current asset manifest instead of leaving the app
-      // stuck on "Failed to fetch dynamically imported module".
-      const key = 'nilefleet_chunk_recovery';
-      if (!sessionStorage.getItem(key)) {
-        sessionStorage.setItem(key, '1');
-        window.location.reload();
-        await new Promise<never>(() => {});
-      }
-      sessionStorage.removeItem(key);
-      throw error;
-    }
-  });
-
 type Language = 'en' | 'ar';
 const getDefaultAllowedScreens = (role: UserRole): string[] => {
   if (role === UserRole.ADMIN) return ['dali-knowledge', 'dashboard', 'analytics', 'master-view', 'port-gate', 'operations', 'booking-invoices', 'financials', 'intelligence', 'reports', 'stock', 'reservations', 'customers', 'user-mgmt', 'organization', 'customer-prices', 'financials', 'support', 'notifications', 'system-log', 'user-settings'];
