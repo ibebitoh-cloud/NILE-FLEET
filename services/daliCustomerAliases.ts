@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { DALI_TRAINING_CREATOR_ID } from './daliKnowledge';
 
 export type DaliCustomerAlias = {
   id: string;
@@ -50,6 +51,7 @@ export async function saveDaliCustomerAlias(input: {
 
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user?.id) throw new Error('No active user');
+  if (auth.user.id !== DALI_TRAINING_CREATOR_ID) throw new Error('Only the Manual Training Node creator can add or edit training data.');
 
   const { data, error } = await supabase
     .from('dali_customer_aliases')
@@ -70,6 +72,9 @@ export async function saveDaliCustomerAlias(input: {
 }
 
 export async function deleteDaliCustomerAlias(id: string): Promise<void> {
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user?.id) throw new Error('No active user');
+  if (auth.user.id !== DALI_TRAINING_CREATOR_ID) throw new Error('Only the Manual Training Node creator can add or edit training data.');
   const { error } = await supabase
     .from('dali_customer_aliases')
     .update({ active: false })
