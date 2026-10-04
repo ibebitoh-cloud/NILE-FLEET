@@ -88,7 +88,7 @@ const rememberUserScreen = (u: User, screen: string) => {
   } catch {}
 };
 
-export type ThemeMode = 'day' | 'night';
+export type ThemeMode = 'day' | 'night' | 'steel' | 'ocean' | 'graphite' | 'light';
 
 interface LanguageContextType {
   lang: Language;
@@ -139,7 +139,8 @@ const App: React.FC = () => {
   
   const [theme, setTheme] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem('theme');
-    return saved === 'day' || saved === 'night' ? saved : 'night';
+    const allowed: ThemeMode[] = ['day', 'night', 'steel', 'ocean', 'graphite', 'light'];
+    return allowed.includes(saved as ThemeMode) ? saved as ThemeMode : 'night';
   });
 
   const [scale, setScale] = useState<number>(() => {
@@ -201,7 +202,7 @@ const App: React.FC = () => {
     localStorage.setItem('app_lang', lang);
   }, [lang]);
 
-  const isDark = theme === 'night';
+  const isDark = theme === 'night' || theme === 'steel' || theme === 'ocean' || theme === 'graphite';
 
   const updateCustomTheme = useCallback((_colors: {
     bg: string; text: string; textSec: string; card: string; accent: string;
@@ -215,8 +216,9 @@ const App: React.FC = () => {
   }), [theme, scale, isMuted, isDark, updateCustomTheme]);
 
   useEffect(() => {
-    document.body.classList.remove('theme-day', 'theme-night');
-    document.body.classList.add(isDark ? 'theme-night' : 'theme-day');
+    const themeClasses = ['theme-day', 'theme-night', 'theme-steel', 'theme-ocean', 'theme-graphite', 'theme-light'];
+    document.body.classList.remove(...themeClasses);
+    document.body.classList.add(isDark ? 'theme-night' : 'theme-day', `theme-${theme}`);
     document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
     localStorage.setItem('theme', theme);
   }, [theme, isDark]);
