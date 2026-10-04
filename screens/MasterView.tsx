@@ -559,6 +559,9 @@ const MasterView: React.FC = () => {
   const [replacementReason, setReplacementReason] = useState<GensetReplacement['reason']>('BREAKDOWN');
   const [replacementGensetNumber, setReplacementGensetNumber] = useState('');
   const [replacementNotes, setReplacementNotes] = useState('');
+  const masterScrollRef = useRef<HTMLDivElement>(null);
+  const masterScrollbarRef = useRef<HTMLDivElement>(null);
+  const [masterScrollWidth, setMasterScrollWidth] = useState(0);
 
   useEffect(() => {
     const closeStagingOnNavigation = () => {
@@ -1492,6 +1495,35 @@ const MasterView: React.FC = () => {
     XLSX.writeFile(workbook, `Nile_Fleet_Master_View_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
+  useEffect(() => {
+    const scrollEl = masterScrollRef.current;
+    if (!scrollEl) return;
+    const updateWidth = () => setMasterScrollWidth(scrollEl.scrollWidth);
+    updateWidth();
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateWidth) : null;
+    observer?.observe(scrollEl);
+    window.addEventListener('resize', updateWidth);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', updateWidth);
+    };
+  }, [filteredAndSortedOps.length, viewPrefs.scale]);
+
+  useEffect(() => {
+    const scrollEl = masterScrollRef.current;
+    const barEl = masterScrollbarRef.current;
+    if (!scrollEl || !barEl) return;
+    const fromTable = () => { if (Math.abs(barEl.scrollLeft - scrollEl.scrollLeft) > 1) barEl.scrollLeft = scrollEl.scrollLeft; };
+    const fromBar = () => { if (Math.abs(scrollEl.scrollLeft - barEl.scrollLeft) > 1) scrollEl.scrollLeft = barEl.scrollLeft; };
+    scrollEl.addEventListener('scroll', fromTable, { passive: true });
+    barEl.addEventListener('scroll', fromBar, { passive: true });
+    fromTable();
+    return () => {
+      scrollEl.removeEventListener('scroll', fromTable);
+      barEl.removeEventListener('scroll', fromBar);
+    };
+  }, [masterScrollWidth]);
+
   const dynamicCellStyle = { paddingTop: `${viewPrefs.density}px`, paddingBottom: `${viewPrefs.density}px` };
   const globalScaleStyle = { fontSize: `${(viewPrefs.scale / 100) * 10}px` };
 
@@ -1560,7 +1592,7 @@ const MasterView: React.FC = () => {
       </div>
 
       <div className={`rounded-3xl shadow-xl border overflow-hidden w-full ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'}`}>
-        <div className="overflow-x-auto overflow-y-visible">
+        <div ref={masterScrollRef} className="overflow-x-auto overflow-y-visible">
           <table className={`w-full ${isAr ? 'text-right' : 'text-left'} whitespace-nowrap border-collapse`}>
             <thead className={`text-white font-black uppercase tracking-widest sticky top-0 z-40 text-[9px] ${isDark ? 'bg-[#001224]' : 'bg-[#3a3833]'}`}>
               <tr>
@@ -1903,6 +1935,14 @@ const MasterView: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {masterScrollWidth > 0 && (
+        <div className="hidden md:block fixed left-3 right-3 bottom-3 z-[90] rounded-xl border border-slate-300 dark:border-slate-700 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md shadow-xl px-2 py-1" title={isAr ? 'شريط تمرير أفقي ثابت للسجل الرئيسي' : 'Fixed horizontal scrollbar for Master View'}>
+          <div ref={masterScrollbarRef} className="overflow-x-auto overflow-y-hidden h-4">
+            <div style={{ width: masterScrollWidth, height: 1 }} />
+          </div>
+        </div>
+      )}
 
       {selectedRowIds.size > 0 && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-10 duration-500">
