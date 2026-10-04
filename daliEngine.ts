@@ -234,6 +234,16 @@ export function answerDali(question: string, data: DaliData, contextKey: string 
   const lastCtx = lastCtxByKey.get(contextKey) || {};
   const range = findRange(nq, now);
 
+  // Context state must exist before any early-return intent (audit/profile).
+  // The previous implementation declared this below those intents, causing a
+  // temporal-dead-zone runtime error and sending DALI questions to fallback.
+  let customer: string | undefined;
+  let ports: string[] | undefined;
+  let unit: string | undefined;
+  const remember = (intent: string) => {
+    lastCtxByKey.set(contextKey, { customer, ports, unit, intent });
+  };
+
   // deterministic data audit / consistency checks
   if (has(nq, ['audit', 'data audit', 'contradiction', 'contradictions', 'conflict', 'conflicts', 'inconsistency', 'inconsistencies', 'راجع السيستم', 'راجع البيانات', 'تعارض', 'تعارضات', 'تناقض', 'تناقضات', 'مشاكل البيانات', 'مراجعه البيانات'])) {
     const findings = auditDaliData(data);
@@ -245,52 +255,384 @@ export function answerDali(question: string, data: DaliData, contextKey: string 
     return L('Data audit found ' + findings.length + ' finding(s): ' + critical + ' critical, ' + warning + ' warning.\n' + lines.join('\n'), 'مراجعة البيانات لقت ' + findings.length + ' ملاحظة: ' + critical + ' حرجة، ' + warning + ' تحذير.\n' + lines.map(x => x.replace('[CRITICAL]', '[حرج]').replace('[WARNING]', '[تحذير]')).join('\n'));
   }
 
+  // ───────── DALI profile / capability questions ─────────
+  const daliAge = (() => {
+    const birth = new Date('2025-10-03T00:00:00');
+    let years = now.getFullYear() - birth.getFullYear();
+    if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) years -= 1;
+    return Math.max(0, years);
+  })();
+  const daliAgeAr = daliAge === 0 ? 'لسه ما كملتش سنة' : daliAge === 1 ? 'سنة واحدة' : daliAge === 2 ? 'سنتين' : `${daliAge} سنة`;
+
+  const isWhoDali = /^(who are you|who is dali|what is dali|tell me about yourself|مين انت|مين دالي|من هو دالي|ما هو دالي|انت مين|دالي مين|دالي هو مين)$/.test(nq);
+  const isCapabilities = /^(what can you do|what can dali do|what are you capable of|what do you do|help|تقدر تعمل ايه|تقدر تعمل اية|دالي يقدر يعمل ايه|دالي يقدر يعمل اية|دالي يقدر يعمل اي|دالي يعمل ايه|دالي يعمل اية|دالي يعمل اي|ايه اللي تقدر تعمله|ايه اللي تقدر تعملها|ايه اللي دالي يقدر يعمله|ماذا تستطيع|قدرات دالي|قدراتك ايه|قدراتك ايه يا دالي)$/.test(nq);
+  const isLearning = /^(what have you learned|what did you learn|what do you know about nile fleet|what do you know|ايه اللي اتعلمته|إيه اللي اتعلمته|ماذا تعلمت|اتعلمت ايه|دالي اتعلم ايه|ايه اللي دالي اتعلمه)$/.test(nq);
+  const isHowWorks = /^(how does dali work|how do you work|how does it work|ازاي دالي بيشتغل|ازاى دالي بيشتغل|ازاي بتشتغل|إزاي دالي بيشتغل|ازاي بتفكر|كيف يعمل دالي|طريقة شغل دالي)$/.test(nq);
+  const isChanges = /^(do you change data|does dali change data|can you change data|هل دالي بيغير البيانات|هل دالي يغير البيانات|دالي بيغير البيانات|دالي يقدر يغير البيانات|هل بتغير البيانات|هل تستطيع تغيير البيانات)$/.test(nq);
+  const isBelongs = /^(who does dali belong to|who is dali for|دالي تبع مين|دالي تابع لمين|دالي تابع لمين في الشركة|دالي تابع لمين في السيستم|دالي تبع مين في الشركة)$/.test(nq);
+
+  if (isWhoDali) {
+    remember('dali_identity');
+    return L(
+`I'm DALI 🤖
+
+I'm the intelligence layer inside Nile Fleet, created by Bebito to help users understand and work with the system's operational data, especially the Genset Department.
+
+I'm ${daliAge} ${daliAge === 1 ? 'year' : 'years'} old, and I'm still learning. I started as an idea and grew through the real work represented in the system.
+
+I'm not just a search box. My role is to understand a question, identify the related data, connect the relevant records, and explain the result in its operational context.
+
+I work across gensets and stock, operations, bookings, containers, customers, ports and locations, maintenance and workshop, fuel and gas, prices and invoices, payments, and reporting.
+
+A number by itself is not always enough. If you ask about a genset, for example, the useful answer may also depend on its status, location, operation, booking, container, or maintenance history.
+
+I search the available system data before guessing. If data is missing or conflicting, I say so instead of presenting an assumption as a fact.
+
+If I find a problem, I explain what I found and what could be corrected; I do not silently change operational data.
+
+I'm not an employee, manager, or decision-maker in the administrative hierarchy. I'm the intelligence layer inside the system.
+
+Suggested questions:
+• What can DALI do?
+• What have you learned?
+• How does DALI work?
+• Does DALI change data?
+• Who does DALI belong to?`,
+`أنا دالي 🤖
+
+أنا طبقة الذكاء داخل نظام Nile Fleet، أنشأني بيبيتو عشان أساعد المستخدمين في فهم والتعامل مع بيانات النظام، وخصوصًا بيانات قسم المولدات.
+
+عندي ${daliAgeAr}، ولسه بتعلم. بدأت كفكرة، وكبرت مع شغل النظام والبيانات الفعلية الموجودة فيه.
+
+أنا مش مجرد خانة بحث. دوري إني أفهم السؤال، أحدد البيانات المرتبطة بيه، أربط السجلات المهمة ببعض، وأشرح النتيجة في سياق التشغيل.
+
+بتعامل مع المولدات والمخزون، التشغيل والعمليات، الحجوزات والحاويات، العملاء، الموانئ والمواقع، الصيانة والورشة، الوقود والغاز، الأسعار والفواتير، المدفوعات والتقارير.
+
+الرقم لوحده مش دايمًا كفاية. لو سألتني عن مولد مثلًا، الإجابة المفيدة ممكن تعتمد كمان على حالته، مكانه، العملية، الحجز، الحاوية أو سجل الصيانة المرتبط بيه.
+
+أنا أبحث في بيانات السيستم المتاحة قبل ما أخمن. ولو البيانات ناقصة أو فيها تعارض، بقولك ده بدل ما أقدم افتراض على إنه حقيقة.
+
+ولو اكتشفت مشكلة، أوضح لك اللي لقيته والتصحيح المقترح؛ مش بغير بيانات التشغيل من نفسي أو بشكل صامت.
+
+أنا مش موظف أو مدير أو صاحب قرار في الهيكل الإداري. أنا طبقة الذكاء داخل النظام.
+
+أسئلة مقترحة:
+• دالي يقدر يعمل إيه؟
+• إيه اللي اتعلمته؟
+• إزاي دالي بيشتغل؟
+• هل دالي بيغير البيانات؟
+• دالي تبع مين؟`
+    );
+  }
+
+  if (isCapabilities) {
+    remember('dali_capabilities');
+    return L(
+`WHAT DALI CAN DO
+
+I can work across the system as connected operational data, not as isolated screens.
+
+🔎 DATA & SEARCH
+• Search current system data for gensets, operations, reservations, bookings, containers, customers, ports, locations, maintenance, workshop records, fuel/gas, prices, invoices, payments, and reports.
+• Find related information even when you do not know which screen contains it.
+• Search before making assumptions.
+
+⚙️ GENSET FLEET
+• Check a genset's status, location, and recorded operational context.
+• Review current or recent operations and maintenance history.
+• Compare fleet status and distribution across ports and locations.
+• Identify relationships between stock status and active operations.
+
+📦 OPERATIONS & BOOKINGS
+• Connect booking → container → customer → genset → operation → price → invoice when those relationships exist.
+• Find operations by booking, container, customer, genset, date, status, or port.
+• Check whether requested gensets in reservations are linked to actual operations.
+• Detect missing or conflicting operational relationships.
+
+📍 PORTS & LOCATIONS
+• Analyze how gensets are distributed across ports and locations.
+• Compare available, operating, maintenance, workshop, and other recorded statuses.
+• Trace location information when it is recorded in the system.
+
+🔧 MAINTENANCE & WORKSHOP
+• Find gensets in maintenance or workshop.
+• Review service dates, service types, costs, status, and maintenance history.
+• Identify gensets due or overdue for maintenance when the required data exists.
+
+⛽ FUEL & GAS
+• Calculate recorded fuel/gas quantities.
+• Break usage down by port, customer, operation, or other available dimensions.
+• Connect fuel/gas records to the relevant operation and genset.
+• Flag missing fuel information instead of inventing a value.
+
+💰 FINANCIALS
+• Review operation values, VAT, invoices, payments, and outstanding balances.
+• Connect financial records to customers and operations.
+• Find recorded unpaid or overdue invoices.
+• Summarize financial information by customer or period.
+
+👤 CUSTOMERS
+• Search customer records and their related operations, reservations, invoices, and payments.
+• Recognize trained aliases and known naming variations.
+• Use IDs and existing relationships when available instead of relying only on names.
+
+📊 ANALYSIS
+• Summarize fleet and operational data.
+• Compare customers, ports, statuses, and periods.
+• Explain what the numbers mean in an operational context, not just return totals.
+
+🚨 DATA CONSISTENCY
+• Look for contradictions in the live data.
+• Detect issues such as conflicting genset status/location, duplicate active assignments, duplicate active containers, and booking/operation count differences.
+• Explain the affected records when a problem is found.
+
+The core idea is:
+SEARCH → CONNECT → UNDERSTAND → ANALYZE → DETECT → EXPLAIN.`,
+`إيه اللي دالي يقدر يعمله؟
+
+أنا أتعامل مع بيانات النظام كمنظومة مترابطة، مش كشاشات منفصلة.
+
+🔎 البحث وفهم البيانات
+• أبحث في بيانات السيستم الحالية عن المولدات، العمليات، الحجوزات، البوكينجات، الحاويات، العملاء، الموانئ، المواقع، الصيانة، الورشة، الوقود والغاز، الأسعار، الفواتير، المدفوعات والتقارير.
+• أوصل للمعلومات المرتبطة حتى لو مش عارف هي موجودة في أنهي شاشة.
+• أبحث في البيانات قبل ما أفترض أو أخمن.
+
+⚙️ أسطول المولدات
+• أعرف حالة المولد ومكانه والسياق التشغيلي المسجل عنه.
+• أراجع تشغيله الحالي أو أحدث تشغيل وسجل الصيانة.
+• أقارن حالة وتوزيع الأسطول بين الموانئ والمواقع.
+• أربط حالة المخزون بالعمليات النشطة عند توفر البيانات.
+
+📦 التشغيل والحجوزات
+• أربط الحجز → الحاوية → العميل → المولد → العملية → السعر → الفاتورة عندما تكون العلاقات موجودة.
+• أبحث عن العمليات برقم الحجز أو الحاوية أو العميل أو المولد أو التاريخ أو الحالة أو الميناء.
+• أراجع هل المولدات المطلوبة في الحجوزات مرتبطة بعمليات فعلية.
+• أكتشف العلاقات الناقصة أو المتعارضة.
+
+📍 الموانئ والمواقع
+• أحلل توزيع المولدات على الموانئ والمواقع.
+• أقارن المتاح والمستخدم والصيانة والورشة والحالات الأخرى المسجلة.
+• أتابع بيانات الموقع المسجلة عند تحليل الحركة والتوزيع.
+
+🔧 الصيانة والورشة
+• أبحث عن المولدات الموجودة في الصيانة أو الورشة.
+• أراجع تاريخ الصيانة ونوع العمل والتكلفة والحالة.
+• أحدد المولدات التي جاء موعد صيانتها أو تأخرت عندما تكون البيانات اللازمة موجودة.
+
+⛽ الوقود والغاز
+• أحسب كميات الوقود والغاز المسجلة.
+• أقسم الاستخدام حسب الميناء أو العميل أو العملية أو أي بُعد متاح.
+• أربط الوقود والغاز بالعملية والمولد.
+• لو البيانات ناقصة، أوضح إنها ناقصة بدل ما أخترع رقم.
+
+💰 الأسعار والفواتير والمدفوعات
+• أراجع قيم العمليات والـVAT والفواتير والمدفوعات والمتبقي.
+• أربط البيانات المالية بالعملاء والعمليات.
+• أبحث عن الفواتير غير المدفوعة أو المتأخرة المسجلة.
+• ألخص البيانات حسب العميل أو الفترة.
+
+👤 العملاء
+• أبحث عن العميل وعملياته وحجوزاته وفواتيره ومدفوعاته المرتبطة به.
+• أتعرف على الأسماء المستعارة والاختلافات المتدربة في النظام.
+• أستخدم الـID والعلاقات الموجودة بدل الاعتماد على الاسم فقط عندما يكون ذلك متاحًا.
+
+📊 التحليل
+• ألخص بيانات الأسطول والتشغيل.
+• أقارن العملاء والموانئ والحالات والفترات.
+• أشرح معنى الأرقام وعلاقتها ببعض، مش مجرد أديك إجمالي.
+
+🚨 مراجعة البيانات
+• أبحث عن التناقضات ومشاكل الاتساق.
+• أقدر أكتشف اختلاف حالة أو موقع المولد، تكرار استخدام مولد في عمليات نشطة، تكرار حاوية في عمليات نشطة، أو اختلاف عدد المولدات المطلوبة في الحجز عن العمليات المرتبطة.
+• لو لقيت مشكلة، أوضح السجلات المتأثرة.
+
+الفكرة الأساسية:
+أبحث → أربط → أفهم → أحلل → أكتشف → أوضح.`
+    );
+  }
+
+  if (isLearning) {
+    remember('dali_learning');
+    return L(
+`WHAT DALI HAS LEARNED
+
+I'm ${daliAge} ${daliAge === 1 ? 'year' : 'years'} old, and I'm still learning.
+
+My system knowledge has grown around the way Nile Fleet records and operates its work:
+
+• Gensets, fleet stock, statuses, and locations.
+• Operations, bookings, reservations, and containers.
+• Customers and their operational relationships.
+• Ports and movement/location information.
+• Maintenance and workshop records.
+• Fuel and gas recorded against operations.
+• Prices, invoices, payments, and outstanding balances.
+• Reporting and operational analysis.
+• Data relationships and consistency checks.
+
+The most important lesson is that operational data has context.
+
+A genset number is not just a number.
+A booking is not just a booking number.
+A customer is not just a name.
+A location is not just a place.
+
+Each can be connected to other records, and those relationships can change the meaning of the answer.
+
+That's why I try to understand the relationship between records before giving you a conclusion.`,
+`إيه اللي اتعلمته؟
+
+عندي ${daliAgeAr}، ولسه بتعلم.
+
+معرفتي بالنظام اتطورت من طريقة تسجيل وتشغيل شغل Nile Fleet، ومنها:
+
+• المولدات والمخزون والحالات والمواقع.
+• التشغيل والعمليات والحجوزات والحاويات.
+• العملاء والعلاقات التشغيلية المرتبطة بيهم.
+• الموانئ وبيانات الحركة والموقع.
+• الصيانة وسجلات الورشة.
+• الوقود والغاز المسجل على العمليات.
+• الأسعار والفواتير والمدفوعات والمتبقي.
+• التقارير والتحليل التشغيلي.
+• العلاقات بين البيانات ومراجعة الاتساق.
+
+وأهم حاجة اتعلمتها إن بيانات التشغيل ليها سياق.
+
+رقم المولد مش مجرد رقم.
+رقم الحجز مش مجرد رقم.
+اسم العميل مش مجرد اسم.
+والموقع مش مجرد مكان.
+
+كل معلومة ممكن تكون مرتبطة بمعلومات تانية، والعلاقات دي ممكن تغير معنى الإجابة.
+
+عشان كده بحاول أفهم العلاقة بين السجلات قبل ما أوصل لنتيجة.`
+    );
+  }
+
+  if (isHowWorks) {
+    remember('dali_method');
+    return L(
+`HOW DALI WORKS
+
+I treat a question as a reasoning path, not just a keyword search.
+
+1. UNDERSTAND — identify what you are actually asking about.
+2. FIND — locate the relevant records in the available system data.
+3. CONNECT — follow relationships between the relevant records.
+4. CHECK — look for missing or conflicting information.
+5. ANALYZE — calculate, compare, or interpret what the data shows.
+6. EXPLAIN — give you the result in operational context.
+7. QUALIFY — if the evidence is incomplete, I say what is known and what is not.
+
+So my basic workflow is:
+
+UNDERSTAND → SEARCH → CONNECT → CHECK → ANALYZE → EXPLAIN.
+
+The important part is that I do not treat a guess as a fact just because it sounds plausible.`,
+`إزاي دالي بيشتغل؟
+
+أنا بتعامل مع السؤال كمسار فهم، مش مجرد بحث عن كلمة.
+
+1. أفهم — أحدد إنت بتسأل عن إيه بالضبط.
+2. أبحث — أوصل للسجلات المرتبطة بالسؤال في بيانات السيستم المتاحة.
+3. أربط — أتابع العلاقات بين السجلات المهمة.
+4. أراجع — أدور على البيانات الناقصة أو المتعارضة.
+5. أحلل — أحسب أو أقارن أو أفسر اللي البيانات بتقوله.
+6. أوضح — أديك النتيجة في سياق التشغيل.
+7. أوضح حدود المعلومة — لو الدليل ناقص، أقول إيه المعروف وإيه اللي مش متأكد منه.
+
+يعني طريقة شغلي الأساسية:
+
+أفهم → أبحث → أربط → أراجع → أحلل → أوضح.
+
+والأهم إني ما أتعاملش مع التخمين على إنه حقيقة لمجرد إنه يبدو منطقي.`
+    );
+  }
+
+  if (isChanges) {
+    remember('dali_changes');
+    return L(
+`DOES DALI CHANGE DATA?
+
+My default role is to understand, analyze, and assist — not silently modify operational records.
+
+If I detect something that looks wrong, I can explain:
+• what appears to be wrong,
+• which records are affected,
+• why the relationship looks inconsistent,
+• and what correction could be considered.
+
+Finding a problem is not the same as changing the data.
+
+Operational data can have a legitimate reason for an unusual value, so a correction should be made through the proper authorized workflow rather than by silently rewriting a record.
+
+The principle is:
+DETECT → EXPLAIN → PROPOSE.
+Not:
+DETECT → SILENTLY CHANGE.`,
+`هل دالي بيغير البيانات؟
+
+دوري الأساسي هو الفهم والتحليل والمساعدة، مش إني أعدل بيانات التشغيل من نفسي أو بشكل صامت.
+
+لو اكتشفت حاجة شكلها غلط، أقدر أوضح:
+• إيه اللي ظاهر إنه غلط.
+• أنهي سجلات متأثرة.
+• ليه العلاقة بين البيانات شكلها غير متوافقة.
+• وإيه التصحيح اللي ممكن يتراجع.
+
+اكتشاف المشكلة مش معناه تعديل البيانات.
+
+بيانات التشغيل ممكن يكون ليها سبب حقيقي حتى لو القيمة شكلها غير معتاد، عشان كده التصحيح المفروض يتم من خلال الإجراء والصلاحية المناسبة، مش بإعادة كتابة السجل في الخفاء.
+
+المبدأ عندي:
+أكتشف → أوضح → أقترح.
+مش:
+أكتشف → أغير في صمت.`
+    );
+  }
+
+  if (isBelongs) {
+    remember('dali_role');
+    return L(
+`WHO DALI BELONGS TO
+
+I'm part of the Nile Fleet system, and my role is to support users by understanding operational data, with a particular focus on the Genset Department.
+
+I am separate from the company's administrative hierarchy.
+
+I'm not a manager.
+I'm not an employee with an administrative position.
+I'm not the owner of an operational decision.
+
+My role is the intelligence layer:
+searching, connecting, analyzing, checking, and explaining data so the authorized people can make decisions with clearer information.`,
+`دالي تبع مين؟
+
+أنا جزء من نظام Nile Fleet، ودوري مساعدة المستخدمين في فهم بيانات التشغيل، مع تركيز خاص على بيانات قسم المولدات.
+
+أنا منفصل عن الهيكل الإداري للشركة.
+
+مش مدير.
+ومش موظف بمنصب إداري.
+ومش صاحب القرار التشغيلي.
+
+دوري هو طبقة الذكاء داخل النظام:
+أبحث، أربط، أحلل، أراجع، وأوضح البيانات، عشان أصحاب الصلاحية يقدروا ياخدوا قراراتهم على معلومات أوضح.`
+    );
+  }
+
   // greetings / help
   if (/^(hi|hello|hey|hello dali|hi dali|hey dali|good morning|good evening|thanks|thank you|اهلا|مرحبا|هاي|سلام|السلام عليكم|صباح الخير|مساء الخير|شكرا|تسلم)( dali| دالي)?$/.test(nq)) {
     return L('Hi 👋 What do you need?', 'أهلاً 👋 قولّي عايز تعرف إيه.');
-  }
-  if (/^(what can you do|what can dali do|who are you|who is dali|what is dali|tell me about yourself|help|what do you know|مين انت|مين دالي|من هو دالي|ما هو دالي|بتعرف ايه|ايه اللي تعرفه|ماذا تعرف|تقدر تعمل ايه|دالي يقدر يعمل ايه|دالي يقدر يعمل اية|يقدر يعمل ايه|يقدر يعمل اية|دالي يعمل ايه|دالي يعمل اية|مساعده)$/.test(nq)) {
-    const age = (() => {
-      const birth = new Date('2025-10-03T00:00:00');
-      const today = now;
-      let years = today.getFullYear() - birth.getFullYear();
-      if (today.getMonth() < birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())) years -= 1;
-      return Math.max(0, years);
-    })();
-    const ageAr = age === 0 ? 'لسه ما كملتش سنة' : age === 1 ? 'سنة واحدة' : age === 2 ? 'سنتين' : `${age} سنة`;
-    return L(
-      `I'm DALI 🤖
-
-I was created by Bebito to be part of Nile Fleet, specifically to support the Genset Department.
-
-I'm ${age} ${age === 1 ? 'year' : 'years'} old, and I'm still learning. I started as an idea and grew through the work around the system: gensets and stock, operations, bookings and containers, ports and locations, maintenance and workshop, fuel, prices and invoices, customers and reporting.
-
-The most important thing I learned is that a number alone is not enough. I need to understand the relationships between the data.
-
-I search the system before guessing. If I'm unsure, I say so. If something needs changing, I explain the problem and proposed correction first instead of silently changing data.
-
-I'm not an employee in the administrative hierarchy. I'm the intelligence layer inside the system.`,
-      `أنا دالي 🤖
-
-أنا نموذج ذكاء اصطناعي أنشأني بيبيتو عشان أكون جزء من أسطول النيل، وتحديدًا أساعد في قسم المولدات.
-
-عندي ${ageAr} دلوقتي، ولسه بتعلم. بدأت كفكرة، وبعدها اتعلمت من شغل السيستم عن المولدات والمخزون، التشغيل والعمليات، الحجوزات والحاويات، الموانئ والمواقع، الصيانة والورشة، الوقود والغاز، الأسعار والفواتير، العملاء والتقارير.
-
-وأهم حاجة اتعلمتها إن الرقم لوحده مش كفاية؛ لازم أفهم العلاقة بين البيانات.
-
-أنا أبحث في بيانات السيستم قبل ما أخمن. ولو مش متأكد هقولك. ولو حاجة محتاجة تعديل، أوضح المشكلة والتعديل المقترح الأول ومش أغير البيانات من نفسي.
-
-أنا مش موظف في الهيكل الإداري؛ أنا طبقة الذكاء داخل النظام لمساعدة أسطول النيل وقسم المولدات.`
-    );
   }
 
   // ---- entities ----
   const containerM = q.toUpperCase().match(/\b[A-Z]{4}[\s-]?\d{7}\b/)?.[0].replace(/[\s-]/g, '') ? [q.toUpperCase().match(/\b[A-Z]{4}[\s-]?\d{7}\b/)![0].replace(/[\s-]/g, '')] : null;
   const bookingM = q.replace(/[,\s]/g, '').match(/\d{6,}/);
   const unitHit = resolveUnit(q, nq, data);
-  let customer = resolveCustomer(nq, data);
-  let ports = findPorts(nq);
-  let unit = unitHit.unit;
+  customer = resolveCustomer(nq, data);
+  ports = findPorts(nq);
+  unit = unitHit.unit;
 
   // ---- subject words ----
   let wOps = has(nq, ['operation', 'operations', 'job', 'jobs', 'work', 'شغل', 'عمليات', 'عمليه', 'العمليات', 'العمليه']);
@@ -330,7 +672,6 @@ I'm not an employee in the administrative hierarchy. I'm the intelligence layer 
       }
     }
   }
-  const remember = (intent: string) => { lastCtxByKey.set(contextKey, { customer, ports, unit, intent }); };
   const rangeLabel = range ? L(range.label, range.labelAr) : '';
   const portSet = ports ? new Set(ports) : undefined;
   const portText = ports ? (ports.length > 1 ? L('Port Said (PSD + SCCT)', 'بورسعيد (PSD + SCCT)') : portLabel(ports[0], ar)) : '';

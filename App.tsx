@@ -39,6 +39,35 @@ const getDefaultAllowedScreens = (role: UserRole): string[] => {
   if (role === UserRole.GATE_OPERATOR) return ['port-gate', 'notifications', 'support', 'user-settings'];
   return ['cust-reservations', 'cust-invoices', 'notifications', 'support', 'user-settings'];
 };
+
+const getUserMemoryKey = (userId: string) => `nilefleet_user_memory_${userId}`;
+
+const getRememberedScreen = (u: User): string | null => {
+  try {
+    const raw = localStorage.getItem(getUserMemoryKey(u.id));
+    if (!raw) return null;
+    const memory = JSON.parse(raw);
+    const screen = typeof memory?.lastScreen === 'string' ? memory.lastScreen : null;
+    if (!screen) return null;
+    const allowed = new Set(
+      Array.isArray(u.allowedScreens) ? u.allowedScreens : getDefaultAllowedScreens(u.role)
+    );
+    if (u.role === UserRole.ADMIN || u.role === UserRole.MANAGER) allowed.add('financials');
+    if (u.role === UserRole.CUSTOMER) return ['cust-reservations', 'cust-invoices', 'notifications', 'support'].includes(screen) ? screen : null;
+    return allowed.has(screen) ? screen : null;
+  } catch {
+    return null;
+  }
+};
+
+const rememberUserScreen = (u: User, screen: string) => {
+  try {
+    const key = getUserMemoryKey(u.id);
+    const current = JSON.parse(localStorage.getItem(key) || '{}');
+    localStorage.setItem(key, JSON.stringify({ ...current, lastScreen: screen }));
+  } catch {}
+};
+
 export type ThemeMode = 'day' | 'night';
 
 interface LanguageContextType {
@@ -85,6 +114,7 @@ const App: React.FC = () => {
   const [authChecked, setAuthChecked] = useState(false);
   const [appDataReady, setAppDataReady] = useState(false);
   const loggingInRef = useRef(false);
+  const restoreRememberedScreenRef = useRef(false);
   
   const [theme, setTheme] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem('theme');
@@ -118,6 +148,15 @@ const App: React.FC = () => {
     }
   });
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  // Mobile performance: keep only the active screen mounted. Hidden desktop tabs can be expensive on phones.
+  const [isMobileViewport, setIsMobileViewport] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches);
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px)');
+    const sync = () => setIsMobileViewport(media.matches);
+    sync();
+    media.addEventListener?.('change', sync);
+    return () => media.removeEventListener?.('change', sync);
+  }, []);
   // All screens read business data from the shared SupabaseDB cache. Bump this
   // version whenever that cache changes so mounted screens (including hidden
   // tabs) re-render from the same current source of truth.
@@ -256,12 +295,14 @@ const App: React.FC = () => {
           setUser(null);
           localStorage.removeItem('user');
         } else {
+          const rememberedScreen = getRememberedScreen(sessionUser);
           setActiveScreen(
-            sessionUser.role === UserRole.GATE_OPERATOR
+            rememberedScreen ||
+            (sessionUser.role === UserRole.GATE_OPERATOR
               ? 'port-gate'
               : sessionUser.role === UserRole.CUSTOMER
                 ? 'cust-reservations'
-                : 'dashboard'
+                : 'dashboard')
           );
         }
       } else {
@@ -330,11 +371,18 @@ const App: React.FC = () => {
       // dashboard — this is the remembered-screen race fix.
       const screen = rawHash || (user ? localStorage.getItem('nf_last_screen') || homeScreen : homeScreen);
       if (!user) return;
-      const destination = permittedScreens.has(screen)
-        ? screen
-        : permittedScreens.has(homeScreen)
-          ? homeScreen
-          : permittedScreens.values().next().value || 'no-access';
+      const rememberedScreen = getRememberedScreen(user);
+      const shouldRestoreRemembered = restoreRememberedScreenRef.current;
+      const destination = shouldRestoreRemembered && rememberedScreen && permittedScreens.has(rememberedScreen)
+        ? rememberedScreen
+        : permittedScreens.has(screen)
+          ? screen
+          : rememberedScreen && permittedScreens.has(rememberedScreen)
+            ? rememberedScreen
+            : permittedScreens.has(homeScreen)
+              ? homeScreen
+              : permittedScreens.values().next().value || 'no-access';
+      if (shouldRestoreRemembered) restoreRememberedScreenRef.current = false;
       if (destination === 'no-access') {
         if (window.location.hash) window.location.hash = '';
       } else if (rawHash !== destination) {
@@ -554,13 +602,22 @@ const App: React.FC = () => {
           loggingInRef.current = false;
           setUser(u);
           localStorage.setItem('user', JSON.stringify(u));
-          setActiveScreen(
-            u.role === UserRole.GATE_OPERATOR
+          const rememberedScreen = getRememberedScreen(u);
+          const targetScreen =
+            rememberedScreen ||
+            (u.role === UserRole.GATE_OPERATOR
               ? 'port-gate'
               : u.role === UserRole.CUSTOMER
                 ? 'cust-reservations'
-                : 'dashboard'
-          );
+                : 'dashboard');
+          restoreRememberedScreenRef.current = Boolean(rememberedScreen);
+          setActiveScreen(targetScreen);
+          // Keep the URL and remembered screen in agreement. Otherwise the
+          // auth/hash synchronization effect can immediately overwrite the
+          // remembered screen with the old login URL (usually dashboard).
+          if (window.location.hash !== `#${targetScreen}`) {
+            window.location.hash = targetScreen;
+          }
         };
       }
       loggingInRef.current = false;
@@ -589,6 +646,7 @@ const App: React.FC = () => {
 
   const navigateTo = useCallback((screen: string, id?: string) => {
     setHighlightId(id || null);
+    if (user) rememberUserScreen(user, screen);
     setActiveScreen(screen);
     setOpenScreens(current => current.includes(screen) ? current : [...current, screen]);
     window.location.hash = screen;
@@ -691,6 +749,7 @@ const App: React.FC = () => {
 
   const setScreenFromLayout = (screen: string) => {
     setHighlightId(null);
+    if (user) rememberUserScreen(user, screen);
     setActiveScreen(screen);
     setOpenScreens(current => current.includes(screen) ? current : [...current, screen]);
     window.location.hash = screen;
@@ -709,6 +768,7 @@ const App: React.FC = () => {
     const nextScreens = remaining.length ? remaining : nextScreen === 'no-access' ? [] : [nextScreen];
     setOpenScreens(nextScreens);
     if (activeScreen === screen) {
+      if (user) rememberUserScreen(user, nextScreen);
       setActiveScreen(nextScreen);
       window.location.hash = nextScreen === 'no-access' ? '' : nextScreen;
     }
@@ -726,8 +786,8 @@ const App: React.FC = () => {
           onCloseScreen={closeScreenTab}
         >
           <Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center text-slate-500">Loading…</div>}>
-            {(openScreens.length ? openScreens : ['no-access']).map(screen => (
-              <div key={`${screen}-${dataVersion}`} hidden={screen !== activeScreen} className="min-h-full">
+            {(isMobileViewport ? [activeScreen] : (openScreens.length ? openScreens : ['no-access'])).map(screen => (
+              <div key={`${screen}-${dataVersion}`} hidden={!isMobileViewport && screen !== activeScreen} className="min-h-full min-w-0">
                 {renderScreen(screen)}
               </div>
             ))}

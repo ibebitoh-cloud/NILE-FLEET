@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useContext, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useContext, useEffect, useLayoutEffect, useRef } from 'react';
 import { db } from '../services/supabaseDb';
 import { Operation, Location, GensetStatus, UserRole, User, CustomerPrice, Invoice, hasReadOnlyAccess } from '../types';
 import { LanguageContext, ThemeContext } from '../App';
@@ -40,6 +40,14 @@ const DEFAULT_COLUMN_WIDTHS: Record<string, number> = {
 
 const allPorts: string[] = ['DAM', 'ALEX', 'GOUDA', 'SOKHNA', 'SCCT', 'PSD'];
 const STATUS_CYCLE: string[] = ['UNDER OPERATE', 'IN PROGRESS', 'DONE', 'HOLD', 'CANCEL'];
+
+const scrollFieldIntoView = (element: HTMLElement | null) => {
+  if (!element) return;
+  requestAnimationFrame(() => {
+    if (!element.isConnected) return;
+    element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+  });
+};
 
 const getContrastColor = (bgClass: string, isDarkTerminal: boolean) => {
   if (isDarkTerminal) {
@@ -552,6 +560,17 @@ const MasterView: React.FC = () => {
   });
   const [sortConfig, setSortConfig] = useState<SortConfig>(null);
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
+  const selectedOperations = useMemo(() => operations.filter(op => selectedRowIds.has(op.id)), [operations, selectedRowIds]);
+  const selectedStatusCounts = useMemo(() => selectedOperations.reduce<Record<string, number>>((acc, op) => {
+    const key = op.status || 'UNKNOWN';
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {}), [selectedOperations]);
+  const selectedPortCounts = useMemo(() => selectedOperations.reduce<Record<string, number>>((acc, op) => {
+    const key = op.clipOnPort || '—';
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {}), [selectedOperations]);
   const [collapsedStatusGroups, setCollapsedStatusGroups] = useState<Set<string>>(new Set());
   const [showSettings, setShowSettings] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -627,6 +646,10 @@ const MasterView: React.FC = () => {
   ]);
   const [rawPasteBuffer, setRawPasteBuffer] = useState('');
   const [stagingColWidths, setStagingColWidths] = useState<Record<string, number>>({});
+
+  const masterTableScrollRef = useRef<HTMLDivElement | null>(null);
+  const pendingMasterScrollRef = useRef<{ left: number; top: number } | null>(null);
+  const skipNextDbChangeRefreshRef = useRef(false);
 
   const [viewPrefs, setViewPrefs] = useState<{
     density: number;
@@ -823,6 +846,7 @@ const MasterView: React.FC = () => {
   };
 
   const [invoices, setInvoices] = useState<Invoice[]>(() => db.getInvoices());
+  const [, setGensetRevision] = useState(0);
 
   // Track whether a cell is currently being edited inline. Refreshes triggered
   // by db-change events skip the state update while an edit is in progress so
@@ -841,8 +865,37 @@ const MasterView: React.FC = () => {
     setInvoices([...db.getInvoices()]);
   };
 
+  useLayoutEffect(() => {
+    const position = pendingMasterScrollRef.current;
+    if (!position) return;
+    const restore = () => {
+      const container = masterTableScrollRef.current;
+      if (!container) return;
+      container.scrollLeft = position.left;
+      container.scrollTop = position.top;
+    };
+    restore();
+    requestAnimationFrame(restore);
+    const timer = window.setTimeout(restore, 80);
+    pendingMasterScrollRef.current = null;
+    return () => window.clearTimeout(timer);
+  }, [operations]);
+
   useEffect(() => {
-    const sync = () => refresh();
+    const sync = (event: Event) => {
+      const detail = (event as CustomEvent<{ entity?: string }>).detail;
+      if (detail?.entity === 'genset') {
+        // Genset edits are already committed to the shared database/cache.
+        // Re-render this view without reloading operations or disturbing scroll.
+        setGensetRevision(value => value + 1);
+        return;
+      }
+      if (skipNextDbChangeRefreshRef.current) {
+        skipNextDbChangeRefreshRef.current = false;
+        return;
+      }
+      refresh();
+    };
     window.addEventListener('db-undo-success', sync);
     window.addEventListener('db-change', sync);
     return () => {
@@ -1215,14 +1268,55 @@ const MasterView: React.FC = () => {
 
   const handleUpdateCell = async (op: Operation, field: keyof Operation, val: any) => {
     if (isReadOnly) return;
+
+    // Capture every possible horizontal scroll owner. Some browsers scroll
+    // the page/main shell instead of the table wrapper when an inline editor
+    // is replaced after blur.
+    const scrollPositions: Array<{ element: HTMLElement; left: number; top: number }> = [];
+    let node: HTMLElement | null = masterTableScrollRef.current;
+    while (node) {
+      scrollPositions.push({ element: node, left: node.scrollLeft, top: node.scrollTop });
+      node = node.parentElement;
+    }
+    const root = document.scrollingElement as HTMLElement | null;
+    if (root) scrollPositions.push({ element: root, left: root.scrollLeft, top: root.scrollTop });
+
+    const restoreScroll = () => {
+      scrollPositions.forEach(position => {
+        if (position.element.isConnected) {
+          position.element.scrollLeft = position.left;
+          position.element.scrollTop = position.top;
+        }
+      });
+    };
+
+    skipNextDbChangeRefreshRef.current = true;
     const saved = await db.updateOperation({ ...op, [field]: val });
+
     if (!saved) {
+      skipNextDbChangeRefreshRef.current = false;
+      restoreScroll();
       window.alert(isAr
         ? `فشل حفظ التعديل: ${db.getLastDbError() || ''}`
         : `Failed to save change: ${db.getLastDbError() || ''}`);
       return;
     }
-    refresh();
+
+    // Update only this operation. No full Master View refresh.
+    skipNextDbChangeRefreshRef.current = false;
+    const updatedOperation = db.getOperations().find(item => item.id === op.id) || ({ ...op, [field]: val } as Operation);
+    setOperations(current =>
+      current.map(item => item.id === updatedOperation.id ? updatedOperation : item)
+    );
+    setInvoices([...db.getInvoices()]);
+
+    // Restore after React commits the edited cell, including WebKit's delayed
+    // scroll correction when an input is replaced by its display element.
+    restoreScroll();
+    requestAnimationFrame(restoreScroll);
+    window.setTimeout(restoreScroll, 0);
+    window.setTimeout(restoreScroll, 80);
+    window.setTimeout(restoreScroll, 250);
   };
 
   const handleUpdateGensetGas = (unitNumber: string, value: string) => {
@@ -1239,7 +1333,11 @@ const MasterView: React.FC = () => {
           : `Could not save gas amount. ${detail || 'Make sure the database update has been applied.'}`);
         return;
       }
+<<<<<<< HEAD
       refresh(true);
+=======
+      setGensetRevision(value => value + 1);
+>>>>>>> dbfc38f9a5563cafc771028e3f865a3b795cf462
     });
   };
 
@@ -1472,7 +1570,7 @@ const MasterView: React.FC = () => {
       </div>
 
       <div className={`rounded-3xl shadow-xl border overflow-hidden w-full ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'}`}>
-        <div className="overflow-x-auto overflow-y-visible">
+        <div ref={masterTableScrollRef} className="overflow-x-auto overflow-y-visible">
           <table className={`w-full ${isAr ? 'text-right' : 'text-left'} whitespace-nowrap border-collapse`}>
             <thead className={`text-white font-black uppercase tracking-widest sticky top-0 z-40 text-[9px] ${isDark ? 'bg-[#001224]' : 'bg-[#3a3833]'}`}>
               <tr>
@@ -1797,61 +1895,103 @@ const MasterView: React.FC = () => {
       </div>
 
       {selectedRowIds.size > 0 && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-10 duration-500">
-           <div className="bg-[#3a3833] text-white px-8 py-4 rounded-[2.5rem] shadow-2xl border-2 border-[#C2A378] flex items-center gap-10 backdrop-blur-xl">
-              <div className="flex items-center gap-3">
-                 <span className="w-10 h-10 bg-[#C2A378] text-[#3a3833] rounded-full flex items-center justify-center font-black text-sm">{selectedRowIds.size}</span>
-                 <div>
+        <div className="fixed inset-x-2 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] sm:inset-auto sm:bottom-24 sm:left-1/2 sm:-translate-x-1/2 z-[100] animate-in slide-in-from-bottom-10 duration-300">
+          <div className="w-full sm:w-auto sm:min-w-[680px] max-w-[calc(100vw-1rem)] sm:max-w-[92vw] max-h-[58vh] overflow-hidden bg-[#3a3833] text-white rounded-[1.5rem] sm:rounded-[2.5rem] shadow-2xl border-2 border-[#C2A378] backdrop-blur-xl">
+            <div className="px-3 py-3 sm:px-6 sm:py-4 border-b border-white/10">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="w-10 h-10 shrink-0 bg-[#C2A378] text-[#3a3833] rounded-full flex items-center justify-center font-black text-sm">{selectedRowIds.size}</span>
+                  <div className="min-w-0">
                     <p className="text-[10px] font-black uppercase tracking-widest text-[#C2A378]">{isAr ? 'وضع الإجراء المجمع' : 'Bulk Action Mode'}</p>
-                    <p className="text-[9px] font-bold text-slate-400">{isAr ? 'عمليات مختارة' : 'Selected Entries'}</p>
-                 </div>
+                    <p className="text-[9px] font-bold text-slate-400">{isAr ? 'العمليات المختارة' : 'Selected Entries'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button type="button" onClick={() => setSelectedRowIds(new Set(filteredAndSortedOps.map(op => op.id)))} disabled={isReadOnly || filteredAndSortedOps.length === selectedRowIds.size} className="min-h-[38px] px-2.5 rounded-lg border border-white/15 text-[8px] font-black uppercase tracking-wider text-slate-300 disabled:opacity-40">{isAr ? 'الكل' : 'Select All'}</button>
+                  <button type="button" onClick={() => setSelectedRowIds(new Set())} className="min-h-[38px] px-2.5 rounded-lg border border-white/15 text-[8px] font-black uppercase tracking-wider text-slate-300">{isAr ? 'مسح' : 'Clear'}</button>
+                </div>
               </div>
-              <div className="h-10 w-px bg-white/10"></div>
-              {!isReadOnly && (
-                <button
-                  onClick={handleCloneSelectedOperations}
-                  className="bg-[#C2A378] text-[#3a3833] px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#d8bd91] transition-all shadow-lg"
-                  title={isAr ? 'إضافة نسخة جديدة من العمليات المحددة' : 'Add a new copy of the selected operations'}
-                >
-                  + {isAr ? 'نسخ السطر' : 'Clone Line'}
-                </button>
+
+              <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                <div className="rounded-lg bg-white/5 border border-white/10 px-2.5 py-2">
+                  <div className="text-[7px] uppercase tracking-widest text-slate-400">{isAr ? 'الحالة' : 'Status'}</div>
+                  <div className="mt-1 text-[9px] font-black truncate">{Object.keys(selectedStatusCounts).length === 1 ? translateEntity(Object.keys(selectedStatusCounts)[0], lang) : (isAr ? 'متعددة' : 'Mixed')}</div>
+                </div>
+                <div className="rounded-lg bg-white/5 border border-white/10 px-2.5 py-2">
+                  <div className="text-[7px] uppercase tracking-widest text-slate-400">{isAr ? 'الميناء' : 'Port'}</div>
+                  <div className="mt-1 text-[9px] font-black truncate">{Object.keys(selectedPortCounts).length === 1 ? translateEntity(Object.keys(selectedPortCounts)[0], lang) : (isAr ? 'متعددة' : 'Mixed')}</div>
+                </div>
+                <div className="rounded-lg bg-white/5 border border-white/10 px-2.5 py-2">
+                  <div className="text-[7px] uppercase tracking-widest text-slate-400">{isAr ? 'حاويات' : 'Containers'}</div>
+                  <div className="mt-1 text-[9px] font-black">{selectedOperations.filter(op => Boolean(op.containerNumber?.trim())).length}</div>
+                </div>
+                <div className="rounded-lg bg-white/5 border border-white/10 px-2.5 py-2">
+                  <div className="text-[7px] uppercase tracking-widest text-slate-400">{isAr ? 'مولدات' : 'Gensets'}</div>
+                  <div className="mt-1 text-[9px] font-black">{selectedOperations.filter(op => Boolean(op.gensetNumber?.trim())).length}</div>
+                </div>
+              </div>
+
+              <div className="mt-2 flex gap-1.5 overflow-x-auto no-scrollbar">
+                {Object.entries(selectedStatusCounts).map(([status, count]) => (
+                  <span key={status} className="shrink-0 rounded-full bg-white/5 border border-white/10 px-2 py-1 text-[7px] font-black uppercase tracking-wider text-slate-300">{translateEntity(status, lang)} · {count}</span>
+                ))}
+              </div>
+            </div>
+
+            <div className="max-h-[24vh] sm:max-h-[20vh] overflow-y-auto px-2.5 py-2.5 sm:px-4 sm:py-3 space-y-1.5">
+              {selectedOperations.slice(0, 30).map(op => (
+                <div key={op.id} className="rounded-xl border border-white/10 bg-white/[0.035] px-2.5 py-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="shrink-0 w-7 h-7 rounded-lg bg-[#C2A378]/15 text-[#C2A378] flex items-center justify-center text-[7px] font-black">✓</span>
+                    <div className="min-w-0 flex-1 grid grid-cols-2 sm:grid-cols-5 gap-x-3 gap-y-1">
+                      <div className="min-w-0"><div className="text-[7px] uppercase tracking-wider text-slate-500">{isAr ? 'الحجز' : 'Booking'}</div><div className="text-[9px] font-black text-white truncate">{op.bookingNumber || '—'}</div></div>
+                      <div className="min-w-0"><div className="text-[7px] uppercase tracking-wider text-slate-500">{isAr ? 'الحاوية' : 'Container'}</div><div className="text-[9px] font-bold text-slate-300 truncate">{op.containerNumber || '—'}</div></div>
+                      <div className="min-w-0"><div className="text-[7px] uppercase tracking-wider text-slate-500">{isAr ? 'المولد' : 'Genset'}</div><div className="text-[9px] font-bold text-slate-300 truncate">{op.gensetNumber || '—'}</div></div>
+                      <div className="min-w-0"><div className="text-[7px] uppercase tracking-wider text-slate-500">{isAr ? 'العميل' : 'Customer'}</div><div className="text-[9px] font-bold text-slate-300 truncate">{op.customerName || '—'}</div></div>
+                      <div className="min-w-0"><div className="text-[7px] uppercase tracking-wider text-slate-500">{isAr ? 'الحالة' : 'Status'}</div><div className="text-[9px] font-bold text-[#C2A378] truncate">{translateEntity(op.status || '—', lang)}</div></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {selectedOperations.length > 30 && (
+                <div className="text-center py-2 text-[8px] font-bold text-slate-500">{isAr ? 'عرض أول 30 من ' + selectedOperations.length + ' عملية مختارة' : 'Showing first 30 of ' + selectedOperations.length + ' selected entries'}</div>
               )}
-              <div className="flex items-center gap-4">
-                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-300">{isAr ? 'تغيير الحالة لـ:' : 'Target Status:'}</p>
-                 <select className="bg-white/10 text-white border border-white/20 rounded-xl px-4 py-2 text-[10px] font-black uppercase outline-none focus:border-[#C2A378] transition-all" onChange={(e) => handleBulkStatusChange(e.target.value as any)} defaultValue="">
-                    <option value="" disabled>-- {isAr ? 'اختر الحالة' : 'Select Status'} --</option>
-                    {STATUS_CYCLE.map(s => <option key={s} value={s} className="bg-slate-900">{translateEntity(s, lang)}</option>)}
-                 </select>
+            </div>
+
+            <div className="px-3 py-3 sm:px-5 sm:py-3 border-t border-white/10 flex flex-col sm:flex-row gap-2">
+              {!isReadOnly && (
+                <button onClick={handleCloneSelectedOperations} className="min-h-[44px] flex-1 bg-[#C2A378] text-[#3a3833] px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-[#d8bd91] transition-all shadow-lg" title={isAr ? 'إضافة نسخة جديدة من العمليات المحددة' : 'Add a new copy of the selected operations'}>+ {isAr ? 'نسخ السطور' : 'Clone Selected'}</button>
+              )}
+              <div className="flex flex-1 items-center gap-2">
+                <select className="min-h-[44px] flex-1 bg-white/10 text-white border border-white/20 rounded-xl px-3 py-2 text-[9px] font-black uppercase outline-none focus:border-[#C2A378]" onChange={(e) => handleBulkStatusChange(e.target.value as any)} defaultValue="">
+                  <option value="" disabled>-- {isAr ? 'تغيير الحالة' : 'Change Status'} --</option>
+                  {STATUS_CYCLE.map(status => <option key={status} value={status} className="bg-slate-900">{translateEntity(status, lang)}</option>)}
+                </select>
               </div>
-              {isAdmin && <button onClick={handleBulkDelete} className="bg-rose-600 text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg">{isAr ? 'حذف إجباري' : 'Force Delete'}</button>}
-              <button onClick={() => setSelectedRowIds(new Set())} className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">{isAr ? 'إلغاء' : 'Clear'}</button>
-           </div>
+              {isAdmin && <button onClick={handleBulkDelete} className="min-h-[44px] px-4 bg-rose-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg">{isAr ? 'حذف' : 'Delete'}</button>}
+            </div>
+          </div>
         </div>
       )}
-
       {showAddModal && (
-        <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-2xl z-[500] flex items-center justify-center p-4">
-          <div className={`rounded-[3.5rem] shadow-2xl max-w-[98vw] w-full h-[85vh] overflow-hidden border-[10px] border-slate-900 flex flex-col animate-in zoom-in-95 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-900'}`}>
-             <div className={`p-8 flex justify-between items-center shrink-0 ${isDark ? 'bg-slate-950 text-white' : 'bg-slate-900 text-white'}`}>
-                <div className="text-start">
-                  <h3 className="text-2xl font-black italic uppercase tracking-tighter text-[#C2A378]">{isAr ? 'حقن بيانات السجل المجمع' : 'Bulk Manifest Staging'}</h3>
-                  <p className="text-[9px] font-bold tracking-wide text-slate-300">{isAr ? 'أدخل البيانات يدوياً أو الصق صفوفاً مفصولة بعلامات تبويب. أضف تاريخ العملية ثم تاريخ التركيب كآخر عمودين اختياريين.' : 'Enter rows manually or paste tab-separated data. Optionally append Operation Date, then Clip On Date.'}</p>
+        <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-2xl z-[500] flex items-center justify-center p-2 sm:p-4 overscroll-contain">
+          <div className={`nf-mobile-modal rounded-[2rem] sm:rounded-[3.5rem] shadow-2xl max-w-[98vw] w-full h-[calc(100dvh-1rem)] sm:h-[85vh] max-h-[calc(100dvh-1rem)] overflow-hidden border-[4px] sm:border-[10px] border-slate-900 flex flex-col animate-in zoom-in-95 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-900'}`}>
+             <div className={`p-4 sm:p-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 shrink-0 ${isDark ? 'bg-slate-950 text-white' : 'bg-slate-900 text-white'}`}>
+                <div className="text-start min-w-0 w-full sm:flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="text-xl sm:text-2xl font-black italic uppercase tracking-tighter text-[#C2A378] leading-tight">{isAr ? 'حقن بيانات السجل المجمع' : 'Bulk Manifest Staging'}</h3>
+                    <button onClick={() => setShowAddModal(false)} aria-label={isAr ? 'إغلاق' : 'Close'} className="sm:hidden shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-white hover:text-rose-400 hover:bg-white/10 text-xl">✕</button>
+                  </div>
+                  
                 </div>
-                <div className="flex gap-4">
-                   <textarea 
-                     className="w-48 h-10 p-2 bg-slate-800 border border-slate-500 rounded-xl text-[10px] font-bold text-white placeholder:text-slate-300 outline-none focus:w-80 focus:h-20 focus:ring-2 focus:ring-[#C2A378] transition-all"
-                     placeholder={isAr ? 'الصق البيانات هنا...' : 'Paste tab-separated rows...'}
-                     value={rawPasteBuffer} 
-                     onChange={(e) => setRawPasteBuffer(e.target.value)}
-                   />
-                   <button type="button" onClick={() => fallbackParse(rawPasteBuffer)} className="px-4 py-2 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 text-white text-[9px] font-black uppercase tracking-wider">{isAr ? 'تحميل الصفوف' : 'Load Rows'}</button>
-                   <button onClick={() => setShowAddModal(false)} className="text-white hover:text-rose-500 p-2">✕</button>
+                <div className="flex w-full sm:w-auto items-center justify-end">
+                   <button onClick={() => setShowAddModal(false)} aria-label={isAr ? 'إغلاق' : 'Close'} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-white hover:text-rose-400 hover:bg-white/10 text-xl">✕</button>
                 </div>
              </div>
-             <div className="flex-1 overflow-auto p-4 relative" style={{ backgroundColor: isDark ? '#0b1220' : '#f1f5f9' }}>
-                <table className="manifest-staging-table w-max min-w-full text-start whitespace-nowrap border-collapse" style={{ tableLayout: 'fixed' }}>
+             <div className="nf-mobile-scroll-container flex-1 min-h-0 overflow-auto overscroll-contain p-1 sm:p-4 relative" style={{ backgroundColor: isDark ? '#0b1220' : '#f1f5f9' }}>
+                <table className="manifest-staging-table w-max min-w-full text-start whitespace-nowrap border-collapse text-[11px] sm:text-[10px]" style={{ tableLayout: 'fixed' }}>
                    <colgroup>{stagingColumnHeaders.map(column => <col key={column.key} style={{ width: stagingColWidths[column.key] ?? stagingColumnDefaults[column.key] }} />)}</colgroup>
-                   <thead className="bg-[#3a3833] text-white text-[9px] font-black uppercase tracking-widest sticky top-0 z-10">
+                   <thead className="bg-[#3a3833] text-white text-[9px] font-black uppercase tracking-widest sticky top-0 z-30">
                       <tr>{stagingColumnHeaders.map(column => <th key={column.key} className="p-3 relative text-start" style={{ width: stagingColWidths[column.key] ?? stagingColumnDefaults[column.key], minWidth: stagingColWidths[column.key] ?? stagingColumnDefaults[column.key] }}>
                         <span>{column.label}</span>
                         {column.key !== 'row' && <span onMouseDown={event => startStagingColumnResize(event, column.key)} className="absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-[#C2A378]" title={isAr ? 'اسحب لتغيير العرض بحرية' : 'Drag to resize this column'} />}
@@ -1860,17 +2000,17 @@ const MasterView: React.FC = () => {
                    <tbody className={`divide-y ${isDark ? 'divide-slate-800' : 'divide-slate-100'}`}>
                       {stagedOps.map((o, idx) => (
                         <tr key={idx} className={`${isDark ? 'hover:bg-white/5' : 'hover:bg-blue-50/50'}`}>
-                           <td className={`p-4 font-black text-[9px] ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{idx + 1}</td>
-                           <td className="p-2"><input type="number" className={`${stagingFieldClass} text-center`} value={o.quantity} onChange={e => updateStagedRow(idx, 'quantity', parseInt(e.target.value) || 1)} /></td>
+                           <td className={`p-3 sm:p-4 font-black text-[9px] sticky left-0 z-20 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{idx + 1}</td>
+                           <td className="p-2 sticky left-[36px] z-20" style={{ backgroundColor: isDark ? "#0f172a" : "#ffffff" }}><input type="number" className={`${stagingFieldClass} text-center min-h-[44px]`} value={o.quantity} onChange={e => updateStagedRow(idx, 'quantity', parseInt(e.target.value) || 1)} /></td>
                            <td className="p-2">
-                             <input list="partners" className={`${stagingFieldClass} uppercase`} value={o.customerName} onChange={e => updateStagedRow(idx, 'customerName', e.target.value.toUpperCase())} />
+                             <input inputMode="text" enterKeyHint="next" onFocus={(e) => scrollFieldIntoView(e.currentTarget)} list="partners" className={`${stagingFieldClass} uppercase min-h-[44px]`} value={o.customerName} onChange={e => updateStagedRow(idx, 'customerName', e.target.value.toUpperCase())} />
                              {isAr && <p className={`text-[8px] font-bold mt-1 ${isDark ? 'text-sky-300' : 'text-blue-700'}`}>{translateEntity(o.customerName, 'ar')}</p>}
                            </td>
-                           <td className="p-2"><input className={`${stagingFieldClass} uppercase`} value={o.bookingNumber} onChange={e => updateStagedRow(idx, 'bookingNumber', e.target.value.toUpperCase())} /></td>
-                           <td className="p-2"><input type="date" className={stagingFieldClass} style={{ colorScheme: isDark ? 'dark' : 'light' }} value={o.operationDate || todayDate} onChange={e => updateStagedRow(idx, 'operationDate', e.target.value)} /></td>
+                           <td className="p-2"><input inputMode="text" enterKeyHint="next" onFocus={(e) => scrollFieldIntoView(e.currentTarget)} className={`${stagingFieldClass} uppercase min-h-[44px]`} value={o.bookingNumber} onChange={e => updateStagedRow(idx, 'bookingNumber', e.target.value.toUpperCase())} /></td>
+                           <td className="p-2"><input type="date" onFocus={(e) => scrollFieldIntoView(e.currentTarget)} className={`${stagingFieldClass} min-h-[44px]`} style={{ colorScheme: isDark ? 'dark' : 'light' }} value={o.operationDate || todayDate} onChange={e => updateStagedRow(idx, 'operationDate', e.target.value)} /></td>
                            <td className="p-2"><input type="date" className={stagingFieldClass} style={{ colorScheme: isDark ? 'dark' : 'light' }} value={o.clipOnDate} onChange={e => updateStagedRow(idx, 'clipOnDate', e.target.value)} /></td>
                            <td className="p-2">
-                              <select className={stagingFieldClass} value={o.clipOnPort} onChange={e => updateStagedRow(idx, 'clipOnPort', e.target.value as any)}>
+                              <select onFocus={(e) => scrollFieldIntoView(e.currentTarget)} className={`${stagingFieldClass} min-h-[44px]`} value={o.clipOnPort} onChange={e => updateStagedRow(idx, 'clipOnPort', e.target.value as any)}>
                                 {allPorts.map(p => <option key={p} value={p}>{translateEntity(p, lang)}</option>)}
                               </select>
                            </td>
@@ -1880,18 +2020,18 @@ const MasterView: React.FC = () => {
                               </select>
                            </td>
                            <td className="p-2">
-                             <input className={`${stagingFieldClass} uppercase`} placeholder={isAr ? 'الوجهة النهائية' : 'Final destination'} value={o.destination || ''} onChange={e => updateStagedRow(idx, 'destination', e.target.value)} />
+                             <input inputMode="text" onFocus={(e) => scrollFieldIntoView(e.currentTarget)} className={`${stagingFieldClass} uppercase min-h-[44px]`} placeholder={isAr ? 'الوجهة النهائية' : 'Final destination'} value={o.destination || ''} onChange={e => updateStagedRow(idx, 'destination', e.target.value)} />
                            </td>
-                           <td className="p-2"><input type="number" className={`${stagingFieldClass} text-right`} value={o.rate} onChange={e => updateStagedRow(idx, 'rate', e.target.value)} /></td>
+                           <td className="p-2"><input type="number" inputMode="decimal" onFocus={(e) => scrollFieldIntoView(e.currentTarget)} className={`${stagingFieldClass} text-right min-h-[44px]`} value={o.rate} onChange={e => updateStagedRow(idx, 'rate', e.target.value)} /></td>
                            <td className="p-2">
-                             <input list="shippers" className={`${stagingFieldClass} uppercase`} value={o.beneficiaryName} onChange={e => updateStagedRow(idx, 'beneficiaryName', e.target.value.toUpperCase())} />
+                             <input inputMode="text" enterKeyHint="next" onFocus={(e) => scrollFieldIntoView(e.currentTarget)} list="shippers" className={`${stagingFieldClass} uppercase min-h-[44px]`} value={o.beneficiaryName} onChange={e => updateStagedRow(idx, 'beneficiaryName', e.target.value.toUpperCase())} />
                              {isAr && <p className={`text-[8px] font-bold mt-1 ${isDark ? 'text-sky-300' : 'text-blue-700'}`}>{translateEntity(o.beneficiaryName, 'ar')}</p>}
                            </td>
                            <td className="p-2">
-                             <input list="truckers" className={`${stagingFieldClass} uppercase`} value={o.trucker} onChange={e => updateStagedRow(idx, 'trucker', e.target.value.toUpperCase())} />
+                             <input inputMode="text" enterKeyHint="next" onFocus={(e) => scrollFieldIntoView(e.currentTarget)} list="truckers" className={`${stagingFieldClass} uppercase min-h-[44px]`} value={o.trucker} onChange={e => updateStagedRow(idx, 'trucker', e.target.value.toUpperCase())} />
                              {isAr && <p className={`text-[8px] font-bold mt-1 ${isDark ? 'text-sky-300' : 'text-blue-700'}`}>{translateEntity(o.trucker, 'ar')}</p>}
                            </td>
-                           <td className="p-2"><input className={`${stagingFieldClass} uppercase`} placeholder="e.g. CITRUS" value={o.commodity || ''} onChange={e => updateStagedRow(idx, 'commodity', e.target.value.toUpperCase())} /></td>
+                           <td className="p-2"><input inputMode="text" onFocus={(e) => scrollFieldIntoView(e.currentTarget)} className={`${stagingFieldClass} uppercase min-h-[44px]`} placeholder="e.g. CITRUS" value={o.commodity || ''} onChange={e => updateStagedRow(idx, 'commodity', e.target.value.toUpperCase())} /></td>
                            <td className="p-2 text-center"><div className="flex items-center justify-center gap-2">
                               <button onClick={() => duplicateRow(idx)} className={`hover:scale-125 transition-transform p-2 rounded-lg shadow-sm ${isDark ? 'text-sky-200 bg-sky-950 hover:bg-sky-900' : 'text-blue-700 bg-blue-50 hover:bg-blue-100'}`} title={isAr ? 'تكرار الصف' : 'Duplicate Row'}>
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
@@ -1904,9 +2044,9 @@ const MasterView: React.FC = () => {
                 </table>
                 <button onClick={() => setStagedOps([...stagedOps, { customerName: '', bookingNumber: '', commodity: '', operationDate: todayDate, clipOnDate: todayDate, status: 'UNDER OPERATE', rate: '0', vat: '0', clipOnPort: Location.ALEX, clipOffPort: Location.ALEX, trucker: '', beneficiaryName: '', quantity: 1 }])} className={`mt-4 w-full py-4 border-2 border-dashed rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all ${isDark ? 'border-slate-600 text-slate-200 hover:bg-white/5' : 'border-slate-300 text-slate-700 hover:bg-white'}`}>{isAr ? '+ إضافة سطر فارغ' : '+ Add Empty Row'}</button>
              </div>
-             <div className={`p-8 shrink-0 flex gap-4 border-t ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-                <button type="button" onClick={() => setShowAddModal(false)} className="px-10 py-5 text-[11px] font-black uppercase text-slate-400 tracking-widest hover:text-rose-500 transition-colors">{t.cancel}</button>
-                <button onClick={handleFinalInject} className="flex-1 bg-[#C2A378] text-[#3a3833] py-5 rounded-[2rem] font-black uppercase text-xs tracking-[0.4em] shadow-2xl active:scale-95 transition-all">
+             <div className={`p-3 sm:p-8 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:pb-8 shrink-0 flex flex-col-reverse sm:flex-row gap-2 sm:gap-4 border-t ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                <button type="button" onClick={() => setShowAddModal(false)} className="min-h-[44px] px-6 sm:px-10 py-3 sm:py-5 text-[10px] sm:text-[11px] font-black uppercase text-slate-400 tracking-widest hover:text-rose-500 transition-colors rounded-xl">{t.cancel}</button>
+                <button onClick={handleFinalInject} className="flex-1 min-h-[48px] bg-[#C2A378] text-[#3a3833] py-3 sm:py-5 rounded-xl sm:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-[0.18em] sm:tracking-[0.4em] shadow-2xl active:scale-95 transition-all">
                   {isAr ? 'اعتماد حقن البيانات' : 'AUTHORIZE BATCH INJECTION'} ({stagedOps.reduce((sum, o) => sum + (o.bookingNumber && o.customerName ? (o.quantity || 1) : 0), 0)} {isAr ? 'وحدة' : 'UNITS'})
                 </button>
              </div>

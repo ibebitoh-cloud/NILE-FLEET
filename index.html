@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://cdn.tailwindcss.com"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nile Fleet</title>
@@ -10,7 +11,6 @@
     <meta property="og:description" content="Premium Clip-On Genset Management Platform">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="icon" href="/nile-fleet-logo.png" type="image/png">
-    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -545,6 +545,139 @@
             background: var(--bg-primary); color: var(--accent); font-weight: bold; font-size: 14px;
             text-transform: uppercase; letter-spacing: 0.2em;
         }
+
+        /* NILE FLEET MOBILE RESPONSIVE CORE */
+        html { width: 100%; min-width: 0; }
+        body { width: 100%; min-width: 0; margin: 0; }
+        #root { width: 100%; min-width: 0; min-height: 100dvh; }
+        @media (max-width: 767px) {
+            html, body { width: 100%; max-width: 100vw; overflow-x: clip; }
+            body { min-height: 100dvh; }
+            #root { min-height: 100dvh; }
+            button, [role="button"], input, select, textarea { -webkit-tap-highlight-color: transparent; }
+            input, select, textarea { font-size: 16px !important; }
+            .nf-mobile-scroll-container {
+                min-height: 0;
+                max-height: calc(100dvh - 1rem);
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .nf-mobile-modal {
+                height: min(900px, calc(100dvh - 1rem)) !important;
+                max-height: calc(100dvh - 1rem) !important;
+            }
+        }
+        @media (max-width: 430px) {
+            .nile-fleet-layout main {
+                box-sizing: border-box;
+            }
+        }
+
+        /* NILE FLEET MOBILE V2 — actual production wrapper is .nile-command-layout.
+           These rules intentionally override desktop-first Tailwind sizing on phones. */
+        .nile-command-layout { min-width: 0; width: 100%; }
+        .nile-command-layout > main { min-width: 0; }
+        .nile-command-layout main > div { min-width: 0; }
+        .nile-command-layout img, .nile-command-layout svg, .nile-command-layout canvas, .nile-command-layout video { max-width: 100%; }
+        @media (max-width: 767px) {
+            html, body, #root { width: 100%; min-width: 0; max-width: 100vw; overflow-x: hidden; }
+            body { overscroll-behavior-x: none; }
+            .nile-command-layout {
+                width: 100vw;
+                max-width: 100vw;
+                height: 100dvh;
+                min-height: 100dvh;
+                overflow: hidden;
+            }
+            .nile-command-layout > main {
+                width: 100%;
+                max-width: 100%;
+                min-width: 0;
+                height: 100%;
+                min-height: 0;
+                overflow-x: hidden !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch;
+                overscroll-behavior-y: contain;
+                padding-bottom: calc(74px + env(safe-area-inset-bottom));
+            }
+            .nile-command-layout > main > header {
+                position: sticky;
+                top: 0;
+                z-index: 35;
+                min-height: 58px;
+                padding: 7px 10px;
+            }
+            .nile-command-layout > main > header > div { min-width: 0; }
+            .nile-command-layout > main > header h2 { max-width: 38vw; }
+            .nile-command-layout > main > div.p-4,
+            .nile-command-layout > main > div[class*="p-4"] {
+                padding: 12px !important;
+                min-width: 0;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .nile-command-layout main .grid { min-width: 0; }
+            .nile-command-layout main .grid > * { min-width: 0 !important; max-width: 100%; }
+            .nile-command-layout main .flex { min-width: 0; }
+            .nile-command-layout main .flex > * { min-width: 0; }
+            .nile-command-layout main [class*="grid-cols-"] { grid-template-columns: minmax(0,1fr) !important; }
+            .nile-command-layout main [class*="md:grid-cols-"] { grid-template-columns: minmax(0,1fr) !important; }
+            .nile-command-layout main [class*="lg:grid-cols-"] { grid-template-columns: minmax(0,1fr) !important; }
+            .nile-command-layout main [class*="xl:grid-cols-"] { grid-template-columns: minmax(0,1fr) !important; }
+            .nile-command-layout main [class*="min-w-"] { min-width: 0 !important; }
+            .nile-command-layout main [class*="w-["] { max-width: 100% !important; }
+            .nile-command-layout main [class*="max-w-"] { max-width: 100%; }
+            .nile-command-layout main [class*="p-8"],
+            .nile-command-layout main [class*="p-10"],
+            .nile-command-layout main [class*="p-12"] { padding: 14px !important; }
+            .nile-command-layout main [class*="px-8"],
+            .nile-command-layout main [class*="px-10"],
+            .nile-command-layout main [class*="px-12"] { padding-left: 14px !important; padding-right: 14px !important; }
+            .nile-command-layout main [class*="py-8"],
+            .nile-command-layout main [class*="py-10"],
+            .nile-command-layout main [class*="py-12"] { padding-top: 14px !important; padding-bottom: 14px !important; }
+            .nile-command-layout main [class*="gap-8"],
+            .nile-command-layout main [class*="gap-10"],
+            .nile-command-layout main [class*="gap-12"] { gap: 12px !important; }
+            .nile-command-layout main [class*="rounded-[3"],
+            .nile-command-layout main [class*="rounded-[4"] { border-radius: 18px !important; }
+            .nile-command-layout main h1 { font-size: clamp(1.35rem, 6vw, 1.8rem); line-height: 1.15; }
+            .nile-command-layout main h2 { font-size: clamp(1.15rem, 5vw, 1.5rem); line-height: 1.2; }
+            .nile-command-layout main h3 { font-size: clamp(1rem, 4.5vw, 1.25rem); line-height: 1.25; }
+            .nile-command-layout main button,
+            .nile-command-layout main [role="button"] { max-width: 100%; }
+            .nile-command-layout main input,
+            .nile-command-layout main select,
+            .nile-command-layout main textarea { max-width: 100%; min-width: 0; font-size: 16px !important; }
+            .nile-command-layout main .overflow-x-auto {
+                width: 100%;
+                max-width: 100%;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
+                overscroll-behavior-x: contain;
+            }
+            .nile-command-layout main table { min-width: max-content; }
+            .nile-command-layout main .flex.items-center.justify-between,
+            .nile-command-layout main .flex.items-end.justify-between { flex-wrap: wrap; gap: 10px; }
+            .nile-command-layout main .flex.items-center.justify-between > *,
+            .nile-command-layout main .flex.items-end.justify-between > * { max-width: 100%; }
+            .nile-command-layout > nav {
+                min-height: 68px;
+                padding-bottom: max(6px, env(safe-area-inset-bottom));
+                padding-top: 5px;
+            }
+            .nile-command-layout > nav button { min-height: 54px; border-radius: 12px; }
+            .nile-command-layout > nav span { line-height: 1; }
+        }
+        @media (max-width: 430px) {
+            .nile-command-layout > main > header { padding-left: 8px; padding-right: 8px; }
+            .nile-command-layout > main > header .min-w-0 { min-width: 0; }
+            .nile-command-layout main > div[class*="p-4"] { padding: 10px !important; }
+            .nile-command-layout main .text-3xl { font-size: 1.45rem; }
+            .nile-command-layout main .text-2xl { font-size: 1.25rem; }
+        }
+
     </style>
 <script type="importmap">
 {

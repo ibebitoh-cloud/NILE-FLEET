@@ -38,13 +38,14 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
   const portData = useMemo(() => {
     const locations = ['DAM', 'ALEX', 'GOUDA', 'SOKHNA', 'SCCT', 'PSD', 'MAL', 'WORKSHOP'] as const;
-    const byPort: Record<string, { stockCount: number; maintenanceCount: number; preorderCount: number; active: number }> = {};
-    locations.forEach(port => { byPort[port] = { stockCount: 0, maintenanceCount: 0, preorderCount: 0, active: 0 }; });
+    const activeOperationUnits = new Set(ops.filter(o => o.status === 'IN PROGRESS' && o.gensetNumber?.trim()).map(o => o.gensetNumber.trim().toUpperCase()));
+    const byPort: Record<string, { stockCount: number; maintenanceCount: number; preorderCount: number; active: number; surplus: number; deficit: number }> = {};
+    locations.forEach(port => { byPort[port] = { stockCount: 0, maintenanceCount: 0, preorderCount: 0, active: 0, surplus: 0, deficit: 0 }; });
 
     stock.forEach(g => {
       const p = String(g.location || '');
       if (!byPort[p]) return;
-      if (g.status === 'IN_STOCK') byPort[p].stockCount++;
+      if (g.status === 'IN_STOCK' || (g.status === 'CLIPPED_ON' && !activeOperationUnits.has(g.unitNumber.trim().toUpperCase()))) byPort[p].stockCount++;
       if (g.status === 'MAINTENANCE') byPort[p].maintenanceCount++;
     });
     ops.forEach(o => {
@@ -53,40 +54,69 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       if (o.status === 'UNDER OPERATE') byPort[p].preorderCount++;
       if (o.status === 'IN PROGRESS') byPort[p].active++;
     });
-    reservations.forEach(r => {
-      const p = String(r.portIn || '');
-      if (byPort[p] && r.status === 'PENDING') byPort[p].preorderCount++;
+    locations.forEach(port => {
+      const available = byPort[port].stockCount;
+      const demand = byPort[port].preorderCount;
+      byPort[port].surplus = Math.max(available - demand, 0);
+      byPort[port].deficit = Math.max(demand - available, 0);
     });
     return locations.map(port => ({ port, ...byPort[port] }));
-  }, [stock, ops, reservations]);
+  }, [stock, ops]);
 
+  // Customer financials are intentionally calculated from the same rules used by
+  // Financials/الشؤون المالية: historical opening balance + unpaid invoices +
+  // unbilled operations. This keeps the dashboard from showing a separate,
+  // invoice-only version of the customer's balance.
   const customerFinancials = useMemo(() => {
-    const normalizeCustomer = (value?: string) => String(value || '').trim().toLocaleLowerCase().replace(/\s+/g, ' ');
-    const invoiceByCustomer: Record<string, { billed: number; paid: number }> = {};
-    invoices.forEach(i => {
-      const key = i.customerId || normalizeCustomer(i.customerName);
-      if (!invoiceByCustomer[key]) invoiceByCustomer[key] = { billed: 0, paid: 0 };
-      const amount = Number(i.amount) || 0;
-      invoiceByCustomer[key].billed += amount;
-      invoiceByCustomer[key].paid += Math.min(amount, Math.max(0, db.getInvoicePaidAmount(i.id)));
-    });
-    const opsByCustomer: Record<string, number> = {};
-    ops.forEach(o => {
-      const key = o.customerId || normalizeCustomer(o.customerName);
-      opsByCustomer[key] = (opsByCustomer[key] || 0) + 1;
+    const normalizeCustomer = (value?: string) => String(value || '').trim().toLocaleLowerCase().replace(/\\s+/g, ' ');
+    const rows = customers.map(cust => {
+      const name = cust.companyName || cust.name;
+      const customerOperations = ops.filter(o =>
+        o.customerId === cust.id ||
+        (!o.customerId && [cust.companyName, cust.name].some(n => normalizeCustomer(n) === normalizeCustomer(o.customerName)))
+      );
+      const unbilledTotal = customerOperations
+        .filter(o => !o.invoiced)
+        .reduce((sum, o) => sum + (Number(String(o.rate || 0).replace(/,/g, '')) || 0) + (Number(String(o.vat || 0).replace(/,/g, '')) || 0), 0);
+
+      const userInvoices = invoices.filter(i => {
+        if (i.customerId) return i.customerId === cust.id;
+        const invoiceName = normalizeCustomer(i.customerName);
+        return Boolean(invoiceName && [cust.companyName, cust.name].some(n => normalizeCustomer(n) === invoiceName));
+      });
+      const billed = userInvoices.reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+      const paid = userInvoices.reduce((sum, i) => {
+        const amount = Number(i.amount) || 0;
+        return sum + Math.min(amount, Math.max(0, db.getInvoicePaidAmount(i.id)));
+      }, 0);
+      const unpaidInvoicesTotal = userInvoices
+        .filter(i => i.status === 'UNPAID')
+        .reduce((sum, i) => sum + Math.max(0, (Number(i.amount) || 0) - db.getInvoicePaidAmount(i.id)), 0);
+      const historicalOpeningBalance = Number(cust.pastOutstandingAmount || 0);
+      const outstanding = historicalOpeningBalance + unpaidInvoicesTotal + unbilledTotal;
+      const operationCount = customerOperations.length;
+
+      return {
+        id: cust.id,
+        name,
+        billed,
+        paid,
+        historicalOpeningBalance,
+        unbilled: unbilledTotal,
+        unpaidInvoices: unpaidInvoicesTotal,
+        outstanding,
+        operations: operationCount,
+      };
     });
 
-    return customers.map(cust => {
-      const name = cust.companyName || cust.name;
-      const totals = invoiceByCustomer[cust.id] || invoiceByCustomer[normalizeCustomer(name)] || { billed: 0, paid: 0 };
-      const operationCount = opsByCustomer[cust.id] || opsByCustomer[normalizeCustomer(name)] || 0;
-      return { id: cust.id, name, billed: totals.billed, paid: totals.paid, outstanding: totals.billed - totals.paid, operations: operationCount };
-    }).sort((a, b) => b.outstanding - a.outstanding);
+    return rows.sort((a, b) => b.outstanding - a.outstanding);
   }, [customers, invoices, ops]);
 
   const financialTotals = useMemo(() => ({
     billed: customerFinancials.reduce((s, c) => s + c.billed, 0),
     paid: customerFinancials.reduce((s, c) => s + c.paid, 0),
+    historical: customerFinancials.reduce((s, c) => s + c.historicalOpeningBalance, 0),
+    unbilled: customerFinancials.reduce((s, c) => s + c.unbilled, 0),
     outstanding: customerFinancials.reduce((s, c) => s + Math.max(c.outstanding, 0), 0),
   }), [customerFinancials]);
 
@@ -103,10 +133,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const smartAlerts = useMemo(() => {
     const alerts: { level: 'HIGH' | 'MEDIUM' | 'INFO'; text: string; action?: () => void }[] = [];
     portData.forEach(p => {
-      if (p.preorderCount > p.stockCount) {
+      if (p.deficit > 0) {
         alerts.push({
           level: 'HIGH',
-          text: `${translateEntity(p.port, lang)}: ${p.preorderCount} pending operations / ${p.stockCount} stock`,
+          text: `${translateEntity(p.port, lang)}: ${p.deficit} genset deficit — ${p.preorderCount} demand / ${p.stockCount} available`,
           action: () => onNavigate('operations', p.port)
         });
       }
@@ -120,6 +150,15 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     if (!alerts.length) alerts.push({ level: 'INFO', text: 'Fleet is balanced — no critical dashboard exceptions detected.' });
     return alerts.slice(0, 5);
   }, [portData, maintenanceStats, financialTotals, lang, onNavigate]);
+
+  const operationStats = useMemo(() => {
+    const total = ops.length;
+    const active = ops.filter(o => o.status === 'IN PROGRESS').length;
+    const underOperate = ops.filter(o => o.status === 'UNDER OPERATE').length;
+    const linkedActive = ops.filter(o => o.status === 'IN PROGRESS' && o.gensetNumber?.trim()).length;
+    const unlinkedActive = active - linkedActive;
+    return { total, active, underOperate, linkedActive, unlinkedActive };
+  }, [ops]);
 
   const daliSummary = useMemo(() => {
     const totalUnits = stock.filter(g => g.status !== 'RETIRED').length;
@@ -136,7 +175,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         <div className="flex items-end justify-between mb-3 px-1">
           <div>
             <h2 className="text-xl md:text-2xl font-black text-[#3a3833] dark:text-white uppercase italic tracking-tight">{translateEntity('Port Control', lang)}</h2>
-            <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.25em]">{translateEntity('Stock • Maintenance • Preorder', lang)}</p>
+            <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.25em]">{translateEntity('Available • Demand • Surplus / Deficit', lang)}</p>
           </div>
           <button onClick={() => onNavigate('stock')} className="text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Fleet</button>
         </div>
@@ -154,14 +193,42 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               <div className="grid grid-cols-3 gap-2">
                 <div><span className="block text-[8px] text-slate-400 font-black uppercase">{translateEntity('Stock', lang)}</span><b className="text-xl text-blue-600 dark:text-blue-400">{port.stockCount}</b></div>
                 <div><span className="block text-[8px] text-slate-400 font-black uppercase">{translateEntity('Maint.', lang)}</span><b className="text-xl text-rose-500">{port.maintenanceCount}</b></div>
-                <div><span className="block text-[8px] text-slate-400 font-black uppercase">{translateEntity('Preorder', lang)}</span><b className="text-xl text-amber-500">{port.preorderCount}</b></div>
+                <div><span className="block text-[8px] text-slate-400 font-black uppercase">{translateEntity('Under Operate', lang)}</span><b className="text-xl text-amber-500">{port.preorderCount}</b></div>
               </div>
-              <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-700 flex justify-between text-[8px] font-black uppercase">
+              <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-700 grid grid-cols-2 gap-2 text-[8px] font-black uppercase">
+                <div className={`rounded-lg px-2 py-1.5 ${port.deficit > 0 ? 'bg-rose-50 dark:bg-rose-900/20' : 'bg-emerald-50 dark:bg-emerald-900/20'}`}>
+                  <span className="block text-slate-400">{translateEntity('Deficit', lang)}</span>
+                  <span className={`text-sm ${port.deficit > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>{port.deficit}</span>
+                </div>
+                <div className="rounded-lg px-2 py-1.5 bg-blue-50 dark:bg-blue-900/20">
+                  <span className="block text-slate-400">{translateEntity('Surplus', lang)}</span>
+                  <span className="text-sm text-blue-500">{port.surplus}</span>
+                </div>
+              </div>
+              <div className="mt-2 flex justify-between text-[8px] font-black uppercase">
                 <span className="text-slate-400">{translateEntity('Live', lang)}</span><span className="text-emerald-500">{port.active}</span>
               </div>
             </button>
           ))}
         </div>
+      </section>
+
+      {/* LIVE OPERATIONS */}
+      <section className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+          <div>
+            <h2 className="font-black text-[#3a3833] dark:text-white uppercase italic">Live Operations</h2>
+            <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Real operation records from the system</p>
+          </div>
+          <button onClick={() => onNavigate('operations')} className="text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Operations</button>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-4">
+          <div><span className="block text-[8px] text-slate-400 uppercase font-black">Total Operations</span><b className="text-2xl text-[#3a3833] dark:text-white">{operationStats.total}</b></div>
+          <div><span className="block text-[8px] text-slate-400 uppercase font-black">In Progress</span><b className="text-2xl text-emerald-500">{operationStats.active}</b></div>
+          <div><span className="block text-[8px] text-slate-400 uppercase font-black">Under Operate</span><b className="text-2xl text-amber-500">{operationStats.underOperate}</b></div>
+          <div><span className="block text-[8px] text-slate-400 uppercase font-black">Genset Linked</span><b className="text-2xl text-blue-500">{operationStats.linkedActive}</b></div>
+        </div>
+        {operationStats.unlinkedActive > 0 && <div className="px-5 py-3 border-t border-amber-100 bg-amber-50 dark:bg-amber-900/20 text-[9px] font-black uppercase text-amber-700 dark:text-amber-300">{operationStats.unlinkedActive} active operation(s) have no genset linked</div>}
       </section>
 
       {/* SMART WIDGET */}
@@ -243,8 +310,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: 'Total Gensets', value: stock.length, action: 'stock' },
-          { label: 'In Operation', value: ops.filter(o => o.status === 'IN PROGRESS').length, action: 'operations' },
-          { label: 'Preorders', value: ops.filter(o => o.status === 'UNDER OPERATE').length, action: 'operations' },
+          { label: 'In Operation', value: operationStats.active, action: 'operations' },
+          { label: 'Under Operate', value: operationStats.underOperate, action: 'operations' },
           { label: 'Maintenance', value: stock.filter(g => g.status === 'MAINTENANCE').length, action: 'maintenance' },
         ].map(item => (
           <button key={item.label} onClick={() => onNavigate(item.action)} className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm text-start hover:shadow-lg transition-all">

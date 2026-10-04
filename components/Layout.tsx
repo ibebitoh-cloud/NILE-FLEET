@@ -170,20 +170,24 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   useEffect(() => {
     const visualViewport = window.visualViewport;
     if (!visualViewport) return;
+    // Keyboard detection only needs viewport resize events. Listening to
+    // visualViewport scroll fires continuously while the page is being scrolled
+    // on iOS and forces a React state update for every scroll frame.
     const updateDaliViewport = () => {
       const keyboardInset = Math.max(0, window.innerHeight - (visualViewport.height + visualViewport.offsetTop));
-      setDaliViewport({
+      const next = {
         height: visualViewport.height,
         keyboardInset: window.innerWidth < 640 ? keyboardInset : 0
-      });
+      };
+      setDaliViewport(prev =>
+        prev.height === next.height && prev.keyboardInset === next.keyboardInset ? prev : next
+      );
     };
     updateDaliViewport();
     visualViewport.addEventListener('resize', updateDaliViewport);
-    visualViewport.addEventListener('scroll', updateDaliViewport);
     window.addEventListener('resize', updateDaliViewport);
     return () => {
       visualViewport.removeEventListener('resize', updateDaliViewport);
-      visualViewport.removeEventListener('scroll', updateDaliViewport);
       window.removeEventListener('resize', updateDaliViewport);
     };
   }, []);
@@ -2008,14 +2012,14 @@ I’ll search with you. 🤖`;
             {isCreator && <span className="hidden md:inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-[#C2A37866] bg-[#C2A37815] text-[#C2A378] text-[8px] font-black uppercase tracking-widest" title="System Creator">👑 {isAr ? 'منشئ النظام' : 'CREATOR'}</span>}
             <button 
               onClick={() => setIsMuted(!isMuted)} 
-              className={`p-1.5 rounded-lg border transition-all ${isDark ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-[#d8d2c8] bg-[#faf9f6]'}`}
+              className={`hidden sm:flex min-h-[44px] min-w-[44px] items-center justify-center p-1.5 rounded-lg border transition-all ${isDark ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-[#d8d2c8] bg-[#faf9f6]'}`}
               title={isMuted ? (isAr ? 'إلغاء كتم التنبيهات' : 'Unmute Notifications') : (isAr ? 'كتم التنبيهات' : 'Mute Notifications')}
             >
                <span className="text-base">{isMuted ? '🔇' : '🔊'}</span>
             </button>
             <button
               onClick={toggleTheme}
-              className={`relative p-1.5 rounded-lg border transition-all overflow-hidden ${isDark ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-slate-200 bg-white'}`}
+              className={`hidden sm:flex relative min-h-[44px] min-w-[44px] items-center justify-center p-1.5 rounded-lg border transition-all overflow-hidden ${isDark ? 'border-[#C2A37844] bg-white/5 text-[#C2A378]' : 'border-slate-200 bg-white'}`}
               title={isDark ? (isAr ? 'الوضع الفاتح' : 'Light Mode') : (isAr ? 'الوضع الداكن' : 'Dark Mode')}
               aria-label={isDark ? 'Light Mode' : 'Dark Mode'}
             >
@@ -2090,7 +2094,7 @@ I’ll search with you. 🤖`;
               className={`min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all ${active ? 'bg-[#C2A378] text-[#001F3F]' : available ? (isDark ? 'text-[#C2A378cc] hover:bg-white/5' : 'text-slate-600 hover:bg-slate-100') : 'opacity-25 cursor-not-allowed'}`}
             >
               <span className="text-base leading-none">{item.icon}</span>
-              <span className="max-w-full truncate text-[6.5px] font-black uppercase tracking-[.08em]">{item.label}</span>
+              <span className="max-w-full truncate text-[7.5px] font-black uppercase tracking-[.06em]">{item.label}</span>
             </button>
           );
         })}
