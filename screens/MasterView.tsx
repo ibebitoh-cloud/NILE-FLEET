@@ -692,6 +692,31 @@ const MasterView: React.FC = () => {
     return set;
   }, [operations]);
 
+  // Make duplicate active gensets unambiguous: earliest assignment is OLD, latest is NEW.
+  const duplicateGensetRoleByOperationId = useMemo(() => {
+    const groups = new Map<string, Operation[]>();
+    operations.forEach(op => {
+      const gen = op.gensetNumber?.trim().toUpperCase();
+      if (!gen || gen === '---' || gen === 'N/A' || gen === 'NONE' || op.status !== 'IN PROGRESS') return;
+      const group = groups.get(gen) || [];
+      group.push(op);
+      groups.set(gen, group);
+    });
+    const roles = new Map<string, 'OLD' | 'NEW' | 'DUPLICATE'>();
+    groups.forEach(group => {
+      if (group.length < 2) return;
+      const sorted = [...group].sort((a, b) => {
+        const aKey = (a.operationDate || a.clipOnDate || '') + '|' + (a.clipOnDate || '') + '|' + a.id;
+        const bKey = (b.operationDate || b.clipOnDate || '') + '|' + (b.clipOnDate || '') + '|' + b.id;
+        return aKey.localeCompare(bKey);
+      });
+      roles.set(sorted[0].id, 'OLD');
+      roles.set(sorted[sorted.length - 1].id, 'NEW');
+      sorted.slice(1, -1).forEach(op => roles.set(op.id, 'DUPLICATE'));
+    });
+    return roles;
+  }, [operations]);
+
   const resizingRef = useRef<{ colKey: string; startX: number; startWidth: number } | null>(null);
   const resizeCleanupRef = useRef<(() => void) | null>(null);
   const resizeFrameRef = useRef<number | null>(null);
@@ -1657,12 +1682,28 @@ const MasterView: React.FC = () => {
                           </td>
                           <td 
                             style={{ ...dynamicCellStyle, ...getColStyle('gensetNumber') }} 
-                            className={`px-2 border-r text-center transition-all duration-300 ${isGensetDup ? 'bg-red-600 !text-white font-black shadow-md' : isDark ? 'border-slate-800' : 'border-slate-50'}`}
-                            title={isGensetDup ? (isAr ? 'تنبيه: المولد مستخدم في أكثر من عملية IN PROGRESS!' : 'WARNING: Genset unit assigned to multiple IN PROGRESS operations!') : undefined}
+                            className={`px-2 border-r text-center transition-all duration-200 relative ${isGensetDup
+                              ? 'bg-red-700 !text-white font-black shadow-[inset_0_0_0_2px_#fecaca,0_0_18px_rgba(239,68,68,.75)] animate-pulse'
+                              : isDark ? 'border-slate-800' : 'border-slate-50'}`}
+                            title={isGensetDup
+                              ? (isAr
+                                ? '⚠️ مولد مكرر — القديم هو OLD والجديد هو NEW'
+                                : '⚠️ DUPLICATE GENSET — OLD = previous assignment, NEW = latest assignment')
+                              : undefined}
                           >
-                            <div className="flex items-center justify-center gap-1">
-                              {isGensetDup && <span className="text-[10px] shrink-0">⚡</span>}
-                              <EditableCell value={op.gensetNumber} suggestions={systemSuggestions.gensets} onSave={(val) => handleUpdateCell(op, 'gensetNumber', val)} disabled={isReadOnly} onEditStart={onCellEditStart} onEditEnd={onCellEditEnd} className={`font-black ${isGensetDup ? '!text-black font-extrabold' : isSelected ? 'text-blue-100' : 'text-[#C2A378]'}`} placeholder="UNIT" isDark={isDark} />
+                            {isGensetDup && <div className="absolute inset-0 pointer-events-none border-2 border-red-300 rounded-sm" />}
+                            <div className="flex items-center justify-center gap-1.5 relative z-10">
+                              {isGensetDup && (
+                                <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-black text-white border border-white/80 text-[7px] font-black tracking-widest shadow-lg">
+                                  {duplicateGensetRoleByOperationId.get(op.id) === 'OLD'
+                                    ? (isAr ? 'قديم' : 'OLD')
+                                    : duplicateGensetRoleByOperationId.get(op.id) === 'NEW'
+                                      ? (isAr ? 'جديد' : 'NEW')
+                                      : (isAr ? 'مكرر' : 'DUP')}
+                                </span>
+                              )}
+                              {isGensetDup && <span className="text-[11px] shrink-0">⚠️</span>}
+                              <EditableCell value={op.gensetNumber} suggestions={systemSuggestions.gensets} onSave={(val) => handleUpdateCell(op, 'gensetNumber', val)} disabled={isReadOnly} onEditStart={onCellEditStart} onEditEnd={onCellEditEnd} className={`font-black ${isGensetDup ? '!text-white font-extrabold' : isSelected ? 'text-blue-100' : 'text-[#C2A378]'}`} placeholder="UNIT" isDark={isDark} />
                             </div>
                           </td>
                           <td style={{ ...dynamicCellStyle, ...getColStyle('rate') }} className={`border-r text-right px-2 font-bold ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
