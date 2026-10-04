@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient';
 import { db } from './supabaseDb';
+import { DALI_TRAINING_CREATOR_ID } from './daliKnowledge';
 
 export type TerminologyType =
   | 'entity' | 'field' | 'status' | 'port' | 'customer' | 'shipper'
@@ -188,27 +189,15 @@ function inferIntent(input:string): IntentMatch['intent'] {
   return 'SEARCH';
 }
 
-export async function recordTerminologyUsage(matches: TerminologyMatch[]): Promise<void> {
-  const ids=matches.map(m=>m.id).filter(Boolean);
-  if(!ids.length) return;
-  // Non-critical usage update; never blocks DALI. Each update is constrained
-  // to the matched row and never changes the canonical value or alias.
-  await Promise.all(ids.map(async id => {
-    try {
-      const { data } = await supabase.from('dali_terminology').select('usage_count').eq('id', id).single();
-      if (!data) return;
-      await supabase.from('dali_terminology')
-        .update({ usage_count: Number(data.usage_count || 0) + 1 })
-        .eq('id', id);
-    } catch {
-      // Usage telemetry is non-critical and must never block DALI.
-    }
-  }));
+export async function recordTerminologyUsage(_matches: TerminologyMatch[]): Promise<void> {
+  // Usage telemetry is intentionally read-only for ordinary users. Manual
+  // Training Node data is creator-owned and must not be modified by usage.
 }
 
 export async function learnTerminology(input: Omit<TerminologyRecord,'normalized_alias'|'id'|'usage_count'>): Promise<TerminologyRecord> {
   const {data:auth}=await supabase.auth.getUser();
   if(!auth.user?.id) throw new Error('No active user');
+  if(auth.user.id !== DALI_TRAINING_CREATOR_ID) throw new Error('Only the Manual Training Node creator can add or edit training data.');
   const normalized_alias=normalizeTerminology(input.alias);
   const {data,error}=await supabase.from('dali_terminology').upsert({
     ...input, normalized_alias, created_by:auth.user.id
@@ -228,6 +217,9 @@ export async function recordCorrection(input:{inputText:string;correctIntent?:st
 }
 
 export async function scanSystemTerminology(): Promise<number> {
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user?.id) throw new Error('No active user');
+  if (auth.user.id !== DALI_TRAINING_CREATOR_ID) throw new Error('Only the Manual Training Node creator can add or edit training data.');
   const learned: TerminologyRecord[] = [];
   const add = (canonical:string,type:TerminologyType,value:string,context:string[]=['system']) => {
     const v=String(value||'').trim(); if(v.length<2) return;
