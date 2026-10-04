@@ -394,7 +394,7 @@ const StockManagement: React.FC = () => {
       l.completedDate && l.serviceDate ? Math.max(0, Math.ceil((new Date(l.completedDate).getTime() - new Date(l.serviceDate).getTime()) / 86400000)) : '',
       l.serviceType,
       l.status,
-      `"${l.technician}"`,
+      `"${l.technician ?? ''}"`,
       l.location,
       l.runningHours || 0,
       `"${(l.partsReplaced || '').replace(/"/g, '""')}"`,
@@ -706,7 +706,7 @@ const StockManagement: React.FC = () => {
               </select>
               <select className="bg-white dark:bg-slate-900 text-black dark:text-white border-2 border-slate-100 dark:border-slate-700 rounded-xl px-4 py-2 font-black uppercase text-[9px] outline-none focus:border-blue-400" value={filterStat} onChange={e => setFilterStat(e.target.value)}>
                 <option value="ALL">{isAr ? 'جميع الحالات' : 'All Status'}</option>
-                {Object.values(GensetStatus).map(s => <option key={s} value={s}>{s === GensetStatus.CLIPPED_ON && editingGenset && !activeOperationUnits.has(editingGenset.unitNumber.trim().toUpperCase()) ? (isAr ? "غير مرتبط بعملية" : "NO OPERATION") : s.replace('_', ' ')}</option>)}
+                {Object.values(GensetStatus).map(s => <option key={s} value={s}>{s === GensetStatus.CLIPPED_ON && editingGenset && !activeOperationUnits.has(editingGenset.unitNumber.trim().toUpperCase()) ? (isAr ? "غير مرتبط بعملية" : "NO OPERATION") : String(s ?? '').replace('_', ' ')}</option>)}
               </select>
             </div>
           </div>
@@ -1620,7 +1620,7 @@ const StockManagement: React.FC = () => {
               <div>
                 <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-2">Service Status</label>
                 <select className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl font-black text-xs text-black dark:text-white outline-none focus:border-blue-400" value={editingGenset.status} onChange={e => setEditingGenset({...editingGenset, status: e.target.value as any})}>
-                  {Object.values(GensetStatus).map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
+                  {Object.values(GensetStatus).map(s => <option key={s} value={s}>{String(s ?? '').replace('_', ' ')}</option>)}
                 </select>
               </div>
 
