@@ -230,7 +230,7 @@ const Reports: React.FC = () => {
               'border-slate-400 bg-slate-50/40 dark:bg-slate-900/30';
 
             return (
-              <div key={port || 'NO_PORT'} className={\`rounded-2xl border-l-4 overflow-hidden \${portTone}\`}>
+              <div key={port || 'NO_PORT'} className={`rounded-2xl border-l-4 overflow-hidden ${portTone}`}>
                 <div className="px-4 py-3 bg-slate-900 text-white flex items-center justify-between">
                   <div className="font-black uppercase tracking-widest">{port ? translateEntity(port, lang) : '-'}</div>
                   <div className="text-[9px] font-black uppercase tracking-widest opacity-80">
@@ -270,7 +270,7 @@ const Reports: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => setVideoRequests(prev => ({ ...prev, [key]: !requested }))}
-                                className={\`min-w-12 px-3 py-1.5 rounded-lg text-[9px] font-black \${requested ? 'bg-blue-600 text-white' : 'bg-transparent text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}\`}
+                                className={`min-w-12 px-3 py-1.5 rounded-lg text-[9px] font-black ${requested ? 'bg-blue-600 text-white' : 'bg-transparent text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
                                 title={lang === 'ar' ? 'اضغط لتحديد طلب تصوير فيديو' : 'Click to request video'}
                               >
                                 {requested ? 'YES' : ''}
