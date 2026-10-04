@@ -18,6 +18,7 @@ create index if not exists genset_replacements_replacement_genset_idx on public.
 
 alter table public.genset_replacements enable row level security;
 grant select, insert, update, delete on public.genset_replacements to authenticated;
+revoke all on table public.genset_replacements from anon;
 
 drop policy if exists "authenticated read genset replacements" on public.genset_replacements;
 create policy "authenticated read genset replacements" on public.genset_replacements
