@@ -34,7 +34,6 @@ export const PORT_STYLING: Record<Location, { bg: string, text: string, border: 
   [Location.SOKHNA]: { bg: 'bg-[#C2410C]', text: 'text-white', border: 'border-[#9A3412]' },    // Orange
   [Location.SCCT]: { bg: 'bg-[#0E7490]', text: 'text-white', border: 'border-[#155E75]' },      // Cyan
   [Location.PSD]: { bg: 'bg-[#6D28D9]', text: 'text-white', border: 'border-[#5B21B6]' },        // Violet
-  [Location.MAL]: { bg: 'bg-[#15803D]', text: 'text-white', border: 'border-[#166534]' },       // Green
   [Location.WORKSHOP]: { bg: 'bg-[#475569]', text: 'text-white', border: 'border-[#334155]' },  // Slate
 };
 
@@ -70,13 +69,6 @@ const generateInitialStock = (): Genset[] => {
     ],
     [Location.PSD]: [
       '121378-123', 'SZLG221215'
-    ],
-    [Location.MAL]: [
-      '121422-119', 'FSRG100576', 'SZLG221-223', '120222-146', '206017', '318259-145', 
-      'SZLG221-240', 'SZLG221-261', 'SZLG221-284', 'SZLG221-258', '206036', '100050-128', 
-      'CRLG121-808', '5181-133', '5184-138', 'HRSG594803', 'HRSG594787', 'HRSG594791', 
-      'HRSG594773', 'HRSG594781', 'HRSG594757', 'HRSG594801', 'HRSG594797', 'HRSG594775', 
-      'HRSG594792', '5173-122', '122343-112', 'FSRG1005617'
     ],
     [Location.WORKSHOP]: [],
     [Location.SCCT]: [
