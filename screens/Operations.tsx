@@ -565,7 +565,9 @@ const Operations: React.FC<{ highlightId?: string | null; clearHighlight?: () =>
                                             <div className="flex-1">
                                                <div>
                                                   <p className="text-[7px] font-black text-slate-300 uppercase">Container ID</p>
-                                                  <div className={`rounded-xl px-2 py-1 \${duplicateContainerIds.has((item.containerNumber || '').trim().toUpperCase()) ? 'bg-red-600 text-white shadow-[0_0_14px_rgba(239,68,68,0.35)]' : ''}`}>                                                    <p className="font-mono font-black text-xl uppercase">{item.containerNumber || '---'}</p>\n                                                 </div>
+                                                  <div className={`rounded-xl px-2 py-1 ${duplicateContainerIds.has((item.containerNumber || '').trim().toUpperCase()) ? 'bg-red-600 text-white shadow-[0_0_14px_rgba(239,68,68,0.35)]' : ''}`}>
+                                                    <p className="font-mono font-black text-xl uppercase">{item.containerNumber || '---'}</p>
+                                                 </div>
                                                </div>
                                                <div className="mt-2">
                                                   <p className="text-[7px] font-black text-slate-300 uppercase">Genset Serial</p>
