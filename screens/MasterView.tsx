@@ -676,6 +676,19 @@ const MasterView: React.FC = () => {
     return set;
   }, [operations]);
 
+  const gensetPortMismatchByOperationId = useMemo(() => {
+    const mismatches = new Map<string, Location>();
+    operations.forEach(op => {
+      const opPort = op.clipOnPort?.trim().toUpperCase();
+      const gen = op.gensetNumber?.trim().toUpperCase();
+      if (!opPort || !gen || opPort === '---' || opPort === 'N/A' || opPort === 'NONE') return;
+      const stockGenset = db.getStock().find(item => item.unitNumber?.trim().toUpperCase() === gen);
+      const stockPort = stockGenset?.location?.toString().trim().toUpperCase();
+      if (stockPort && stockPort !== opPort && Object.values(Location).includes(stockPort as Location)) mismatches.set(op.id, stockPort as Location);
+    });
+    return mismatches;
+  }, [operations]);
+
   const duplicateActiveGensets = useMemo(() => {
     const counts: Record<string, number> = {};
     operations.forEach(op => {
@@ -1691,11 +1704,11 @@ const MasterView: React.FC = () => {
                             </div>
                           </td>
                           <td 
-                            style={{ ...dynamicCellStyle, ...getColStyle('gensetNumber') }} 
+                            style={{ ...dynamicCellStyle, ...getColStyle('gensetNumber'), ...(gensetPortMismatchByOperationId.get(op.id) && !isGensetDup ? { color: getDarkPortStyle(gensetPortMismatchByOperationId.get(op.id) as Location).color } : {}) }} 
                             className={`px-2 border-r text-center transition-all duration-200 relative ${isGensetDup
                               ? 'bg-red-700 !text-white font-black shadow-[inset_0_0_0_2px_#fecaca,0_0_18px_rgba(239,68,68,.75)] animate-pulse'
-                              : isDark ? 'border-slate-800' : 'border-slate-50'}`}
-                            title={isGensetDup
+                              : gensetPortMismatchByOperationId.has(op.id) ? 'font-black bg-amber-50/10 border-l-4' : isDark ? 'border-slate-800' : 'border-slate-50'}`}
+                            title={gensetPortMismatchByOperationId.has(op.id) ? (isAr ? `⚠️ المولد موجود في مخزون ${translateEntity(gensetPortMismatchByOperationId.get(op.id), lang)} بينما العملية على ${translateEntity(op.clipOnPort, lang)}` : `⚠️ GENSET PORT MISMATCH — Stock: ${translateEntity(gensetPortMismatchByOperationId.get(op.id), lang)} | Operation: ${translateEntity(op.clipOnPort, lang)}`) : isGensetDup
                               ? (isAr
                                 ? '⚠️ مولد مكرر — القديم هو OLD والجديد هو NEW'
                                 : '⚠️ DUPLICATE GENSET — OLD = previous assignment, NEW = latest assignment')
@@ -1713,7 +1726,7 @@ const MasterView: React.FC = () => {
                                 </span>
                               )}
                               {isGensetDup && <span className="text-[11px] shrink-0">⚠️</span>}
-                              <EditableCell value={op.gensetNumber} suggestions={systemSuggestions.gensets} onSave={(val) => handleUpdateCell(op, 'gensetNumber', val)} disabled={isReadOnly} onEditStart={onCellEditStart} onEditEnd={onCellEditEnd} className={`font-black ${isGensetDup ? '!text-white font-extrabold' : isSelected ? 'text-blue-100' : 'text-[#C2A378]'}`} placeholder="UNIT" isDark={isDark} />
+                              <EditableCell value={op.gensetNumber} suggestions={systemSuggestions.gensets} onSave={(val) => handleUpdateCell(op, 'gensetNumber', val)} disabled={isReadOnly} onEditStart={onCellEditStart} onEditEnd={onCellEditEnd} className={`font-black ${isGensetDup ? '!text-white font-extrabold' : isSelected ? 'text-blue-100' : gensetPortMismatchByOperationId.has(op.id) ? '!text-inherit font-extrabold' : 'text-[#C2A378]'}`} placeholder="UNIT" isDark={isDark} />
                             </div>
                           </td>
                           <td style={{ ...dynamicCellStyle, ...getColStyle('rate') }} className={`border-r text-right px-2 font-bold ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
