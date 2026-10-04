@@ -1,28 +1,28 @@
 
 import React, { lazy, Suspense, useState, createContext, useContext, useEffect, useMemo, useCallback, useRef } from 'react';
-const Login = lazy(() => import('./screens/Login'));
-const CompanyHome = lazy(() => import('./screens/CompanyHomeV4'));
-const Dashboard = lazy(() => import('./screens/Dashboard'));
-const Operations = lazy(() => import('./screens/Operations'));
-const StockManagement = lazy(() => import('./screens/StockManagement'));
-const Reservations = lazy(() => import('./screens/Reservations'));
-const Customers = lazy(() => import('./screens/Customers'));
-const CustomerPrices = lazy(() => import('./screens/CustomerPrices'));
-const Financials = lazy(() => import('./screens/Financials'));
-const HistoryLog = lazy(() => import('./screens/HistoryLog'));
-const Intelligence = lazy(() => import('./screens/Intelligence'));
-const Reports = lazy(() => import('./screens/Reports'));
-const CustomerPortal = lazy(() => import('./screens/CustomerPortal'));
-const MasterView = lazy(() => import('./screens/MasterView'));
-const Analytics = lazy(() => import('./screens/Analytics'));
-const UserSettings = lazy(() => import('./screens/UserSettings'));
-const PortGateControl = lazy(() => import('./screens/PortGateControl'));
-const UserMgmt = lazy(() => import('./screens/UserMgmt'));
-const CustomerService = lazy(() => import('./screens/CustomerService'));
-const BookingInvoices = lazy(() => import('./screens/BookingInvoices'));
-const DaliKnowledgeCenter = lazy(() => import('./screens/DaliKnowledgeCenter'));
-const Organization = lazy(() => import('./screens/Organization'));
-const Notifications = lazy(() => import('./screens/Notifications'));
+const Login = lazyWithChunkRecovery(() => import('./screens/Login')));
+const CompanyHome = lazyWithChunkRecovery(() => import('./screens/CompanyHomeV4')));
+const Dashboard = lazyWithChunkRecovery(() => import('./screens/Dashboard')));
+const Operations = lazyWithChunkRecovery(() => import('./screens/Operations')));
+const StockManagement = lazyWithChunkRecovery(() => import('./screens/StockManagement')));
+const Reservations = lazyWithChunkRecovery(() => import('./screens/Reservations')));
+const Customers = lazyWithChunkRecovery(() => import('./screens/Customers')));
+const CustomerPrices = lazyWithChunkRecovery(() => import('./screens/CustomerPrices')));
+const Financials = lazyWithChunkRecovery(() => import('./screens/Financials')));
+const HistoryLog = lazyWithChunkRecovery(() => import('./screens/HistoryLog')));
+const Intelligence = lazyWithChunkRecovery(() => import('./screens/Intelligence')));
+const Reports = lazyWithChunkRecovery(() => import('./screens/Reports')));
+const CustomerPortal = lazyWithChunkRecovery(() => import('./screens/CustomerPortal')));
+const MasterView = lazyWithChunkRecovery(() => import('./screens/MasterView')));
+const Analytics = lazyWithChunkRecovery(() => import('./screens/Analytics')));
+const UserSettings = lazyWithChunkRecovery(() => import('./screens/UserSettings')));
+const PortGateControl = lazyWithChunkRecovery(() => import('./screens/PortGateControl')));
+const UserMgmt = lazyWithChunkRecovery(() => import('./screens/UserMgmt')));
+const CustomerService = lazyWithChunkRecovery(() => import('./screens/CustomerService')));
+const BookingInvoices = lazyWithChunkRecovery(() => import('./screens/BookingInvoices')));
+const DaliKnowledgeCenter = lazyWithChunkRecovery(() => import('./screens/DaliKnowledgeCenter')));
+const Organization = lazyWithChunkRecovery(() => import('./screens/Organization')));
+const Notifications = lazyWithChunkRecovery(() => import('./screens/Notifications')));
 import Layout from './components/Layout';
 import { User, UserRole } from './types';
 import { db } from './services/supabaseDb';
@@ -30,6 +30,26 @@ import { supabase } from './services/supabaseClient';
 import { loginWithPassword, logout as supabaseLogout, getCurrentSessionUser } from './services/authService';
 import { discoveryQueue, registerDynamicTranslations, translateUiText } from './translations';
 import { translateBusinessEntities, getSafeApiKey } from './services/aiService';
+
+const lazyWithChunkRecovery = <T extends React.ComponentType<any>>(loader: () => Promise<{ default: T }>) =>
+  lazy(async () => {
+    try {
+      return await loader();
+    } catch (error) {
+      // Cloudflare Pages can briefly serve an older HTML shell whose hashed
+      // lazy chunk was removed by a newer deployment. Reload once so the
+      // browser gets the current asset manifest instead of leaving the app
+      // stuck on "Failed to fetch dynamically imported module".
+      const key = 'nilefleet_chunk_recovery';
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1');
+        window.location.reload();
+        await new Promise<never>(() => {});
+      }
+      sessionStorage.removeItem(key);
+      throw error;
+    }
+  });
 
 type Language = 'en' | 'ar';
 const getDefaultAllowedScreens = (role: UserRole): string[] => {
