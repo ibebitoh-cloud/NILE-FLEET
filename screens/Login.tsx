@@ -162,7 +162,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBackToHome, welcomeName }) => 
 
   const enterWelcome = () => {
     const previous = Number(sessionStorage.getItem('nilefleet_welcome_style') || '-1');
-    const next = Number.isFinite(previous) && previous >= 0 ? (previous + 1) % 6 : 0;
+    const next = Number.isFinite(previous) && previous >= 0 ? (previous + 1) % 10 : 0;
     sessionStorage.setItem('nilefleet_welcome_style', String(next));
     setWelcomeStyle(next);
     setStage('form');
@@ -210,6 +210,10 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBackToHome, welcomeName }) => 
         'التشغيل القوي يبدأ ببيانات دقيقة.',
         'خطوة صحيحة اليوم تعني عملية أفضل غداً.',
         'خطط بذكاء. تحرك بسرعة. نفّذ بدقة.',
+        'قيادتك اليوم تصنع فرقاً في كل عملية.',
+        'ركز على التفاصيل. حافظ على الإيقاع. أنجز المهمة.',
+        'كل قرار دقيق يحافظ على قوة الأسطول.',
+        'ابدأ اليوم بتركيز. أنهِ كل عملية بثقة.',
       ]
     : [
         'Every detail matters. Every operation counts.',
@@ -218,6 +222,10 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBackToHome, welcomeName }) => 
         'Great operations start with accurate data.',
         'One operation at a time. Done right.',
         'Plan smart. Move fast. Deliver right.',
+        'Lead with focus. Make every operation count.',
+        'Watch the details. Keep the rhythm. Get it done.',
+        'Every precise decision keeps the fleet stronger.',
+        'Start focused. Finish every operation with confidence.',
       ];
 
   const welcomeQuote = welcomeQuotes[welcomeStyle % welcomeQuotes.length];
