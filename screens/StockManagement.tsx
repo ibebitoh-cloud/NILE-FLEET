@@ -12,7 +12,8 @@ const SERVICE_TYPE_CONFIG: Record<MaintenanceServiceType, { labelEn: string; lab
   ELECTRICAL_CHECK: { labelEn: 'Electrical Check', labelAr: 'فحص كهربائي', color: 'bg-cyan-100 text-cyan-800 border-cyan-300 dark:bg-cyan-900/30 dark:text-cyan-400', icon: '⚡' },
   ROUTINE_INSPECTION: { labelEn: 'Routine Inspection', labelAr: 'فحص دوري', color: 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400', icon: '🔍' },
   EMERGENCY_REPAIR: { labelEn: 'Emergency Repair', labelAr: 'إصلاح طارئ', color: 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/30 dark:text-red-400', icon: '🚨' },
-  GENERAL_SERVICE: { labelEn: 'General Service', labelAr: 'صيانة عامة', color: 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/30 dark:text-purple-400', icon: '🔧' }
+  GENERAL_SERVICE: { labelEn: 'General Service', labelAr: 'صيانة عامة', color: 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/30 dark:text-purple-400', icon: '🔧' },
+  RADIATOR: { labelEn: 'Radiator Service', labelAr: 'صيانة ردياتير', color: 'bg-sky-100 text-sky-800 border-sky-300 dark:bg-sky-900/30 dark:text-sky-400', icon: '🌡️' }
 };
 
 const MAINT_STATUS_CONFIG: Record<'COMPLETED' | 'IN_PROGRESS' | 'SCHEDULED', { labelEn: string; labelAr: string; color: string; badge: string }> = {
@@ -72,7 +73,10 @@ const StockManagement: React.FC = () => {
     const handleDbChange = () => setDbVersion(v => v + 1);
     window.addEventListener('db-undo-success', handleDbChange);
     window.addEventListener('db-change', handleDbChange);
-    return () => window.removeEventListener('db-undo-success', handleDbChange);
+    return () => {
+      window.removeEventListener('db-undo-success', handleDbChange);
+      window.removeEventListener('db-change', handleDbChange);
+    };
   }, []);
 
   const stock = useMemo(() => db.getStock(), [dbVersion]);
