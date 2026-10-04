@@ -652,7 +652,7 @@ const StockManagement: React.FC = () => {
                               const activeOp = liveStatus === 'IN_PROGRESS'
                                 ? ops.find(o => o.gensetNumber?.trim().toUpperCase() === unit.unitNumber.trim().toUpperCase() && o.status === 'IN PROGRESS')
                                 : undefined;
-                              const selectedClass = selected ? 'ring-4 ring-[#C2A378] ring-offset-1 ring-offset-white dark:ring-offset-slate-900 scale-[1.03] z-10' : '';
+                              const selectedClass = selected ? 'bg-blue-600 !text-white ring-4 ring-blue-300 ring-offset-1 ring-offset-white dark:ring-offset-slate-900 scale-[1.03] z-10 shadow-[0_0_12px_rgba(59,130,246,.75)]' : '';
                               return (
                                 <button
                                   key={unit.id}
