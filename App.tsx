@@ -787,7 +787,7 @@ const App: React.FC = () => {
         >
           <Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center text-slate-500">Loading…</div>}>
             {(isMobileViewport ? [activeScreen] : (openScreens.length ? openScreens : ['no-access'])).map(screen => (
-              <div key={`${screen}-${dataVersion}`} hidden={!isMobileViewport && screen !== activeScreen} className="min-h-full min-w-0">
+              <div key={screen} hidden={!isMobileViewport && screen !== activeScreen} className="min-h-full min-w-0">
                 {renderScreen(screen)}
               </div>
             ))}
