@@ -415,16 +415,15 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBackToHome, welcomeName }) => 
                     <button type="button" onClick={enterWelcome} className="mt-3 px-8 min-h-10 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-full uppercase tracking-[0.3em] text-[9px] transition-all active:scale-[0.97]">{isAr ? 'متابعة' : 'CONTINUE'}</button>
                   </div>
                 ) : (
-                  <div className="w-full flex-1 min-h-[390px] flex items-center justify-center text-center relative overflow-hidden">
-                    <div className="relative z-10 w-full max-w-lg mx-auto px-6 flex flex-col items-center justify-center text-center" dir={isAr ? 'rtl' : 'ltr'}>
-                      <div className="mb-4 h-px w-12 bg-[#C2A378]/60"></div>
-                      <p className="text-[#C2A378] text-[9px] sm:text-[10px] font-black tracking-[0.32em] leading-none">{isAr ? 'أسطول النيل' : 'NILE FLEET'}</p>
-                      <h3 className={`mt-4 text-white text-[1.8rem] sm:text-4xl font-black tracking-[-0.04em] leading-none text-center ${isAr ? 'not-italic' : 'uppercase'}`}>{isAr ? 'أهلاً بعودتكم' : 'WELCOME BACK'}</h3>
-                      <p className="mt-3 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">{isAr ? 'سعيدون بوجودك معنا' : 'GOOD TO SEE YOU'}</p>
-                      <div className="mt-5 max-w-full text-[#C2A378] text-2xl sm:text-3xl font-black tracking-[0.08em] leading-tight text-center break-words">{displayWelcomeName}</div>
-                      <p className="mt-4 max-w-sm text-slate-300 text-[10px] sm:text-xs font-semibold leading-relaxed tracking-wide text-center">{isAr ? 'كل التفاصيل مهمة. خليك مركز وخلي التشغيل ماشي بسلاسة.' : 'Stay sharp, stay connected, and keep every operation moving smoothly.'}</p>
-                      <button type="button" onClick={enterApp} className="mt-7 px-9 py-3.5 bg-[#001F3F] hover:bg-[#002b57] border border-[#C2A378]/50 text-white font-black rounded-full uppercase tracking-[0.24em] text-[9px] transition-all active:scale-[0.97] shadow-[0_0_30px_rgba(194,163,120,.14)]">{isAr ? 'دخول إلى النظام' : 'ENTER SYSTEM'}</button>
-                      <div className="mt-6 text-[8px] font-black uppercase tracking-[0.3em] text-[#C2A378]/80">POWERED BY <span className="text-white/80">BEBITO</span></div>
+                  <div className="absolute inset-0 flex items-center justify-center px-5 sm:px-8">
+                    <div className="w-full max-w-xl flex flex-col items-center justify-center text-center" dir={isAr ? 'rtl' : 'ltr'}>
+                      <div className="text-[#C2A378] text-[10px] sm:text-xs font-bold tracking-[0.28em] leading-none">{isAr ? 'أسطول النيل' : 'NILE FLEET'}</div>
+                      <h3 className={`mt-5 text-white text-3xl sm:text-4xl font-bold leading-tight tracking-tight ${isAr ? 'tracking-normal' : ''}`}>{isAr ? 'أهلاً بعودتك' : 'WELCOME BACK'}</h3>
+                      <div className="mt-3 text-[#C2A378] text-xl sm:text-2xl font-bold leading-tight tracking-tight">{displayWelcomeName}</div>
+                      <p className={`mt-3 max-w-md text-slate-300 text-sm sm:text-base font-medium leading-relaxed ${isAr ? 'tracking-normal' : 'tracking-tight'}`}>{isAr ? 'سعيدون بوجودك معنا. لنحافظ معاً على سير كل عملية بسلاسة.' : 'Good to see you. Let’s keep every operation moving smoothly.'}</p>
+                      <p className={`mt-2 max-w-md text-slate-400 text-xs sm:text-sm font-medium leading-relaxed ${isAr ? 'tracking-normal' : 'tracking-tight'}`}>{welcomeQuote}</p>
+                      <button type="button" onClick={enterApp} className="mt-7 px-9 py-3.5 rounded-full bg-[#001F3F] border border-[#C2A378]/50 text-white text-[10px] sm:text-xs font-bold tracking-[0.2em] uppercase hover:bg-[#002b57] transition-all active:scale-[0.97] shadow-[0_0_30px_rgba(194,163,120,.12)]">{isAr ? 'دخول إلى النظام' : 'ENTER SYSTEM'}</button>
+                      <div className="mt-6 text-[8px] sm:text-[9px] font-bold tracking-[0.25em] text-slate-500 uppercase">POWERED BY <span className="text-slate-300">BEBITO</span></div>
                     </div>
                   </div>
 )}
