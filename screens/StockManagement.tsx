@@ -209,6 +209,28 @@ const StockManagement: React.FC = () => {
     alert(lang === 'ar' ? `تم نقل ${ids.length} وحدة بنجاح` : `Successfully transferred ${ids.length} units.`);
   };
 
+  const handleFleetBoardBulkStatus = async (status: 'IN_STOCK' | 'IN_PROGRESS' | 'MAINTENANCE' | 'RETIRED') => {
+    if (isReadOnly || selectedIds.size === 0) return;
+    const ids = Array.from(selectedIds);
+    const targetStatus = status === 'IN_PROGRESS' ? GensetStatus.CLIPPED_ON : status as GensetStatus;
+    const targetLabel = status === 'IN_STOCK'
+      ? (isAr ? 'متاح' : 'ON STOCK')
+      : status === 'IN_PROGRESS'
+        ? (isAr ? 'قيد التشغيل' : 'IN PROGRESS')
+        : status === 'MAINTENANCE'
+          ? (isAr ? 'صيانة' : 'MAINTENANCE')
+          : (isAr ? 'خارج الخدمة' : 'SCRAP');
+
+    await Promise.all(ids.map(async id => {
+      const unit = stock.find(s => s.id === id);
+      if (unit) await db.updateGenset({ ...unit, status: targetStatus });
+    }));
+
+    setSelectedIds(new Set());
+    setDbVersion(v => v + 1);
+    alert(isAr ? `تم تحديث حالة ${ids.length} مولد إلى ${targetLabel}` : `Updated ${ids.length} genset(s) to ${targetLabel}.`);
+  };
+
   const toggleSelectAll = () => {
     if (selectedIds.size === filteredStock.length) setSelectedIds(new Set());
     else setSelectedIds(new Set(filteredStock.map(s => s.id)));
@@ -492,36 +514,88 @@ const StockManagement: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-1.5">
+          {!isReadOnly && selectedIds.size > 0 && (
+            <div className="sticky top-2 z-30 rounded-2xl border border-[#C2A378]/40 bg-[#3a3833] text-white p-2.5 shadow-2xl">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-2 mr-auto">
+                  <span className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/10 text-[9px] font-black uppercase tracking-widest">
+                    {selectedIds.size} {isAr ? 'محدد' : 'SELECTED'}
+                  </span>
+                  <button type="button" onClick={() => setSelectedIds(new Set())} className="px-2 py-1 rounded-lg text-[8px] font-black uppercase text-slate-300 hover:bg-white/10">
+                    {isAr ? 'إلغاء' : 'CLEAR'}
+                  </button>
+                </div>
+                <button type="button" onClick={() => handleFleetBoardBulkStatus('MAINTENANCE')} className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-[8px] font-black uppercase">🔧 {isAr ? 'صيانة' : 'MAINTENANCE'}</button>
+                <button type="button" onClick={() => handleFleetBoardBulkStatus('IN_STOCK')} className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[8px] font-black uppercase">● {isAr ? 'متاح' : 'ON STOCK'}</button>
+                <button type="button" onClick={() => handleFleetBoardBulkStatus('IN_PROGRESS')} className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[8px] font-black uppercase">▶ {isAr ? 'قيد التشغيل' : 'IN PROGRESS'}</button>
+                <button type="button" onClick={() => handleFleetBoardBulkStatus('RETIRED')} className="px-2.5 py-1.5 rounded-lg bg-slate-600 hover:bg-slate-500 text-white text-[8px] font-black uppercase">■ {isAr ? 'خارج الخدمة' : 'SCRAP'}</button>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5">
             {Object.values(Location).map(port => {
-              const units = stock.filter(s => s.location === port).sort((a,b) => a.unitNumber.localeCompare(b.unitNumber));
+              const units = stock.filter(s => s.location === port);
               if (!units.length) return null;
-              const available = units.filter(u => u.status === GensetStatus.IN_STOCK || (u.status === GensetStatus.CLIPPED_ON && !activeOperationUnits.has(u.unitNumber.trim().toUpperCase()))).length;
-              const active = units.filter(u => u.status === GensetStatus.CLIPPED_ON && activeOperationUnits.has(u.unitNumber.trim().toUpperCase())).length;
-              const maintenance = units.filter(u => u.status === GensetStatus.MAINTENANCE).length;
+              const normalizedUnits = units.map(unit => ({
+                unit,
+                liveStatus: unit.status === GensetStatus.MAINTENANCE
+                  ? 'MAINTENANCE'
+                  : unit.status === GensetStatus.RETIRED
+                    ? 'RETIRED'
+                    : unit.status === GensetStatus.CLIPPED_ON && activeOperationUnits.has(unit.unitNumber.trim().toUpperCase())
+                      ? 'IN_PROGRESS'
+                      : 'IN_STOCK'
+              })).sort((a, b) => {
+                const rank: Record<string, number> = { MAINTENANCE: 0, IN_STOCK: 1, IN_PROGRESS: 2, RETIRED: 3 };
+                return (rank[a.liveStatus] - rank[b.liveStatus]) || a.unit.unitNumber.localeCompare(b.unit.unitNumber);
+              });
+              const statusGroups = [
+                { key: 'MAINTENANCE', label: isAr ? 'صيانة' : 'MAINTENANCE', icon: '🔧', cls: 'text-rose-600', cell: 'bg-rose-500 border-rose-600' },
+                { key: 'IN_STOCK', label: isAr ? 'متاح' : 'ON STOCK', icon: '●', cls: 'text-emerald-600', cell: 'bg-emerald-500 border-emerald-600' },
+                { key: 'IN_PROGRESS', label: isAr ? 'قيد التشغيل' : 'IN PROGRESS', icon: '▶', cls: 'text-blue-600', cell: 'bg-blue-600 border-blue-700' },
+                { key: 'RETIRED', label: isAr ? 'خارج الخدمة' : 'SCRAP', icon: '■', cls: 'text-slate-500', cell: 'bg-slate-500 border-slate-600' }
+              ];
               return (
-                <div key={port} className="min-w-0 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
-                  <div className="bg-[#3a3833] text-white px-1.5 py-2 text-center border-b border-[#C2A378]/30">
-                    <div className="font-black text-[9px] truncate">{port}</div>
-                    <div className="text-[6px] font-bold text-slate-300">{units.length} {isAr ? 'مولد' : 'G'}</div>
+                <div key={port} className="min-w-0 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+                  <div className="bg-[#3a3833] text-white px-2.5 py-2.5 flex items-center justify-between border-b border-[#C2A378]/30">
+                    <div>
+                      <div className="font-black text-[10px] truncate">{port}</div>
+                      <div className="text-[7px] font-bold text-slate-300">{units.length} {isAr ? 'مولد إجمالي' : 'TOTAL GENSETS'}</div>
+                    </div>
+                    <div className="text-[10px] font-mono font-black text-[#C2A378]">{units.length}</div>
                   </div>
-                  <div className="flex justify-center gap-0.5 py-1 border-b border-slate-100 dark:border-slate-800 text-[6px] font-black">
-                    <span className="text-emerald-600">S {available}</span>
-                    <span className="text-blue-600">A {active}</span>
-                    <span className="text-rose-600">M {maintenance}</span>
-                  </div>
-                  <div className="p-1 space-y-1">
-                    {units.map(unit => {
-                      const linkedActive = activeOperationUnits.has(unit.unitNumber.trim().toUpperCase());
-                      const isAvailable = unit.status === GensetStatus.IN_STOCK || (unit.status === GensetStatus.CLIPPED_ON && !linkedActive);
-                      const statusClass = unit.status === GensetStatus.MAINTENANCE ? 'bg-rose-500 border-rose-600' : unit.status === GensetStatus.CLIPPED_ON && linkedActive ? 'bg-blue-600 border-blue-700' : isAvailable ? 'bg-emerald-500 border-emerald-600' : 'bg-amber-500 border-amber-600';
-                      const label = unit.status === GensetStatus.MAINTENANCE ? (isAr ? 'صيانة' : 'MAINT') : unit.status === GensetStatus.CLIPPED_ON && linkedActive ? (isAr ? 'رحلة' : 'ACTIVE') : isAvailable ? (isAr ? 'متاح' : 'STOCK') : unit.status.replace('_', ' ');
-                      const activeOp = ops.find(o => o.gensetNumber?.trim().toUpperCase() === unit.unitNumber.trim().toUpperCase() && o.status === 'IN PROGRESS');
+                  <div className="p-1.5 space-y-2">
+                    {statusGroups.map(group => {
+                      const groupUnits = normalizedUnits.filter(item => item.liveStatus === group.key);
+                      if (!groupUnits.length) return null;
                       return (
-                        <button key={unit.id} title={activeOp ? `#${activeOp.bookingNumber}` : label} onClick={() => setEditingGenset({...unit})} className={`${statusClass} min-h-[42px] w-full rounded-lg border text-white px-1 py-1 flex flex-col items-center justify-center hover:brightness-110 transition-all`}>
-                          <span className="text-[9px] font-black font-mono truncate max-w-full">{unit.unitNumber}</span>
-                          <span className="text-[5px] font-black uppercase opacity-90 mt-0.5">{label}</span>
-                        </button>
+                        <div key={group.key}>
+                          <div className={`flex items-center justify-between px-1 mb-1 ${group.cls}`}>
+                            <span className="text-[7px] font-black uppercase tracking-wider">{group.icon} {group.label}</span>
+                            <span className="text-[8px] font-mono font-black">{groupUnits.length}</span>
+                          </div>
+                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-1">
+                            {groupUnits.map(({ unit, liveStatus }) => {
+                              const selected = selectedIds.has(unit.id);
+                              const activeOp = liveStatus === 'IN_PROGRESS'
+                                ? ops.find(o => o.gensetNumber?.trim().toUpperCase() === unit.unitNumber.trim().toUpperCase() && o.status === 'IN PROGRESS')
+                                : undefined;
+                              const selectedClass = selected ? 'ring-4 ring-[#C2A378] ring-offset-1 ring-offset-white dark:ring-offset-slate-900 scale-[1.03] z-10' : '';
+                              return (
+                                <button
+                                  key={unit.id}
+                                  type="button"
+                                  title={activeOp ? `#${activeOp.bookingNumber}` : (isAr ? 'اضغط للتحديد' : 'Click to select')}
+                                  onClick={() => toggleSelect(unit.id)}
+                                  className={`${group.cell} ${selectedClass} min-h-[38px] w-full rounded-lg border text-white px-1 py-1 flex flex-col items-center justify-center hover:brightness-110 active:scale-95 transition-all cursor-pointer`}
+                                >
+                                  <span className="text-[9px] font-black font-mono truncate max-w-full">{unit.unitNumber}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
                       );
                     })}
                   </div>
@@ -529,7 +603,7 @@ const StockManagement: React.FC = () => {
               );
             })}
           </div>
-          <p className="text-[7px] text-slate-400 text-center uppercase tracking-widest">{isAr ? 'الموانئ كلها ظاهرة جنب بعض — كل مولد في سطر مستقل حسب حالته' : 'All ports visible side by side — every genset shown vertically by live status'}</p>
+          <p className="text-[7px] text-slate-400 text-center uppercase tracking-widest">{isAr ? 'الصيانة أولاً ثم المتاح ثم قيد التشغيل — اضغط على الخلايا للتحديد والتعديل الجماعي' : 'Maintenance first, On Stock next, In Progress last — click cells to select and bulk change status'}</p>
           {stock.length === 0 && (
             <div className="bg-white dark:bg-slate-800 rounded-3xl p-12 text-center border border-slate-200 dark:border-slate-700">
               <div className="text-4xl mb-3">⚡</div>
