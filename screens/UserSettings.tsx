@@ -338,6 +338,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
               { id: 'IDENTITY', label: isAr ? 'الملف الشخصي' : 'Profile', icon: '👤' },
               { id: 'BUSINESS', label: isAr ? 'العلامة التجارية' : 'Branding', icon: '🏢' },
               { id: 'LINGUISTICS', label: isAr ? 'اللغة والذكاء' : 'Linguistics', icon: '🗣️' },
+              { id: 'DISPLAY', label: isAr ? 'المظهر' : 'Themes', icon: '🎨' },
               isSuperOwner ? { id: 'COMMAND', label: isAr ? 'التحكم الحرج' : 'Command', icon: '☢️' } : null,
             ].filter(Boolean).map((tab) => (
               <button 
@@ -510,20 +511,14 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {[
-                {
-                  id: 'day' as const,
-                  name: isAr ? '☀️ وضع الصباح' : '☀️ DAY MODE',
-                  desc: isAr ? 'خلفية فاتحة، بطاقات بيضاء، نص كحلي ولمسة ذهبية.' : 'Light workspace, white cards, navy text and Nile Fleet gold.',
-                  preview: ['#f5f7fa','#ffffff','#b18b52']
-                },
-                {
-                  id: 'night' as const,
-                  name: isAr ? '🌙 وضع الليل' : '🌙 NIGHT MODE',
-                  desc: isAr ? 'خلفية كحلية عميقة، بطاقات داكنة ونص فاتح ولمسة ذهبية.' : 'Deep navy workspace, dark cards, light text and Nile Fleet gold.',
-                  preview: ['#26231f','#101c2e','#c2a378']
-                }
+                { id: 'day' as const, name: isAr ? '☀️ نهاري' : '☀️ DAY', desc: isAr ? 'كلاسيكي فاتح وذهبي.' : 'Classic light Nile Fleet.', preview: ['#f3f1ec','#faf9f6','#9b7438'] },
+                { id: 'night' as const, name: isAr ? '🌙 ليلي' : '🌙 NIGHT', desc: isAr ? 'كحلي عميق ولمسة ذهبية.' : 'Deep navy and gold.', preview: ['#050b14','#0d1928','#d0ae78'] },
+                { id: 'steel' as const, name: isAr ? '⚙️ ستيل صناعي' : '⚙️ INDUSTRIAL STEEL', desc: isAr ? 'رمادي معدني عالي الوضوح.' : 'High-contrast industrial steel.', preview: ['#0f1720','#1b2935','#62b6cb'] },
+                { id: 'ocean' as const, name: isAr ? '🌊 أزرق بحري' : '🌊 OCEAN COMMAND', desc: isAr ? 'أزرق بحري واضح وهادئ.' : 'Clean maritime blue command.', preview: ['#071a2b','#102d46','#38bdf8'] },
+                { id: 'graphite' as const, name: isAr ? '◼️ جرافيت' : '◼️ GRAPHITE', desc: isAr ? 'أسود فحمي مع فضي.' : 'Graphite black with silver.', preview: ['#111111','#1c1c1c','#d1d5db'] },
+                { id: 'light' as const, name: isAr ? '◇ احترافي فاتح' : '◇ PROFESSIONAL LIGHT', desc: isAr ? 'فاتح نظيف للعمل اليومي.' : 'Bright professional workspace.', preview: ['#eef2f6','#ffffff','#2563eb'] }
               ].map(p => (
                 <button
                   key={p.id}
@@ -531,9 +526,9 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
                   onClick={() => setTheme(p.id)}
                   className={`group text-start rounded-[2rem] overflow-hidden border-2 transition-all duration-200 ${theme === p.id ? 'border-[var(--accent)] shadow-xl -translate-y-1' : 'border-[var(--border-primary)] hover:border-[var(--accent)]/60'}`}
                 >
-                  <div className="h-32 p-4 flex items-end gap-3" style={{ background: p.preview[0] }}>
-                    <div className="h-16 flex-1 rounded-xl" style={{ background: p.preview[1] }}></div>
-                    <div className="h-10 w-10 rounded-xl" style={{ background: p.preview[2] }}></div>
+                  <div className="h-28 p-4 flex items-end gap-3" style={{ background: p.preview[0] }}>
+                    <div className="h-14 flex-1 rounded-xl" style={{ background: p.preview[1] }}></div>
+                    <div className="h-9 w-9 rounded-xl" style={{ background: p.preview[2] }}></div>
                   </div>
                   <div className="p-5 bg-[var(--surface-1)]">
                     <div className="flex items-center justify-between gap-2">
