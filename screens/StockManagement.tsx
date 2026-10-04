@@ -290,10 +290,15 @@ const StockManagement: React.FC = () => {
       createdAt: log.createdAt || new Date().toISOString()
     };
 
-    if (mode === 'add') {
-      db.addMaintenanceLog(fullLog);
-    } else {
-      db.updateMaintenanceLog(fullLog);
+    const saved = mode === 'add'
+      ? await db.addMaintenanceLog(fullLog)
+      : await db.updateMaintenanceLog(fullLog);
+
+    if (!saved) {
+      alert(isAr
+        ? 'تعذر حفظ سجل الصيانة في قاعدة البيانات. لم يتم إغلاق النموذج حتى لا تفقد البيانات.'
+        : 'Maintenance log could not be saved to the database. The form was kept open so your data is not lost.');
+      return;
     }
 
     setMaintModalState({ isOpen: false, mode: 'add', log: {} });
