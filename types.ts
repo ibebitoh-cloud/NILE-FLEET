@@ -28,7 +28,6 @@ export enum Location {
   SOKHNA = 'SOKHNA',
   SCCT = 'SCCT',
   PSD = 'PSD',
-  MAL = 'MAL',
   WORKSHOP = 'WORKSHOP'
 }
 
