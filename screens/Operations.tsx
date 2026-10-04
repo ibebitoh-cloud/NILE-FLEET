@@ -180,6 +180,9 @@ const Operations: React.FC<{ highlightId?: string | null; clearHighlight?: () =>
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
   useEffect(() => { const timer = setTimeout(() => setDebouncedSearch(searchTerm), 150); return () => clearTimeout(timer); }, [searchTerm]);
+  const [expandedBooking, setExpandedBooking] = useState<string | null>(() => readOperationsMemory().expandedBooking || null);
+  const [activeQuickFilter, setActiveQuickFilter] = useState<QuickFilter>(() => readOperationsMemory().quickFilter || 'ALL');
+
   useEffect(() => {
     if (!userMemoryKey) return;
     try {
@@ -190,9 +193,6 @@ const Operations: React.FC<{ highlightId?: string | null; clearHighlight?: () =>
       }));
     } catch {}
   }, [userMemoryKey, activeQuickFilter, searchTerm, expandedBooking]);
-
-  const [expandedBooking, setExpandedBooking] = useState<string | null>(() => readOperationsMemory().expandedBooking || null);
-  const [activeQuickFilter, setActiveQuickFilter] = useState<QuickFilter>(() => readOperationsMemory().quickFilter || 'ALL');
   const [editingOp, setEditingOp] = useState<Operation | null>(null);
   const [viewingPhoto, setViewingPhoto] = useState<string | null>(null);
 
