@@ -73,7 +73,7 @@ const Reports: React.FC = () => {
     ops.forEach(o => {
       if (o.status !== 'UNDER OPERATE') return;
       const clipOnDate = String(o.clipOnDate || o.operationDate || '').slice(0, 10);
-      if (!clipOnDate || clipOnDate !== reportDate) return;
+      if (!clipOnDate) return;
 
       const port = String(o.clipOnPort || '').trim();
       const bookingNumber = String(o.bookingNumber || '').trim();
