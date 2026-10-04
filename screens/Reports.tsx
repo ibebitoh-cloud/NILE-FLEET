@@ -15,13 +15,14 @@ const Reports: React.FC = () => {
   const { lang } = useContext(LanguageContext);
   const t = translations[lang];
   
-  const [dateFrom, setDateFrom] = useState(() => { const now = new Date(); return localDateISO(new Date(now.getFullYear(), now.getMonth(), 1)); });
-  const [dateTo, setDateTo] = useState(() => localDateISO());
+  const [reportDate, setReportDate] = useState(() => localDateISO());
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<string>('ALL');
+  const [videoRequests, setVideoRequests] = useState<Record<string, boolean>>({});
   const [isThinking, setIsThinking] = useState(false);
   const [auditAdvice, setAuditAdvice] = useState<string>('');
   const [dataVersion, setDataVersion] = useState(0);
+
   useEffect(() => {
     const refresh = () => setDataVersion(v => v + 1);
     window.addEventListener('db-change', refresh);
@@ -33,44 +34,29 @@ const Reports: React.FC = () => {
   }, []);
 
   const ops = db.getOperations();
-  const customers = useMemo(() => 
-    db.getUsers().filter(u => u.role === UserRole.CUSTOMER).map(u => u.companyName || u.name), 
+  const customers = useMemo(() =>
+    db.getUsers().filter(u => u.role === UserRole.CUSTOMER).map(u => u.companyName || u.name),
   []);
 
   const filteredData = useMemo(() => {
-    const from = dateFrom;
-    const to = dateTo;
     const search = searchTerm.toLowerCase().trim();
-    
     return ops.filter(o => {
       const operationDate = String(o.operationDate || '').slice(0, 10);
-      const matchesDate = operationDate >= from && operationDate <= to;
+      const matchesDate = operationDate === reportDate;
       const normalizeCustomer = (value?: string) => String(value || '').trim().toLocaleLowerCase().replace(/\s+/g, ' ');
       const matchesCustomer = selectedCustomer === 'ALL' || normalizeCustomer(o.customerName) === normalizeCustomer(selectedCustomer);
-      const matchesSearch = !search || 
-        (o.bookingNumber || '').toLowerCase().includes(search) ||
-        (o.containerNumber || '').toLowerCase().includes(search) ||
-        (o.customerName || '').toLowerCase().includes(search) ||
-        (o.gensetNumber && o.gensetNumber.toLowerCase().includes(search));
-      
+      const matchesSearch = !search ||
+        String(o.bookingNumber || '').toLowerCase().includes(search) ||
+        String(o.containerNumber || '').toLowerCase().includes(search) ||
+        String(o.customerName || '').toLowerCase().includes(search) ||
+        String(o.gensetNumber || '').toLowerCase().includes(search);
       return matchesDate && matchesCustomer && matchesSearch;
-    }).sort((a, b) => b.operationDate.localeCompare(a.operationDate));
-  }, [dateFrom, dateTo, ops, searchTerm, selectedCustomer]);
+    }).sort((a, b) => String(b.operationDate || '').localeCompare(String(a.operationDate || '')));
+  }, [reportDate, ops, searchTerm, selectedCustomer]);
 
-  const summary = useMemo(() => {
-    const totalRevenue = filteredData.reduce((a, b) => a + (parseFloat(String(b.rate || '').replace(/,/g, '')) || 0), 0);
-    const totalVat = filteredData.reduce((a, b) => a + (parseFloat(String(b.vat || '').replace(/,/g, '')) || 0), 0);
-    return {
-      count: filteredData.length,
-      revenue: totalRevenue,
-      vat: totalVat,
-      grandTotal: totalRevenue + totalVat
-    };
-  }, [filteredData]);
-
-  // Daily Genset Dispatch Plan: one operational row per booking/port/date.
-  // Container-level operations are grouped so the port team sees the number
-  // of gensets to prepare, plus the customer, shipper and commodity context.
+  // Daily Genset Dispatch Plan: UNDER OPERATE only.
+  // Containers already present in Master View are the source for the booking
+  // requirement, so Gensets Required always follows the actual container count.
   const dailyGensetPlan = useMemo(() => {
     const groups = new Map<string, {
       clipOnDate: string;
@@ -80,44 +66,47 @@ const Reports: React.FC = () => {
       shipper: string;
       commodity: string;
       trucker: string;
-      videoUrl: string;
       containers: Set<string>;
-      gensets: Set<string>;
+      rowCount: number;
     }>();
 
     ops.forEach(o => {
+      if (o.status !== 'UNDER OPERATE') return;
       const clipOnDate = String(o.clipOnDate || o.operationDate || '').slice(0, 10);
-      if (!clipOnDate || clipOnDate < dateFrom || clipOnDate > dateTo) return;
-      if (o.status === 'CANCEL' || o.status === 'DONE') return;
+      if (!clipOnDate || clipOnDate !== reportDate) return;
 
-      const key = [clipOnDate, o.clipOnPort, o.bookingNumber].join('|');
+      const port = String(o.clipOnPort || '').trim();
+      const bookingNumber = String(o.bookingNumber || '').trim();
+      const key = [clipOnDate, port, bookingNumber].join('|');
       const current = groups.get(key) || {
         clipOnDate,
-        port: String(o.clipOnPort || ''),
-        bookingNumber: o.bookingNumber || '---',
-        customerName: o.customerName || '---',
-        shipper: o.beneficiaryName || '---',
-        commodity: o.commodity || '---',
-        trucker: o.trucker || '---',
-        videoUrl: String((o as any).videoUrl || (o as any).video || ''),
+        port,
+        bookingNumber: bookingNumber || '-',
+        customerName: o.customerName || '',
+        shipper: o.beneficiaryName || '',
+        commodity: o.commodity || '',
+        trucker: o.trucker || '',
         containers: new Set<string>(),
-        gensets: new Set<string>()
+        rowCount: 0
       };
 
-      if (o.containerNumber) current.containers.add(o.containerNumber);
-      if (o.gensetNumber) current.gensets.add(o.gensetNumber);
-      if (!current.customerName || current.customerName === '---') current.customerName = o.customerName || '---';
-      if (!current.shipper || current.shipper === '---') current.shipper = o.beneficiaryName || '---';
-      if (!current.commodity || current.commodity === '---') current.commodity = o.commodity || '---';
-      if (!current.trucker || current.trucker === '---') current.trucker = o.trucker || '---';
-      if (!current.videoUrl) current.videoUrl = String((o as any).videoUrl || (o as any).video || '');
+      current.rowCount += 1;
+      const container = String(o.containerNumber || '').trim();
+      if (container) current.containers.add(container);
+      if (!current.customerName) current.customerName = o.customerName || '';
+      if (!current.shipper) current.shipper = o.beneficiaryName || '';
+      if (!current.commodity) current.commodity = o.commodity || '';
+      if (!current.trucker) current.trucker = o.trucker || '';
       groups.set(key, current);
     });
 
     return Array.from(groups.values())
-      .map(g => ({ ...g, containerCount: g.containers.size, gensetCount: g.containers.size }))
-      .sort((a, b) => a.clipOnDate.localeCompare(b.clipOnDate) || a.port.localeCompare(b.port) || a.bookingNumber.localeCompare(b.bookingNumber));
-  }, [ops, dateFrom, dateTo, dataVersion]);
+      .map(g => {
+        const containerCount = g.containers.size || g.rowCount;
+        return { ...g, containerCount, gensetCount: containerCount };
+      })
+      .sort((a, b) => a.port.localeCompare(b.port) || a.clipOnDate.localeCompare(b.clipOnDate) || a.bookingNumber.localeCompare(b.bookingNumber));
+  }, [ops, reportDate, dataVersion]);
 
   const dailyGensetTotals = useMemo(() => ({
     bookings: dailyGensetPlan.length,
@@ -131,7 +120,7 @@ const Reports: React.FC = () => {
     try {
       const prompt = `
         You are an elite Auditor for Nile Fleet.
-        REVENUE REPORT DATA (${dateFrom} to ${dateTo}) ${selectedCustomer !== 'ALL' ? `for Customer: ${selectedCustomer}` : ''}:
+        REVENUE REPORT DATA (${reportDate} to ${reportDate}) ${selectedCustomer !== 'ALL' ? `for Customer: ${selectedCustomer}` : ''}:
         - Total Bookings: ${summary.count}
         - Base Revenue: EGP ${summary.revenue.toLocaleString()}
         - Collected VAT: EGP ${summary.vat.toLocaleString()}
@@ -158,7 +147,7 @@ const Reports: React.FC = () => {
       <div className="bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col xl:flex-row justify-between items-center gap-6">
         <div>
            <h2 className="text-2xl font-black text-[#3a3833] dark:text-white uppercase tracking-tight">{lang === 'ar' ? 'التقارير المالية والتدقيق' : 'Financial Audit Reports'}</h2>
-           <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Audit by date range, partner, or asset ID</p>
+           <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Daily operational report — UNDER OPERATE only</p>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full xl:w-auto">
            {/* Customer Filter */}
@@ -188,9 +177,8 @@ const Reports: React.FC = () => {
            </div>
            
            <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900 p-2 rounded-2xl border border-slate-100 dark:border-slate-700 w-full md:w-auto">
-              <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="bg-transparent text-xs font-black text-blue-900 dark:text-blue-400 outline-none p-2 flex-1" />
-              <span className="text-slate-300 font-black">→</span>
-              <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="bg-transparent text-xs font-black text-blue-900 dark:text-blue-400 outline-none p-2 flex-1" />
+              <input type="date" value={reportDate} onChange={e => setReportDate(e.target.value)} className="bg-transparent text-xs font-black text-blue-900 dark:text-blue-400 outline-none p-2 flex-1" />
+              <span className="px-2 text-[9px] font-black uppercase tracking-widest text-slate-400">{lang === 'ar' ? 'يومي' : 'DAILY'}</span>
            </div>
         </div>
       </div>
@@ -215,64 +203,82 @@ const Reports: React.FC = () => {
         </div>
 
         <div className="mx-6 mt-5 rounded-2xl border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-[9px] font-black uppercase tracking-widest text-amber-800 dark:text-amber-200">
-          {lang === 'ar' ? 'تعليمات الميناء: تصوير فيديو لكل مولد أثناء التشغيل بعد التركيب + تسجيل اسم العميل وتاريخ التركيب.' : 'PORT INSTRUCTION: Capture a video of each genset while working after clip-on + record customer name and clip-on date.'}
+          {lang === 'ar' ? 'تعليمات الميناء: اضغط على YES للحجز الذي تريد منه تصوير فيديو. اتركها فارغة إذا لم تطلب فيديو.' : 'PORT INSTRUCTION: Click YES for bookings where you request a video. Leave blank when no video is requested.'}
         </div>
 
-        <div className="overflow-x-auto mt-4 border-t-4 border-slate-900 dark:border-slate-600">
-          <table className="w-full text-left text-[10px] min-w-[1100px]">
-            <thead className="bg-slate-900 text-white font-black uppercase tracking-widest">
-              <tr>
-                <th className="px-4 py-3">{lang === 'ar' ? 'التاريخ' : 'Clip-On Date'}</th>
-                <th className="px-4 py-3">{lang === 'ar' ? 'الميناء' : 'Port'}</th>
-                <th className="px-4 py-3">{lang === 'ar' ? 'رقم الحجز' : 'Booking No.'}</th>
-                <th className="px-4 py-3">{lang === 'ar' ? 'اسم العميل' : 'Customer Name'}</th>
-                <th className="px-4 py-3">{lang === 'ar' ? 'الشاحن' : 'Shipper'}</th>
-                <th className="px-4 py-3">{lang === 'ar' ? 'البضاعة' : 'Commodity'}</th>
-                <th className="px-4 py-3">{lang === 'ar' ? 'شركة النقل' : 'Trucker'}</th>
-                <th className="px-4 py-3 text-center">{lang === 'ar' ? 'الحاويات' : 'Containers'}</th>
-                <th className="px-4 py-3 text-center">{lang === 'ar' ? 'المولدات المطلوبة' : 'Gensets Required'}</th>
-                <th className="px-4 py-3">{lang === 'ar' ? 'الفيديو' : 'Video'}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-              {dailyGensetPlan.map(row => {
-                const portKey = String(row.port || '').trim().toUpperCase();
-                const portTone =
-                  portKey.includes('SOKHNA') || portKey.includes('السخنة') ? 'border-l-4 border-l-blue-500 bg-blue-50/40 dark:bg-blue-950/20' :
-                  portKey.includes('ALEX') || portKey.includes('الإسكندرية') ? 'border-l-4 border-l-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20' :
-                  portKey.includes('DAM') || portKey.includes('دمياط') ? 'border-l-4 border-l-violet-500 bg-violet-50/40 dark:bg-violet-950/20' :
-                  portKey.includes('PORT SAID') || portKey.includes('بورسعيد') ? 'border-l-4 border-l-amber-500 bg-amber-50/40 dark:bg-amber-950/20' :
-                  portKey.includes('DEK') || portKey.includes('الدخيلة') ? 'border-l-4 border-l-rose-500 bg-rose-50/40 dark:bg-rose-950/20' :
-                  'border-l-4 border-l-slate-400 bg-slate-50/40 dark:bg-slate-900/30';
-                const videoLabel = row.videoUrl ? (lang === 'ar' ? 'فتح الفيديو' : 'OPEN VIDEO') : (lang === 'ar' ? 'لا يوجد فيديو' : 'NO VIDEO');
-                return (
-                <tr key={row.clipOnDate + row.port + row.bookingNumber} className={`border-b border-slate-100 dark:border-slate-700 ${portTone} hover:brightness-[0.98]`}>
-                  <td className="px-4 py-3 font-black text-blue-600 dark:text-blue-400 whitespace-nowrap">{row.clipOnDate || '-'}</td>
-                  <td className="px-4 py-3 font-black">{row.port ? translateEntity(row.port, lang) : '-'}</td>
-                  <td className="px-4 py-3 font-black text-blue-600 dark:text-blue-400 font-mono">{row.bookingNumber || '-'}</td>
-                  <td className="px-4 py-3 font-bold">{row.customerName && row.customerName !== '---' ? translateEntity(row.customerName, lang) : '-'}</td>
-                  <td className="px-4 py-3 font-bold">{row.shipper && row.shipper !== '---' ? translateEntity(row.shipper, lang) : '-'}</td>
-                  <td className="px-4 py-3 font-bold">{row.commodity && row.commodity !== '---' ? translateEntity(row.commodity, lang) : '-'}</td>
-                  <td className="px-4 py-3 font-bold">{row.trucker && row.trucker !== '---' ? translateEntity(row.trucker, lang) : '-'}</td>
-                  <td className="px-4 py-3 text-center font-black">{row.containerCount}</td>
-                  <td className="px-4 py-3 text-center font-black text-emerald-600 dark:text-emerald-400">{row.gensetCount}</td>
-                  <td className="px-4 py-3 font-black">
-                    {row.videoUrl ? (
-                      <button type="button" onClick={() => window.open(row.videoUrl, '_blank', 'noopener,noreferrer')} className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-2.5 py-1.5 text-[9px] text-white hover:bg-blue-700">
-                        ▶ {videoLabel}
-                      </button>
-                    ) : (
-                      <span className="text-slate-400">-</span>
-                    )}
-                  </td>
-                </tr>
-                );
-              })}
-              {dailyGensetPlan.length === 0 && (
-                <tr><td colSpan={10} className="py-14 text-center text-slate-400 font-black uppercase tracking-widest">{lang === 'ar' ? 'لا توجد مولدات مطلوبة في الفترة المحددة' : 'No genset requirements in the selected period'}</td></tr>
-              )}
-            </tbody>
-          </table>
+        <div className="p-5 space-y-6">        <div className="overflow-x-auto mt-4 border-t-4 border-slate-900 dark:border-slate-600">
+          {Array.from(new Set(dailyGensetPlan.map(row => row.port))).map(port => {
+            const portRows = dailyGensetPlan.filter(row => row.port === port);
+            const portKey = String(port || '').trim().toUpperCase();
+            const portTone =
+              portKey.includes('SOKHNA') || portKey.includes('السخنة') ? 'border-blue-500 bg-blue-50/40 dark:bg-blue-950/20' :
+              portKey.includes('ALEX') || portKey.includes('الإسكندرية') ? 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20' :
+              portKey.includes('DAM') || portKey.includes('دمياط') ? 'border-violet-500 bg-violet-50/40 dark:bg-violet-950/20' :
+              portKey.includes('PORT SAID') || portKey.includes('بورسعيد') ? 'border-amber-500 bg-amber-50/40 dark:bg-amber-950/20' :
+              portKey.includes('DEK') || portKey.includes('الدخيلة') ? 'border-rose-500 bg-rose-50/40 dark:bg-rose-950/20' :
+              'border-slate-400 bg-slate-50/40 dark:bg-slate-900/30';
+
+            return (
+              <div key={port || 'NO_PORT'} className={\`rounded-2xl border-l-4 overflow-hidden \${portTone}\`}>
+                <div className="px-4 py-3 bg-slate-900 text-white flex items-center justify-between">
+                  <div className="font-black uppercase tracking-widest">{port ? translateEntity(port, lang) : '-'}</div>
+                  <div className="text-[9px] font-black uppercase tracking-widest opacity-80">
+                    {portRows.length} {lang === 'ar' ? 'حجوزات' : 'BOOKINGS'} · {portRows.reduce((s, r) => s + r.gensetCount, 0)} {lang === 'ar' ? 'مولدات' : 'GENSETS'}
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-[10px] min-w-[1120px]">
+                    <thead className="bg-slate-800 text-white font-black uppercase tracking-widest">
+                      <tr>
+                        <th className="px-4 py-3">{lang === 'ar' ? 'التاريخ' : 'Clip-On Date'}</th>
+                        <th className="px-4 py-3">{lang === 'ar' ? 'رقم الحجز' : 'Booking No.'}</th>
+                        <th className="px-4 py-3">{lang === 'ar' ? 'اسم العميل' : 'Customer Name'}</th>
+                        <th className="px-4 py-3">{lang === 'ar' ? 'الشاحن' : 'Shipper'}</th>
+                        <th className="px-4 py-3">{lang === 'ar' ? 'البضاعة' : 'Commodity'}</th>
+                        <th className="px-4 py-3">{lang === 'ar' ? 'شركة النقل' : 'Trucker'}</th>
+                        <th className="px-4 py-3 text-center">{lang === 'ar' ? 'الحاويات' : 'Containers'}</th>
+                        <th className="px-4 py-3 text-center">{lang === 'ar' ? 'المولدات المطلوبة' : 'Gensets Required'}</th>
+                        <th className="px-4 py-3 text-center">{lang === 'ar' ? 'فيديو' : 'Video'}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                      {portRows.map(row => {
+                        const key = row.clipOnDate + '|' + row.port + '|' + row.bookingNumber;
+                        const requested = Boolean(videoRequests[key]);
+                        return (
+                          <tr key={key} className="border-b border-slate-100 dark:border-slate-700 hover:bg-white/60 dark:hover:bg-slate-800/60">
+                            <td className="px-4 py-3 font-black text-blue-600 dark:text-blue-400 whitespace-nowrap">{row.clipOnDate || '-'}</td>
+                            <td className="px-4 py-3 font-black text-blue-600 dark:text-blue-400 font-mono">{row.bookingNumber || '-'}</td>
+                            <td className="px-4 py-3 font-bold">{row.customerName ? translateEntity(row.customerName, lang) : '-'}</td>
+                            <td className="px-4 py-3 font-bold">{row.shipper ? translateEntity(row.shipper, lang) : '-'}</td>
+                            <td className="px-4 py-3 font-bold">{row.commodity ? translateEntity(row.commodity, lang) : '-'}</td>
+                            <td className="px-4 py-3 font-bold">{row.trucker ? translateEntity(row.trucker, lang) : '-'}</td>
+                            <td className="px-4 py-3 text-center font-black">{row.containerCount || '-'}</td>
+                            <td className="px-4 py-3 text-center font-black text-emerald-600 dark:text-emerald-400">{row.gensetCount || '-'}</td>
+                            <td className="px-4 py-3 text-center">
+                              <button
+                                type="button"
+                                onClick={() => setVideoRequests(prev => ({ ...prev, [key]: !requested }))}
+                                className={\`min-w-12 px-3 py-1.5 rounded-lg text-[9px] font-black \${requested ? 'bg-blue-600 text-white' : 'bg-transparent text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}\`}
+                                title={lang === 'ar' ? 'اضغط لتحديد طلب تصوير فيديو' : 'Click to request video'}
+                              >
+                                {requested ? 'YES' : ''}
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          })}
+          {dailyGensetPlan.length === 0 && (
+            <div className="py-14 text-center text-slate-400 font-black uppercase tracking-widest">
+              {lang === 'ar' ? 'لا توجد حجوزات تحت التشغيل في هذا اليوم' : 'NO UNDER OPERATE BOOKINGS FOR THIS DAY'}
+            </div>
+          )}
         </div>
       </section>
 
@@ -311,7 +317,7 @@ const Reports: React.FC = () => {
                 const blob = new Blob(["\uFEFF"+csv], {type:'text/csv'});
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
-                link.href = url; link.download = `Fleet_Audit_${dateFrom}_${selectedCustomer}.csv`; link.click();
+                link.href = url; link.download = `Fleet_Audit_${reportDate}_${selectedCustomer}.csv`; link.click();
               }}
               className="text-[10px] font-black text-blue-600 uppercase hover:underline"
             >
