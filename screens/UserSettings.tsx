@@ -21,7 +21,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
   const isSuperOwner = user.email === 'bebito@nilefleet.com';
   const isAdmin = user.role === UserRole.ADMIN;
 
-  const [activeTab, setActiveTab] = useState<'IDENTITY' | 'BUSINESS' | 'LINGUISTICS' | 'COMMAND'>('BUSINESS');
+  const [activeTab, setActiveTab] = useState<'IDENTITY' | 'BUSINESS' | 'LINGUISTICS' | 'DISPLAY' | 'COMMAND'>('BUSINESS');
   
   const [profileData, setProfileData] = useState<Partial<User>>({
     ...user,
