@@ -59,8 +59,10 @@ function camelToSnake(obj: any): any {
 
 function prepareMaintenanceDbRow(row: any): any {
   const prepared = { ...row };
-  // completedDate is UI-only; genset_maintenance_logs has no completed_date column.
-  delete prepared.completedDate;
+  // These are legacy/UI aliases and are not physical columns in the table.
+  delete prepared.unitNumber;
+  delete prepared.maintenanceType;
+  // completedDate is a real database column; preserve it.
   return prepared;
 }
 
