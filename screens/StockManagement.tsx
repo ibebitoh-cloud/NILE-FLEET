@@ -38,6 +38,16 @@ const StockManagement: React.FC = () => {
   const [filterStat, setFilterStat] = useState<string>('ALL');
   const [filterLoc, setFilterLoc] = useState<string>('ALL');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  // Port-report follow-up markers: these do not change the genset's real status/location.
+  // They persist locally so a missing port update stays visible until it is confirmed.
+  const [missingUpdateIds, setMissingUpdateIds] = useState<Set<string>>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('nilefleet_missing_genset_updates') || '[]');
+      return new Set(Array.isArray(saved) ? saved.filter(Boolean) : []);
+    } catch {
+      return new Set();
+    }
+  });
 
   // Maintenance Tab Specific Filters
   const [maintSearch, setMaintSearch] = useState('');
@@ -288,6 +298,23 @@ const StockManagement: React.FC = () => {
     if (newSet.has(id)) newSet.delete(id);
     else newSet.add(id);
     setSelectedIds(newSet);
+  };
+
+  const persistMissingUpdateIds = (next: Set<string>) => {
+    setMissingUpdateIds(next);
+    localStorage.setItem('nilefleet_missing_genset_updates', JSON.stringify(Array.from(next)));
+  };
+
+  const toggleMissingUpdateForSelected = () => {
+    if (isReadOnly || selectedIds.size === 0) return;
+    const next = new Set(missingUpdateIds);
+    const allMarked = Array.from(selectedIds).every(id => next.has(id));
+    Array.from(selectedIds).forEach(id => {
+      if (allMarked) next.delete(id);
+      else next.add(id);
+    });
+    persistMissingUpdateIds(next);
+    setSelectedIds(new Set());
   };
 
   const activeOperationUnits = useMemo(() => new Set(ops.filter(o => o.status === 'IN PROGRESS' && o.gensetNumber?.trim()).map(o => o.gensetNumber.trim().toUpperCase())), [ops]);
@@ -597,6 +624,15 @@ const StockManagement: React.FC = () => {
                 <button type="button" onClick={() => setBulkTargetStatus(bulkTargetStatus === 'IN_PROGRESS' ? null : 'IN_PROGRESS')} className={`px-2.5 py-1.5 rounded-lg text-[8px] font-black uppercase ${bulkTargetStatus === 'IN_PROGRESS' ? 'bg-blue-500 ring-2 ring-white/70' : 'bg-blue-700 hover:bg-blue-600'}`}>▶ {isAr ? 'قيد التشغيل' : 'IN PROGRESS'}</button>
                 <button type="button" onClick={() => setBulkTargetStatus(bulkTargetStatus === 'RETIRED' ? null : 'RETIRED')} className={`px-2.5 py-1.5 rounded-lg text-[8px] font-black uppercase ${bulkTargetStatus === 'RETIRED' ? 'bg-slate-400 ring-2 ring-white/70' : 'bg-slate-600 hover:bg-slate-500'}`}>■ {isAr ? 'خارج الخدمة' : 'SCRAP'}</button>
 
+                <button
+                  type="button"
+                  disabled={selectedIds.size === 0}
+                  onClick={toggleMissingUpdateForSelected}
+                  className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[8px] font-black uppercase disabled:opacity-30 disabled:cursor-not-allowed"
+                  title={isAr ? 'تمييز المحدد كتحديث مفقود من الميناء — لن تتغير حالته أو موقعه' : 'Mark selected gensets as missing from today\'s port update — status and port stay unchanged'}
+                >
+                  ⚠ {isAr ? 'تحديث مفقود' : 'MISSING UPDATE'}
+                </button>
                 <button type="button" disabled={!bulkTargetStatus && !bulkTargetPort} onClick={handleFleetBoardBulkApply} className="px-3 py-1.5 rounded-lg bg-[#C2A378] text-black text-[8px] font-black uppercase disabled:opacity-30 disabled:cursor-not-allowed">
                   ✓ {isAr ? 'تأكيد التغييرات' : 'CONFIRM CHANGES'}
                 </button>
@@ -649,19 +685,30 @@ const StockManagement: React.FC = () => {
                           <div className="grid grid-cols-3 sm:grid-cols-4 gap-1">
                             {groupUnits.map(({ unit, liveStatus }) => {
                               const selected = selectedIds.has(unit.id);
+                              const missingUpdate = missingUpdateIds.has(unit.id);
                               const activeOp = liveStatus === 'IN_PROGRESS'
                                 ? ops.find(o => o.gensetNumber?.trim().toUpperCase() === unit.unitNumber.trim().toUpperCase() && o.status === 'IN PROGRESS')
                                 : undefined;
                               const selectedClass = selected ? '!bg-blue-600 !text-white !border-blue-300 ring-2 ring-blue-300 ring-offset-1 ring-offset-white dark:ring-offset-slate-900 scale-[1.03] z-10 shadow-[0_0_12px_rgba(59,130,246,.75)]' : '';
+                              const missingUpdateClass = missingUpdate
+                                ? '!bg-blue-600 !text-white !border-blue-300 ring-2 ring-blue-300/80 shadow-[0_0_12px_rgba(59,130,246,.65)]'
+                                : '';
                               return (
                                 <button
                                   key={unit.id}
                                   type="button"
-                                  title={activeOp ? `#${activeOp.bookingNumber}` : (isAr ? 'اضغط للتحديد' : 'Click to select')}
+                                  title={
+                                    missingUpdate
+                                      ? (isAr ? '⚠ تحديث الميناء مفقود — راجع هذا المولد في اليوم التالي' : '⚠ MISSING PORT UPDATE — check this genset the next day')
+                                      : activeOp
+                                        ? `#${activeOp.bookingNumber}`
+                                        : (isAr ? 'اضغط للتحديد' : 'Click to select')
+                                  }
                                   onClick={() => toggleSelect(unit.id)}
-                                  className={`${group.cell} ${selectedClass} min-h-[38px] w-full rounded-lg border text-white px-1 py-1 flex flex-col items-center justify-center hover:brightness-110 active:scale-95 transition-all cursor-pointer`}
+                                  className={`${group.cell} ${missingUpdateClass} ${selectedClass} min-h-[38px] w-full rounded-lg border text-white px-1 py-1 flex flex-col items-center justify-center hover:brightness-110 active:scale-95 transition-all cursor-pointer`}
                                 >
                                   <span className="text-[8px] sm:text-[9px] font-black font-mono leading-tight text-center break-all w-full">{unit.unitNumber}</span>
+                                  {missingUpdate && <span className="text-[7px] leading-none font-black uppercase mt-0.5">⚠ {isAr ? 'مفقود' : 'MISSING'}</span>}
                                 </button>
                               );
                             })}
