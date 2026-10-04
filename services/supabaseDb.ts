@@ -894,8 +894,12 @@ class SupabaseDB {
           o.gensetNumber?.trim().toUpperCase() === normalized
         );
         if (!stillActive) {
+          // The genset physically finishes the operation at Clip-Off Port.
+          // If Clip-On and Clip-Off are different, move the stock record to
+          // Clip-Off automatically when the operation becomes DONE.
+          const clipOffPort = String(op.clipOffPort).trim().toUpperCase() as Location;
           const locationUpdates: Partial<Genset> = {
-            location: op.clipOffPort as Location,
+            location: clipOffPort,
             status: GensetStatus.IN_STOCK
           };
           const saved = await update('gensets', genset.id, locationUpdates);
