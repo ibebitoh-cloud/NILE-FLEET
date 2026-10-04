@@ -1,5 +1,12 @@
 import { supabase } from './supabaseClient';
 
+export const DALI_TRAINING_CREATOR_ID = '0eb0739a-8b59-4d3a-83bc-39972ee1d6b5';
+
+export async function canEditDaliTraining(): Promise<boolean> {
+  const { data } = await supabase.auth.getUser();
+  return data.user?.id === DALI_TRAINING_CREATOR_ID;
+}
+
 export type DaliKnowledge = {
   id: string;
   category: string;
@@ -39,6 +46,7 @@ export async function teachDaliKnowledge(input: {
 }): Promise<DaliKnowledge> {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user?.id) throw new Error('No active user');
+  if (auth.user.id !== DALI_TRAINING_CREATOR_ID) throw new Error('Only the Manual Training Node creator can add or edit training data.');
   const { data, error } = await supabase.from('dali_knowledge').insert({
     category: input.category || 'company_rule', title: input.title.trim(), content: input.content.trim(),
     keywords: input.keywords || [], applies_to: input.applies_to || [], source: input.source || 'User taught DALI',
