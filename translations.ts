@@ -1336,13 +1336,15 @@ const uiPhraseTranslations: Record<string, string> = (() => {
   return result;
 })();
 
-export const translateUiText = (value: string, lang: 'en' | 'ar'): string => {
-  if (lang === 'en' || !value) return value;
-  const cached = uiPhraseTextCache.get(value);
+export const translateUiText = (value: string | null | undefined, lang: 'en' | 'ar'): string => {
+  // UI/database values can be null. Never call string methods on a null value.
+  if (lang === 'en' || !value) return value || '';
+  const safeValue = String(value);
+  const cached = uiPhraseTextCache.get(safeValue);
   if (cached !== undefined) return cached;
-  const exact = uiPhraseTranslations[value.toUpperCase()];
+  const exact = uiPhraseTranslations[safeValue.toUpperCase()];
   if (exact) return exact;
-  let translated = value;
+  let translated = safeValue;
   const phrases = Object.keys(uiPhraseTranslations).sort((a, b) => b.length - a.length);
   for (const phrase of phrases) {
     const replacement = uiPhraseTranslations[phrase];
@@ -1354,6 +1356,6 @@ export const translateUiText = (value: string, lang: 'en' | 'ar'): string => {
     translated = translated.replace(new RegExp(pattern, 'giu'), replacement);
   }
   if (uiPhraseTextCache.size > 5000) uiPhraseTextCache.clear();
-  uiPhraseTextCache.set(value, translated);
+  uiPhraseTextCache.set(safeValue, translated);
   return translated;
 };
