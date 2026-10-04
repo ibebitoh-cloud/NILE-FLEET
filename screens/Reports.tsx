@@ -58,8 +58,8 @@ const Reports: React.FC = () => {
   }, [dateFrom, dateTo, ops, searchTerm, selectedCustomer]);
 
   const summary = useMemo(() => {
-    const totalRevenue = filteredData.reduce((a, b) => a + (parseFloat(b.rate.replace(/,/g, '')) || 0), 0);
-    const totalVat = filteredData.reduce((a, b) => a + (parseFloat(b.vat.replace(/,/g, '')) || 0), 0);
+    const totalRevenue = filteredData.reduce((a, b) => a + (parseFloat(String(b.rate || '').replace(/,/g, '')) || 0), 0);
+    const totalVat = filteredData.reduce((a, b) => a + (parseFloat(String(b.vat || '').replace(/,/g, '')) || 0), 0);
     return {
       count: filteredData.length,
       revenue: totalRevenue,
@@ -284,7 +284,7 @@ const Reports: React.FC = () => {
                 const headers = ['Date', 'Booking #', 'Container #', 'Customer', 'Rate', 'VAT', 'Total'];
                 const csv = [headers.join(','), ...filteredData.map(o => [
                   o.operationDate, o.bookingNumber, o.containerNumber, o.customerName, 
-                  o.rate, o.vat, (parseFloat(o.rate.replace(/,/g,'')) + parseFloat(o.vat.replace(/,/g,'')))
+                  o.rate, o.vat, ((parseFloat(String(o.rate || '').replace(/,/g,'')) || 0) + (parseFloat(String(o.vat || '').replace(/,/g,'')) || 0))
                 ].join(','))].join('\n');
                 const blob = new Blob(["\uFEFF"+csv], {type:'text/csv'});
                 const url = URL.createObjectURL(blob);
