@@ -206,7 +206,8 @@ export type MaintenanceServiceType =
   | 'ELECTRICAL_CHECK' 
   | 'ROUTINE_INSPECTION' 
   | 'EMERGENCY_REPAIR' 
-  | 'GENERAL_SERVICE';
+  | 'GENERAL_SERVICE'
+  | 'RADIATOR';
 
 export interface GensetMaintenanceLog {
   id: string;
