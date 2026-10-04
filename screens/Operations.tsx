@@ -500,6 +500,8 @@ const Operations: React.FC<{ highlightId?: string | null; clearHighlight?: () =>
                 <th className="p-5 w-10 text-center"></th>
                 <th className="p-5">Booking Ref</th>
                 <th className="p-5">Commercial Partner</th>
+                <th className="p-5 text-center">Port</th>
+                <th className="p-5">Shipper</th>
                 <th className="p-5 text-center">Verification</th>
                 <th className="p-5 text-center">Timeline</th>
                 <th className="p-5 text-right">Revenue (EGP)</th>
@@ -517,6 +519,8 @@ const Operations: React.FC<{ highlightId?: string | null; clearHighlight?: () =>
                       </td>
                       <td className={`p-5 font-black font-mono text-sm tracking-tighter ${group.needsReview ? 'text-blue-600 dark:text-blue-400' : 'text-emerald-600 dark:text-emerald-400'}`}>#{group.bk}</td>
                       <td className="p-5 uppercase text-slate-700 dark:text-slate-200">{translateEntity(group.rep.customerName, lang)}</td>
+                      <td className="p-5 text-center font-black text-blue-600 dark:text-blue-400">{translateEntity(group.rep.clipOnPort, lang)}</td>
+                      <td className="p-5 uppercase text-slate-700 dark:text-slate-200">{translateEntity(group.rep.shipper || '---', lang)}</td>
                       <td className="p-5 text-center">
                         {group.needsReview ? (
                           <span className="bg-amber-50 text-amber-600 px-3 py-1 rounded-xl text-[8px] font-black uppercase tracking-widest animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.2)] border border-amber-100">
@@ -543,7 +547,7 @@ const Operations: React.FC<{ highlightId?: string | null; clearHighlight?: () =>
                     </tr>
                     {isEx && (
                       <tr className="bg-slate-50 dark:bg-slate-900/50">
-                        <td colSpan={7} className="p-8">
+                        <td colSpan={9} className="p-8">
                            <div className="grid grid-cols-1 gap-6 max-w-6xl mx-auto">
                               {group.items.map((item, idx) => {
                                 const photo = extractPhoto(item.notes);
