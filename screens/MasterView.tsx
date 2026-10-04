@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useContext, useEffect, useRef } from 'react';
 import { db } from '../services/supabaseDb';
-import { Operation, Location, GensetStatus, UserRole, User, CustomerPrice, Invoice, hasReadOnlyAccess } from '../types';
+import { Operation, Location, GensetStatus, UserRole, User, CustomerPrice, Invoice, GensetReplacement, hasReadOnlyAccess } from '../types';
 import { LanguageContext, ThemeContext } from '../App';
 import { translations, translateEntity } from '../translations';
 import { PORT_STYLING } from '../constants';
@@ -555,6 +555,10 @@ const MasterView: React.FC = () => {
   const [collapsedStatusGroups, setCollapsedStatusGroups] = useState<Set<string>>(new Set());
   const [showSettings, setShowSettings] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [replacementOperation, setReplacementOperation] = useState<Operation | null>(null);
+  const [replacementReason, setReplacementReason] = useState<GensetReplacement['reason']>('BREAKDOWN');
+  const [replacementGensetNumber, setReplacementGensetNumber] = useState('');
+  const [replacementNotes, setReplacementNotes] = useState('');
 
   useEffect(() => {
     const closeStagingOnNavigation = () => {
@@ -893,6 +897,18 @@ const MasterView: React.FC = () => {
     localStorage.setItem(`master_prefs_v5_${currentUser.id}`, JSON.stringify(viewPrefs));
   }, [viewPrefs, currentUser.id]);
 
+  const handleReplaceGenset = async () => {
+    if (isReadOnly || !replacementOperation || !replacementGensetNumber) return;
+    const confirmed = window.confirm(isAr
+      ? 'استبدال المولد ' + replacementOperation.gensetNumber + ' بالمولد ' + replacementGensetNumber + '؟ سيتم إبقاء المولد الأصلي في موقعه وتحويله للصيانة مع حفظ سجل الاستبدال.'
+      : 'Replace genset ' + replacementOperation.gensetNumber + ' with ' + replacementGensetNumber + '? The original stays at its physical port and moves to maintenance.'
+    );
+    if (!confirmed) return;
+    const saved = await db.replaceOperationGenset(replacementOperation.id, replacementGensetNumber, replacementReason, replacementNotes.trim() || undefined);
+    if (!saved) { window.alert(isAr ? 'فشل الاستبدال. ' + (db.getLastDbError() || '') : 'Replacement failed. ' + (db.getLastDbError() || '')); return; }
+    setReplacementOperation(null); setReplacementGensetNumber(''); setReplacementNotes(''); refresh(true);
+    window.alert(isAr ? 'تم استبدال المولد وتسجيل العملية بنجاح.' : 'Genset replaced and replacement history saved.');
+  };
   const handleBulkStatusChange = async (newStatus: 'IN PROGRESS' | 'UNDER OPERATE' | 'DONE' | 'HOLD' | 'CANCEL') => {
     if (isReadOnly) return;
     const ids = Array.from(selectedRowIds) as string[];
@@ -1726,6 +1742,10 @@ const MasterView: React.FC = () => {
                                 </span>
                               )}
                               {isGensetDup && <span className="text-[11px] shrink-0">⚠️</span>}
+<button type="button" disabled={isReadOnly || op.status !== 'IN PROGRESS' || !op.gensetNumber}
+                                onClick={(e) => { e.stopPropagation(); setReplacementOperation(op); setReplacementReason('BREAKDOWN'); setReplacementGensetNumber(''); setReplacementNotes(''); }}
+                                className="shrink-0 px-1.5 py-1 rounded-md bg-rose-600 text-white text-[7px] font-black uppercase tracking-wider hover:bg-rose-500 disabled:opacity-30"
+                                title={isAr ? 'استبدال المولد' : 'Replace this genset'}>🔄</button>
                               <EditableCell value={op.gensetNumber} suggestions={systemSuggestions.gensets} onSave={(val) => handleUpdateCell(op, 'gensetNumber', val)} disabled={isReadOnly} onEditStart={onCellEditStart} onEditEnd={onCellEditEnd} className={`font-black ${isGensetDup ? '!text-white font-extrabold' : isSelected ? 'text-blue-100' : gensetPortMismatchByOperationId.has(op.id) ? '!text-inherit font-extrabold' : 'text-[#C2A378]'}`} placeholder="UNIT" isDark={isDark} />
                             </div>
                           </td>
@@ -1890,6 +1910,27 @@ const MasterView: React.FC = () => {
               {isAdmin && <button onClick={handleBulkDelete} className="bg-rose-600 text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg">{isAr ? 'حذف إجباري' : 'Force Delete'}</button>}
               <button onClick={() => setSelectedRowIds(new Set())} className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">{isAr ? 'إلغاء' : 'Clear'}</button>
            </div>
+        </div>
+      )}
+
+      {replacementOperation && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[600] flex items-center justify-center p-4">
+          <div className={`w-full max-w-lg rounded-3xl shadow-2xl border-2 overflow-hidden ${isDark ? 'bg-slate-950 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
+            <div className="p-5 bg-rose-600 text-white flex items-center justify-between">
+              <div><div className="text-[10px] font-black uppercase tracking-widest">{isAr ? 'استبدال مولد' : 'REPLACE GENSET'}</div><div className="text-lg font-black mt-1">{replacementOperation.gensetNumber}</div></div>
+              <button onClick={() => setReplacementOperation(null)} className="text-white text-lg">✕</button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className={`rounded-xl p-3 border ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}><div className="text-[8px] font-black uppercase text-slate-400">{isAr ? 'المولد الأصلي' : 'Original'}</div><div className="font-black text-sm">{replacementOperation.gensetNumber}</div><div className="text-[9px] font-bold text-slate-500">{translateEntity(replacementOperation.clipOnPort, lang)} · {isAr ? 'يبقى في موقعه للصيانة' : 'stays at its physical port for maintenance'}</div></div>
+                <div className={`rounded-xl p-3 border ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}><div className="text-[8px] font-black uppercase text-slate-400">{isAr ? 'العملية' : 'Operation'}</div><div className="font-black text-sm">{replacementOperation.containerNumber || '---'}</div><div className="text-[9px] font-bold text-slate-500">{translateEntity(replacementOperation.clipOnPort, lang)} → {translateEntity(replacementOperation.clipOffPort, lang)}</div></div>
+              </div>
+              <div><label className="block text-[8px] font-black uppercase text-slate-400 mb-1">{isAr ? 'سبب الاستبدال' : 'Reason'}</label><select value={replacementReason} onChange={e => setReplacementReason(e.target.value as GensetReplacement['reason'])} className={`w-full p-3 rounded-xl border font-black text-xs ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}><option value="BREAKDOWN">{isAr ? 'عطل / توقف' : 'BREAKDOWN / STOPPED'}</option><option value="DAMAGED">{isAr ? 'تلف' : 'DAMAGED'}</option><option value="OTHER">{isAr ? 'سبب آخر' : 'OTHER'}</option></select></div>
+              <div><label className="block text-[8px] font-black uppercase text-slate-400 mb-1">{isAr ? 'المولد البديل' : 'Replacement Genset'}</label><select value={replacementGensetNumber} onChange={e => setReplacementGensetNumber(e.target.value)} className={`w-full p-3 rounded-xl border font-black text-xs ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}><option value="">-- {isAr ? 'اختر المولد البديل' : 'SELECT REPLACEMENT'} --</option>{db.getStock().filter(g => g.unitNumber.trim().toUpperCase() !== replacementOperation.gensetNumber.trim().toUpperCase()).filter(g => g.status === GensetStatus.IN_STOCK).sort((a,b) => (a.location === replacementOperation.clipOnPort ? 0 : 1) - (b.location === replacementOperation.clipOnPort ? 0 : 1) || a.unitNumber.localeCompare(b.unitNumber)).map(g => <option key={g.id} value={g.unitNumber}>{g.unitNumber} · {translateEntity(g.location, lang)}{g.location === replacementOperation.clipOnPort ? (isAr ? ' · نفس الميناء' : ' · SAME PORT') : ''}</option>)}</select></div>
+              <div><label className="block text-[8px] font-black uppercase text-slate-400 mb-1">{isAr ? 'ملاحظات' : 'Notes'}</label><textarea value={replacementNotes} onChange={e => setReplacementNotes(e.target.value)} rows={2} className={`w-full p-3 rounded-xl border text-xs ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`} placeholder={isAr ? 'اختياري' : 'Optional'} /></div>
+              <div className="flex gap-3 pt-2"><button onClick={() => setReplacementOperation(null)} className="flex-1 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 font-black text-xs">{isAr ? 'إلغاء' : 'CANCEL'}</button><button disabled={!replacementGensetNumber || isReadOnly} onClick={handleReplaceGenset} className="flex-1 py-3 rounded-xl bg-rose-600 text-white font-black text-xs disabled:opacity-40">{isAr ? 'تأكيد الاستبدال' : 'CONFIRM REPLACEMENT'}</button></div>
+            </div>
+          </div>
         </div>
       )}
 
