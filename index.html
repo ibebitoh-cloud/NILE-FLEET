@@ -546,6 +546,199 @@
             text-transform: uppercase; letter-spacing: 0.2em;
         }
 
+
+        /* NILE FLEET GLOBAL COLOR SYSTEM V2 */
+        /* One consistent industrial palette. Semantic operational colors remain
+           intentionally distinct so status meaning is never lost. */
+        body.theme-day {
+            --nf-navy: #17324d;
+            --nf-navy-deep: #10263b;
+            --nf-steel: #36566f;
+            --nf-surface: #f5f7f9;
+            --nf-surface-2: #e9eef3;
+            --nf-surface-3: #dce5ec;
+            --nf-text: #17212b;
+            --nf-muted: #526170;
+            --nf-border: #c5d0da;
+            --nf-gold: #b8832f;
+            --nf-gold-dark: #8a611f;
+            --nf-blue: #2563eb;
+        }
+        body.theme-night {
+            --nf-navy: #18324b;
+            --nf-navy-deep: #0b1725;
+            --nf-steel: #2a465d;
+            --nf-surface: #0e1b29;
+            --nf-surface-2: #142638;
+            --nf-surface-3: #1b3044;
+            --nf-text: #f5f8fb;
+            --nf-muted: #c2ced9;
+            --nf-border: #385066;
+            --nf-gold: #d7aa5d;
+            --nf-gold-dark: #a97b2e;
+            --nf-blue: #3b82f6;
+        }
+
+        body[class*="theme-"] {
+            --accent: var(--nf-gold);
+            --text-primary: var(--nf-text);
+            --text-secondary: var(--nf-muted);
+            --border-primary: var(--nf-border);
+            --card-bg: var(--nf-surface);
+            --input-bg: var(--nf-surface);
+            --surface-0: var(--nf-navy-deep);
+            --surface-1: var(--nf-surface);
+            --surface-2: var(--nf-surface-2);
+            --surface-3: var(--nf-surface-3);
+            --row-bg: var(--nf-surface);
+            --rail-bg: var(--nf-navy-deep);
+        }
+
+        /* Shared structural surfaces */
+        body[class*="theme-"] .bg-white,
+        body[class*="theme-"] .bg-slate-50,
+        body[class*="theme-"] .bg-slate-100,
+        body[class*="theme-"] .bg-gray-50,
+        body[class*="theme-"] .bg-gray-100,
+        body[class*="theme-"] .bg-neutral-50,
+        body[class*="theme-"] .bg-neutral-100 {
+            background-color: var(--nf-surface) !important;
+            color: var(--nf-text) !important;
+        }
+        body.theme-day .bg-slate-800,
+        body.theme-day .bg-slate-900 { background-color: var(--nf-navy) !important; color: #fff !important; }
+        body.theme-night .bg-slate-800,
+        body.theme-night .bg-slate-900 { background-color: var(--nf-navy-deep) !important; color: #fff !important; }
+
+        /* Headers, navigation, board shells and table headers */
+        body[class*="theme-"] header,
+        body[class*="theme-"] thead,
+        body[class*="theme-"] .nf-board-header {
+            border-color: var(--nf-border) !important;
+        }
+        body[class*="theme-"] thead th {
+            background-color: var(--nf-navy) !important;
+            color: #ffffff !important;
+            border-color: var(--nf-steel) !important;
+        }
+        body[class*="theme-"] nav {
+            border-color: var(--nf-border) !important;
+        }
+
+        /* Consistent cards/panels */
+        body[class*="theme-"] .border,
+        body[class*="theme-"] .border-2,
+        body[class*="theme-"] .border-slate-100,
+        body[class*="theme-"] .border-slate-200,
+        body[class*="theme-"] .border-gray-100,
+        body[class*="theme-"] .border-gray-200 {
+            border-color: var(--nf-border) !important;
+        }
+
+        /* Strong readable typography */
+        body.theme-day .text-slate-900,
+        body.theme-day .text-slate-800,
+        body.theme-day .text-slate-700,
+        body.theme-day .text-gray-900,
+        body.theme-day .text-gray-800,
+        body.theme-day .text-gray-700 { color: var(--nf-text) !important; }
+        body.theme-day .text-slate-600,
+        body.theme-day .text-slate-500,
+        body.theme-day .text-gray-600,
+        body.theme-day .text-gray-500 { color: var(--nf-muted) !important; }
+        body.theme-night .text-slate-900,
+        body.theme-night .text-slate-800,
+        body.theme-night .text-slate-700,
+        body.theme-night .text-gray-900,
+        body.theme-night .text-gray-800,
+        body.theme-night .text-gray-700 { color: #f5f8fb !important; }
+        body.theme-night .text-slate-600,
+        body.theme-night .text-slate-500,
+        body.theme-night .text-slate-400,
+        body.theme-night .text-gray-600,
+        body.theme-night .text-gray-500,
+        body.theme-night .text-gray-400 { color: var(--nf-muted) !important; }
+
+        /* Inputs and selectors */
+        body.theme-day input,
+        body.theme-day select,
+        body.theme-day textarea {
+            background: #ffffff !important;
+            color: var(--nf-text) !important;
+            border-color: var(--nf-border) !important;
+        }
+        body.theme-night input,
+        body.theme-night select,
+        body.theme-night textarea {
+            background: #0b1826 !important;
+            color: #f5f8fb !important;
+            border-color: var(--nf-border) !important;
+        }
+        body[class*="theme-"] input:focus,
+        body[class*="theme-"] select:focus,
+        body[class*="theme-"] textarea:focus {
+            border-color: var(--nf-gold) !important;
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--nf-gold) 24%, transparent) !important;
+        }
+
+        /* Action hierarchy: navy primary, gold emphasis. Do NOT recolor semantic
+           blue selection/status cells; those are explicitly preserved below. */
+        body[class*="theme-"] .nf-primary-action {
+            background: var(--nf-navy) !important;
+            color: #ffffff !important;
+            border-color: var(--nf-navy) !important;
+        }
+        body[class*="theme-"] .nf-gold-action {
+            background: var(--nf-gold) !important;
+            color: #111820 !important;
+            border-color: var(--nf-gold) !important;
+        }
+
+        /* Fleet boards/cells: selected and missing-update cells stay unmistakably blue. */
+        body[class*="theme-"] .ring-blue-300,
+        body[class*="theme-"] .bg-blue-600 {
+            color: #ffffff !important;
+        }
+        body[class*="theme-"] .bg-blue-600 {
+            background-color: #2563eb !important;
+        }
+        body[class*="theme-"] .bg-blue-500 {
+            background-color: #3b82f6 !important;
+            color: #ffffff !important;
+        }
+
+        /* Status cells keep high-contrast semantic colors in both themes. */
+        body.theme-day .bg-green-600, body.theme-day .bg-emerald-600 { background-color: #15803d !important; color: #fff !important; }
+        body.theme-day .bg-amber-500, body.theme-day .bg-yellow-500 { background-color: #b45309 !important; color: #fff !important; }
+        body.theme-day .bg-red-600, body.theme-day .bg-rose-600 { background-color: #dc2626 !important; color: #fff !important; }
+        body.theme-night .bg-green-600, body.theme-night .bg-emerald-600 { background-color: #166534 !important; color: #dcfce7 !important; }
+        body.theme-night .bg-amber-500, body.theme-night .bg-yellow-500 { background-color: #92400e !important; color: #fef3c7 !important; }
+        body.theme-night .bg-red-600, body.theme-night .bg-rose-600 { background-color: #991b1b !important; color: #fee2e2 !important; }
+
+        /* Gold text is reserved for emphasis and is never used on a gold surface. */
+        body[class*="theme-"] .text-amber-600,
+        body[class*="theme-"] .text-yellow-600 { color: var(--nf-gold-dark) !important; }
+        body.theme-night .text-amber-400,
+        body.theme-night .text-yellow-400 { color: #f3c979 !important; }
+
+        /* Readability guard: muted text must not be placed on status/action fills. */
+        body[class*="theme-"] .bg-blue-600 .text-slate-500,
+        body[class*="theme-"] .bg-blue-600 .text-slate-400,
+        body[class*="theme-"] .bg-red-600 .text-slate-500,
+        body[class*="theme-"] .bg-green-600 .text-slate-500,
+        body[class*="theme-"] .bg-amber-500 .text-slate-500 {
+            color: #ffffff !important;
+        }
+
+        /* Tooltips/popovers/dropdowns use the same navy shell for reliable contrast. */
+        body[class*="theme-"] [role="tooltip"],
+        body[class*="theme-"] [data-radix-popper-content-wrapper] > div {
+            border-color: var(--nf-border) !important;
+        }
+
+        /* Native selection highlight */
+        ::selection { background: var(--nf-gold); color: #111820; }
+
         /* NILE FLEET MOBILE RESPONSIVE CORE */
         html { width: 100%; min-width: 0; }
         body { width: 100%; min-width: 0; margin: 0; }
