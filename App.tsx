@@ -130,6 +130,7 @@ export const ThemeContext = createContext<ThemeContextType>({
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [welcomeUserName, setWelcomeUserName] = useState('');
   const [showCompanyHome, setShowCompanyHome] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
   const [appDataReady, setAppDataReady] = useState(false);
@@ -617,6 +618,7 @@ const App: React.FC = () => {
       const result = await loginWithPassword(email.trim(), pass);
       if (result.user) {
         const u = result.user;
+        setWelcomeUserName(u.name || '');
         await db.loadAll().catch(err => console.error('Failed to load data after login:', err));
         return () => {
           loggingInRef.current = false;
@@ -659,6 +661,7 @@ const App: React.FC = () => {
     await supabaseLogout();
     await db.resetSessionCache();
     setUser(null);
+    setWelcomeUserName('');
     setShowCompanyHome(true);
     localStorage.removeItem('user');
     window.location.hash = '';
@@ -705,7 +708,7 @@ const App: React.FC = () => {
             {showCompanyHome ? (
               <CompanyHome onGenset={() => setShowCompanyHome(false)} />
             ) : (
-              <Login onLogin={handleLogin} onBackToHome={() => setShowCompanyHome(true)} welcomeName={user?.name} />
+              <Login onLogin={handleLogin} onBackToHome={() => setShowCompanyHome(true)} welcomeName={welcomeUserName} />
             )}
           </Suspense>
         </ThemeContext>
