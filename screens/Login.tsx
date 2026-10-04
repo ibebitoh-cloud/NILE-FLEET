@@ -3,13 +3,14 @@ import { ThemeContext, LanguageContext } from '../App';
 import { translations } from '../translations';
 
 // onLogin resolves to a function that enters the app on success, or null on failure.
-interface LoginProps { onLogin: (email: string, pass: string) => Promise<(() => void) | null>; onBackToHome?: () => void; }
+interface LoginProps { onLogin: (email: string, pass: string) => Promise<(() => void) | null>; onBackToHome?: () => void; welcomeName?: string; }
 
-const Login: React.FC<LoginProps> = ({ onLogin, onBackToHome }) => {
+const Login: React.FC<LoginProps> = ({ onLogin, onBackToHome, welcomeName }) => {
   const { theme, isDark } = useContext(ThemeContext);
   const { lang, setLang } = useContext(LanguageContext);
   const t = translations[lang];
   const isAr = lang === 'ar';
+  const displayWelcomeName = (welcomeName || '').trim() || (isAr ? 'مستخدم' : 'USER');
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -412,7 +413,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBackToHome }) => {
                         <p className="relative z-10 text-[#C2A378] text-[9px] sm:text-[10px] font-black tracking-[0.28em] leading-none">{isAr ? 'أسطول النيل' : 'NILE FLEET'}</p>
                         <h3 className={`relative z-10 mt-3 w-full text-white text-[2rem] sm:text-4xl font-black tracking-[-0.045em] leading-tight text-center ${isAr ? 'not-italic' : 'uppercase italic'}`}>{isAr ? <>مرحباً <span className="text-[#C2A378]">بعودتكم</span></> : <>WELCOME <span className="inline-block text-[#C2A378]">BACK</span></>}</h3>
                         <div className="relative z-10 mt-4 inline-flex items-center justify-center gap-2 text-xl sm:text-2xl font-black tracking-[0.18em] text-white text-center">
-                          <span>{isAr ? 'بيبِيتو' : 'B'}</span>{!isAr && <><span>E</span><span>B</span><span>I</span><span>T</span><span>O</span></>}
+                          <span className="max-w-full truncate">{displayWelcomeName}</span>
                         </div>
                         <p className="relative z-10 w-full max-w-md mx-auto mt-4 text-slate-300 text-[10px] sm:text-xs font-bold leading-relaxed tracking-wide">{welcomeQuote}</p>
                       </div>
