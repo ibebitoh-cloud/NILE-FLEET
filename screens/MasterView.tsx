@@ -693,6 +693,12 @@ const MasterView: React.FC = () => {
     return mismatches;
   }, [operations]);
 
+  const replacementsByOperationId = useMemo(() => {
+    const map = new Map<string, GensetReplacement>();
+    db.getGensetReplacements().forEach(record => map.set(record.operationId, record));
+    return map;
+  }, [operations]);
+
   const duplicateActiveGensets = useMemo(() => {
     const counts: Record<string, number> = {};
     operations.forEach(op => {
