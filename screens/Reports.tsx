@@ -68,6 +68,60 @@ const Reports: React.FC = () => {
     };
   }, [filteredData]);
 
+  // Daily Genset Dispatch Plan: one operational row per booking/port/date.
+  // Container-level operations are grouped so the port team sees the number
+  // of gensets to prepare, plus the customer, shipper and commodity context.
+  const dailyGensetPlan = useMemo(() => {
+    const groups = new Map<string, {
+      clipOnDate: string;
+      port: string;
+      bookingNumber: string;
+      customerName: string;
+      shipper: string;
+      commodity: string;
+      trucker: string;
+      containers: Set<string>;
+      gensets: Set<string>;
+    }>();
+
+    ops.forEach(o => {
+      const clipOnDate = String(o.clipOnDate || o.operationDate || '').slice(0, 10);
+      if (!clipOnDate || clipOnDate < dateFrom || clipOnDate > dateTo) return;
+      if (o.status === 'CANCEL' || o.status === 'DONE') return;
+
+      const key = [clipOnDate, o.clipOnPort, o.bookingNumber].join('|');
+      const current = groups.get(key) || {
+        clipOnDate,
+        port: String(o.clipOnPort || ''),
+        bookingNumber: o.bookingNumber || '---',
+        customerName: o.customerName || '---',
+        shipper: o.beneficiaryName || '---',
+        commodity: o.commodity || '---',
+        trucker: o.trucker || '---',
+        containers: new Set<string>(),
+        gensets: new Set<string>()
+      };
+
+      if (o.containerNumber) current.containers.add(o.containerNumber);
+      if (o.gensetNumber) current.gensets.add(o.gensetNumber);
+      if (!current.customerName || current.customerName === '---') current.customerName = o.customerName || '---';
+      if (!current.shipper || current.shipper === '---') current.shipper = o.beneficiaryName || '---';
+      if (!current.commodity || current.commodity === '---') current.commodity = o.commodity || '---';
+      if (!current.trucker || current.trucker === '---') current.trucker = o.trucker || '---';
+      groups.set(key, current);
+    });
+
+    return Array.from(groups.values())
+      .map(g => ({ ...g, containerCount: g.containers.size, gensetCount: g.gensets.size || g.containers.size }))
+      .sort((a, b) => a.clipOnDate.localeCompare(b.clipOnDate) || a.port.localeCompare(b.port) || a.bookingNumber.localeCompare(b.bookingNumber));
+  }, [ops, dateFrom, dateTo]);
+
+  const dailyGensetTotals = useMemo(() => ({
+    bookings: dailyGensetPlan.length,
+    gensets: dailyGensetPlan.reduce((sum, row) => sum + row.gensetCount, 0),
+    containers: dailyGensetPlan.reduce((sum, row) => sum + row.containerCount, 0)
+  }), [dailyGensetPlan]);
+
   const runDaliAuditor = async () => {
     setIsThinking(true);
     setAuditAdvice('');
@@ -137,6 +191,68 @@ const Reports: React.FC = () => {
            </div>
         </div>
       </div>
+
+      {/* Daily Genset Dispatch Plan */}
+      <section className="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+        <div className="p-6 md:p-7 border-b border-slate-100 dark:border-slate-700 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+          <div>
+            <h3 className="text-xl font-black text-[#3a3833] dark:text-white uppercase tracking-tight">
+              {lang === 'ar' ? 'خطة المولدات اليومية' : 'Daily Genset Dispatch Plan'}
+            </h3>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+              {lang === 'ar' ? 'بيانات التشغيل من نفس سجل العمليات' : 'Live operational plan from the same Operations ledger'}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 text-[9px] font-black uppercase tracking-widest">
+            <span className="px-3 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300">{lang === 'ar' ? 'حجوزات' : 'Bookings'}: {dailyGensetTotals.bookings}</span>
+            <span className="px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300">{lang === 'ar' ? 'مولدات' : 'Gensets'}: {dailyGensetTotals.gensets}</span>
+            <span className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300">{lang === 'ar' ? 'حاويات' : 'Containers'}: {dailyGensetTotals.containers}</span>
+            <button onClick={() => window.print()} className="px-3 py-2 rounded-xl bg-[#3a3833] text-white hover:opacity-90">{lang === 'ar' ? 'طباعة الخطة' : 'Print Plan'}</button>
+          </div>
+        </div>
+
+        <div className="px-6 pt-5 text-[9px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-300">
+          {lang === 'ar' ? 'تعليمات الميناء: تصوير فيديو لكل مولد أثناء التشغيل بعد التركيب + تسجيل اسم العميل وتاريخ التركيب.' : 'PORT INSTRUCTION: Capture a video of each genset while working after clip-on + record customer name and clip-on date.'}
+        </div>
+
+        <div className="overflow-x-auto mt-4">
+          <table className="w-full text-left text-[10px] min-w-[1100px]">
+            <thead className="bg-slate-900 text-white font-black uppercase tracking-widest">
+              <tr>
+                <th className="px-4 py-3">{lang === 'ar' ? 'التاريخ' : 'Clip-On Date'}</th>
+                <th className="px-4 py-3">{lang === 'ar' ? 'الميناء' : 'Port'}</th>
+                <th className="px-4 py-3">{lang === 'ar' ? 'رقم الحجز' : 'Booking No.'}</th>
+                <th className="px-4 py-3">{lang === 'ar' ? 'اسم العميل' : 'Customer Name'}</th>
+                <th className="px-4 py-3">{lang === 'ar' ? 'الشاحن' : 'Shipper'}</th>
+                <th className="px-4 py-3">{lang === 'ar' ? 'البضاعة' : 'Commodity'}</th>
+                <th className="px-4 py-3">{lang === 'ar' ? 'شركة النقل' : 'Trucker'}</th>
+                <th className="px-4 py-3 text-center">{lang === 'ar' ? 'الحاويات' : 'Containers'}</th>
+                <th className="px-4 py-3 text-center">{lang === 'ar' ? 'المولدات المطلوبة' : 'Gensets Required'}</th>
+                <th className="px-4 py-3">{lang === 'ar' ? 'الفيديو' : 'Video'}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+              {dailyGensetPlan.map(row => (
+                <tr key={row.clipOnDate + row.port + row.bookingNumber} className="hover:bg-slate-50 dark:hover:bg-slate-900/50">
+                  <td className="px-4 py-3 font-black text-blue-600 dark:text-blue-400 whitespace-nowrap">{row.clipOnDate}</td>
+                  <td className="px-4 py-3 font-black">{translateEntity(row.port, lang)}</td>
+                  <td className="px-4 py-3 font-black text-blue-600 dark:text-blue-400 font-mono">{row.bookingNumber}</td>
+                  <td className="px-4 py-3 font-bold">{translateEntity(row.customerName, lang)}</td>
+                  <td className="px-4 py-3 font-bold">{translateEntity(row.shipper, lang)}</td>
+                  <td className="px-4 py-3 font-bold">{translateEntity(row.commodity, lang)}</td>
+                  <td className="px-4 py-3 font-bold">{translateEntity(row.trucker, lang)}</td>
+                  <td className="px-4 py-3 text-center font-black">{row.containerCount}</td>
+                  <td className="px-4 py-3 text-center font-black text-emerald-600 dark:text-emerald-400">{row.gensetCount}</td>
+                  <td className="px-4 py-3 font-black text-amber-700 dark:text-amber-300">{lang === 'ar' ? 'مطلوب' : 'REQUIRED'}</td>
+                </tr>
+              ))}
+              {dailyGensetPlan.length === 0 && (
+                <tr><td colSpan={10} className="py-14 text-center text-slate-400 font-black uppercase tracking-widest">{lang === 'ar' ? 'لا توجد مولدات مطلوبة في الفترة المحددة' : 'No genset requirements in the selected period'}</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       {/* KPI Dashboard */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
