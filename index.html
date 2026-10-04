@@ -871,6 +871,72 @@
             .nile-command-layout main .text-2xl { font-size: 1.25rem; }
         }
 
+    
+                /* NILE FLEET THEME PRESETS */
+        /* Each preset overrides the shared design tokens. Semantic status colors remain separate. */
+        body.theme-steel {
+            --bg-primary: #0f1720; --text-primary: #f4f7fa; --text-secondary: #c4d0da;
+            --border-primary: #3b4d5b; --card-bg: #18232d; --accent: #62b6cb; --input-bg: #111c26;
+            --rail-bg: #0b131b; --row-bg: #18232d; --surface-0: #0f1720; --surface-1: #18232d; --surface-2: #12202b; --surface-3: #22323f;
+        }
+        body.theme-ocean {
+            --bg-primary: #071a2b; --text-primary: #f3f9fd; --text-secondary: #bfd5e5;
+            --border-primary: #31566e; --card-bg: #102d46; --accent: #38bdf8; --input-bg: #0b2338;
+            --rail-bg: #051421; --row-bg: #102d46; --surface-0: #071a2b; --surface-1: #102d46; --surface-2: #0b2338; --surface-3: #173b57;
+        }
+        body.theme-graphite {
+            --bg-primary: #111111; --text-primary: #f5f5f5; --text-secondary: #c7c7c7;
+            --border-primary: #444444; --card-bg: #1c1c1c; --accent: #d1d5db; --input-bg: #151515;
+            --rail-bg: #0b0b0b; --row-bg: #1c1c1c; --surface-0: #111111; --surface-1: #1c1c1c; --surface-2: #151515; --surface-3: #292929;
+        }
+        body.theme-light {
+            --bg-primary: #eef2f6; --text-primary: #17212b; --text-secondary: #526170;
+            --border-primary: #c5d0da; --card-bg: #ffffff; --accent: #2563eb; --input-bg: #ffffff;
+            --rail-bg: #e2e8ef; --row-bg: #ffffff; --surface-0: #eef2f6; --surface-1: #ffffff; --surface-2: #f3f6f9; --surface-3: #e7edf3;
+        }
+        body.theme-steel, body.theme-ocean, body.theme-graphite {
+            color-scheme: dark;
+        }
+        body.theme-steel .bg-white, body.theme-steel .bg-slate-50, body.theme-steel .bg-slate-100,
+        body.theme-ocean .bg-white, body.theme-ocean .bg-slate-50, body.theme-ocean .bg-slate-100,
+        body.theme-graphite .bg-white, body.theme-graphite .bg-slate-50, body.theme-graphite .bg-slate-100,
+        body.theme-light .bg-white, body.theme-light .bg-slate-50, body.theme-light .bg-slate-100 {
+            background-color: var(--surface-1) !important; color: var(--text-primary) !important;
+        }
+        body.theme-steel .text-slate-900, body.theme-steel .text-slate-800, body.theme-steel .text-slate-700,
+        body.theme-ocean .text-slate-900, body.theme-ocean .text-slate-800, body.theme-ocean .text-slate-700,
+        body.theme-graphite .text-slate-900, body.theme-graphite .text-slate-800, body.theme-graphite .text-slate-700,
+        body.theme-light .text-slate-900, body.theme-light .text-slate-800, body.theme-light .text-slate-700 { color: var(--text-primary) !important; }
+        body.theme-steel .text-slate-600, body.theme-steel .text-slate-500, body.theme-steel .text-slate-400,
+        body.theme-ocean .text-slate-600, body.theme-ocean .text-slate-500, body.theme-ocean .text-slate-400,
+        body.theme-graphite .text-slate-600, body.theme-graphite .text-slate-500, body.theme-graphite .text-slate-400,
+        body.theme-light .text-slate-600, body.theme-light .text-slate-500, body.theme-light .text-slate-400 { color: var(--text-secondary) !important; }
+        body.theme-steel input, body.theme-steel select, body.theme-steel textarea,
+        body.theme-ocean input, body.theme-ocean select, body.theme-ocean textarea,
+        body.theme-graphite input, body.theme-graphite select, body.theme-graphite textarea {
+            background-color: var(--input-bg) !important; color: var(--text-primary) !important; border-color: var(--border-primary) !important; color-scheme: dark;
+        }
+        body.theme-light input, body.theme-light select, body.theme-light textarea {
+            background-color: #ffffff !important; color: #17212b !important; border-color: #c5d0da !important; color-scheme: light;
+        }
+        body.theme-steel .border-slate-200, body.theme-ocean .border-slate-200, body.theme-graphite .border-slate-200,
+        body.theme-light .border-slate-200 { border-color: var(--border-primary) !important; }
+        body.theme-steel .bg-slate-900, body.theme-ocean .bg-slate-900, body.theme-graphite .bg-slate-900,
+        body.theme-light .bg-slate-900 { background-color: var(--surface-2) !important; }
+        body.theme-steel .bg-blue-600, body.theme-ocean .bg-blue-600, body.theme-graphite .bg-blue-600,
+        body.theme-light .bg-blue-600 { background-color: var(--accent) !important; color: #07111a !important; }
+        body.theme-steel .text-blue-600, body.theme-ocean .text-blue-600, body.theme-graphite .text-blue-600,
+        body.theme-light .text-blue-600 { color: var(--accent) !important; }
+        body.theme-light table tbody tr:nth-child(odd):not(.selected-row) td { background: #ffffff !important; }
+        body.theme-light table tbody tr:nth-child(even):not(.selected-row) td { background: #f3f6f9 !important; }
+        body.theme-steel table tbody tr:nth-child(odd):not(.selected-row) td { background: #18232d !important; }
+        body.theme-steel table tbody tr:nth-child(even):not(.selected-row) td { background: #12202b !important; }
+        body.theme-ocean table tbody tr:nth-child(odd):not(.selected-row) td { background: #102d46 !important; }
+        body.theme-ocean table tbody tr:nth-child(even):not(.selected-row) td { background: #0b2338 !important; }
+        body.theme-graphite table tbody tr:nth-child(odd):not(.selected-row) td { background: #1c1c1c !important; }
+        body.theme-graphite table tbody tr:nth-child(even):not(.selected-row) td { background: #151515 !important; }
+        body.theme-steel, body.theme-ocean, body.theme-graphite { --status-info-bg: #163d59; --status-info-fg: #bae6fd; --status-success-bg: #14532d; --status-success-fg: #bbf7d0; --status-warning-bg: #78350f; --status-warning-fg: #fde68a; --status-danger-bg: #7f1d1d; --status-danger-fg: #fecaca; }
+        body.theme-light { --status-info-bg: #dbeafe; --status-info-fg: #1e40af; --status-success-bg: #dcfce7; --status-success-fg: #166534; --status-warning-bg: #fef3c7; --status-warning-fg: #92400e; --status-danger-bg: #fee2e2; --status-danger-fg: #991b1b; }
     </style>
 <script type="importmap">
 {
