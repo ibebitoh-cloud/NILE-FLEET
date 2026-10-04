@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { LanguageContext } from '../App';
 import { User, UserRole } from '../types';
 import { db } from '../services/supabaseDb';
-import { getDaliKnowledge, teachDaliKnowledge } from '../services/daliKnowledge';
+import { getDaliKnowledge, teachDaliKnowledge, canEditDaliTraining } from '../services/daliKnowledge';
 import type { DaliKnowledge } from '../services/daliKnowledge';
 import { getDaliCustomerAliases, saveDaliCustomerAlias, deleteDaliCustomerAlias } from '../services/daliCustomerAliases';
 import type { DaliCustomerAlias } from '../services/daliCustomerAliases';
@@ -30,6 +30,7 @@ const DaliKnowledgeCenter: React.FC = () => {
   const [aliases, setAliases] = useState<DaliCustomerAlias[]>([]);
   const [customers, setCustomers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [canEditTraining, setCanEditTraining] = useState(false);
   const [saving, setSaving] = useState(false);
   const [aliasSaving, setAliasSaving] = useState(false);
   const [search, setSearch] = useState('');
@@ -53,10 +54,12 @@ const DaliKnowledgeCenter: React.FC = () => {
   const load = async () => {
     setLoading(true);
     try {
-      const [knowledge, dictionary] = await Promise.all([
+      const [knowledge, dictionary, editable] = await Promise.all([
         getDaliKnowledge(),
-        getDaliCustomerAliases()
+        getDaliCustomerAliases(),
+        canEditDaliTraining()
       ]);
+      setCanEditTraining(editable);
       setItems(knowledge);
       setAliases(dictionary);
       const customerRows = db.getUsers().filter((u: User) => String(u.role).toUpperCase() === UserRole.CUSTOMER);
@@ -75,7 +78,7 @@ const DaliKnowledgeCenter: React.FC = () => {
   }, []);
 
   const saveLesson = async () => {
-    if (!title.trim() || !content.trim()) return;
+    if (!canEditTraining || !title.trim() || !content.trim()) return;
     setSaving(true);
     setNotice('');
     try {
@@ -102,7 +105,7 @@ const DaliKnowledgeCenter: React.FC = () => {
   };
 
   const saveAlias = async () => {
-    if (!selectedCustomerId || !aliasInput.trim()) return;
+    if (!canEditTraining || !selectedCustomerId || !aliasInput.trim()) return;
     setAliasSaving(true);
     setNotice('');
     try {
@@ -123,6 +126,7 @@ const DaliKnowledgeCenter: React.FC = () => {
   };
 
   const removeAlias = async (id: string) => {
+    if (!canEditTraining) return;
     setNotice('');
     try {
       await deleteDaliCustomerAlias(id);
@@ -152,7 +156,7 @@ const DaliKnowledgeCenter: React.FC = () => {
   }, [customers, customerSearch]);
 
   const trainTerminology = async () => {
-    if (!termCanonical.trim() || !termInput.trim()) return;
+    if (!canEditTraining || !termCanonical.trim() || !termInput.trim()) return;
     setTermLoading(true); setNotice('');
     try {
       await learnTerminology({
@@ -174,6 +178,7 @@ const DaliKnowledgeCenter: React.FC = () => {
   };
 
   const runTerminologyScan = async () => {
+    if (!canEditTraining) return;
     setTermLoading(true); setNotice('');
     try {
       const count = await scanSystemTerminology();
@@ -216,7 +221,10 @@ const DaliKnowledgeCenter: React.FC = () => {
                 : 'Company rules, terminology and customer aliases are stored persistently and used in future DALI conversations.'}
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className={`px-3 py-2 rounded-xl border text-[8px] font-black uppercase tracking-wider ${canEditTraining ? 'border-emerald-400/30 text-emerald-300 bg-emerald-400/10' : 'border-white/10 text-white/50 bg-white/5'}`}>
+              {canEditTraining ? (ar ? 'أنت منشئ التدريب' : 'TRAINING CREATOR') : (ar ? 'عرض فقط' : 'READ ONLY')}
+            </div>
             <div className="text-center px-5 py-3 rounded-2xl bg-white/10 border border-white/10">
               <div className="text-2xl font-black">{items.length}</div>
               <div className="text-[8px] uppercase tracking-widest text-white/50">ACTIVE LESSONS</div>
@@ -239,7 +247,7 @@ const DaliKnowledgeCenter: React.FC = () => {
           <textarea value={content} onChange={e => setContent(e.target.value)} placeholder={ar ? 'ما الذي يجب أن يعرفه دالي؟' : 'What should DALI know and do?'} className="w-full h-32 rounded-xl border p-3 text-sm mb-3 bg-[var(--input-bg)]" />
           <input value={arabicName} onChange={e => setArabicName(e.target.value)} placeholder={ar ? 'اسم العميل بالعربي (مثال: نوتك)' : 'Customer Arabic name (example: نوتك)'} className="w-full rounded-xl border p-3 text-sm mb-3 bg-[var(--input-bg)]" />
           <input value={keywords} onChange={e => setKeywords(e.target.value)} placeholder={ar ? 'كلمات مفتاحية مفصولة بفواصل' : 'Keywords, comma separated'} className="w-full rounded-xl border p-3 text-sm mb-4 bg-[var(--input-bg)]" />
-          <button disabled={saving || !title.trim() || !content.trim()} onClick={saveLesson} className="w-full py-3 rounded-xl bg-[#C2A378] text-[#001F3F] font-black uppercase text-xs disabled:opacity-40">
+          <button disabled={!canEditTraining || saving || !title.trim() || !content.trim()} onClick={saveLesson} className="w-full py-3 rounded-xl bg-[#C2A378] text-[#001F3F] font-black uppercase text-xs disabled:opacity-40">
             {saving ? (ar ? 'جاري الحفظ...' : 'Saving...') : (ar ? 'علّم دالي' : 'TEACH DALI')}
           </button>
         </section>
@@ -266,7 +274,7 @@ const DaliKnowledgeCenter: React.FC = () => {
                   {selectedAliases.map(a => (
                     <span key={a.id} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] border">
                       {a.alias}
-                      <button type="button" onClick={() => removeAlias(a.id)} className="opacity-60 hover:opacity-100">×</button>
+                      <button type="button" onClick={() => removeAlias(a.id)} disabled={!canEditTraining} className="opacity-60 hover:opacity-100 disabled:hidden">×</button>
                     </span>
                   ))}
                 </div>
@@ -275,15 +283,15 @@ const DaliKnowledgeCenter: React.FC = () => {
             </div>
           )}
           <div className="grid grid-cols-[1fr_auto] gap-2">
-            <input value={aliasInput} onChange={e => setAliasInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') saveAlias(); }} placeholder={ar ? 'مثال: نوتك' : 'Example: نوتك'} className="rounded-xl border p-3 text-sm bg-[var(--input-bg)]" />
-            <select value={aliasType} onChange={e => setAliasType(e.target.value as DaliCustomerAlias['alias_type'])} className="rounded-xl border px-2 text-xs bg-[var(--input-bg)]">
+            <input value={aliasInput} onChange={e => setAliasInput(e.target.value)} disabled={!canEditTraining} onKeyDown={e => { if (e.key === 'Enter') saveAlias(); }} placeholder={ar ? 'مثال: نوتك' : 'Example: نوتك'} className="rounded-xl border p-3 text-sm bg-[var(--input-bg)]" />
+            <select value={aliasType} onChange={e => setAliasType(e.target.value as DaliCustomerAlias['alias_type'])} disabled={!canEditTraining} className="rounded-xl border px-2 text-xs bg-[var(--input-bg)]">
               <option value="arabic">{ar ? 'عربي' : 'Arabic'}</option>
               <option value="nickname">{ar ? 'مختصر' : 'Nickname'}</option>
               <option value="typo">{ar ? 'خطأ شائع' : 'Common typo'}</option>
               <option value="manual">{ar ? 'بديل' : 'Manual'}</option>
             </select>
           </div>
-          <button disabled={aliasSaving || !selectedCustomerId || !aliasInput.trim()} onClick={saveAlias} className="w-full mt-2 py-3 rounded-xl border border-[#C2A37866] text-[#C2A378] font-black uppercase text-xs disabled:opacity-40">
+          <button disabled={!canEditTraining || aliasSaving || !selectedCustomerId || !aliasInput.trim()} onClick={saveAlias} className="w-full mt-2 py-3 rounded-xl border border-[#C2A37866] text-[#C2A378] font-black uppercase text-xs disabled:opacity-40">
             {aliasSaving ? (ar ? 'جاري الحفظ...' : 'Saving...') : (ar ? 'إضافة الاسم لدالي' : 'ADD ALIAS TO DALI')}
           </button>
           <div className="mt-4 text-[9px] opacity-50">
@@ -298,7 +306,7 @@ const DaliKnowledgeCenter: React.FC = () => {
             <div className="text-[9px] font-black uppercase tracking-widest text-[#C2A378]">{ar ? 'عقدة التدريب اليدوي • قاموس المصطلحات' : 'MANUAL TRAINING NODE • TERMINOLOGY ENGINE'}</div>
             <p className="text-xs opacity-60 mt-1">{ar ? 'يتعلم الأسماء البديلة والأخطاء الشائعة دون تغيير أي بيانات تشغيلية.' : 'Learns aliases, Arabic/English variants and typos without modifying operational data.'}</p>
           </div>
-          <button type="button" onClick={runTerminologyScan} disabled={termLoading} className="px-4 py-2 rounded-xl border font-black text-[9px] disabled:opacity-40">
+          <button type="button" onClick={runTerminologyScan} disabled={!canEditTraining || termLoading} className="px-4 py-2 rounded-xl border font-black text-[9px] disabled:opacity-40">
             {termLoading ? '…' : (ar ? 'فحص النظام' : 'SCAN SYSTEM')}
           </button>
         </div>
@@ -308,7 +316,7 @@ const DaliKnowledgeCenter: React.FC = () => {
           <select value={termType} onChange={e => setTermType(e.target.value)} className="rounded-xl border p-3 text-xs bg-[var(--input-bg)]">
             {['entity','field','status','port','customer','shipper','trucker','genset','booking','container','maintenance','invoice','operation','action','intent'].map(x => <option key={x}>{x}</option>)}
           </select>
-          <button type="button" onClick={trainTerminology} disabled={termLoading || !termCanonical.trim() || !termInput.trim()} className="rounded-xl bg-[#C2A378] text-[#001F3F] font-black text-[9px] disabled:opacity-40">
+          <button type="button" onClick={trainTerminology} disabled={!canEditTraining || termLoading || !termCanonical.trim() || !termInput.trim()} className="rounded-xl bg-[#C2A378] text-[#001F3F] font-black text-[9px] disabled:opacity-40">
             {ar ? 'حفظ الاسم البديل' : 'SAVE ALIAS'}
           </button>
         </div>
