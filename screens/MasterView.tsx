@@ -915,6 +915,24 @@ const MasterView: React.FC = () => {
     setReplacementOperation(null); setReplacementGensetNumber(''); setReplacementNotes(''); refresh(true);
     window.alert(isAr ? 'تم استبدال المولد وتسجيل العملية بنجاح.' : 'Genset replaced and replacement history saved.');
   };
+  const handleBulkReplaceGenset = () => {
+    if (isReadOnly) return;
+    const selected = operations.filter(op => selectedRowIds.has(op.id));
+    if (selected.length !== 1) {
+      window.alert(isAr ? 'لاستبدال مولد، حدد عملية واحدة فقط من BULK ACTION.' : 'REPLACE GENSET requires exactly one selected operation.');
+      return;
+    }
+    const op = selected[0];
+    if (op.status !== 'IN PROGRESS' || !op.gensetNumber) {
+      window.alert(isAr ? 'يجب أن تكون العملية المحددة قيد التشغيل وبها رقم مولد.' : 'The selected operation must be IN PROGRESS and have a genset number.');
+      return;
+    }
+    setReplacementOperation(op);
+    setReplacementReason('BREAKDOWN');
+    setReplacementGensetNumber('');
+    setReplacementNotes('');
+  };
+
   const handleBulkStatusChange = async (newStatus: 'IN PROGRESS' | 'UNDER OPERATE' | 'DONE' | 'HOLD' | 'CANCEL') => {
     if (isReadOnly) return;
     const ids = Array.from(selectedRowIds) as string[];
@@ -1906,6 +1924,15 @@ const MasterView: React.FC = () => {
                   + {isAr ? 'نسخ السطر' : 'Clone Line'}
                 </button>
               )}
+              {!isReadOnly && (
+                <button
+                  type="button"
+                  onClick={handleBulkReplaceGenset}
+                  className="bg-rose-600 text-white px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 transition-all shadow-lg"
+                >
+                  {isAr ? 'استبدال المولد' : 'REPLACE GENSET'}
+                </button>
+              )}
               <div className="flex items-center gap-4">
                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-300">{isAr ? 'تغيير الحالة لـ:' : 'Target Status:'}</p>
                  <select className="bg-white/10 text-white border border-white/20 rounded-xl px-4 py-2 text-[10px] font-black uppercase outline-none focus:border-[#C2A378] transition-all" onChange={(e) => handleBulkStatusChange(e.target.value as any)} defaultValue="">
@@ -1932,7 +1959,13 @@ const MasterView: React.FC = () => {
                 <div className={`rounded-xl p-3 border ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}><div className="text-[8px] font-black uppercase text-slate-400">{isAr ? 'العملية' : 'Operation'}</div><div className="font-black text-sm">{replacementOperation.containerNumber || '---'}</div><div className="text-[9px] font-bold text-slate-500">{translateEntity(replacementOperation.clipOnPort, lang)} → {translateEntity(replacementOperation.clipOffPort, lang)}</div></div>
               </div>
               <div><label className="block text-[8px] font-black uppercase text-slate-400 mb-1">{isAr ? 'سبب الاستبدال' : 'Reason'}</label><select value={replacementReason} onChange={e => setReplacementReason(e.target.value as GensetReplacement['reason'])} className={`w-full p-3 rounded-xl border font-black text-xs ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}><option value="BREAKDOWN">{isAr ? 'عطل / توقف' : 'BREAKDOWN / STOPPED'}</option><option value="DAMAGED">{isAr ? 'تلف' : 'DAMAGED'}</option><option value="OTHER">{isAr ? 'سبب آخر' : 'OTHER'}</option></select></div>
-              <div><label className="block text-[8px] font-black uppercase text-slate-400 mb-1">{isAr ? 'المولد البديل' : 'Replacement Genset'}</label><select value={replacementGensetNumber} onChange={e => setReplacementGensetNumber(e.target.value)} className={`w-full p-3 rounded-xl border font-black text-xs ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}><option value="">-- {isAr ? 'اختر المولد البديل' : 'SELECT REPLACEMENT'} --</option>{db.getStock().filter(g => g.unitNumber.trim().toUpperCase() !== replacementOperation.gensetNumber.trim().toUpperCase()).filter(g => g.status === GensetStatus.IN_STOCK).sort((a,b) => (a.location === replacementOperation.clipOnPort ? 0 : 1) - (b.location === replacementOperation.clipOnPort ? 0 : 1) || a.unitNumber.localeCompare(b.unitNumber)).map(g => <option key={g.id} value={g.unitNumber}>{g.unitNumber} · {translateEntity(g.location, lang)}{g.location === replacementOperation.clipOnPort ? (isAr ? ' · نفس الميناء' : ' · SAME PORT') : ''}</option>)}</select></div>
+              <div><label className="block text-[8px] font-black uppercase text-slate-400 mb-1">{isAr ? 'المولد البديل' : 'Replacement Genset'}</label><select value={replacementGensetNumber} onChange={e => setReplacementGensetNumber(e.target.value)} className={`w-full p-3 rounded-xl border font-black text-xs ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}><option value="">-- {isAr ? 'اختر المولد البديل' : 'SELECT REPLACEMENT'} --</option>{db.getStock().filter(g => g.unitNumber.trim().toUpperCase() !== replacementOperation.gensetNumber.trim().toUpperCase()).filter(g => g.status === GensetStatus.IN_STOCK).sort((a,b) => (a.location === replacementOperation.clipOnPort ? 0 : 1) - (b.location === replacementOperation.clipOnPort ? 0 : 1) || a.unitNumber.localeCompare(b.unitNumber)).map(g => <option key={g.id} value={g.unitNumber}>{g.unitNumber} · {translateEntity(g.location, lang)}{g.location === replacementOperation.clipOnPort ? (isAr ? ' · نفس الميناء' : ' · SAME PORT') : ''}</option>)}</select></div
+               {replacementGensetNumber && (
+                 <div className={`rounded-xl p-3 border ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                   <div className="text-[8px] font-black uppercase text-slate-400">{isAr ? 'ميناء مصدر المولد البديل' : 'Replacement Source Port'}</div>
+                   <div className="font-black text-sm">{translateEntity(db.getStock().find(g => g.unitNumber.trim().toUpperCase() === replacementGensetNumber.trim().toUpperCase())?.location || '', lang)}</div>
+                 </div>
+               )}>
               <div><label className="block text-[8px] font-black uppercase text-slate-400 mb-1">{isAr ? 'ملاحظات' : 'Notes'}</label><textarea value={replacementNotes} onChange={e => setReplacementNotes(e.target.value)} rows={2} className={`w-full p-3 rounded-xl border text-xs ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`} placeholder={isAr ? 'اختياري' : 'Optional'} /></div>
               <div className="flex gap-3 pt-2"><button onClick={() => setReplacementOperation(null)} className="flex-1 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 font-black text-xs">{isAr ? 'إلغاء' : 'CANCEL'}</button><button disabled={!replacementGensetNumber || isReadOnly} onClick={handleReplaceGenset} className="flex-1 py-3 rounded-xl bg-rose-600 text-white font-black text-xs disabled:opacity-40">{isAr ? 'تأكيد الاستبدال' : 'CONFIRM REPLACEMENT'}</button></div>
             </div>
