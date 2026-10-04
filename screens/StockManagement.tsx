@@ -209,26 +209,54 @@ const StockManagement: React.FC = () => {
     alert(lang === 'ar' ? `تم نقل ${ids.length} وحدة بنجاح` : `Successfully transferred ${ids.length} units.`);
   };
 
-  const handleFleetBoardBulkStatus = async (status: 'IN_STOCK' | 'IN_PROGRESS' | 'MAINTENANCE' | 'RETIRED') => {
-    if (isReadOnly || selectedIds.size === 0) return;
+  const [bulkTargetStatus, setBulkTargetStatus] = useState<'IN_STOCK' | 'IN_PROGRESS' | 'MAINTENANCE' | 'RETIRED' | null>(null);
+  const [bulkTargetPort, setBulkTargetPort] = useState<Location | ''>('');
+
+  const handleFleetBoardBulkApply = async () => {
+    if (isReadOnly || selectedIds.size === 0 || (!bulkTargetStatus && !bulkTargetPort)) return;
+
     const ids = Array.from(selectedIds);
-    const targetStatus = status === 'IN_PROGRESS' ? GensetStatus.CLIPPED_ON : status as GensetStatus;
-    const targetLabel = status === 'IN_STOCK'
+    const targetStatus = bulkTargetStatus === 'IN_PROGRESS'
+      ? GensetStatus.CLIPPED_ON
+      : bulkTargetStatus as GensetStatus | null;
+    const selectedUnits = stock.filter(unit => selectedIds.has(unit.id));
+    const targetStatusLabel = bulkTargetStatus === 'IN_STOCK'
       ? (isAr ? 'متاح' : 'ON STOCK')
-      : status === 'IN_PROGRESS'
+      : bulkTargetStatus === 'IN_PROGRESS'
         ? (isAr ? 'قيد التشغيل' : 'IN PROGRESS')
-        : status === 'MAINTENANCE'
+        : bulkTargetStatus === 'MAINTENANCE'
           ? (isAr ? 'صيانة' : 'MAINTENANCE')
-          : (isAr ? 'خارج الخدمة' : 'SCRAP');
+          : bulkTargetStatus === 'RETIRED'
+            ? (isAr ? 'خارج الخدمة' : 'SCRAP')
+            : '';
+    const targetPortLabel = bulkTargetPort ? translateEntity(bulkTargetPort, lang) : '';
+    const changes = [
+      bulkTargetPort ? (isAr ? 'نقل إلى ' + targetPortLabel : 'Move to ' + targetPortLabel) : '',
+      bulkTargetStatus ? (isAr ? 'تغيير الحالة إلى ' + targetStatusLabel : 'Set status to ' + targetStatusLabel) : ''
+    ].filter(Boolean).join(' + ');
+
+    const confirmed = window.confirm(
+      isAr
+        ? 'سيتم تطبيق التغييرات التالية على ' + ids.length + ' مولد:\n\n' + changes + '\n\nهل تريد التأكيد؟'
+        : ids.length + ' genset(s) will be updated:\n\n' + changes + '\n\nConfirm changes?'
+    );
+    if (!confirmed) return;
 
     await Promise.all(ids.map(async id => {
-      const unit = stock.find(s => s.id === id);
-      if (unit) await db.updateGenset({ ...unit, status: targetStatus });
+      const unit = selectedUnits.find(s => s.id === id);
+      if (!unit) return;
+      await db.updateGenset({
+        ...unit,
+        ...(bulkTargetPort ? { location: bulkTargetPort } : {}),
+        ...(targetStatus ? { status: targetStatus } : {})
+      });
     }));
 
-    setSelectedIds(new Set());
     setDbVersion(v => v + 1);
-    alert(isAr ? `تم تحديث حالة ${ids.length} مولد إلى ${targetLabel}` : `Updated ${ids.length} genset(s) to ${targetLabel}.`);
+    setSelectedIds(new Set());
+    setBulkTargetStatus(null);
+    setBulkTargetPort('');
+    alert(isAr ? 'تم تطبيق التغييرات على ' + ids.length + ' مولد بنجاح' : 'Changes applied to ' + ids.length + ' genset(s) successfully.');
   };
 
   const toggleSelectAll = () => {
@@ -517,18 +545,42 @@ const StockManagement: React.FC = () => {
           {!isReadOnly && selectedIds.size > 0 && (
             <div className="sticky top-2 z-30 rounded-2xl border border-[#C2A378]/40 bg-[#3a3833] text-white p-2.5 shadow-2xl">
               <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-2 mr-auto">
-                  <span className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/10 text-[9px] font-black uppercase tracking-widest">
+                <div className="flex min-w-0 max-w-full items-center gap-1.5">
+                  <span className="shrink-0 px-2.5 py-1 rounded-lg bg-white/10 border border-white/10 text-[9px] font-black uppercase tracking-widest">
                     {selectedIds.size} {isAr ? 'محدد' : 'SELECTED'}
                   </span>
-                  <button type="button" onClick={() => setSelectedIds(new Set())} className="px-2 py-1 rounded-lg text-[8px] font-black uppercase text-slate-300 hover:bg-white/10">
+                  <div className="flex min-w-0 max-w-[48vw] sm:max-w-[55vw] items-center gap-1 overflow-x-auto">
+                    {stock.filter(unit => selectedIds.has(unit.id)).map(unit => (
+                      <span key={unit.id} title={unit.unitNumber} className="shrink-0 px-2 py-1 rounded-lg bg-white/10 border border-[#C2A378]/30 text-[8px] font-mono font-black text-[#C2A378]">
+                        {unit.unitNumber}
+                      </span>
+                    ))}
+                  </div>
+                  <button type="button" onClick={() => { setSelectedIds(new Set()); setBulkTargetStatus(null); setBulkTargetPort(''); }} className="shrink-0 px-2 py-1 rounded-lg text-[8px] font-black uppercase text-slate-300 hover:bg-white/10">
                     {isAr ? 'إلغاء' : 'CLEAR'}
                   </button>
                 </div>
-                <button type="button" onClick={() => handleFleetBoardBulkStatus('MAINTENANCE')} className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-[8px] font-black uppercase">🔧 {isAr ? 'صيانة' : 'MAINTENANCE'}</button>
-                <button type="button" onClick={() => handleFleetBoardBulkStatus('IN_STOCK')} className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[8px] font-black uppercase">● {isAr ? 'متاح' : 'ON STOCK'}</button>
-                <button type="button" onClick={() => handleFleetBoardBulkStatus('IN_PROGRESS')} className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[8px] font-black uppercase">▶ {isAr ? 'قيد التشغيل' : 'IN PROGRESS'}</button>
-                <button type="button" onClick={() => handleFleetBoardBulkStatus('RETIRED')} className="px-2.5 py-1.5 rounded-lg bg-slate-600 hover:bg-slate-500 text-white text-[8px] font-black uppercase">■ {isAr ? 'خارج الخدمة' : 'SCRAP'}</button>
+
+                <select
+                  value={bulkTargetPort}
+                  onChange={e => setBulkTargetPort(e.target.value as Location | '')}
+                  className="h-7 max-w-[145px] rounded-lg border border-[#C2A378]/30 bg-black/20 px-2 text-[8px] font-black uppercase text-white outline-none"
+                  aria-label={isAr ? 'نقل إلى ميناء' : 'MOVE TO PORT'}
+                >
+                  <option value="">{isAr ? '📍 بدون نقل' : '📍 NO MOVE'}</option>
+                  {Object.values(Location).map(port => (
+                    <option key={port} value={port}>{translateEntity(port, lang)}</option>
+                  ))}
+                </select>
+
+                <button type="button" onClick={() => setBulkTargetStatus(bulkTargetStatus === 'MAINTENANCE' ? null : 'MAINTENANCE')} className={`px-2.5 py-1.5 rounded-lg text-[8px] font-black uppercase ${bulkTargetStatus === 'MAINTENANCE' ? 'bg-rose-500 ring-2 ring-white/70' : 'bg-rose-700 hover:bg-rose-600'}`}>🔧 {isAr ? 'صيانة' : 'MAINTENANCE'}</button>
+                <button type="button" onClick={() => setBulkTargetStatus(bulkTargetStatus === 'IN_STOCK' ? null : 'IN_STOCK')} className={`px-2.5 py-1.5 rounded-lg text-[8px] font-black uppercase ${bulkTargetStatus === 'IN_STOCK' ? 'bg-emerald-500 ring-2 ring-white/70' : 'bg-emerald-700 hover:bg-emerald-600'}`}>● {isAr ? 'متاح' : 'ON STOCK'}</button>
+                <button type="button" onClick={() => setBulkTargetStatus(bulkTargetStatus === 'IN_PROGRESS' ? null : 'IN_PROGRESS')} className={`px-2.5 py-1.5 rounded-lg text-[8px] font-black uppercase ${bulkTargetStatus === 'IN_PROGRESS' ? 'bg-blue-500 ring-2 ring-white/70' : 'bg-blue-700 hover:bg-blue-600'}`}>▶ {isAr ? 'قيد التشغيل' : 'IN PROGRESS'}</button>
+                <button type="button" onClick={() => setBulkTargetStatus(bulkTargetStatus === 'RETIRED' ? null : 'RETIRED')} className={`px-2.5 py-1.5 rounded-lg text-[8px] font-black uppercase ${bulkTargetStatus === 'RETIRED' ? 'bg-slate-400 ring-2 ring-white/70' : 'bg-slate-600 hover:bg-slate-500'}`}>■ {isAr ? 'خارج الخدمة' : 'SCRAP'}</button>
+
+                <button type="button" disabled={!bulkTargetStatus && !bulkTargetPort} onClick={handleFleetBoardBulkApply} className="px-3 py-1.5 rounded-lg bg-[#C2A378] text-black text-[8px] font-black uppercase disabled:opacity-30 disabled:cursor-not-allowed">
+                  ✓ {isAr ? 'تأكيد التغييرات' : 'CONFIRM CHANGES'}
+                </button>
               </div>
             </div>
           )}
