@@ -196,6 +196,15 @@ const Operations: React.FC<{ highlightId?: string | null; clearHighlight?: () =>
   const [editingOp, setEditingOp] = useState<Operation | null>(null);
   const [viewingPhoto, setViewingPhoto] = useState<string | null>(null);
 
+  const duplicateContainerIds = useMemo(() => {
+    const counts = new Map<string, number>();
+    operations.forEach(op => {
+      const container = (op.containerNumber || '').trim().toUpperCase();
+      if (container) counts.set(container, (counts.get(container) || 0) + 1);
+    });
+    return new Set([...counts.entries()].filter(([, count]) => count > 1).map(([container]) => container));
+  }, [operations]);
+
   const selectedPort = highlightId && Object.values(Location).includes(highlightId as Location)
     ? highlightId as Location
     : null;
@@ -556,7 +565,7 @@ const Operations: React.FC<{ highlightId?: string | null; clearHighlight?: () =>
                                             <div className="flex-1">
                                                <div>
                                                   <p className="text-[7px] font-black text-slate-300 uppercase">Container ID</p>
-                                                  <p className="font-mono font-black text-xl text-slate-900 dark:text-white uppercase">{item.containerNumber || '---'}</p>
+                                                  <div className={`rounded-xl px-2 py-1 \${duplicateContainerIds.has((item.containerNumber || '').trim().toUpperCase()) ? 'bg-red-600 text-white shadow-[0_0_14px_rgba(239,68,68,0.35)]' : ''}`}>                                                    <p className="font-mono font-black text-xl uppercase">{item.containerNumber || '---'}</p>\n                                                 </div>
                                                </div>
                                                <div className="mt-2">
                                                   <p className="text-[7px] font-black text-slate-300 uppercase">Genset Serial</p>
