@@ -108,6 +108,17 @@ const Reports: React.FC = () => {
       .sort((a, b) => a.port.localeCompare(b.port) || a.clipOnDate.localeCompare(b.clipOnDate) || a.bookingNumber.localeCompare(b.bookingNumber));
   }, [ops, reportDate, dataVersion]);
 
+  const summary = useMemo(() => {
+    const totalRevenue = filteredData.reduce((a, b) => a + (parseFloat(String(b.rate || '').replace(/,/g, '')) || 0), 0);
+    const totalVat = filteredData.reduce((a, b) => a + (parseFloat(String(b.vat || '').replace(/,/g, '')) || 0), 0);
+    return {
+      count: filteredData.length,
+      revenue: totalRevenue,
+      vat: totalVat,
+      grandTotal: totalRevenue + totalVat
+    };
+  }, [filteredData]);
+
   const dailyGensetTotals = useMemo(() => ({
     bookings: dailyGensetPlan.length,
     gensets: dailyGensetPlan.reduce((sum, row) => sum + row.gensetCount, 0),
