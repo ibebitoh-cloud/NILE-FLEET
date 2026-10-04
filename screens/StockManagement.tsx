@@ -242,15 +242,34 @@ const StockManagement: React.FC = () => {
     );
     if (!confirmed) return;
 
-    await Promise.all(ids.map(async id => {
+    // Changing a genset to ON STOCK closes its active operation(s) as DONE,
+    // keeping Master View and the Fleet Board on the same source of truth.
+    for (const id of ids) {
       const unit = selectedUnits.find(s => s.id === id);
-      if (!unit) return;
+      if (!unit) continue;
+
+      const effectiveLocation = bulkTargetPort || unit.location;
+      const activeOps = ops.filter(o =>
+        o.status === 'IN PROGRESS' &&
+        o.gensetNumber?.trim().toUpperCase() === unit.unitNumber.trim().toUpperCase()
+      );
+
+      if (bulkTargetStatus === 'IN_STOCK') {
+        for (const op of activeOps) {
+          await db.updateOperation({
+            ...op,
+            status: 'DONE',
+            clipOffPort: op.clipOffPort || effectiveLocation
+          });
+        }
+      }
+
       await db.updateGenset({
         ...unit,
         ...(bulkTargetPort ? { location: bulkTargetPort } : {}),
         ...(targetStatus ? { status: targetStatus } : {})
       });
-    }));
+    }
 
     setDbVersion(v => v + 1);
     setSelectedIds(new Set());
