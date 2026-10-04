@@ -590,7 +590,7 @@ const StockManagement: React.FC = () => {
                                   onClick={() => toggleSelect(unit.id)}
                                   className={`${group.cell} ${selectedClass} min-h-[38px] w-full rounded-lg border text-white px-1 py-1 flex flex-col items-center justify-center hover:brightness-110 active:scale-95 transition-all cursor-pointer`}
                                 >
-                                  <span className="text-[9px] font-black font-mono truncate max-w-full">{unit.unitNumber}</span>
+                                  <span className="text-[8px] sm:text-[9px] font-black font-mono leading-tight text-center break-all w-full">{unit.unitNumber}</span>
                                 </button>
                               );
                             })}
