@@ -80,6 +80,7 @@ const Reports: React.FC = () => {
       shipper: string;
       commodity: string;
       trucker: string;
+      videoUrl: string;
       containers: Set<string>;
       gensets: Set<string>;
     }>();
@@ -98,6 +99,7 @@ const Reports: React.FC = () => {
         shipper: o.beneficiaryName || '---',
         commodity: o.commodity || '---',
         trucker: o.trucker || '---',
+        videoUrl: String((o as any).videoUrl || (o as any).video || ''),
         containers: new Set<string>(),
         gensets: new Set<string>()
       };
@@ -108,6 +110,7 @@ const Reports: React.FC = () => {
       if (!current.shipper || current.shipper === '---') current.shipper = o.beneficiaryName || '---';
       if (!current.commodity || current.commodity === '---') current.commodity = o.commodity || '---';
       if (!current.trucker || current.trucker === '---') current.trucker = o.trucker || '---';
+      if (!current.videoUrl) current.videoUrl = String((o as any).videoUrl || (o as any).video || '');
       groups.set(key, current);
     });
 
@@ -211,7 +214,7 @@ const Reports: React.FC = () => {
           </div>
         </div>
 
-        <div className="px-6 pt-5 text-[9px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-300">
+        <div className="mx-6 mt-5 rounded-2xl border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-[9px] font-black uppercase tracking-widest text-amber-800 dark:text-amber-200">
           {lang === 'ar' ? 'تعليمات الميناء: تصوير فيديو لكل مولد أثناء التشغيل بعد التركيب + تسجيل اسم العميل وتاريخ التركيب.' : 'PORT INSTRUCTION: Capture a video of each genset while working after clip-on + record customer name and clip-on date.'}
         </div>
 
@@ -232,20 +235,41 @@ const Reports: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-              {dailyGensetPlan.map(row => (
-                <tr key={row.clipOnDate + row.port + row.bookingNumber} className="hover:bg-slate-50 dark:hover:bg-slate-900/50">
-                  <td className="px-4 py-3 font-black text-blue-600 dark:text-blue-400 whitespace-nowrap">{row.clipOnDate}</td>
-                  <td className="px-4 py-3 font-black">{translateEntity(row.port, lang)}</td>
-                  <td className="px-4 py-3 font-black text-blue-600 dark:text-blue-400 font-mono">{row.bookingNumber}</td>
-                  <td className="px-4 py-3 font-bold">{translateEntity(row.customerName, lang)}</td>
-                  <td className="px-4 py-3 font-bold">{translateEntity(row.shipper, lang)}</td>
-                  <td className="px-4 py-3 font-bold">{translateEntity(row.commodity, lang)}</td>
-                  <td className="px-4 py-3 font-bold">{translateEntity(row.trucker, lang)}</td>
-                  <td className="px-4 py-3 text-center font-black">{row.containerCount}</td>
-                  <td className="px-4 py-3 text-center font-black text-emerald-600 dark:text-emerald-400">{row.gensetCount}</td>
-                  <td className="px-4 py-3 font-black text-amber-700 dark:text-amber-300">{lang === 'ar' ? 'مطلوب' : 'REQUIRED'}</td>
+              {dailyGensetPlan.map(row => {
+                const portKey = String(row.port || '').toUpperCase();
+                const portTone =
+                  portKey.includes('SOKHNA') || portKey.includes('السخنة') ? 'border-l-4 border-l-blue-500 bg-blue-50/40 dark:bg-blue-950/20' :
+                  portKey.includes('ALEX') || portKey.includes('الإسكندرية') ? 'border-l-4 border-l-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20' :
+                  portKey.includes('DAM') || portKey.includes('دمياط') ? 'border-l-4 border-l-violet-500 bg-violet-50/40 dark:bg-violet-950/20' :
+                  portKey.includes('PORT SAID') || portKey.includes('بورسعيد') ? 'border-l-4 border-l-amber-500 bg-amber-50/40 dark:bg-amber-950/20' :
+                  portKey.includes('DEK') || portKey.includes('الدخيلة') ? 'border-l-4 border-l-rose-500 bg-rose-50/40 dark:bg-rose-950/20' :
+                  'border-l-4 border-l-slate-400 bg-slate-50/40 dark:bg-slate-900/30';
+                const videoLabel = row.videoUrl ? (lang === 'ar' ? 'فتح الفيديو' : 'OPEN VIDEO') : (lang === 'ar' ? 'لا يوجد فيديو' : 'NO VIDEO');
+                return (
+                <tr key={row.clipOnDate + row.port + row.bookingNumber} className={`border-b border-slate-100 dark:border-slate-700 ${portTone} hover:brightness-[0.98]`}>
+                  <td className="px-4 py-3 font-black text-blue-600 dark:text-blue-400 whitespace-nowrap">{row.clipOnDate || '0'}</td>
+                  <td className="px-4 py-3 font-black">{row.port ? translateEntity(row.port, lang) : '0'}</td>
+                  <td className="px-4 py-3 font-black text-blue-600 dark:text-blue-400 font-mono">{row.bookingNumber || '0'}</td>
+                  <td className="px-4 py-3 font-bold">{row.customerName && row.customerName !== '---' ? translateEntity(row.customerName, lang) : '0'}</td>
+                  <td className="px-4 py-3 font-bold">{row.shipper && row.shipper !== '---' ? translateEntity(row.shipper, lang) : '0'}</td>
+                  <td className="px-4 py-3 font-bold">{row.commodity && row.commodity !== '---' ? translateEntity(row.commodity, lang) : '0'}</td>
+                  <td className="px-4 py-3 font-bold">{row.trucker && row.trucker !== '---' ? translateEntity(row.trucker, lang) : '0'}</td>
+                  <td className="px-4 py-3 text-center font-black">{row.containerCount || 0}</td>
+                  <td className="px-4 py-3 text-center font-black text-emerald-600 dark:text-emerald-400">{row.gensetCount || 0}</td>
+                  <td className="px-4 py-3 font-black">
+                    {row.videoUrl ? (
+                      <button type="button" onClick={() => window.open(row.videoUrl, '_blank', 'noopener,noreferrer')} className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-2.5 py-1.5 text-[9px] text-white hover:bg-blue-700">
+                        ▶ {videoLabel}
+                      </button>
+                    ) : (
+                      <button type="button" onClick={() => window.alert(lang === 'ar' ? 'لا يوجد رابط فيديو محفوظ لهذه العملية.' : 'No saved video link is available for this operation.')} className="inline-flex items-center gap-1 rounded-lg bg-slate-200 dark:bg-slate-700 px-2.5 py-1.5 text-[9px] text-slate-700 dark:text-slate-200 hover:opacity-80">
+                        0
+                      </button>
+                    )}
+                  </td>
                 </tr>
-              ))}
+                );
+              })}
               {dailyGensetPlan.length === 0 && (
                 <tr><td colSpan={10} className="py-14 text-center text-slate-400 font-black uppercase tracking-widest">{lang === 'ar' ? 'لا توجد مولدات مطلوبة في الفترة المحددة' : 'No genset requirements in the selected period'}</td></tr>
               )}
