@@ -34,7 +34,6 @@ export const entityTranslations: Record<string, string> = {
   "SOKHNA": "السخنة",
   "SCCT": "شرق بورسعيد",
   "PSD": "بورسعيد غرب",
-  "MAL": "الورشة",
   "WORKSHOP": "الورشة",
   "IN_STOCK": "متاح بالمخزن",
   "CLIPPED_ON": "مركب على حاوية",
