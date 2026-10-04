@@ -1240,7 +1240,17 @@ const MasterView: React.FC = () => {
 
   const handleUpdateCell = async (op: Operation, field: keyof Operation, val: any) => {
     if (isReadOnly) return;
-    const saved = await db.updateOperation({ ...op, [field]: val });
+    const normalizedValue = typeof val === 'string' ? val.trim() : val;
+    const shouldAutoFillGas =
+      field === 'containerNumber' &&
+      Boolean(normalizedValue) &&
+      (op.gaz === null || op.gaz === undefined || op.gaz === '' || Number(op.gaz) === 0);
+
+    const saved = await db.updateOperation({
+      ...op,
+      [field]: val,
+      ...(shouldAutoFillGas ? { gaz: '50' } : {})
+    });
     if (!saved) {
       window.alert(isAr
         ? `فشل حفظ التعديل: ${db.getLastDbError() || ''}`
