@@ -115,7 +115,7 @@ const Reports: React.FC = () => {
     });
 
     return Array.from(groups.values())
-      .map(g => ({ ...g, containerCount: g.containers.size, gensetCount: g.gensets.size || g.containers.size }))
+      .map(g => ({ ...g, containerCount: g.containers.size, gensetCount: g.containers.size }))
       .sort((a, b) => a.clipOnDate.localeCompare(b.clipOnDate) || a.port.localeCompare(b.port) || a.bookingNumber.localeCompare(b.bookingNumber));
   }, [ops, dateFrom, dateTo, dataVersion]);
 
@@ -247,24 +247,22 @@ const Reports: React.FC = () => {
                 const videoLabel = row.videoUrl ? (lang === 'ar' ? 'فتح الفيديو' : 'OPEN VIDEO') : (lang === 'ar' ? 'لا يوجد فيديو' : 'NO VIDEO');
                 return (
                 <tr key={row.clipOnDate + row.port + row.bookingNumber} className={`border-b border-slate-100 dark:border-slate-700 ${portTone} hover:brightness-[0.98]`}>
-                  <td className="px-4 py-3 font-black text-blue-600 dark:text-blue-400 whitespace-nowrap">{row.clipOnDate || '0'}</td>
-                  <td className="px-4 py-3 font-black">{row.port ? translateEntity(row.port, lang) : '0'}</td>
-                  <td className="px-4 py-3 font-black text-blue-600 dark:text-blue-400 font-mono">{row.bookingNumber || '0'}</td>
-                  <td className="px-4 py-3 font-bold">{row.customerName && row.customerName !== '---' ? translateEntity(row.customerName, lang) : '0'}</td>
-                  <td className="px-4 py-3 font-bold">{row.shipper && row.shipper !== '---' ? translateEntity(row.shipper, lang) : '0'}</td>
-                  <td className="px-4 py-3 font-bold">{row.commodity && row.commodity !== '---' ? translateEntity(row.commodity, lang) : '0'}</td>
-                  <td className="px-4 py-3 font-bold">{row.trucker && row.trucker !== '---' ? translateEntity(row.trucker, lang) : '0'}</td>
-                  <td className="px-4 py-3 text-center font-black">{row.containerCount || 0}</td>
-                  <td className="px-4 py-3 text-center font-black text-emerald-600 dark:text-emerald-400">{row.gensetCount || 0}</td>
+                  <td className="px-4 py-3 font-black text-blue-600 dark:text-blue-400 whitespace-nowrap">{row.clipOnDate || '-'}</td>
+                  <td className="px-4 py-3 font-black">{row.port ? translateEntity(row.port, lang) : '-'}</td>
+                  <td className="px-4 py-3 font-black text-blue-600 dark:text-blue-400 font-mono">{row.bookingNumber || '-'}</td>
+                  <td className="px-4 py-3 font-bold">{row.customerName && row.customerName !== '---' ? translateEntity(row.customerName, lang) : '-'}</td>
+                  <td className="px-4 py-3 font-bold">{row.shipper && row.shipper !== '---' ? translateEntity(row.shipper, lang) : '-'}</td>
+                  <td className="px-4 py-3 font-bold">{row.commodity && row.commodity !== '---' ? translateEntity(row.commodity, lang) : '-'}</td>
+                  <td className="px-4 py-3 font-bold">{row.trucker && row.trucker !== '---' ? translateEntity(row.trucker, lang) : '-'}</td>
+                  <td className="px-4 py-3 text-center font-black">{row.containerCount}</td>
+                  <td className="px-4 py-3 text-center font-black text-emerald-600 dark:text-emerald-400">{row.gensetCount}</td>
                   <td className="px-4 py-3 font-black">
                     {row.videoUrl ? (
                       <button type="button" onClick={() => window.open(row.videoUrl, '_blank', 'noopener,noreferrer')} className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-2.5 py-1.5 text-[9px] text-white hover:bg-blue-700">
                         ▶ {videoLabel}
                       </button>
                     ) : (
-                      <button type="button" onClick={() => window.alert(lang === 'ar' ? 'لا يوجد رابط فيديو محفوظ لهذه العملية.' : 'No saved video link is available for this operation.')} className="inline-flex items-center gap-1 rounded-lg bg-slate-200 dark:bg-slate-700 px-2.5 py-1.5 text-[9px] text-slate-700 dark:text-slate-200 hover:opacity-80">
-                        0
-                      </button>
+                      <span className="text-slate-400">-</span>
                     )}
                   </td>
                 </tr>
