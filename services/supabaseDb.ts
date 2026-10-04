@@ -14,7 +14,7 @@ import {
   CustomerPrice, Procurement, GasTransaction, Employee,
   PayrollTransaction, Payment, PaymentAllocation, FoodExpense, TransportExpense,
   PortRent, SystemNotification, SupportContact, FAQItem, PortInfo,
-  GensetMaintenanceLog
+  GensetMaintenanceLog, GensetReplacement
 } from '../types';
 
 export type { User };
@@ -252,6 +252,7 @@ let _supportContacts: SupportContact[] = [];
 let _faqs: FAQItem[] = [];
 let _portsInfo: PortInfo[] = [];
 let _maintenanceLogs: GensetMaintenanceLog[] = [];
+let _gensetReplacements: GensetReplacement[] = [];
 let _loaded = false;
 let _lastDbError = '';
 
@@ -366,6 +367,7 @@ class SupabaseDB {
     _faqs = [];
     _portsInfo = [];
     _maintenanceLogs = [];
+    _gensetReplacements = [];
   }
 
   // ─── bootstrap ─────────────────────────────────────────────────────────────
@@ -434,7 +436,7 @@ class SupabaseDB {
       const [stock, reservations, operations, invoices, payments, paymentAllocations, users,
         auditLogs, customerPrices, procurements, gasTransactions, employees,
         payrollTransactions, foodExpenses, transportExpenses, portRents, notifications,
-        supportContacts, faqs, portsInfo, maintenanceLogs] = await Promise.all([
+        supportContacts, faqs, portsInfo, maintenanceLogs, gensetReplacements] = await Promise.all([
         query<Genset>('gensets', { order: 'created_at' }),
         query<Reservation>('reservations', { order: 'created_at' }),
         query<Operation>('operations', { order: 'created_at' }),
@@ -456,12 +458,13 @@ class SupabaseDB {
         query<FAQItem>('faqs'),
         query<PortInfo>('ports_info'),
         query<GensetMaintenanceLog>('genset_maintenance_logs', { order: 'service_date' }),
+        query<GensetReplacement>('genset_replacements', { order: 'replaced_at' }),
       ]);
       _stock=stock; _reservations=reservations; _operations=operations; _invoices=invoices; _payments=payments;
       _paymentAllocations=paymentAllocations; _users=users; _auditLogs=auditLogs; _customerPrices=customerPrices;
       _procurements=procurements; _gasTransactions=gasTransactions; _employees=employees; _payrollTransactions=payrollTransactions;
       _foodExpenses=foodExpenses; _transportExpenses=transportExpenses; _portRents=portRents; _notifications=notifications;
-      _supportContacts=supportContacts; _faqs=faqs; _portsInfo=portsInfo; _maintenanceLogs=maintenanceLogs;
+      _supportContacts=supportContacts; _faqs=faqs; _portsInfo=portsInfo; _maintenanceLogs=maintenanceLogs; _gensetReplacements=gensetReplacements;
     }
     _loaded = true;
     dispatchChange();
@@ -471,6 +474,7 @@ class SupabaseDB {
   // ─── synchronous getters (return cached data) ───────────────────────────────
 
   getStock(): Genset[] { return _stock; }
+  getGensetReplacements(): GensetReplacement[] { return _gensetReplacements; }
   /** Fresh database lookup used by DALI when the local cache does not contain a genset. */
   async searchGensetRecords(value: string): Promise<{ stock: Genset[]; operations: Operation[]; maintenance: GensetMaintenanceLog[] }> {
     const raw = String(value || '').trim().toUpperCase();
@@ -730,6 +734,50 @@ class SupabaseDB {
     return true;
   }
 
+  async replaceOperationGenset(
+    operationId: string,
+    replacementGensetNumber: string,
+    reason: GensetReplacement['reason'],
+    notes?: string
+  ): Promise<boolean> {
+    const operation = _operations.find(o => o.id === operationId);
+    if (!operation) { _lastDbError = 'operations: operation not found'; return false; }
+    const originalNumber = String(operation.gensetNumber || '').trim();
+    const replacementNumber = String(replacementGensetNumber || '').trim();
+    if (!originalNumber || !replacementNumber || originalNumber.toUpperCase() === replacementNumber.toUpperCase()) {
+      _lastDbError = 'genset replacement: choose a different replacement unit'; return false;
+    }
+    const replacement = _stock.find(s => s.unitNumber?.trim().toUpperCase() === replacementNumber.toUpperCase());
+    const original = _stock.find(s => s.unitNumber?.trim().toUpperCase() === originalNumber.toUpperCase());
+    if (!replacement || !original) { _lastDbError = 'genset replacement: original or replacement unit was not found in stock'; return false; }
+    const activeConflict = _operations.some(o => o.id !== operation.id && o.status === 'IN PROGRESS' && o.gensetNumber?.trim().toUpperCase() === replacementNumber.toUpperCase());
+    if (activeConflict) { _lastDbError = 'genset replacement: replacement unit is already assigned to another active operation'; return false; }
+    const savedOperation = await update('operations', operation.id, { gensetNumber: replacementNumber });
+    if (!savedOperation) return false;
+    const replacementSaved = await update('gensets', replacement.id, { status: GensetStatus.CLIPPED_ON });
+    if (!replacementSaved) { await update('operations', operation.id, { gensetNumber: originalNumber }); return false; }
+    const originalSaved = await update('gensets', original.id, { status: GensetStatus.MAINTENANCE, location: original.location });
+    if (!originalSaved) { await update('operations', operation.id, { gensetNumber: originalNumber }); await update('gensets', replacement.id, { status: replacement.status, location: replacement.location }); return false; }
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const replacementRecord: Partial<GensetReplacement> = {
+      operationId: operation.id, originalGensetNumber: originalNumber, originalPort: original.location,
+      replacementGensetNumber: replacementNumber, replacementSourcePort: replacement.location, reason,
+      replacedAt: new Date().toISOString(), replacedBy: currentUser?.name || undefined, notes
+    };
+    const savedRecord = await insert<GensetReplacement>('genset_replacements', replacementRecord);
+    if (!savedRecord) {
+      await update('operations', operation.id, { gensetNumber: originalNumber });
+      await update('gensets', original.id, { status: original.status, location: original.location });
+      await update('gensets', replacement.id, { status: replacement.status, location: replacement.location });
+      return false;
+    }
+    _operations = _operations.map(o => o.id === operation.id ? { ...o, gensetNumber: replacementNumber } : o);
+    _stock = _stock.map(s => s.id === original.id ? { ...s, status: GensetStatus.MAINTENANCE } : s.id === replacement.id ? { ...s, status: GensetStatus.CLIPPED_ON } : s);
+    _gensetReplacements = [savedRecord, ..._gensetReplacements];
+    await auditLog('OPS', 'GENSET REPLACED ' + originalNumber + ' -> ' + replacementNumber + ' (' + reason + ')');
+    dispatchChange();
+    return true;
+  }
   async updateOperation(updatedOp: Operation): Promise<boolean> {
     const previous = _operations.find(o => o.id === updatedOp.id);
     const operationToSave = { ...updatedOp };
