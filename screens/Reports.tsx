@@ -195,7 +195,7 @@ const Reports: React.FC = () => {
       </div>
 
       {/* Daily Genset Dispatch Plan */}
-      <section className="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
         <div className="p-6 md:p-7 border-b border-slate-100 dark:border-slate-700 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
           <div>
             <h3 className="text-xl font-black text-[#3a3833] dark:text-white uppercase tracking-tight">
@@ -291,7 +291,7 @@ const Reports: React.FC = () => {
             </div>
           )}
         </div>
-      </section>
+      </div>
 
       {/* KPI Dashboard */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
