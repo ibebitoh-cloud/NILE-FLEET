@@ -705,7 +705,7 @@ const App: React.FC = () => {
             {showCompanyHome ? (
               <CompanyHome onGenset={() => setShowCompanyHome(false)} />
             ) : (
-              <Login onLogin={handleLogin} onBackToHome={() => setShowCompanyHome(true)} />
+              <Login onLogin={handleLogin} onBackToHome={() => setShowCompanyHome(true)} welcomeName={user?.name} />
             )}
           </Suspense>
         </ThemeContext>
