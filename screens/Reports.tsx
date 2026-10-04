@@ -117,7 +117,7 @@ const Reports: React.FC = () => {
     return Array.from(groups.values())
       .map(g => ({ ...g, containerCount: g.containers.size, gensetCount: g.gensets.size || g.containers.size }))
       .sort((a, b) => a.clipOnDate.localeCompare(b.clipOnDate) || a.port.localeCompare(b.port) || a.bookingNumber.localeCompare(b.bookingNumber));
-  }, [ops, dateFrom, dateTo]);
+  }, [ops, dateFrom, dateTo, dataVersion]);
 
   const dailyGensetTotals = useMemo(() => ({
     bookings: dailyGensetPlan.length,
@@ -218,7 +218,7 @@ const Reports: React.FC = () => {
           {lang === 'ar' ? 'تعليمات الميناء: تصوير فيديو لكل مولد أثناء التشغيل بعد التركيب + تسجيل اسم العميل وتاريخ التركيب.' : 'PORT INSTRUCTION: Capture a video of each genset while working after clip-on + record customer name and clip-on date.'}
         </div>
 
-        <div className="overflow-x-auto mt-4">
+        <div className="overflow-x-auto mt-4 border-t-4 border-slate-900 dark:border-slate-600">
           <table className="w-full text-left text-[10px] min-w-[1100px]">
             <thead className="bg-slate-900 text-white font-black uppercase tracking-widest">
               <tr>
@@ -236,7 +236,7 @@ const Reports: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
               {dailyGensetPlan.map(row => {
-                const portKey = String(row.port || '').toUpperCase();
+                const portKey = String(row.port || '').trim().toUpperCase();
                 const portTone =
                   portKey.includes('SOKHNA') || portKey.includes('السخنة') ? 'border-l-4 border-l-blue-500 bg-blue-50/40 dark:bg-blue-950/20' :
                   portKey.includes('ALEX') || portKey.includes('الإسكندرية') ? 'border-l-4 border-l-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20' :
