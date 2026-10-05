@@ -295,3 +295,4 @@ const DailyDispatchPlan: React.FC = () => {
 };
 
 export default DailyDispatchPlan;
+// Deployment marker: Daily Genset Dispatch Plan
