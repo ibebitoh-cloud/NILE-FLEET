@@ -466,6 +466,9 @@ class SupabaseDB {
       _foodExpenses=foodExpenses; _transportExpenses=transportExpenses; _portRents=portRents; _notifications=notifications;
       _supportContacts=supportContacts; _faqs=faqs; _portsInfo=portsInfo; _maintenanceLogs=maintenanceLogs; _gensetReplacements=gensetReplacements;
     }
+    // Bring pre-existing active operations into the same Clip-On -> Clip-Off
+    // transfer state used for newly created/edited operations.
+    await this._syncActiveGensetLocations();
     _loaded = true;
     dispatchChange();
     startRealtimeSync();
@@ -910,6 +913,39 @@ class SupabaseDB {
     await Promise.all(units.map(unit => this._releaseGensetIfUnused(unit)));
     await auditLog('OPS', `Force deleted ${removedIds.length} manifest entries`);
     dispatchChange();
+  }
+
+  private async _syncActiveGensetLocations(): Promise<void> {
+    // Reconcile existing IN PROGRESS operations on login/load. Older records
+    // may have been created before automatic Clip-Off transfer was enabled.
+    // If the same physical unit is assigned to active records with different
+    // destinations, do not guess a location.
+    const destinations = new Map<string, Set<string>>();
+    _operations.forEach(op => {
+      if (op.status !== 'IN PROGRESS' || !op.gensetNumber || !op.clipOffPort) return;
+      const unit = op.gensetNumber.trim().toUpperCase();
+      const port = String(op.clipOffPort).trim().toUpperCase();
+      if (!port) return;
+      if (!destinations.has(unit)) destinations.set(unit, new Set());
+      destinations.get(unit)!.add(port);
+    });
+
+    for (const [unit, ports] of destinations) {
+      if (ports.size !== 1) continue;
+      const location = Array.from(ports)[0] as Location;
+      const genset = _stock.find(s => s.unitNumber?.trim().toUpperCase() === unit);
+      if (!genset || genset.location === location) continue;
+      const saved = await update('gensets', genset.id, {
+        status: GensetStatus.CLIPPED_ON,
+        location
+      });
+      if (saved) {
+        _stock = _stock.map(s => s.id === genset.id
+          ? { ...s, status: GensetStatus.CLIPPED_ON, location }
+          : s
+        );
+      }
+    }
   }
 
   private async _releaseGensetIfUnused(unitNumber: string): Promise<void> {
