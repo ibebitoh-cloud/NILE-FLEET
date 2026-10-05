@@ -1830,7 +1830,7 @@ const MasterView: React.FC = () => {
                             className={`px-2 border-r text-center transition-all duration-200 relative ${isGensetDup
                               ? 'bg-red-700 !text-white font-black shadow-[inset_0_0_0_2px_#fecaca,0_0_18px_rgba(239,68,68,.75)] animate-pulse'
                               : op.clipOffPort === Location.SCCT && op.manualScctClipOff
-                                ? (isDark ? 'bg-sky-900/70 border-sky-500/40' : 'bg-sky-100 border-sky-300')
+                                ? (isDark ? 'bg-sky-900/70' : 'bg-sky-100')
                                 : isDark ? 'border-slate-800' : 'border-slate-50'}`}
                             title={gensetPortMismatchByOperationId.has(op.id) ? (isAr ? `⚠️ المولد موجود في ${translateEntity(gensetPortMismatchByOperationId.get(op.id), lang)} بينما المتوقع ${translateEntity(op.status === 'IN PROGRESS' ? op.clipOffPort : op.clipOnPort, lang)}` : `⚠️ GENSET PORT MISMATCH — Stock: ${translateEntity(gensetPortMismatchByOperationId.get(op.id), lang)} | Expected: ${translateEntity(op.status === 'IN PROGRESS' ? op.clipOffPort : op.clipOnPort, lang)}`) : isGensetDup
                               ? (isAr
