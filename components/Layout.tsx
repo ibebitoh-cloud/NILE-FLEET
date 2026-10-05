@@ -7,6 +7,7 @@ import { db } from '../services/supabaseDb';
 import { runThinkingAudit } from '../services/aiService';
 import { getDaliRecentMemory, getDaliConversationMemory, saveDaliConversationMessage, getDaliChatSessions, archiveDaliConversation } from '../services/daliMemory';
 import { searchDaliKnowledge } from '../services/daliKnowledge';
+import { getTerminology } from '../services/daliTerminology';
 import { getDaliCustomerAliases } from '../services/daliCustomerAliases';
 import type { DaliCustomerAlias } from '../services/daliCustomerAliases';
 import { buildDaliOrganizationContext, isDaliAllowedRole } from '../services/daliOrganization';
@@ -427,12 +428,24 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
         const lessons = await searchDaliKnowledge(question, 10);
         if (lessons.length) daliKnowledgeContext = lessons.map((x: any) => `[${x.category}] ${x.title}: ${x.content}`).join('\\n');
       } catch (knowledgeError) { console.warn('DALI knowledge lookup failed:', knowledgeError); }
+      let daliLearnedRegistry: Array<{ canonical_value: string; alias: string; canonical_type: string }> = [];
+      try {
+        const terms = await getTerminology(2000);
+        daliLearnedRegistry = terms
+          .filter((x: any) => String(x.source || '').toLowerCase().includes('learned intelligence registry') || String(x.alias_type || '').toLowerCase() === 'manual')
+          .map((x: any) => ({ canonical_value: String(x.canonical_value || ''), alias: String(x.alias || ''), canonical_type: String(x.canonical_type || '') }))
+          .filter(x => x.canonical_value && x.alias);
+      } catch (terminologyError) { console.warn('DALI learned registry lookup failed:', terminologyError); }
       let daliCustomerAliases: DaliCustomerAlias[] = [];
       try {
         daliCustomerAliases = await getDaliCustomerAliases();
       } catch (aliasError) {
         console.warn('DALI customer dictionary lookup failed:', aliasError);
       }
+
+      const learnedRegistryContext = daliLearnedRegistry.length
+        ? daliLearnedRegistry.map(x => x.canonical_value + ' → ' + x.alias).join(' | ')
+        : 'No learned intelligence registry entries loaded.';
 
       const creatorContext = isCreator
         ? 'CURRENT USER: Bebito (bebito@nilefleet.com), creator and system owner of NILE FLEET. Treat this user as the creator/owner when relevant. Do not confuse the creator with an ordinary employee or customer. Never reveal passwords, API keys, tokens, or other secrets.'
@@ -1283,7 +1296,7 @@ DATA BEHAVIOR:
 - Reply in the latest question's language and preserve IDs/dates/numbers exactly.
 - Keep simple answers concise, but give enough context to feel like a real conversation.
 - Use the currentDate and tomorrowDate values in LIVE CONTEXT for phrases such as today, tomorrow, yesterday, this week and next week.
-- For requested customer work, use reservations.pendingNotLoaded and its today/tomorrow lists. PENDING or APPROVED without a linked operation means the work is still requested and not loaded into Operations.\n\nNILE FLEET SYSTEM FLOW: Reservations are customer requests for one or more gensets; approving a reservation creates operations. Each operation links booking, container, genset, customer, beneficiary/shipper, trucker/driver, dates, clip-on port, clip-off port, status, rate and VAT. The gensets master is the source for current unit number, location and status: IN_STOCK, CLIPPED_ON, MAINTENANCE or RETIRED. Maintenance logs belong to gensets and contain service date/type, technician, location, status, completion date, cost, parts and next service. A genset question may therefore require combining its master record with its operation history and maintenance history. Port stock means the current gensets grouped by their current location/status, not historical operations. Invoices are financial records associated with customers/bookings/operations; payments represent collections and reduce outstanding balances. Customer questions can require joining customer profiles with operations, invoices and payments. Use these relationships to understand new questions, not just exact keywords. For counts, totals, dates, status and location, calculate from the supplied live data. If the live data does not contain the requested fact, say what is missing instead of inventing it.\n${creatorContext}\nLATEST QUESTION: ${question}\nLIVE CONTEXT: ${JSON.stringify(context)}`
+- For requested customer work, use reservations.pendingNotLoaded and its today/tomorrow lists. PENDING or APPROVED without a linked operation means the work is still requested and not loaded into Operations.\n\nNILE FLEET SYSTEM FLOW: Reservations are customer requests for one or more gensets; approving a reservation creates operations. Each operation links booking, container, genset, customer, beneficiary/shipper, trucker/driver, dates, clip-on port, clip-off port, status, rate and VAT. The gensets master is the source for current unit number, location and status: IN_STOCK, CLIPPED_ON, MAINTENANCE or RETIRED. Maintenance logs belong to gensets and contain service date/type, technician, location, status, completion date, cost, parts and next service. A genset question may therefore require combining its master record with its operation history and maintenance history. Port stock means the current gensets grouped by their current location/status, not historical operations. Invoices are financial records associated with customers/bookings/operations; payments represent collections and reduce outstanding balances. Customer questions can require joining customer profiles with operations, invoices and payments. Use these relationships to understand new questions, not just exact keywords. For counts, totals, dates, status and location, calculate from the supplied live data. If the live data does not contain the requested fact, say what is missing instead of inventing it.\n${creatorContext}\nLEARNED INTELLIGENCE REGISTRY (shared across desktop and mobile): ${learnedRegistryContext}\nUse these mappings as authoritative Nile Fleet terminology and Arabic logic. Do not invent alternative translations when a registry mapping exists.\nLATEST QUESTION: ${question}\nLIVE CONTEXT: ${JSON.stringify(context)}`
       let answer = '';
       try {
         answer = await runThinkingAudit(prompt, 650);
