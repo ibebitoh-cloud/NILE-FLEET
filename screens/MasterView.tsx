@@ -686,12 +686,18 @@ const MasterView: React.FC = () => {
   const gensetPortMismatchByOperationId = useMemo(() => {
     const mismatches = new Map<string, Location>();
     operations.forEach(op => {
-      const opPort = op.clipOnPort?.trim().toUpperCase();
+      // While an operation is active, the genset is expected at the physical
+      // clip-off/destination port. Before it is in progress, the clip-on port
+      // is the relevant expected location.
+      const expectedPort = op.status === 'IN PROGRESS' ? op.clipOffPort : op.clipOnPort;
+      const opPort = expectedPort?.trim().toUpperCase();
       const gen = op.gensetNumber?.trim().toUpperCase();
       if (!opPort || !gen || opPort === '---' || opPort === 'N/A' || opPort === 'NONE') return;
       const stockGenset = db.getStock().find(item => item.unitNumber?.trim().toUpperCase() === gen);
       const stockPort = stockGenset?.location?.toString().trim().toUpperCase();
-      if (stockPort && stockPort !== opPort && Object.values(Location).includes(stockPort as Location)) mismatches.set(op.id, stockPort as Location);
+      if (stockPort && stockPort !== opPort && Object.values(Location).includes(stockPort as Location)) {
+        mismatches.set(op.id, stockPort as Location);
+      }
     });
     return mismatches;
   }, [operations]);
@@ -1796,7 +1802,7 @@ const MasterView: React.FC = () => {
                             className={`px-2 border-r text-center transition-all duration-200 relative ${isGensetDup
                               ? 'bg-red-700 !text-white font-black shadow-[inset_0_0_0_2px_#fecaca,0_0_18px_rgba(239,68,68,.75)] animate-pulse'
                               : isDark ? 'border-slate-800' : 'border-slate-50'}`}
-                            title={gensetPortMismatchByOperationId.has(op.id) ? (isAr ? `⚠️ المولد موجود في مخزون ${translateEntity(gensetPortMismatchByOperationId.get(op.id), lang)} بينما العملية على ${translateEntity(op.clipOnPort, lang)}` : `⚠️ GENSET PORT MISMATCH — Stock: ${translateEntity(gensetPortMismatchByOperationId.get(op.id), lang)} | Operation: ${translateEntity(op.clipOnPort, lang)}`) : isGensetDup
+                            title={gensetPortMismatchByOperationId.has(op.id) ? (isAr ? `⚠️ المولد موجود في ${translateEntity(gensetPortMismatchByOperationId.get(op.id), lang)} بينما المتوقع ${translateEntity(op.status === 'IN PROGRESS' ? op.clipOffPort : op.clipOnPort, lang)}` : `⚠️ GENSET PORT MISMATCH — Stock: ${translateEntity(gensetPortMismatchByOperationId.get(op.id), lang)} | Expected: ${translateEntity(op.status === 'IN PROGRESS' ? op.clipOffPort : op.clipOnPort, lang)}`) : isGensetDup
                               ? (isAr
                                 ? '⚠️ مولد مكرر — القديم هو OLD والجديد هو NEW'
                                 : '⚠️ DUPLICATE GENSET — OLD = previous assignment, NEW = latest assignment')
