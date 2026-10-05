@@ -38,29 +38,73 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
   const portData = useMemo(() => {
     const locations = ['DAM', 'ALEX', 'GOUDA', 'SOKHNA', 'SCCT', 'PSD', 'WORKSHOP'] as const;
-    const activeOperationUnits = new Set(ops.filter(o => o.status === 'IN PROGRESS' && o.gensetNumber?.trim()).map(o => o.gensetNumber.trim().toUpperCase()));
-    const byPort: Record<string, { stockCount: number; maintenanceCount: number; preorderCount: number; active: number; surplus: number; deficit: number }> = {};
-    locations.forEach(port => { byPort[port] = { stockCount: 0, maintenanceCount: 0, preorderCount: 0, active: 0, surplus: 0, deficit: 0 }; });
+    const activeOperationUnits = new Set(
+      ops
+        .filter(o => o.status === 'IN PROGRESS' && o.gensetNumber?.trim())
+        .map(o => o.gensetNumber.trim().toUpperCase())
+    );
 
-    stock.forEach(g => {
-      const p = String(g.location || '');
-      if (!byPort[p]) return;
-      if (g.status === 'IN_STOCK' || (g.status === 'CLIPPED_ON' && !activeOperationUnits.has(g.unitNumber.trim().toUpperCase()))) byPort[p].stockCount++;
-      if (g.status === 'MAINTENANCE') byPort[p].maintenanceCount++;
-    });
-    ops.forEach(o => {
-      const p = String(o.clipOnPort || '');
-      if (!byPort[p]) return;
-      if (o.status === 'UNDER OPERATE') byPort[p].preorderCount++;
-      if (o.status === 'IN PROGRESS') byPort[p].active++;
-    });
+    const byPort: Record<string, {
+      available: number;
+      rented: number;
+      demand: number;
+      maintenanceCount: number;
+      active: number;
+      surplusDeficit: number;
+    }> = {};
+
     locations.forEach(port => {
-      const available = byPort[port].stockCount;
-      const demand = byPort[port].preorderCount;
-      byPort[port].surplus = Math.max(available - demand, 0);
-      byPort[port].deficit = Math.max(demand - available, 0);
+      byPort[port] = {
+        available: 0,
+        rented: 0,
+        demand: 0,
+        maintenanceCount: 0,
+        active: 0,
+        surplusDeficit: 0,
+      };
     });
-    return locations.map(port => ({ port, ...byPort[port] }));
+
+    // Physical fleet position is the source of truth for stock:
+    // IN_STOCK = available; CLIPPED_ON + active operation = rented.
+    stock.forEach(g => {
+      const port = String(g.location || '');
+      if (!byPort[port]) return;
+
+      if (g.status === 'MAINTENANCE') {
+        byPort[port].maintenanceCount++;
+        return;
+      }
+
+      if (g.status === 'IN_STOCK') {
+        byPort[port].available++;
+      } else if (g.status === 'CLIPPED_ON') {
+        const unit = g.unitNumber.trim().toUpperCase();
+        if (activeOperationUnits.has(unit)) {
+          byPort[port].rented++;
+        } else {
+          // Preserve the existing orphaned CLIPPED_ON handling.
+          byPort[port].available++;
+        }
+      }
+    });
+
+    ops.forEach(o => {
+      const port = String(o.clipOnPort || '');
+      if (!byPort[port]) return;
+      if (o.status === 'UNDER OPERATE') byPort[port].demand++;
+      if (o.status === 'IN PROGRESS') byPort[port].active++;
+    });
+
+    locations.forEach(port => {
+      const totalStock = byPort[port].available + byPort[port].rented;
+      byPort[port].surplusDeficit = totalStock - byPort[port].demand;
+    });
+
+    return locations.map(port => ({
+      port,
+      ...byPort[port],
+      totalStock: byPort[port].available + byPort[port].rented,
+    }));
   }, [stock, ops]);
 
   // Customer financials are intentionally calculated from the same rules used by
@@ -170,46 +214,111 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
   return (
     <div className="space-y-5 lg:space-y-6 animate-in fade-in duration-500 pb-28 lg:pb-12 text-start">
-      {/* PORT WIDGETS */}
+      {/* PORT CONTROL */}
       <section>
         <div className="flex items-end justify-between mb-3 px-1">
           <div>
-            <h2 className="text-xl md:text-2xl font-black text-[#3a3833] dark:text-white uppercase italic tracking-tight">{translateEntity('Port Control', lang)}</h2>
-            <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.25em]">{translateEntity('Available • Demand • Surplus / Deficit', lang)}</p>
+            <h2 className="text-xl md:text-2xl font-black text-[#3a3833] dark:text-white uppercase italic tracking-tight">
+              {translateEntity('Port Control', lang)}
+            </h2>
+            <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.25em]">
+              {isAr ? 'إجمالي المخزون • مؤجر • متاح • الطلب • زيادة / عجز' : 'Total Stock • Rented • Available • Demand • Surplus / Deficit'}
+            </p>
           </div>
-          <button onClick={() => onNavigate('stock')} className="text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Fleet</button>
+          <button onClick={() => onNavigate('stock')} className="text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">
+            Fleet
+          </button>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {portData.map(port => (
-            <button
-              key={port.port}
-              onClick={() => onNavigate('operations', port.port)}
-              className="text-start bg-white dark:bg-slate-800 rounded-[1.6rem] p-4 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <span className="bg-[#3a3833] dark:bg-slate-700 text-[#C2A378] px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">{translateEntity(port.port, lang)}</span>
-                <span className={`w-2 h-2 rounded-full ${port.preorderCount > port.stockCount ? 'bg-rose-500' : 'bg-emerald-500'}`}></span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div><span className="block text-[8px] text-slate-400 font-black uppercase">{translateEntity('Stock', lang)}</span><b className="text-xl text-blue-600 dark:text-blue-400">{port.stockCount}</b></div>
-                <div><span className="block text-[8px] text-slate-400 font-black uppercase">{translateEntity('Maint.', lang)}</span><b className="text-xl text-rose-500">{port.maintenanceCount}</b></div>
-                <div><span className="block text-[8px] text-slate-400 font-black uppercase">{translateEntity('Under Operate', lang)}</span><b className="text-xl text-amber-500">{port.preorderCount}</b></div>
-              </div>
-              <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-700 grid grid-cols-2 gap-2 text-[8px] font-black uppercase">
-                <div className={`rounded-lg px-2 py-1.5 ${port.deficit > 0 ? 'bg-rose-50 dark:bg-rose-900/20' : 'bg-emerald-50 dark:bg-emerald-900/20'}`}>
-                  <span className="block text-slate-400">{translateEntity('Deficit', lang)}</span>
-                  <span className={`text-sm ${port.deficit > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>{port.deficit}</span>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+          {portData.map(port => {
+            const isDeficit = port.surplusDeficit < 0;
+            return (
+              <button
+                key={port.port}
+                onClick={() => onNavigate('operations', port.port)}
+                className="w-full text-start bg-white dark:bg-slate-800 rounded-[1.6rem] p-4 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="bg-[#3a3833] dark:bg-slate-700 text-[#C2A378] px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">
+                    {translateEntity(port.port, lang)}
+                  </span>
+                  <span className={`text-[8px] font-black uppercase ${isDeficit ? 'text-rose-500' : 'text-emerald-500'}`}>
+                    {isDeficit ? (isAr ? 'عجز' : 'DEFICIT') : (isAr ? 'زيادة' : 'SURPLUS')}
+                  </span>
                 </div>
-                <div className="rounded-lg px-2 py-1.5 bg-blue-50 dark:bg-blue-900/20">
-                  <span className="block text-slate-400">{translateEntity('Surplus', lang)}</span>
-                  <span className="text-sm text-blue-500">{port.surplus}</span>
+
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  <div className="rounded-xl bg-blue-50 dark:bg-blue-900/20 p-2">
+                    <span className="block text-[7px] text-slate-400 font-black uppercase">{isAr ? 'إجمالي المخزون' : 'Total Stock'}</span>
+                    <b className="text-xl text-blue-600 dark:text-blue-400">{port.totalStock}</b>
+                  </div>
+                  <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 p-2">
+                    <span className="block text-[7px] text-slate-400 font-black uppercase">{isAr ? 'مؤجر' : 'Rented'}</span>
+                    <b className="text-xl text-amber-500">{port.rented}</b>
+                  </div>
+                  <div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 p-2">
+                    <span className="block text-[7px] text-slate-400 font-black uppercase">{isAr ? 'متاح' : 'Available'}</span>
+                    <b className="text-xl text-emerald-500">{port.available}</b>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 dark:bg-slate-900/40 p-2">
+                    <span className="block text-[7px] text-slate-400 font-black uppercase">{isAr ? 'الطلب' : 'Demand'}</span>
+                    <b className="text-xl text-slate-700 dark:text-slate-200">{port.demand}</b>
+                  </div>
+                  <div className={`rounded-xl p-2 ${isDeficit ? 'bg-rose-50 dark:bg-rose-900/20' : 'bg-cyan-50 dark:bg-cyan-900/20'}`}>
+                    <span className="block text-[7px] text-slate-400 font-black uppercase">{isAr ? 'زيادة / عجز' : 'Surplus / Deficit'}</span>
+                    <b className={`text-xl ${isDeficit ? 'text-rose-500' : 'text-cyan-500'}`}>
+                      {port.surplusDeficit > 0 ? '+' : ''}{port.surplusDeficit}
+                    </b>
+                  </div>
                 </div>
+
+                <div className="mt-2 flex justify-between text-[8px] font-black uppercase">
+                  <span className="text-slate-400">{isAr ? 'تشغيل نشط' : 'Live Operations'}</span>
+                  <span className="text-emerald-500">{port.active}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-3 bg-[#3a3833] dark:bg-slate-900 rounded-[1.6rem] p-4 border border-slate-700 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[#C2A378] text-[9px] font-black uppercase tracking-widest">
+              {isAr ? 'الإجمالي' : 'TOTAL'}
+            </span>
+            <span className="text-[8px] text-slate-400 font-black uppercase">
+              {isAr ? 'كل الموانئ' : 'ALL PORTS'}
+            </span>
+          </div>
+          {(() => {
+            const totals = portData.reduce((sum, port) => ({
+              totalStock: sum.totalStock + port.totalStock,
+              rented: sum.rented + port.rented,
+              available: sum.available + port.available,
+              demand: sum.demand + port.demand,
+              surplusDeficit: sum.surplusDeficit + port.surplusDeficit,
+            }), { totalStock: 0, rented: 0, available: 0, demand: 0, surplusDeficit: 0 });
+
+            return (
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                {[
+                  { label: isAr ? 'إجمالي المخزون' : 'Total Stock', value: totals.totalStock, cls: 'text-blue-400' },
+                  { label: isAr ? 'مؤجر' : 'Rented', value: totals.rented, cls: 'text-amber-400' },
+                  { label: isAr ? 'متاح' : 'Available', value: totals.available, cls: 'text-emerald-400' },
+                  { label: isAr ? 'الطلب' : 'Demand', value: totals.demand, cls: 'text-white' },
+                  { label: isAr ? 'زيادة / عجز' : 'Surplus / Deficit', value: totals.surplusDeficit, cls: totals.surplusDeficit < 0 ? 'text-rose-400' : 'text-cyan-400' },
+                ].map(item => (
+                  <div key={item.label} className="rounded-xl bg-white/5 p-2">
+                    <span className="block text-[7px] text-slate-400 font-black uppercase">{item.label}</span>
+                    <b className={`text-xl ${item.cls}`}>
+                      {item.value > 0 && item.label === (isAr ? 'زيادة / عجز' : 'Surplus / Deficit') ? '+' : ''}{item.value}
+                    </b>
+                  </div>
+                ))}
               </div>
-              <div className="mt-2 flex justify-between text-[8px] font-black uppercase">
-                <span className="text-slate-400">{translateEntity('Live', lang)}</span><span className="text-emerald-500">{port.active}</span>
-              </div>
-            </button>
-          ))}
+            );
+          })()}
         </div>
       </section>
 
