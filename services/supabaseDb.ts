@@ -938,7 +938,15 @@ class SupabaseDB {
     if (!genset) return;
 
     if (op.status === 'IN PROGRESS') {
-      const updates: Partial<Genset> = { status: GensetStatus.CLIPPED_ON };
+      // Clip-On is the origin and Clip-Off is the destination. While the
+      // operation is active, the genset follows the operation to its
+      // destination port automatically. This is normal port transfer logic,
+      // not a replacement, and is scoped to this operation's assigned unit.
+      const clipOffPort = String(op.clipOffPort || '').trim().toUpperCase();
+      const updates: Partial<Genset> = {
+        status: GensetStatus.CLIPPED_ON,
+        ...(clipOffPort ? { location: clipOffPort as Location } : {})
+      };
       const saved = await update('gensets', genset.id, updates);
       if (saved) _stock = _stock.map(s => s.id === genset.id ? { ...s, ...updates } : s);
     } else if (op.status === 'DONE' || op.status === 'CANCEL') {
