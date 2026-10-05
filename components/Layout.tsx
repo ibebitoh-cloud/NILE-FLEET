@@ -1632,7 +1632,10 @@ I’ll search with you. 🤖`;
   const menu = user.role === UserRole.CUSTOMER
     ? allPossibleMenuItems.filter(item => ['cust-reservations', 'cust-invoices', 'notifications', 'support'].includes(item.id))
     : Array.isArray(user.allowedScreens)
-      ? allPossibleMenuItems.filter(item => user.allowedScreens?.includes(item.id))
+      ? allPossibleMenuItems.filter(item =>
+          user.allowedScreens?.includes(item.id) ||
+          ((user.role === UserRole.ADMIN || user.role === UserRole.MANAGER) && item.id === 'daily-dispatch')
+        )
     : roleDefaultScreenIds
       ? allPossibleMenuItems.filter(item => roleDefaultScreenIds.includes(item.id))
       : defaultMenu;
