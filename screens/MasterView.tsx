@@ -1968,7 +1968,7 @@ const MasterView: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleBulkReplaceGenset}
-                  className="bg-rose-600 text-white px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 transition-all shadow-lg"
+                  className={`bg-[#C2A378] text-[#3a3833] px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#d8bd91] transition-all shadow-lg ${isDark ? 'border border-[#C2A378]/40' : 'border border-[#a88d61]/40'}`}
                 >
                   {isAr ? 'استبدال المولد' : 'REPLACE GENSET'}
                 </button>
