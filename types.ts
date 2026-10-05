@@ -288,6 +288,8 @@ export interface Operation {
   clipOffDate: string;
   clipOnPort: Location;
   clipOffPort: Location;
+  /** Customer-requested clip-off destination. clipOffPort remains the actual physical clip-off port. */
+  requestedClipOffPort?: Location;
   destination?: string;
   trucker: string;
   bookingNumber: string;
