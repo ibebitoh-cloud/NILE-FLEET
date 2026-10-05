@@ -1798,10 +1798,6 @@ const MasterView: React.FC = () => {
                                 </span>
                               )}
                               {isGensetDup && <span className="text-[11px] shrink-0">⚠️</span>}
-<button type="button" disabled={isReadOnly || op.status !== 'IN PROGRESS' || !op.gensetNumber}
-                                onClick={(e) => { e.stopPropagation(); setReplacementOperation(op); setReplacementReason('BREAKDOWN'); setReplacementGensetNumber(''); setReplacementNotes(''); }}
-                                className={`shrink-0 px-1.5 py-1 rounded-md bg-[#C2A378] text-[#3a3833] text-[7px] font-black uppercase tracking-wider hover:bg-[#d8bd91] disabled:opacity-30 ${isDark ? 'border border-[#C2A378]/40' : 'border border-[#a88d61]/40'}`}
-                                title={isAr ? 'استبدال المولد' : 'Replace this genset'}>🔄</button>
                               <EditableCell value={op.gensetNumber} suggestions={systemSuggestions.gensets} onSave={(val) => handleUpdateCell(op, 'gensetNumber', val)} disabled={isReadOnly} onEditStart={onCellEditStart} onEditEnd={onCellEditEnd} className={`font-black ${isGensetDup ? '!text-white font-extrabold' : isSelected ? 'text-blue-100' : gensetPortMismatchByOperationId.has(op.id) ? '!text-inherit font-extrabold' : 'text-[#C2A378]'}`} placeholder="UNIT" isDark={isDark} />
                             </div>
                           </td>
