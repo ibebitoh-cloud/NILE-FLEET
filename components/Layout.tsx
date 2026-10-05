@@ -1580,6 +1580,8 @@ I’ll search with you. 🤖`;
     { id: 'reports', label: t.reports, icon: '📝' },
     { id: 'stock', label: t.gensetStock, icon: '⚡' },
     { id: 'reservations', label: t.reservations, icon: '📅' },
+    { id: 'daily-dispatch', label: isAr ? 'خطة التوزيع اليومية' : 'DAILY DISPATCH', icon: '🗂️' },
+    { id: 'daily-dispatch', label: isAr ? 'خطة التوزيع اليومية' : 'DAILY DISPATCH', icon: '🗂️' },
     { id: 'customers', label: t.customers, icon: '🤝' },
     { id: 'user-mgmt', label: t.userMgmt, icon: '👤' },
     { id: 'organization', label: isAr ? 'الهيكل التنظيمي' : 'ORGANIZATION', icon: '🏢' },
