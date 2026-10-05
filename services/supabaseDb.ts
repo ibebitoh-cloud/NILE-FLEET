@@ -756,7 +756,17 @@ class SupabaseDB {
     if (!savedOperation) return false;
     const replacementSaved = await update('gensets', replacement.id, { status: GensetStatus.CLIPPED_ON });
     if (!replacementSaved) { await update('operations', operation.id, { gensetNumber: originalNumber }); return false; }
-    const originalSaved = await update('gensets', original.id, { status: GensetStatus.MAINTENANCE, location: original.location });
+    // Do not change the stock status of an original genset if the same unit number
+    // is still assigned to another active operation. Duplicate genset numbers are
+    // allowed by the existing workflow, so replacement must affect only this operation.
+    const originalStillActive = _operations.some(
+      o => o.id !== operation.id &&
+        o.status === 'IN PROGRESS' &&
+        String(o.gensetNumber || '').trim().toUpperCase() === originalNumber.toUpperCase()
+    );
+    const originalSaved = originalStillActive
+      ? true
+      : await update('gensets', original.id, { status: GensetStatus.MAINTENANCE, location: original.location });
     if (!originalSaved) { await update('operations', operation.id, { gensetNumber: originalNumber }); await update('gensets', replacement.id, { status: replacement.status, location: replacement.location }); return false; }
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     const replacementRecord: Partial<GensetReplacement> = {
