@@ -630,7 +630,7 @@ const MasterView: React.FC = () => {
     .toISOString().slice(0, 10);
 
   const [stagedOps, setStagedOps] = useState<any[]>([
-    { customerName: '', bookingNumber: '', operationDate: todayDate, clipOnDate: todayDate, status: 'UNDER OPERATE', rate: '0', vat: '0', clipOnPort: Location.ALEX, clipOffPort: Location.ALEX, destination: '', trucker: '', beneficiaryName: '', quantity: 1 }
+    { customerName: '', bookingNumber: '', operationDate: todayDate, clipOnDate: todayDate, status: 'UNDER OPERATE', rate: '0', vat: '0', clipOnPort: Location.ALEX, clipOffPort: Location.ALEX, requestedClipOffPort: Location.ALEX, destination: '', trucker: '', beneficiaryName: '', quantity: 1 }
   ]);
   const [rawPasteBuffer, setRawPasteBuffer] = useState('');
   const [stagingColWidths, setStagingColWidths] = useState<Record<string, number>>({});
@@ -1035,6 +1035,7 @@ const MasterView: React.FC = () => {
         status: 'UNDER OPERATE',
         clipOnPort: Location.ALEX,
         clipOffPort: Location.ALEX,
+        requestedClipOffPort: Location.ALEX,
         destination: '',
         quantity: 1,
         vat: '0'
@@ -1129,6 +1130,7 @@ const MasterView: React.FC = () => {
           clipOffDate: '',
           clipOnPort: (s.clipOnPort as Location) || Location.ALEX,
           clipOffPort: (s.clipOffPort as Location) || Location.ALEX,
+          requestedClipOffPort: (s.requestedClipOffPort as Location) || (s.clipOffPort as Location) || Location.ALEX,
           destination: s.destination || '',
           status: (s.status as any) || 'UNDER OPERATE',
           rate: s.rate || '0.00',
@@ -1174,7 +1176,7 @@ const MasterView: React.FC = () => {
       }
       setOperations([...freshOps]);
       setShowAddModal(false);
-      setStagedOps([{ customerName: '', bookingNumber: '', operationDate: todayDate, clipOnDate: todayDate, status: 'UNDER OPERATE', rate: '0', vat: '0', clipOnPort: Location.ALEX, clipOffPort: Location.ALEX, destination: '', trucker: '', beneficiaryName: '', quantity: 1 }]);
+      setStagedOps([{ customerName: '', bookingNumber: '', operationDate: todayDate, clipOnDate: todayDate, status: 'UNDER OPERATE', rate: '0', vat: '0', clipOnPort: Location.ALEX, clipOffPort: Location.ALEX, requestedClipOffPort: Location.ALEX, destination: '', trucker: '', beneficiaryName: '', quantity: 1 }]);
       setRawPasteBuffer('');
       refresh();
       alert(isAr ? `تمت إضافة ${toInject.length} عملية بنجاح` : `Successfully injected ${toInject.length} operations.`);
@@ -1753,14 +1755,28 @@ const MasterView: React.FC = () => {
                              />
                           </td>
                           <td style={{ ...dynamicCellStyle, ...getColStyle('clipOffPort') }} className={`text-center border-r ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
-                             <EditableCell 
-                                value={op.clipOffPort} 
-                                options={allPorts}
-                                onSave={(val) => handleUpdateCell(op, 'clipOffPort', val)} 
-                                disabled={isReadOnly} 
-                                isDark={isDark} 
-                                renderValue={(v) => <span className={`${portBadgeStyle(v as Location).className} inline-block`} style={portBadgeStyle(v as Location).style}>{translateEntity(v, lang)}</span>}
-                             />
+                             <div className="flex flex-col items-center gap-0.5">
+                               <EditableCell 
+                                  value={op.clipOffPort} 
+                                  options={allPorts}
+                                  onSave={(val) => handleUpdateCell(op, 'clipOffPort', val)} 
+                                  disabled={isReadOnly} 
+                                  isDark={isDark} 
+                                  renderValue={(v) => <span className={`${portBadgeStyle(v as Location).className} inline-block`} style={portBadgeStyle(v as Location).style}>{translateEntity(v, lang)}</span>}
+                               />
+                               <div className="flex items-center justify-center gap-1 w-full" title={isAr ? 'الميناء المطلوب من العميل مقابل ميناء الخروج الفعلي' : 'Customer-requested clip-off port vs the actual physical clip-off port'}>
+                                 <span className={`text-[6px] font-black uppercase tracking-wider ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{isAr ? 'طلب' : 'REQ'}</span>
+                                 <select
+                                   disabled={isReadOnly}
+                                   value={op.requestedClipOffPort || op.clipOffPort}
+                                   onChange={(e) => handleUpdateCell(op, 'requestedClipOffPort', e.target.value)}
+                                   className={`max-w-[62px] bg-transparent border-0 outline-none p-0 text-[7px] font-black uppercase cursor-pointer ${op.requestedClipOffPort && op.requestedClipOffPort !== op.clipOffPort ? (isDark ? 'text-amber-300' : 'text-amber-700') : (isDark ? 'text-emerald-400' : 'text-emerald-700')}`}
+                                 >
+                                   {allPorts.map(port => <option key={port} value={port} className="bg-slate-900 text-white">{translateEntity(port, lang)}</option>)}
+                                 </select>
+                                 {op.requestedClipOffPort && op.requestedClipOffPort === op.clipOffPort && <span className={`text-[7px] ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>✓</span>}
+                               </div>
+                             </div>
                           </td>
                           <td style={{ ...dynamicCellStyle, ...getColStyle('destination') }} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
                             <EditableCell value={op.destination || ''} onSave={(val) => handleUpdateCell(op, 'destination', val)} disabled={isReadOnly} isDark={isDark} className={`${isSelected ? 'text-white' : (isDark ? 'text-slate-300' : 'text-slate-800')} font-bold uppercase text-[9px]`} placeholder={isAr ? 'الوجهة' : 'DESTINATION'} />
@@ -1779,7 +1795,7 @@ const MasterView: React.FC = () => {
                             style={{ ...dynamicCellStyle, ...getColStyle('gensetNumber'), ...(gensetPortMismatchByOperationId.get(op.id) && !isGensetDup ? { color: getDarkPortStyle(gensetPortMismatchByOperationId.get(op.id) as Location).color } : {}) }} 
                             className={`px-2 border-r text-center transition-all duration-200 relative ${isGensetDup
                               ? 'bg-red-700 !text-white font-black shadow-[inset_0_0_0_2px_#fecaca,0_0_18px_rgba(239,68,68,.75)] animate-pulse'
-                              : gensetPortMismatchByOperationId.has(op.id) ? 'font-black bg-amber-50/10 border-l-4' : isDark ? 'border-slate-800' : 'border-slate-50'}`}
+                              : isDark ? 'border-slate-800' : 'border-slate-50'}`}
                             title={gensetPortMismatchByOperationId.has(op.id) ? (isAr ? `⚠️ المولد موجود في مخزون ${translateEntity(gensetPortMismatchByOperationId.get(op.id), lang)} بينما العملية على ${translateEntity(op.clipOnPort, lang)}` : `⚠️ GENSET PORT MISMATCH — Stock: ${translateEntity(gensetPortMismatchByOperationId.get(op.id), lang)} | Operation: ${translateEntity(op.clipOnPort, lang)}`) : isGensetDup
                               ? (isAr
                                 ? '⚠️ مولد مكرر — القديم هو OLD والجديد هو NEW'
