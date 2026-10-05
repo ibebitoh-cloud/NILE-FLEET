@@ -132,13 +132,8 @@ function prepareOperationsDbRow(row: any, partial = false): any {
     prepared.customerId = row.customerId || resolveCustomerId(row.customerName) || null;
   }
 
-  // Keep the customer-requested destination separate from the actual physical
-  // clip-off port. New operations default the request to the actual port;
-  // later, the operator can record a different requested destination (e.g.
-  // customer asks for SCCT but the unit is actually clipped off at GOUDA).
-  if (!partial && !prepared.requestedClipOffPort) {
-    prepared.requestedClipOffPort = prepared.clipOffPort || null;
-  }
+  // Manual SCCT clip-off is stored per operation as a simple boolean.
+  // No defaulting is needed here; the database column defaults to false.
 
   return prepared;
 }
