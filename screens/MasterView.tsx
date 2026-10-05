@@ -1980,7 +1980,7 @@ const MasterView: React.FC = () => {
                     {STATUS_CYCLE.map(s => <option key={s} value={s} className="bg-slate-900">{translateEntity(s, lang)}</option>)}
                  </select>
               </div>
-              {isAdmin && <button onClick={handleBulkDelete} className="bg-rose-600 text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg">{isAr ? 'حذف إجباري' : 'Force Delete'}</button>}
+
               <button onClick={() => setSelectedRowIds(new Set())} className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">{isAr ? 'إلغاء' : 'Clear'}</button>
            </div>
         </div>
