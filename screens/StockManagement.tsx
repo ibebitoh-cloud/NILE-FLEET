@@ -4,6 +4,7 @@ import { Location, GensetStatus, Genset, User, UserRole, GensetMaintenanceLog, M
 import { LanguageContext, ThemeContext } from '../App';
 import { translations, translateEntity } from '../translations';
 import { PORT_STYLING } from '../constants';
+import * as XLSX from 'xlsx-js-style';
 
 const SERVICE_TYPE_CONFIG: Record<MaintenanceServiceType, { labelEn: string; labelAr: string; color: string; icon: string }> = {
   OIL_CHANGE: { labelEn: 'Oil Change', labelAr: 'تغيير زيت وفلتر', color: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-400', icon: '🛢️' },
@@ -78,6 +79,17 @@ const StockManagement: React.FC = () => {
   });
 
   const [dbVersion, setDbVersion] = useState(0);
+  const [fleetImportRows, setFleetImportRows] = useState<Array<{
+    id: string;
+    originalUnitNumber: string;
+    unitNumber: string;
+    location: Location;
+    status: GensetStatus;
+    changed: boolean;
+    warning?: string;
+  }>>([]);
+  const [showFleetImportModal, setShowFleetImportModal] = useState(false);
+  const [fleetImportFileName, setFleetImportFileName] = useState('');
 
   useEffect(() => {
     const handleDbChange = () => setDbVersion(v => v + 1);
@@ -479,6 +491,339 @@ const StockManagement: React.FC = () => {
     }
   };
 
+  const fleetBoardStatus = (unit: Genset): 'IN_STOCK' | 'IN_PROGRESS' | 'MAINTENANCE' | 'RETIRED' => {
+    if (unit.status === GensetStatus.MAINTENANCE) return 'MAINTENANCE';
+    if (unit.status === GensetStatus.RETIRED) return 'RETIRED';
+    if (unit.status === GensetStatus.CLIPPED_ON && activeOperationUnits.has(unit.unitNumber.trim().toUpperCase())) return 'IN_PROGRESS';
+    return 'IN_STOCK';
+  };
+
+  const fleetBoardStatusLabel = (status: 'IN_STOCK' | 'IN_PROGRESS' | 'MAINTENANCE' | 'RETIRED') => {
+    if (isAr) {
+      return status === 'IN_STOCK' ? 'متاح'
+        : status === 'IN_PROGRESS' ? 'قيد التشغيل'
+          : status === 'MAINTENANCE' ? 'صيانة'
+            : 'خارج الخدمة';
+    }
+    return status === 'IN_STOCK' ? 'ON STOCK'
+      : status === 'IN_PROGRESS' ? 'IN PROGRESS'
+        : status === 'MAINTENANCE' ? 'MAINTENANCE'
+          : 'SCRAP';
+  };
+
+  const fleetBoardStatusColor = (status: 'IN_STOCK' | 'IN_PROGRESS' | 'MAINTENANCE' | 'RETIRED') => {
+    switch (status) {
+      case 'IN_PROGRESS': return '2563EB';
+      case 'MAINTENANCE': return 'F43F5E';
+      case 'RETIRED': return '64748B';
+      default: return '10B981';
+    }
+  };
+
+  const normalizeImportText = (value: unknown) =>
+    String(value ?? '').trim().replace(/\s+/g, ' ');
+
+  const normalizeImportHeader = (value: unknown) =>
+    normalizeImportText(value).toLowerCase().replace(/[\\s_\-()/]+/g, '');
+
+  const parseFleetImportLocation = (value: unknown): Location | null => {
+    const raw = normalizeImportText(value).toUpperCase();
+    const aliases: Record<string, Location> = {
+      DAM: Location.DAM,
+      DAMIETTA: Location.DAM,
+      'دمياط': Location.DAM,
+      ALEX: Location.ALEX,
+      ALEXANDRIA: Location.ALEX,
+      'الإسكندرية': Location.ALEX,
+      'الاسكندرية': Location.ALEX,
+      GOUDA: Location.GOUDA,
+      'بورسعيد غرب جودة': Location.GOUDA,
+      'بورسعيد غرب - جودة': Location.GOUDA,
+      SCCT: Location.SCCT,
+      'بورسعيد شرق': Location.SCCT,
+      SOKHNA: Location.SOKHNA,
+      'السخنة': Location.SOKHNA,
+      PSD: Location.PSD,
+      'بورسعيد': Location.PSD,
+      WORKSHOP: Location.WORKSHOP,
+      'الورشة': Location.WORKSHOP
+    };
+    return aliases[raw] || null;
+  };
+
+  const parseFleetImportStatus = (value: unknown): GensetStatus | null => {
+    const raw = normalizeImportText(value).toUpperCase();
+    if (['IN STOCK', 'ON STOCK', 'IN_STOCK', 'AVAILABLE', 'متاح', 'جاهز'].includes(raw)) return GensetStatus.IN_STOCK;
+    if (['IN PROGRESS', 'IN_PROGRESS', 'ACTIVE', 'CLIPPED ON', 'CLIPPED_ON', 'قيد التشغيل', 'قيد الرحلة'].includes(raw)) return GensetStatus.CLIPPED_ON;
+    if (['MAINTENANCE', 'MAINTENANCE', 'صيانة', 'في الصيانة'].includes(raw)) return GensetStatus.MAINTENANCE;
+    if (['SCRAP', 'RETIRED', 'OUT OF SERVICE', 'خارج الخدمة', 'خردة'].includes(raw)) return GensetStatus.RETIRED;
+    return null;
+  };
+
+  const handleExportFleetBoardXlsx = () => {
+    if (!stock.length) {
+      alert(isAr ? 'لا توجد مولدات لتصديرها.' : 'There are no gensets to export.');
+      return;
+    }
+
+    const sorted = stock.slice().sort((a, b) => {
+      const portCompare = String(a.location).localeCompare(String(b.location));
+      if (portCompare !== 0) return portCompare;
+      const statusCompare = fleetBoardStatus(a).localeCompare(fleetBoardStatus(b));
+      return statusCompare || a.unitNumber.localeCompare(b.unitNumber);
+    });
+
+    const headers = [
+      'Genset ID',
+      'Genset Number',
+      'Location',
+      'Status',
+      'Running Hours',
+      'Gas Liters',
+      'Last Maintenance',
+      'Next Maintenance',
+      'Maintenance Count'
+    ];
+
+    const rows = sorted.map(unit => {
+      const liveStatus = fleetBoardStatus(unit);
+      return [
+        unit.id,
+        unit.unitNumber,
+        unit.location,
+        fleetBoardStatusLabel(liveStatus),
+        unit.runningHours ?? '',
+        unit.gasLiters ?? '',
+        unit.lastMaintenanceDate || '',
+        unit.nextMaintenanceDue || '',
+        unit.maintenanceCount ?? 0
+      ];
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+    ws['!autofilter'] = { ref: `A1:I${rows.length + 1}` };
+    ws['!cols'] = [
+      { wch: 38, hidden: true },
+      { wch: 18 },
+      { wch: 18 },
+      { wch: 18 },
+      { wch: 15 },
+      { wch: 13 },
+      { wch: 18 },
+      { wch: 18 },
+      { wch: 18 }
+    ];
+
+    const headerStyle = {
+      fill: { fgColor: { rgb: '3A3833' } },
+      font: { color: { rgb: 'FFFFFF' }, bold: true },
+      alignment: { horizontal: 'center', vertical: 'center' },
+      border: {
+        top: { style: 'thin', color: { rgb: 'C2A378' } },
+        bottom: { style: 'thin', color: { rgb: 'C2A378' } },
+        left: { style: 'thin', color: { rgb: 'C2A378' } },
+        right: { style: 'thin', color: { rgb: 'C2A378' } }
+      }
+    };
+
+    headers.forEach((_, colIndex) => {
+      const cell = ws[XLSX.utils.encode_cell({ r: 0, c: colIndex })];
+      if (cell) cell.s = headerStyle;
+    });
+
+    sorted.forEach((unit, rowIndex) => {
+      const excelRow = rowIndex + 1;
+      const liveStatus = fleetBoardStatus(unit);
+      const statusRgb = fleetBoardStatusColor(liveStatus);
+      const fillStyle = {
+        fill: { fgColor: { rgb: statusRgb } },
+        font: { color: { rgb: 'FFFFFF' }, bold: true },
+        alignment: { horizontal: 'center', vertical: 'center' }
+      };
+      ['B', 'D'].forEach(col => {
+        const cell = ws[`${col}${excelRow + 0}`];
+        if (cell) cell.s = fillStyle;
+      });
+      const locationCell = ws[`C${excelRow}`];
+      if (locationCell) {
+        locationCell.s = {
+          fill: { fgColor: { rgb: 'F1F5F9' } },
+          font: { bold: true, color: { rgb: '334155' } }
+        };
+      }
+    });
+
+    const noteRow = rows.length + 3;
+    XLSX.utils.sheet_add_aoa(ws, [[
+      'IMPORT RULE',
+      'Edit Genset Number, Location and Status, then upload this XLSX. Genset ID is the stable key and is hidden from normal editing.'
+    ]], { origin: `A${noteRow}` });
+    ws[`A${noteRow}`].s = { font: { bold: true, color: { rgb: 'B45309' } } };
+    ws[`B${noteRow}`].s = { font: { italic: true, color: { rgb: '64748B' } } };
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'GENSET FLEET BOARD');
+    XLSX.writeFile(wb, `NILE_FLEET_Genset_Fleet_Board_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
+  const handleFleetBoardImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file || isReadOnly) return;
+
+    try {
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: 'array' });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      if (!firstSheet) throw new Error('No worksheet found.');
+
+      const matrix = XLSX.utils.sheet_to_json<any[]>(firstSheet, { header: 1, defval: '' });
+      if (!matrix.length) throw new Error('The worksheet is empty.');
+
+      const rawHeaders = matrix[0] || [];
+      const headerIndex = new Map<string, number>();
+      rawHeaders.forEach((header, index) => {
+        const key = normalizeImportHeader(header);
+        if (key) headerIndex.set(key, index);
+      });
+
+      const findColumn = (...names: string[]) => {
+        for (const name of names) {
+          const index = headerIndex.get(normalizeImportHeader(name));
+          if (index !== undefined) return index;
+        }
+        return -1;
+      };
+
+      const idCol = findColumn('Genset ID', 'ID', 'معرف المولد');
+      const numberCol = findColumn('Genset Number', 'Unit Serial', 'Unit Number', 'رقم المولد', 'رقم الوحدة');
+      const locationCol = findColumn('Location', 'Current Hub', 'الموقع', 'الميناء الحالي');
+      const statusCol = findColumn('Status', 'الحالة', 'الحالة التشغيلية');
+
+      if (numberCol < 0 || locationCol < 0 || statusCol < 0) {
+        throw new Error(isAr
+          ? 'الأعمدة المطلوبة هي: Genset Number و Location و Status.'
+          : 'Required columns are: Genset Number, Location and Status.');
+      }
+
+      const currentById = new Map(stock.map(unit => [unit.id, unit]));
+      const currentByNumber = new Map(stock.map(unit => [unit.unitNumber.trim().toUpperCase(), unit]));
+      const seenIds = new Set<string>();
+      const seenNumbers = new Set<string>();
+      const parsed: Array<{
+        id: string;
+        originalUnitNumber: string;
+        unitNumber: string;
+        location: Location;
+        status: GensetStatus;
+        changed: boolean;
+        warning?: string;
+      }> = [];
+
+      for (let i = 1; i < matrix.length; i++) {
+        const row = matrix[i] || [];
+        const rawId = idCol >= 0 ? normalizeImportText(row[idCol]) : '';
+        const rawNumber = normalizeImportText(row[numberCol]);
+        if (!rawId && !rawNumber) continue;
+
+        const current = (rawId && currentById.get(rawId)) || currentByNumber.get(rawNumber.toUpperCase());
+        if (!current) throw new Error(`Row ${i + 1}: genset could not be matched. Keep the exported Genset ID unchanged.`);
+
+        if (seenIds.has(current.id)) throw new Error(`Row ${i + 1}: duplicate genset row for ${current.unitNumber}.`);
+        seenIds.add(current.id);
+
+        const nextNumber = rawNumber || current.unitNumber;
+        const nextLocation = parseFleetImportLocation(row[locationCol]);
+        const nextStatus = parseFleetImportStatus(row[statusCol]);
+        if (!nextLocation) throw new Error(`Row ${i + 1}: invalid location for ${current.unitNumber}.`);
+        if (!nextStatus) throw new Error(`Row ${i + 1}: invalid status for ${current.unitNumber}.`);
+
+        const normalizedNumber = nextNumber.toUpperCase().trim();
+        if (!normalizedNumber) throw new Error(`Row ${i + 1}: empty genset number.`);
+        if (seenNumbers.has(normalizedNumber)) throw new Error(`Row ${i + 1}: duplicate genset number ${nextNumber}.`);
+        seenNumbers.add(normalizedNumber);
+
+        const numberOwner = currentByNumber.get(normalizedNumber);
+        if (numberOwner && numberOwner.id !== current.id) {
+          throw new Error(`Row ${i + 1}: genset number ${nextNumber} already belongs to ${numberOwner.location}.`);
+        }
+
+        const liveStatus = fleetBoardStatus(current);
+        const importedLiveStatus = nextStatus === GensetStatus.MAINTENANCE
+          ? 'MAINTENANCE'
+          : nextStatus === GensetStatus.RETIRED
+            ? 'RETIRED'
+            : nextStatus === GensetStatus.CLIPPED_ON
+              ? 'IN_PROGRESS'
+              : 'IN_STOCK';
+
+        const warning = importedLiveStatus === 'IN_PROGRESS' &&
+          !ops.some(o => o.status === 'IN PROGRESS' && o.gensetNumber?.trim().toUpperCase() === current.unitNumber.trim().toUpperCase())
+          ? (isAr ? 'قيد التشغيل بدون عملية نشطة' : 'IN PROGRESS but no active operation is linked')
+          : undefined;
+
+        parsed.push({
+          id: current.id,
+          originalUnitNumber: current.unitNumber,
+          unitNumber: nextNumber,
+          location: nextLocation,
+          status: nextStatus,
+          changed: current.unitNumber.trim() !== nextNumber.trim()
+            || current.location !== nextLocation
+            || current.status !== nextStatus
+            || liveStatus !== importedLiveStatus,
+          warning
+        });
+      }
+
+      if (!parsed.length) throw new Error(isAr ? 'لم يتم العثور على بيانات مولدات.' : 'No genset rows were found.');
+
+      const changed = parsed.filter(row => row.changed);
+      setFleetImportRows(changed);
+      setFleetImportFileName(file.name);
+      setShowFleetImportModal(true);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : (isAr ? 'تعذر قراءة ملف Excel.' : 'Could not read the Excel file.'));
+    }
+  };
+
+  const handleApplyFleetBoardImport = async () => {
+    if (isReadOnly || !fleetImportRows.length) return;
+
+    const duplicateNumbers = new Set<string>();
+    const finalNumbers = new Map<string, string>();
+    for (const row of fleetImportRows) {
+      const normalized = row.unitNumber.trim().toUpperCase();
+      if (finalNumbers.has(normalized) && finalNumbers.get(normalized) !== row.id) duplicateNumbers.add(normalized);
+      finalNumbers.set(normalized, row.id);
+    }
+    if (duplicateNumbers.size) {
+      alert(isAr ? 'يوجد تكرار في أرقام المولدات الجديدة.' : 'Duplicate final genset numbers were found.');
+      return;
+    }
+
+    for (const row of fleetImportRows) {
+      const current = stock.find(unit => unit.id === row.id);
+      if (!current) continue;
+
+      await db.updateGenset({
+        ...current,
+        unitNumber: row.unitNumber.trim().toUpperCase(),
+        location: row.location,
+        status: row.status
+      });
+    }
+
+    setShowFleetImportModal(false);
+    setFleetImportRows([]);
+    setFleetImportFileName('');
+    setDbVersion(v => v + 1);
+    alert(isAr
+      ? 'تمت مزامنة تعديلات Fleet Board من ملف Excel بنجاح.'
+      : 'Fleet Board Excel edits have been synced successfully.');
+  };
+
   const handleExportMaintenanceCsv = () => {
     const headers = ['Record ID', 'Genset Unit', 'Start Date', 'Completed Date', 'Duration (Days)', 'Service Type', 'Status', 'Technician', 'Hub Location', 'Running Hours', 'Parts Replaced', 'Next Service Due', 'Description'];
     const rows = filteredMaintLogs.map(l => [
@@ -648,6 +993,30 @@ const StockManagement: React.FC = () => {
                 </p>
               </div>
               <div className="flex flex-wrap gap-2 text-[8px] font-black uppercase">
+                {!isReadOnly && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleExportFleetBoardXlsx}
+                      className="px-3 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-400/30 transition-all"
+                      title={isAr ? 'تصدير Fleet Board إلى Excel بالألوان' : 'Export Fleet Board to colored XLSX'}
+                    >
+                      ⬇ {isAr ? 'تصدير Excel' : 'EXPORT XLSX'}
+                    </button>
+                    <label
+                      className="px-3 py-2 rounded-xl bg-[#C2A378]/20 hover:bg-[#C2A378]/30 text-[#E8D5B5] border border-[#C2A378]/30 cursor-pointer transition-all"
+                      title={isAr ? 'رفع ملف Excel لمزامنة التعديلات' : 'Upload edited XLSX to sync changes'}
+                    >
+                      ⬆ {isAr ? 'رفع Excel' : 'UPLOAD XLSX'}
+                      <input
+                        type="file"
+                        accept=".xlsx,.xls"
+                        className="hidden"
+                        onChange={handleFleetBoardImportFile}
+                      />
+                    </label>
+                  </>
+                )}
                 <span className="px-3 py-2 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">● {isAr ? 'متاح' : 'IN STOCK'} {metrics.inStock}</span>
                 <span className="px-3 py-2 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-400/30">● {isAr ? 'على رحلة مؤكدة' : 'ACTIVE / CLIPPED'} {metrics.clippedOn}</span>
                 {metrics.unlinkedClippedOn > 0 && <span className="px-3 py-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-400/30">⚠ {isAr ? 'حالة بدون عملية' : 'STATUS WITHOUT OPERATION'} {metrics.unlinkedClippedOn}</span>}
@@ -957,6 +1326,82 @@ const StockManagement: React.FC = () => {
                   })}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showFleetImportModal && (
+        <div className="fixed inset-0 bg-[#3a3833]/85 backdrop-blur-md z-[250] flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-3xl w-full border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div className="p-4 bg-[#3a3833] text-white flex items-center justify-between">
+              <div>
+                <h3 className="font-black uppercase text-sm">{isAr ? 'مراجعة مزامنة Excel' : 'REVIEW EXCEL SYNC'}</h3>
+                <p className="text-[8px] text-[#C2A378] font-bold mt-0.5">{fleetImportFileName} • {fleetImportRows.length} {isAr ? 'تعديل' : 'CHANGE(S)'}</p>
+              </div>
+              <button type="button" onClick={() => { setShowFleetImportModal(false); setFleetImportRows([]); setFleetImportFileName(''); }} className="text-white text-lg">✕</button>
+            </div>
+
+            <div className="p-4">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-700 max-h-[55vh]">
+                <table className="w-full text-left whitespace-nowrap text-[9px]">
+                  <thead className="bg-slate-100 dark:bg-slate-800 sticky top-0">
+                    <tr>
+                      <th className="p-2.5 font-black">GENSET</th>
+                      <th className="p-2.5 font-black">{isAr ? 'رقم جديد' : 'NEW NUMBER'}</th>
+                      <th className="p-2.5 font-black">{isAr ? 'الميناء' : 'LOCATION'}</th>
+                      <th className="p-2.5 font-black">{isAr ? 'الحالة' : 'STATUS'}</th>
+                      <th className="p-2.5 font-black">{isAr ? 'ملاحظة' : 'NOTE'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {fleetImportRows.map(row => (
+                      <tr key={row.id} className="border-t border-slate-100 dark:border-slate-800">
+                        <td className="p-2.5 font-mono font-black">{row.originalUnitNumber}</td>
+                        <td className="p-2.5 font-mono font-black text-blue-600">{row.unitNumber}</td>
+                        <td className="p-2.5 font-black">{translateEntity(row.location, lang)}</td>
+                        <td className="p-2.5">
+                          <span className={`px-2 py-1 rounded-lg text-white font-black`} style={{ backgroundColor: `#${fleetBoardStatusColor(
+                            row.status === GensetStatus.MAINTENANCE ? 'MAINTENANCE' :
+                            row.status === GensetStatus.RETIRED ? 'RETIRED' :
+                            row.status === GensetStatus.CLIPPED_ON ? 'IN_PROGRESS' : 'IN_STOCK'
+                          )}` }}>
+                            {fleetBoardStatusLabel(
+                              row.status === GensetStatus.MAINTENANCE ? 'MAINTENANCE' :
+                              row.status === GensetStatus.RETIRED ? 'RETIRED' :
+                              row.status === GensetStatus.CLIPPED_ON ? 'IN_PROGRESS' : 'IN_STOCK'
+                            )}
+                          </span>
+                        </td>
+                        <td className="p-2.5 text-amber-600 dark:text-amber-400 font-bold">{row.warning || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-3 p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 text-[8px] font-bold text-amber-800 dark:text-amber-300">
+                {isAr
+                  ? 'سيتم تحديث رقم المولد والميناء والحالة فقط. باقي بيانات المولد لن تتغير. رقم Genset ID هو مفتاح المطابقة.'
+                  : 'Only Genset Number, Location and Status will be updated. All other genset data stays unchanged. Genset ID is the matching key.'}
+              </div>
+
+              <div className="flex gap-2 mt-3">
+                <button
+                  type="button"
+                  onClick={() => { setShowFleetImportModal(false); setFleetImportRows([]); setFleetImportFileName(''); }}
+                  className="w-1/3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-black text-[9px] uppercase"
+                >
+                  {isAr ? 'إلغاء' : 'CANCEL'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleApplyFleetBoardImport}
+                  className="w-2/3 py-2.5 rounded-xl bg-[#3a3833] hover:bg-slate-900 text-[#C2A378] font-black text-[9px] uppercase"
+                >
+                  ✓ {isAr ? 'تأكيد المزامنة' : 'CONFIRM SYNC'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
