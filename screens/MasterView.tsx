@@ -82,10 +82,12 @@ interface EditableCellProps {
   renderValue?: (val: string) => React.ReactNode;
   onEditStart?: () => void;
   onEditEnd?: () => void;
+  onSingleClickAction?: () => void;
 }
 
-const EditableCell: React.FC<EditableCellProps> = ({ value, onSave, type, suggestions, options, placeholder, className, isError, disabled, strict, isDark, renderValue, onEditStart, onEditEnd }) => {
+const EditableCell: React.FC<EditableCellProps> = ({ value, onSave, type, suggestions, options, placeholder, className, isError, disabled, strict, isDark, renderValue, onEditStart, onEditEnd, onSingleClickAction }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const singleClickTimerRef = useRef<number | null>(null);
   const [currentValue, setCurrentValue] = useState(value);
   const inputRef = useRef<HTMLInputElement | HTMLSelectElement>(null);
   const listId = useMemo(() => `list-${Math.random().toString(36).substr(2, 9)}`, []);
@@ -95,6 +97,10 @@ const EditableCell: React.FC<EditableCellProps> = ({ value, onSave, type, sugges
       inputRef.current?.focus();
     }
   }, [isEditing]);
+
+  useEffect(() => () => {
+    if (singleClickTimerRef.current !== null) window.clearTimeout(singleClickTimerRef.current);
+  }, []);
 
   const startEditing = () => {
     setIsEditing(true);
@@ -114,6 +120,27 @@ const EditableCell: React.FC<EditableCellProps> = ({ value, onSave, type, sugges
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleBlur();
     else if (e.key === 'Escape') { setCurrentValue(value); setIsEditing(false); onEditEnd?.(); }
+  };
+
+  const handleDisplayClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (disabled) return;
+    if (!onSingleClickAction) { startEditing(); return; }
+    if (singleClickTimerRef.current !== null) window.clearTimeout(singleClickTimerRef.current);
+    singleClickTimerRef.current = window.setTimeout(() => {
+      singleClickTimerRef.current = null;
+      onSingleClickAction();
+    }, 220);
+  };
+
+  const handleDisplayDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (disabled) return;
+    if (singleClickTimerRef.current !== null) {
+      window.clearTimeout(singleClickTimerRef.current);
+      singleClickTimerRef.current = null;
+    }
+    if (onSingleClickAction) startEditing();
   };
 
   if (isEditing && !disabled) {
@@ -155,7 +182,8 @@ const EditableCell: React.FC<EditableCellProps> = ({ value, onSave, type, sugges
 
   return (
     <div 
-      onClick={(e) => { if(!disabled) { e.stopPropagation(); startEditing(); } }}
+      onClick={handleDisplayClick}
+      onDoubleClick={handleDisplayDoubleClick}
       className={`group min-h-[1.2rem] flex items-center px-1 rounded transition-colors ${!disabled ? 'cursor-pointer' : 'cursor-default'} ${isDark ? 'hover:bg-white/5 border-transparent' : 'hover:bg-black/5 border-transparent'} ${isError ? 'bg-red-600 text-white animate-pulse' : ''} ${className}`}
     >
       <div className="flex-1 whitespace-nowrap overflow-visible">
@@ -630,7 +658,7 @@ const MasterView: React.FC = () => {
     .toISOString().slice(0, 10);
 
   const [stagedOps, setStagedOps] = useState<any[]>([
-    { customerName: '', bookingNumber: '', operationDate: todayDate, clipOnDate: todayDate, status: 'UNDER OPERATE', rate: '0', vat: '0', clipOnPort: Location.ALEX, clipOffPort: Location.ALEX, requestedClipOffPort: Location.ALEX, destination: '', trucker: '', beneficiaryName: '', quantity: 1 }
+    { customerName: '', bookingNumber: '', operationDate: todayDate, clipOnDate: todayDate, status: 'UNDER OPERATE', rate: '0', vat: '0', clipOnPort: Location.ALEX, clipOffPort: Location.ALEX, destination: '', trucker: '', beneficiaryName: '', quantity: 1 }
   ]);
   const [rawPasteBuffer, setRawPasteBuffer] = useState('');
   const [stagingColWidths, setStagingColWidths] = useState<Record<string, number>>({});
@@ -1135,9 +1163,7 @@ const MasterView: React.FC = () => {
           clipOnDate: s.clipOnDate || todayDate,
           clipOffDate: '',
           clipOnPort: (s.clipOnPort as Location) || Location.ALEX,
-          clipOffPort: (s.clipOffPort as Location) || Location.ALEX,
-          requestedClipOffPort: (s.requestedClipOffPort as Location) || (s.clipOffPort as Location) || Location.ALEX,
-          destination: s.destination || '',
+          clipOffPort: (s.clipOffPort as Location) || Location.ALEX,          destination: s.destination || '',
           status: (s.status as any) || 'UNDER OPERATE',
           rate: s.rate || '0.00',
           vat: s.vat || '0.00',
@@ -1182,7 +1208,7 @@ const MasterView: React.FC = () => {
       }
       setOperations([...freshOps]);
       setShowAddModal(false);
-      setStagedOps([{ customerName: '', bookingNumber: '', operationDate: todayDate, clipOnDate: todayDate, status: 'UNDER OPERATE', rate: '0', vat: '0', clipOnPort: Location.ALEX, clipOffPort: Location.ALEX, requestedClipOffPort: Location.ALEX, destination: '', trucker: '', beneficiaryName: '', quantity: 1 }]);
+      setStagedOps([{ customerName: '', bookingNumber: '', operationDate: todayDate, clipOnDate: todayDate, status: 'UNDER OPERATE', rate: '0', vat: '0', clipOnPort: Location.ALEX, clipOffPort: Location.ALEX, destination: '', trucker: '', beneficiaryName: '', quantity: 1 }]);
       setRawPasteBuffer('');
       refresh();
       alert(isAr ? `تمت إضافة ${toInject.length} عملية بنجاح` : `Successfully injected ${toInject.length} operations.`);
@@ -1302,6 +1328,16 @@ const MasterView: React.FC = () => {
     return result;
   }, [operations, searchTerm, columnSearches, selectedPorts, selectedStatuses, dateFilter, sortConfig, invoices, lang]);
 
+  const handleToggleManualScctClipOff = async (op: Operation) => {
+    if (isReadOnly || op.clipOffPort !== Location.SCCT) return;
+    const saved = await db.updateOperation({ ...op, manualScctClipOff: !op.manualScctClipOff });
+    if (!saved) {
+      window.alert(isAr ? `فشل حفظ حالة SCCT: ${db.getLastDbError() || ''}` : `Failed to save SCCT manual clip-off: ${db.getLastDbError() || ''}`);
+      return;
+    }
+    refresh();
+  };
+
   const handleUpdateCell = async (op: Operation, field: keyof Operation, val: any) => {
     if (isReadOnly) return;
     const normalizedValue = typeof val === 'string' ? val.trim() : val;
@@ -1310,11 +1346,15 @@ const MasterView: React.FC = () => {
       Boolean(normalizedValue) &&
       (op.gaz === null || op.gaz === undefined || op.gaz === '' || Number(op.gaz) === 0);
 
-    const saved = await db.updateOperation({
+    const nextOperation: Operation = {
       ...op,
       [field]: val,
       ...(shouldAutoFillGas ? { gaz: '50' } : {})
-    });
+    };
+    if (field === 'clipOffPort' && String(normalizedValue || '').trim().toUpperCase() !== Location.SCCT) {
+      nextOperation.manualScctClipOff = false;
+    }
+    const saved = await db.updateOperation(nextOperation);
     if (!saved) {
       window.alert(isAr
         ? `فشل حفظ التعديل: ${db.getLastDbError() || ''}`
@@ -1801,7 +1841,9 @@ const MasterView: React.FC = () => {
                             style={{ ...dynamicCellStyle, ...getColStyle('gensetNumber'), ...(gensetPortMismatchByOperationId.get(op.id) && !isGensetDup ? { color: getDarkPortStyle(gensetPortMismatchByOperationId.get(op.id) as Location).color } : {}) }} 
                             className={`px-2 border-r text-center transition-all duration-200 relative ${isGensetDup
                               ? 'bg-red-700 !text-white font-black shadow-[inset_0_0_0_2px_#fecaca,0_0_18px_rgba(239,68,68,.75)] animate-pulse'
-                              : isDark ? 'border-slate-800' : 'border-slate-50'}`}
+                              : op.clipOffPort === Location.SCCT && op.manualScctClipOff
+                                ? (isDark ? 'bg-sky-900/70 border-sky-500/40' : 'bg-sky-100 border-sky-300')
+                                : isDark ? 'border-slate-800' : 'border-slate-50'}`}
                             title={gensetPortMismatchByOperationId.has(op.id) ? (isAr ? `⚠️ المولد موجود في ${translateEntity(gensetPortMismatchByOperationId.get(op.id), lang)} بينما المتوقع ${translateEntity(op.status === 'IN PROGRESS' ? op.clipOffPort : op.clipOnPort, lang)}` : `⚠️ GENSET PORT MISMATCH — Stock: ${translateEntity(gensetPortMismatchByOperationId.get(op.id), lang)} | Expected: ${translateEntity(op.status === 'IN PROGRESS' ? op.clipOffPort : op.clipOnPort, lang)}`) : isGensetDup
                               ? (isAr
                                 ? '⚠️ مولد مكرر — القديم هو OLD والجديد هو NEW'
@@ -1820,7 +1862,7 @@ const MasterView: React.FC = () => {
                                 </span>
                               )}
                               {isGensetDup && <span className="text-[11px] shrink-0">⚠️</span>}
-                              <EditableCell value={op.gensetNumber} suggestions={systemSuggestions.gensets} onSave={(val) => handleUpdateCell(op, 'gensetNumber', val)} disabled={isReadOnly} onEditStart={onCellEditStart} onEditEnd={onCellEditEnd} className={`font-black ${isGensetDup ? '!text-white font-extrabold' : isSelected ? 'text-blue-100' : gensetPortMismatchByOperationId.has(op.id) ? '!text-inherit font-extrabold' : 'text-[#C2A378]'}`} placeholder="UNIT" isDark={isDark} />
+                              <EditableCell value={op.gensetNumber} suggestions={systemSuggestions.gensets} onSave={(val) => handleUpdateCell(op, 'gensetNumber', val)} disabled={isReadOnly} onEditStart={onCellEditStart} onEditEnd={onCellEditEnd} className={`font-black ${isGensetDup ? '!text-white font-extrabold' : isSelected ? 'text-blue-100' : gensetPortMismatchByOperationId.has(op.id) ? '!text-inherit font-extrabold' : 'text-[#C2A378]'}`} placeholder="UNIT" isDark={isDark} onSingleClickAction={op.clipOffPort === Location.SCCT ? () => handleToggleManualScctClipOff(op) : undefined} />
                             </div>
                           </td>
                           <td style={{ ...dynamicCellStyle, ...getColStyle('rate') }} className={`border-r text-right px-2 font-bold ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
