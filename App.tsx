@@ -384,7 +384,7 @@ const App: React.FC = () => {
             .filter(screen => allScreens.has(screen))
             .concat(
               user?.role === UserRole.ADMIN || user?.role === UserRole.MANAGER
-                ? ['financials']
+                ? ['financials', 'daily-dispatch']
                 : []
             )
         );
@@ -727,7 +727,7 @@ const App: React.FC = () => {
     if (Array.isArray(user.allowedScreens)) {
       // Finance is an internal financial-control screen and must remain reachable
       // for Admin/Manager accounts even when an older allowedScreens profile is stale.
-      if (screen === 'financials' && (user.role === UserRole.ADMIN || user.role === UserRole.MANAGER)) {
+      if ((screen === 'financials' || screen === 'daily-dispatch') && (user.role === UserRole.ADMIN || user.role === UserRole.MANAGER)) {
         return true;
       }
       return user.allowedScreens.includes(screen);
