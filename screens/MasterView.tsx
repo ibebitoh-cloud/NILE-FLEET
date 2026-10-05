@@ -2007,7 +2007,7 @@ const MasterView: React.FC = () => {
                  </div>
                )}
               <div><label className="block text-[8px] font-black uppercase text-slate-400 mb-1">{isAr ? 'ملاحظات' : 'Notes'}</label><textarea value={replacementNotes} onChange={e => setReplacementNotes(e.target.value)} rows={2} className={`w-full p-3 rounded-xl border text-xs ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`} placeholder={isAr ? 'اختياري' : 'Optional'} /></div>
-              <div className="flex gap-3 pt-2"><button onClick={() => setReplacementOperation(null)} className="flex-1 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 font-black text-xs">{isAr ? 'إلغاء' : 'CANCEL'}</button><button disabled={!replacementGensetNumber || isReadOnly} onClick={handleReplaceGenset} className="flex-1 py-3 rounded-xl bg-rose-600 text-white font-black text-xs disabled:opacity-40">{isAr ? 'تأكيد الاستبدال' : 'CONFIRM REPLACEMENT'}</button></div>
+              <div className="flex gap-3 pt-2"><button onClick={() => setReplacementOperation(null)} className="flex-1 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 font-black text-xs">{isAr ? 'إلغاء' : 'CANCEL'}</button><button disabled={!replacementGensetNumber || isReadOnly} onClick={handleReplaceGenset} className="flex-1 py-3 rounded-xl bg-[#C2A378] text-[#3a3833] font-black text-xs disabled:opacity-40 hover:bg-[#d8bd91] transition-colors">{isAr ? 'تأكيد الاستبدال' : 'CONFIRM REPLACEMENT'}</button></div>
             </div>
           </div>
         </div>
