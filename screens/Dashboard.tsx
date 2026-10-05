@@ -14,6 +14,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const { lang } = useContext(LanguageContext);
   const { isDark } = useContext(ThemeContext);
   const t = translations[lang];
+  const isAr = lang === 'ar';
   const currentUser = useMemo(() => JSON.parse(localStorage.getItem('user') || '{}') as User, []);
   const isReadOnly = hasReadOnlyAccess(currentUser);
   const [, setDataVersion] = useState(0);
