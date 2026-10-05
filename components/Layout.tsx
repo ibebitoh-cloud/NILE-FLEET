@@ -1625,7 +1625,7 @@ I’ll search with you. 🤖`;
   ]);
 
   const roleDefaultScreenIds = user.role === UserRole.MANAGER
-    ? ['dashboard', 'master-view', 'operations', 'stock', 'reservations', 'customers', 'customer-prices', 'booking-invoices', 'financials', 'intelligence', 'reports', 'notifications', 'system-log']
+    ? ['dashboard', 'master-view', 'operations', 'stock', 'reservations', 'daily-dispatch', 'customers', 'customer-prices', 'booking-invoices', 'financials', 'intelligence', 'reports', 'notifications', 'system-log']
     : user.role === UserRole.VIEWER
       ? ['dashboard', 'master-view', 'reports', 'intelligence', 'notifications', 'support', 'system-log']
       : null;
