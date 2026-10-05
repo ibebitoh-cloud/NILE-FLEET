@@ -1069,7 +1069,6 @@ const MasterView: React.FC = () => {
         status: 'UNDER OPERATE',
         clipOnPort: Location.ALEX,
         clipOffPort: Location.ALEX,
-        requestedClipOffPort: Location.ALEX,
         destination: '',
         quantity: 1,
         vat: '0'
@@ -1810,18 +1809,7 @@ const MasterView: React.FC = () => {
                                   isDark={isDark} 
                                   renderValue={(v) => <span className={`${portBadgeStyle(v as Location).className} inline-block`} style={portBadgeStyle(v as Location).style}>{translateEntity(v, lang)}</span>}
                                />
-                               <div className="flex items-center justify-center gap-1 w-full" title={isAr ? 'الميناء المطلوب من العميل مقابل ميناء الخروج الفعلي' : 'Customer-requested clip-off port vs the actual physical clip-off port'}>
-                                 <span className={`text-[6px] font-black uppercase tracking-wider ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{isAr ? 'طلب' : 'REQ'}</span>
-                                 <select
-                                   disabled={isReadOnly}
-                                   value={op.requestedClipOffPort || op.clipOffPort}
-                                   onChange={(e) => handleUpdateCell(op, 'requestedClipOffPort', e.target.value)}
-                                   className={`max-w-[62px] bg-transparent border-0 outline-none p-0 text-[7px] font-black uppercase cursor-pointer ${op.requestedClipOffPort && op.requestedClipOffPort !== op.clipOffPort ? (isDark ? 'text-amber-300' : 'text-amber-700') : (isDark ? 'text-emerald-400' : 'text-emerald-700')}`}
-                                 >
-                                   {allPorts.map(port => <option key={port} value={port} className="bg-slate-900 text-white">{translateEntity(port, lang)}</option>)}
-                                 </select>
-                                 {op.requestedClipOffPort && op.requestedClipOffPort === op.clipOffPort && <span className={`text-[7px] ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>✓</span>}
-                               </div>
+
                              </div>
                           </td>
                           <td style={{ ...dynamicCellStyle, ...getColStyle('destination') }} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
