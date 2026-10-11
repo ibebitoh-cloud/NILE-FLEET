@@ -60,7 +60,7 @@ Deno.serve(async(req)=>{
       past_outstanding_amount:Number.isFinite(Number(input.pastOutstandingAmount))?Number(input.pastOutstandingAmount):0,revoked:boolValue(input.revoked),
       mfa_enabled:boolValue(input.mfaEnabled),allowed_screens:Array.isArray(input.allowedScreens)?input.allowedScreens:null,
       permissions:input.permissions&&typeof input.permissions==="object"?input.permissions:{},invoice_settings:input.invoiceSettings&&typeof input.invoiceSettings==="object"?input.invoiceSettings:{},
-      signature_url:input.signatureUrl||null,is_service_account:boolValue(input.isServiceAccount)
+      signature_url:input.signatureUrl||null,is_service_account:callerRole==="ADMIN"&&boolValue(input.isServiceAccount)
     };
 
     const {error:profileError2}=await adminClient.from("profiles").upsert(profile,{onConflict:"id"});

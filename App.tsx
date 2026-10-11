@@ -626,6 +626,9 @@ const App: React.FC = () => {
         return () => {
           loggingInRef.current = false;
           setUser(u);
+          // The auth listener is paused during sign-in, so mark data ready here;
+          // otherwise the app stays on the "loading system data" screen.
+          setAppDataReady(true);
           localStorage.setItem('user', JSON.stringify(u));
           const rememberedScreen = getRememberedScreen(u);
           const targetScreen =

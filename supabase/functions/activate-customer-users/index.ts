@@ -10,8 +10,15 @@ const corsHeaders = {
 
 function randomPassword(length = 16) {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
-  const bytes = crypto.getRandomValues(new Uint8Array(length));
-  return Array.from(bytes, (byte) => chars[byte % chars.length]).join("");
+  // Rejection sampling avoids modulo bias toward the first characters.
+  const limit = 256 - (256 % chars.length);
+  let result = "";
+  while (result.length < length) {
+    for (const byte of crypto.getRandomValues(new Uint8Array(length * 2))) {
+      if (byte < limit && result.length < length) result += chars[byte % chars.length];
+    }
+  }
+  return result;
 }
 
 Deno.serve(async (req) => {
@@ -74,10 +81,10 @@ Deno.serve(async (req) => {
       }
 
       const password = randomPassword();
+      // Single resets do not lift Auth bans; only the admin-only bulk activation does.
       const { error: resetError } = await adminClient.auth.admin.updateUserById(customer.id, {
         password,
         email_confirm: true,
-        ban_duration: "none",
       });
 
       if (resetError) throw resetError;
@@ -90,6 +97,11 @@ Deno.serve(async (req) => {
         password,
         warning: "The new password is returned once and is not stored in public.profiles.",
       }), { status: 200, headers: corsHeaders });
+    }
+
+    // Bulk reset hands back every customer's credentials, so it is admin-only.
+    if (String(callerProfile.role).toUpperCase() !== "ADMIN") {
+      return new Response(JSON.stringify({ error: "Administrator access required for bulk activation" }), { status: 403, headers: corsHeaders });
     }
 
     const { data: customers, error: customersError } = await adminClient

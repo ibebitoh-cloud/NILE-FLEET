@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
       return json({ ok: false, error: "Administrator access required" }, 403);
     }
 
-    const { data, error } = await adminClient.rpc("admin_total_system_wipe");
+    const { data, error } = await adminClient.rpc("admin_total_system_wipe", { p_actor: caller.id });
     if (error || !data?.ok) {
       return json({ ok: false, error: error?.message || "System wipe failed" }, 500);
     }
