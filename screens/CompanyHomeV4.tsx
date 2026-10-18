@@ -1281,12 +1281,17 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
   box-shadow: 0 28px 80px rgba(0,0,0,.2);
 }
 .nf-home #partners {
-  background:
+  background-image:
     radial-gradient(circle at 15% 10%, rgba(194,163,120,.08), transparent 28%),
-    #050b12;
+    linear-gradient(180deg, rgba(3,8,13,.08), rgba(3,8,13,.22));
 }
 .nf-home #partners .nf4-logo-viewport {
-  box-shadow: inset 0 0 60px rgba(0,0,0,.35), 0 24px 70px rgba(0,0,0,.18);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 60px, #000 calc(100% - 60px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 60px, #000 calc(100% - 60px), transparent);
+}
+.nf-home #partners .nf4-logo-viewport:before,
+.nf-home #partners .nf4-logo-viewport:after {
+  display: none;
 }
 .nf-home #leadership .grid > div {
   min-height: 300px;
