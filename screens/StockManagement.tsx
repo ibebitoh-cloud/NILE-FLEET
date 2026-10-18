@@ -387,9 +387,10 @@ const StockManagement: React.FC = () => {
 
   const toggleMissingUpdateForSelected = () => {
     if (isReadOnly || selectedIds.size === 0) return;
-    const next = new Set(missingUpdateIds);
-    const allMarked = Array.from(selectedIds).every(id => next.has(id));
-    Array.from(selectedIds).forEach(id => {
+    const next = new Set<string>(missingUpdateIds);
+    const ids = Array.from(selectedIds) as string[];
+    const allMarked = ids.every(id => next.has(id));
+    ids.forEach(id => {
       if (allMarked) next.delete(id);
       else next.add(id);
     });
@@ -707,8 +708,8 @@ const StockManagement: React.FC = () => {
           : 'Required columns are: Genset Number, Location and Status.');
       }
 
-      const currentById = new Map(stock.map(unit => [unit.id, unit]));
-      const currentByNumber = new Map(stock.map(unit => [unit.unitNumber.trim().toUpperCase(), unit]));
+      const currentById = new Map<string, Genset>(stock.map(unit => [unit.id, unit]));
+      const currentByNumber = new Map<string, Genset>(stock.map(unit => [unit.unitNumber.trim().toUpperCase(), unit]));
       const seenIds = new Set<string>();
       const seenNumbers = new Set<string>();
       const parsed: Array<{

@@ -30,7 +30,7 @@ const CustomerPrices: React.FC = () => {
   const [quickEditKey, setQuickEditKey] = useState<string | null>(null);
   const quickInputRef = useRef<HTMLInputElement>(null);
 
-  const ports = Object.values(Location).filter(l => l !== Location.MAL);
+  const ports = Object.values(Location);
 
   useEffect(() => {
     if (quickEditKey && quickInputRef.current) {

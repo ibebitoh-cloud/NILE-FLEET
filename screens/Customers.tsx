@@ -162,7 +162,7 @@ const CustomerDossier: React.FC<{
     onRefresh();
   };
 
-  const ports = Object.values(Location).filter(l => l !== Location.MAL);
+  const ports = Object.values(Location);
 
   return (
     <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-2xl z-[500] flex items-center justify-center p-4 lg:p-10 animate-in fade-in">

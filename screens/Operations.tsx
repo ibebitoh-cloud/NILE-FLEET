@@ -258,7 +258,7 @@ const Operations: React.FC<{ highlightId?: string | null; clearHighlight?: () =>
   const dailyPortActivity = useMemo(() => {
     const activity: Record<string, { on: number, off: number, added: number }> = {};
     Object.values(Location).forEach(loc => {
-      if (loc !== Location.MAL) activity[loc] = { on: 0, off: 0, added: 0 };
+      activity[loc] = { on: 0, off: 0, added: 0 };
     });
 
     operations.forEach(op => {

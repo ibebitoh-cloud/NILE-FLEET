@@ -21,7 +21,7 @@ const PortGateControl: React.FC = () => {
     if (isOperator && currentUser.assignedPorts && currentUser.assignedPorts.length > 0) {
       return currentUser.assignedPorts;
     }
-    return Object.values(Location).filter(l => l !== Location.MAL);
+    return Object.values(Location);
   }, [isOperator, currentUser]);
 
   const [selectedPort, setSelectedPort] = useState<Location>(availablePorts[0] || Location.ALEX);
@@ -493,7 +493,7 @@ const PortGateControl: React.FC = () => {
 
                {mode === 'PORT_MOVE' ? (
                  <div className="grid grid-cols-2 gap-3">
-                   {Object.values(Location).filter(loc => loc !== selectedPort && loc !== Location.MAL).map(loc => (
+                   {Object.values(Location).filter(loc => loc !== selectedPort).map(loc => (
                      <button key={loc} onClick={() => setTargetPort(loc)} className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 ${targetPort === loc ? 'bg-[#3a3833] border-[#C2A378] text-white shadow-lg' : (isDark ? 'bg-slate-700 border-slate-600 text-slate-300' : 'bg-slate-50 border-slate-100 text-slate-700')}`}>
                         <span className="text-[10px] font-black uppercase tracking-widest">{translateEntity(loc, lang)}</span>
                      </button>
