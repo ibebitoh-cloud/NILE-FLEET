@@ -23,7 +23,7 @@ const MAINT_STATUS_CONFIG: Record<'COMPLETED' | 'IN_PROGRESS' | 'SCHEDULED', { l
   SCHEDULED: { labelEn: 'Scheduled', labelAr: 'مجدول', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-300', badge: 'bg-blue-500' }
 };
 
-const StockManagement: React.FC = () => {
+const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
   const { lang } = useContext(LanguageContext);
   const { theme } = useContext(ThemeContext);
   const isDark = theme === 'night';
@@ -52,6 +52,15 @@ const StockManagement: React.FC = () => {
 
   // Maintenance Tab Specific Filters
   const [maintSearch, setMaintSearch] = useState('');
+
+  // Dashboard links open this screen on the maintenance tab, optionally
+  // filtered to one genset ("maintenance:<unit>").
+  useEffect(() => {
+    if (!focus?.startsWith('maintenance')) return;
+    setActiveTab('maintenance');
+    const unit = focus.split(':')[1];
+    if (unit) setMaintSearch(unit);
+  }, [focus]);
   const [maintFilterType, setMaintFilterType] = useState<string>('ALL');
   const [maintFilterStat, setMaintFilterStat] = useState<string>('ALL');
   const [maintFilterLoc, setMaintFilterLoc] = useState<string>('ALL');
@@ -202,13 +211,17 @@ const StockManagement: React.FC = () => {
     e.preventDefault();
     if (isReadOnly || !newGenset.unitNumber) return;
     
-    db.addGenset({
+    const saved = await db.addGenset({
       id: `G-${newGenset.unitNumber}-${newGenset.location}-${Date.now()}`,
       unitNumber: newGenset.unitNumber.toUpperCase().trim(),
       location: newGenset.location,
       status: newGenset.status
     });
-    
+    if (!saved) {
+      alert(isAr ? `فشل إضافة الوحدة: ${db.getLastDbError() || ''}` : `Could not add unit: ${db.getLastDbError() || ''}`);
+      return;
+    }
+
     setShowAddModal(false);
     setNewGenset({ unitNumber: '', location: Location.ALEX, status: GensetStatus.IN_STOCK });
   };
@@ -216,19 +229,28 @@ const StockManagement: React.FC = () => {
   const handleDeleteGenset = async (id: string) => {
     if (!isAdmin) return;
     if (confirm(isAr ? 'هل أنت متأكد من حذف هذه الوحدة؟' : 'Are you sure you want to delete this asset?')) {
-      db.deleteGenset(id);
+      if (!(await db.deleteGenset(id))) {
+        alert(isAr ? `فشل حذف الوحدة: ${db.getLastDbError() || ''}` : `Could not delete unit: ${db.getLastDbError() || ''}`);
+      }
     }
   };
 
   const handleBulkTransfer = async (targetLoc: Location) => {
     if (isReadOnly) return;
     const ids = Array.from(selectedIds);
-    ids.forEach(id => {
+    const results = await Promise.all(ids.map(id => {
       const unit = stock.find(s => s.id === id);
-      if (unit) db.updateGenset({ ...unit, location: targetLoc });
-    });
+      return unit ? db.updateGenset({ ...unit, location: targetLoc }) : Promise.resolve(false);
+    }));
+    const moved = results.filter(Boolean).length;
     setSelectedIds(new Set());
-    alert(lang === 'ar' ? `تم نقل ${ids.length} وحدة بنجاح` : `Successfully transferred ${ids.length} units.`);
+    if (moved === ids.length) {
+      alert(lang === 'ar' ? `تم نقل ${moved} وحدة بنجاح` : `Successfully transferred ${moved} units.`);
+    } else {
+      alert(lang === 'ar'
+        ? `تم نقل ${moved} من ${ids.length} وحدة. ${db.getLastDbError() || ''}`
+        : `Transferred ${moved} of ${ids.length} units. ${db.getLastDbError() || ''}`);
+    }
   };
 
   const [bulkTargetStatus, setBulkTargetStatus] = useState<'IN_STOCK' | 'IN_PROGRESS' | 'MAINTENANCE' | 'RETIRED' | null>(null);
@@ -488,7 +510,9 @@ const StockManagement: React.FC = () => {
   const handleDeleteMaintenanceLog = async (id: string) => {
     if (!isAdmin) return;
     if (confirm(isAr ? 'هل أنت متأكد من حذف هذا السجل للصيانة؟' : 'Are you sure you want to delete this maintenance record?')) {
-      db.deleteMaintenanceLog(id);
+      if (!(await db.deleteMaintenanceLog(id))) {
+        alert(isAr ? `فشل حذف السجل: ${db.getLastDbError() || ''}` : `Could not delete record: ${db.getLastDbError() || ''}`);
+      }
     }
   };
 
@@ -1478,16 +1502,6 @@ const StockManagement: React.FC = () => {
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                   <span>{isAr ? 'تصدير CSV' : 'Export CSV'}</span>
                 </button>
-
-                {!isReadOnly && (
-                  <button
-                    onClick={() => openNewMaintenanceModal()}
-                    className="px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-black uppercase text-[9px] tracking-wider shadow-md flex items-center gap-1.5 transition-all whitespace-nowrap"
-                  >
-                    <span>+</span>
-                    <span>{isAr ? 'تسجيل صيانة جديدة' : 'New Maintenance Log'}</span>
-                  </button>
-                )}
               </div>
             </div>
 

@@ -55,12 +55,14 @@ const CustomerDossier: React.FC<{
     return { exposure, unbilled, unpaidInv, active };
   }, [customer, customerOps, customerInvoices]);
 
-  const handleUpdateProfile = (e: React.FormEvent) => {
+  const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isReadOnly) return;
-    db.updateUser(customer.id, profile);
+    const saved = await db.updateUser(customer.id, profile);
     onRefresh();
-    alert(lang === 'ar' ? 'تم تحديث الملف الشخصي' : 'Profile Synchronized');
+    alert(saved
+      ? (lang === 'ar' ? 'تم تحديث الملف الشخصي' : 'Profile Synchronized')
+      : (lang === 'ar' ? `فشل تحديث الملف الشخصي: ${db.getLastDbError() || ''}` : `Profile update failed: ${db.getLastDbError() || ''}`));
   };
 
   const handleExportAllDataAndFinance = () => {
@@ -145,12 +147,12 @@ const CustomerDossier: React.FC<{
     document.body.removeChild(link);
   };
 
-  const handlePriceChange = (portIn: Location, portOut: Location, price: string) => {
+  const handlePriceChange = async (portIn: Location, portOut: Location, price: string) => {
     if (isReadOnly) return;
     const numericPrice = parseFloat(price) || 0;
     const existing = customerPrices.find(p => p.portIn === portIn && p.portOut === portOut);
     
-    db.setCustomerPrice({
+    const saved = await db.setCustomerPrice({
       id: existing?.id || `price-${customer.id}-${portIn}-${portOut}`,
       customerId: customer.id,
       customerName: customer.companyName || customer.name,
@@ -159,6 +161,7 @@ const CustomerDossier: React.FC<{
       price: numericPrice,
       includeVat: existing?.includeVat ?? false
     });
+    if (!saved) alert(lang === 'ar' ? `فشل حفظ السعر: ${db.getLastDbError() || ''}` : `Price save failed: ${db.getLastDbError() || ''}`);
     onRefresh();
   };
 

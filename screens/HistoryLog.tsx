@@ -31,15 +31,6 @@ const HistoryLog: React.FC = () => {
            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">{lang === 'ar' ? 'راجع سجل النشاط. التراجع عن التغييرات غير متاح.' : 'Review activity. Undo is unavailable.'}</p>
         </div>
         <div className="flex gap-4">
-          <button 
-            type="button"
-            disabled
-            title={lang === 'ar' ? 'التراجع غير متاح للسجلات المحفوظة في قاعدة البيانات.' : 'Undo is unavailable for database-backed records.'}
-            className="bg-slate-100 text-slate-400 px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest cursor-not-allowed flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
-            {t.undo}
-          </button>
           {!isReadOnly && <button
             onClick={handleFinalize}
             className="bg-[#3a3833] text-white px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-[#002b57] transition-all shadow-xl shadow-blue-900/20"

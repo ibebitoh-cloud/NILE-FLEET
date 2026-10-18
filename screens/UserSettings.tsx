@@ -133,12 +133,15 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
       delete updatedData.phoneNumber;
       delete updatedData.joinedDate;
     }
-    setTimeout(() => {
-      db.updateUser(user.id, updatedData);
-      onUpdate(updatedData);
+    db.updateUser(user.id, updatedData).then(saved => {
       setIsSaving(false);
+      if (!saved) {
+        addNotification(isAr ? `فشل حفظ التغييرات: ${db.getLastDbError() || ''}` : `Changes were not saved: ${db.getLastDbError() || ''}`);
+        return;
+      }
+      onUpdate(updatedData);
       addNotification(isAr ? 'تم حفظ التغييرات بنجاح' : 'Changes saved to secure node.');
-    }, 600);
+    });
   };
 
   const [notifications, setNotifications] = useState<{id: number, msg: string}[]>([]);
@@ -264,9 +267,13 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
     if (holdTimer < 100) setHoldTimer(0);
   };
 
-  const executeNuclearPurge = () => {
-    db.totalSystemWipe();
-    addNotification(isAr ? 'تم تدمير كافة البيانات وتصفير النظام' : 'TOTAL SYSTEM TERMINATION COMPLETE');
+  const executeNuclearPurge = async () => {
+    try {
+      await db.totalSystemWipe();
+      addNotification(isAr ? 'تم تدمير كافة البيانات وتصفير النظام' : 'TOTAL SYSTEM TERMINATION COMPLETE');
+    } catch (err) {
+      addNotification(isAr ? `فشل تصفير النظام: ${err instanceof Error ? err.message : ''}` : `System wipe failed: ${err instanceof Error ? err.message : ''}`);
+    }
     setShieldActive(false);
     setHoldTimer(0);
     setPurgeConfirmText('');
