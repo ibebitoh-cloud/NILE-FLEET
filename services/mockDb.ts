@@ -82,7 +82,7 @@ class MockDB {
     const demoCustomers = ['ELAMIR', 'MAERSK', 'MSC', 'FISSAL'];
     const demoCommodities = ['ORANGES', 'CITRUS', 'GRAPES', 'POTATOES', 'STRAWBERRIES', 'POMEGRANATE', 'FROZEN FISH', 'ONIONS'];
     const demoClippers = ['Mohamed Fawzy', 'Ahmed Ali', 'Mahmoud Hassan', 'Eslam Logistics', 'Ibrahim Said', 'Sherif Hegazy'];
-    const ports = Object.values(Location).filter(l => l !== Location.MAL);
+    const ports = Object.values(Location);
     
     // Existing dynamic seed
     for (let i = 0; i < 15; i++) {
@@ -367,7 +367,7 @@ class MockDB {
 
   private initDefaultPrices() {
     const demoCustomers = ['ELAMIR', 'ELHANDSIA', 'DALTIX', 'FISSAL', 'MAERSK', 'MSC'];
-    const ports = Object.values(Location).filter(l => l !== Location.MAL);
+    const ports = Object.values(Location);
     demoCustomers.forEach(cust => {
       ports.forEach(pIn => {
         ports.forEach(pOut => {

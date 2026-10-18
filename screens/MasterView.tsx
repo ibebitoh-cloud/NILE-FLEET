@@ -61,7 +61,6 @@ const getDarkPortStyle = (loc: Location) => {
     [Location.SOKHNA]: { backgroundColor:'rgba(249,115,22,.24)',color:'#FDBA74',borderColor:'#FB923C',boxShadow:'0 0 10px rgba(251,146,60,.18)' },
     [Location.SCCT]: { backgroundColor:'rgba(14,165,233,.22)',color:'#7DD3FC',borderColor:'#38BDF8',boxShadow:'0 0 10px rgba(56,189,248,.18)' },
     [Location.PSD]: { backgroundColor:'rgba(124,58,237,.25)',color:'#C4B5FD',borderColor:'#A78BFA',boxShadow:'0 0 10px rgba(167,139,250,.18)' },
-    [Location.MAL]: { backgroundColor:'rgba(34,197,94,.22)',color:'#86EFAC',borderColor:'#4ADE80',boxShadow:'0 0 10px rgba(74,222,128,.18)' },
     [Location.WORKSHOP]: { backgroundColor:'rgba(100,116,139,.28)',color:'#CBD5E1',borderColor:'#94A3B8',boxShadow:'0 0 10px rgba(148,163,184,.16)' }
   };
   return styles[loc] || { backgroundColor:'rgba(71,85,105,.28)',color:'#E2E8F0',borderColor:'#64748B',boxShadow:'none' };

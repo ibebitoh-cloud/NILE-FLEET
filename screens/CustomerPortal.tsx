@@ -130,7 +130,7 @@ const CustomerPortal: React.FC<CustomerPortalProps> = ({ user, type }) => {
   };
 
   // Filter out MAL for commercial portal selection
-  const commercialPorts = Object.values(Location).filter(l => l !== Location.MAL);
+  const commercialPorts = Object.values(Location);
 
   const myReservations = db.getReservations().filter(r => r.customerId === user.id);
   const myInvoices = db.getInvoices().filter(i => i.customerId === user.id);

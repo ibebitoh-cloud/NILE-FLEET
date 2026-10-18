@@ -927,7 +927,7 @@ const UserMgmt: React.FC = () => {
                                 >
                                   <span className="block font-black text-[10px] uppercase">{loc}</span>
                                   <span className="block text-[8px] mt-0.5 text-slate-400">
-                                    {loc === Location.DAM ? 'Damietta' : loc === Location.ALEX ? 'Alexandria' : loc === Location.GOUDA ? 'Gouda' : loc === Location.SOKHNA ? 'Sokhna' : loc === Location.SCCT ? 'SCCT' : loc === Location.PSD ? 'Port Said' : loc === Location.MAL ? 'Mallaoui' : 'Workshop'}
+                                    {loc === Location.DAM ? 'Damietta' : loc === Location.ALEX ? 'Alexandria' : loc === Location.GOUDA ? 'Gouda' : loc === Location.SOKHNA ? 'Sokhna' : loc === Location.SCCT ? 'SCCT' : loc === Location.PSD ? 'Port Said' : 'Workshop'}
                                   </span>
                                   {isAssigned && <span className="float-end text-emerald-500 font-black">✓</span>}
                                 </button>
