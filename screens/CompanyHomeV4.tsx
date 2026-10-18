@@ -394,10 +394,10 @@ const PARTNER_LOGOS = [
   { name: 'Freight & Logistics Egypt', type: 'FREIGHT TRANSPORT', url: 'https://www.fle.com.eg/', logo: 'https://www.google.com/s2/favicons?domain=fle.com.eg&sz=128' },
 ];
 const PARTNER_GROUPS = [
-  { title: 'Shipping Lines', types: ['SHIPPING LINE','SHIPPING & LOGISTICS','CONTAINER SHIPPING'] },
-  { title: 'Logistics & Freight', types: ['LOGISTICS','LOGISTICS & TRANSPORT','LOGISTICS SERVICES','LOGISTICS INTERNATIONAL','LOGISTICS & FREIGHT','INTERNATIONAL TRANSPORT','FREIGHT & LOGISTICS','FREIGHT SERVICES','FREIGHT FORWARDING','CARGO & LOGISTICS','EXPRESS & LOGISTICS'] },
-  { title: 'Shipping Agencies', types: ['SHIPPING AGENCY','SHIPPING SERVICES','SHIPPING & LOGISTICS'] },
-  { title: 'Transport & Trucking', types: ['TRANSPORT & LOGISTICS','ROAD FREIGHT','TRUCKING & FREIGHT','TRUCK TRANSPORTATION','TRANSPORT SERVICES','FREIGHT TRANSPORT'] },
+  { title: 'Shipping Lines', titleAr: 'خطوط ملاحية', types: ['SHIPPING LINE','SHIPPING & LOGISTICS','CONTAINER SHIPPING'] },
+  { title: 'Logistics & Freight', titleAr: 'لوجستيات وشحن', types: ['LOGISTICS','LOGISTICS & TRANSPORT','LOGISTICS SERVICES','LOGISTICS INTERNATIONAL','LOGISTICS & FREIGHT','INTERNATIONAL TRANSPORT','FREIGHT & LOGISTICS','FREIGHT SERVICES','FREIGHT FORWARDING','CARGO & LOGISTICS','EXPRESS & LOGISTICS'] },
+  { title: 'Shipping Agencies', titleAr: 'وكالات ملاحية', types: ['SHIPPING AGENCY','SHIPPING SERVICES','SHIPPING & LOGISTICS'] },
+  { title: 'Transport & Trucking', titleAr: 'نقل وشاحنات', types: ['TRANSPORT & LOGISTICS','ROAD FREIGHT','TRUCKING & FREIGHT','TRUCK TRANSPORTATION','TRANSPORT SERVICES','FREIGHT TRANSPORT'] },
 ];
 
 const CONTACT_EMAIL = 'nilefleet@nilefleetlogistics.com';
@@ -843,11 +843,11 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     ops24: ar ? 'العمليات' : 'OPERATIONS',
     company: ar ? 'الشركة' : 'Company',
     built: ar ? <>مصمم من أجل<br /><span className={gold}>الطريق.</span></> : <>Built for<br /><span className={gold}>the road.</span></>,
-    about1: ar ? 'نيل فليت لخدمات النقل واللوجستيات هي إحدى شركات النقل واللوجستيات الرائدة في مصر، وتقدم خدمات نقل الشاحنات والحاويات وحلولاً لوجستية متكاملة منذ عام 2009.' : 'Nile Fleet for Transport and Logistics Service is one of Egypt’s leading transportation and logistics providers, offering reliable trucking, container transportation, and integrated logistics solutions since 2009.',
+    about1: ar ? 'أسطول النيل لخدمات النقل واللوجستيات هي إحدى شركات النقل واللوجستيات الرائدة في مصر، وتقدم خدمات نقل الشاحنات والحاويات وحلولاً لوجستية متكاملة منذ عام 2009.' : 'Nile Fleet for Transport and Logistics Service is one of Egypt’s leading transportation and logistics providers, offering reliable trucking, container transportation, and integrated logistics solutions since 2009.',
     about2: ar ? 'بخبرة تتجاوز 17 عاماً في المجال، تخدم الشركة خطوط الملاحة ووكلاء الشحن والمستوردين والمصدرين والعملاء الصناعيين من خلال إدارة الأسطول وعمليات الخدمات اللوجستية بالموانئ ودعم سلاسل الإمداد.' : 'With more than 17 years of industry experience, the company supports shipping lines, freight forwarders, importers, exporters, and industrial clients through fleet management, port logistics operations, and supply chain support.',
     values: ar ? ['السلامة', 'الموثوقية', 'الرؤية التشغيلية', 'الابتكار', 'نجاح العملاء'] : ['SAFETY', 'RELIABILITY', 'VISIBILITY', 'INNOVATION', 'CUSTOMER SUCCESS'],
     oneFleet: ar ? <>أسطول واحد.<br /><span className={gold}>مهام متعددة.</span></> : <>One fleet.<br /><span className={gold}>Many missions.</span></>,
-    opsDesc: ar ? 'من النقل البري إلى عمليات الجينسيت داخل الموانئ، تربط نيل فليت بين الحركة الفعلية والتحكم التشغيلي.' : 'From road transport to port-side genset operations, Nile Fleet connects physical movement with operational control.',
+    opsDesc: ar ? 'من النقل البري إلى عمليات الجينسيت داخل الموانئ، تربط أسطول النيل بين الحركة الفعلية والتحكم التشغيلي.' : 'From road transport to port-side genset operations, Nile Fleet connects physical movement with operational control.',
     authorized: ar ? 'دخول مصرح' : 'Authorized access',
     gensetControl: ar ? <>تحكم<br />الجينسيت</> : <>GENSET<br />CONTROL</>,
     liveSystem: ar ? 'نظام مباشر' : 'LIVE SYSTEM',
@@ -863,7 +863,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     roles: ar ? ['الرئيس التنفيذي', 'رئيس قطاع النقل', 'رئيس قطاع الجينسيت'] : ['CEO', 'HEAD OF TRANSPORT DEPARTMENT', 'HEAD OF GENSET DEPARTMENT'],
     areas: ar ? ['الشركة', 'النقل', 'الجينسيت'] : ['COMPANY', 'TRANSPORT', 'GENSET'],
     safe: ar ? 'آمن. موثوق. واضح. متصل.' : 'Safe. Reliable. Visible. Connected.',
-    whyTitle: ar ? <>لماذا <span className={gold}>نيل فليت؟</span></> : <>Why <span className={gold}>Nile Fleet?</span></>,
+    whyTitle: ar ? <>لماذا <span className={gold}>أسطول النيل؟</span></> : <>Why <span className={gold}>Nile Fleet?</span></>,
     whyDesc: ar ? 'خبرة تشغيلية، استجابة سريعة، إدارة أسطول ورؤية واضحة للحركة — مصممة لخدمة الأعمال التي لا تتوقف.' : 'Operational experience, fast response, fleet control and clear visibility — built for businesses that cannot afford to stop.',
     standards: ar ? [
       { title: 'الجودة أولاً', desc: 'نراجع تفاصيل التشغيل قبل الحركة، ونركز على تنفيذ الخدمة بمستوى ثابت وواضح.' },
@@ -936,7 +936,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
   const field = `w-full rounded-xl border px-4 py-3 text-xs font-semibold outline-none transition focus:border-[#c2a378] ${isDark ? 'border-white/15 bg-black/40 text-white placeholder:text-slate-500' : 'border-black/15 bg-white text-[#26231f] placeholder:text-slate-400'}`;
 
   return (
-    <div ref={wrapRef} className={`nf-home nf4 ${isDark ? 'nf4-dark' : 'nf4-light'} min-h-screen overflow-x-hidden selection:bg-[#c2a378] selection:text-black ${K.root}`}>
+    <div ref={wrapRef} data-no-translate dir={ar ? "rtl" : "ltr"} className={`nf-home nf4 ${isDark ? 'nf4-dark' : 'nf4-light'} min-h-screen overflow-x-hidden selection:bg-[#c2a378] selection:text-black ${K.root}`}>
       <style>{`
         @keyframes nf4Reveal { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
         @keyframes nf4Pulse { 0%,100%{box-shadow:0 0 0 rgba(194,163,120,0)} 50%{box-shadow:0 0 42px rgba(194,163,120,.28)} }
@@ -1092,6 +1092,11 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
             @media(max-width:1023px){.nf-home .nf4-about-layout>div:first-child{position:static}.nf-home .nf4-services-grid>div:first-child{grid-column:span 1}}
             @media(max-width:767px){.nf-home .nf4-hero-title{font-size:clamp(3.2rem,18vw,5.2rem)}.nf-home .nf4-network-grid>div,.nf-home .nf4-services-grid>div,.nf-home .nf4-leadership-grid>div{min-height:220px}}
         .nf4-hdr-btn{white-space:nowrap}
+        [dir=rtl] .nf4-hero-scrim{transform:scaleX(-1)}
+        .nf4-mobile-nav{scrollbar-width:none}
+        .nf4-mobile-nav::-webkit-scrollbar{display:none}
+        @media(max-width:640px){.nf-home .nf4-speedo{display:none}}
+        @media(max-width:767px){.nf-home.nf4-dark .nf4-hero-scrim{background:linear-gradient(180deg,rgba(2,3,5,.7),rgba(2,3,5,.35) 70%,transparent)}.nf-home.nf4-light .nf4-hero-scrim{background:linear-gradient(180deg,rgba(255,255,255,.85),rgba(255,255,255,.5) 70%,transparent)}}
         @media(max-width:767px){
           .nf-home [data-desktop-only]{display:none}
           .nf-home .nf4-hdr-btn{padding:7px 10px;font-size:8px;letter-spacing:.08em}
@@ -1155,12 +1160,12 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       <div className={`nf4-contact-bar border-b ${isDark ? "nf4-route-dark text-white" : "nf4-route-light text-[#26231f]"}`}>
         <div className="nf4-route-line mx-auto max-w-[1500px] px-4 lg:px-10">
           <div className="nf4-route-welcome">
-            <span>WELCOME TO</span><strong>NILE FLEET</strong>
+            <span>{ar ? 'مرحباً بكم في' : 'WELCOME TO'}</span><strong>{ar ? 'أسطول النيل' : 'NILE FLEET'}</strong>
           </div>
 
           <div className="nf4-route-track" aria-hidden="true"></div>
           <div className="nf4-route-actions">
-            <a href="tel:+201000992858" className="nf4-route-action nf4-route-phone" aria-label="Call Nile Fleet"><span>☎</span><div><small>24/7 TRANSPORT DESK</small><strong>+20 10 0099 2858</strong></div></a>
+            <a href="tel:+201000992858" className="nf4-route-action nf4-route-phone" aria-label={ar ? 'اتصل بأسطول النيل' : 'Call Nile Fleet'}><span>☎</span><div><small>{ar ? 'مكتب النقل 24/7' : '24/7 TRANSPORT DESK'}</small><strong dir="ltr">+20 10 0099 2858</strong></div></a>
             <a href="https://www.linkedin.com/company/nile-fleet-for-transport-and-logistics-service" target="_blank" rel="noreferrer" className="nf4-route-social" aria-label="Nile Fleet LinkedIn">in</a>
             <a href="https://www.facebook.com/profile.php?id=61591362501143" target="_blank" rel="noreferrer" className="nf4-route-social nf4-route-fb" aria-label="Nile Fleet Facebook">f</a>
             <a href="#quote" className="nf4-route-quote">{ar ? 'طلب عرض سعر' : 'REQUEST QUOTE'} <span>↗</span></a>
@@ -1173,11 +1178,11 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           <a href="#top" className="group flex min-w-0 items-center gap-2 sm:gap-3">
             <img src="/nile-fleet-logo.png" className="h-8 w-8 shrink-0 object-contain sm:h-10 sm:w-10 transition-transform duration-500 group-hover:rotate-6" alt="Nile Fleet" />
             <div>
-              <div className="flex items-baseline gap-2 whitespace-nowrap text-[15px] font-black tracking-tight sm:text-[17px]">NILE <span className={gold}>FLEET</span><span className="hidden text-[7px] font-black uppercase tracking-[.18em] text-[#c2a378] whitespace-nowrap sm:inline">POWERED BY <span className="text-white">BEBITO</span></span></div>
+              <div dir="ltr" className="flex items-baseline gap-2 whitespace-nowrap text-[15px] font-black tracking-tight sm:text-[17px]">NILE <span className={gold}>FLEET</span><span className="hidden text-[7px] font-black uppercase tracking-[.18em] text-[#c2a378] whitespace-nowrap sm:inline">POWERED BY <span className="text-white">BEBITO</span></span></div>
               <div className={`text-[7px] font-black uppercase tracking-[.34em] ${K.faint}`}>{tx.brandSub}</div>
             </div>
           </a>
-          <nav className="hidden items-center gap-8 md:flex">
+          <nav className="hidden items-center gap-6 lg:gap-8 md:flex">
             {nav.map(([label, href]) => <a key={href} href={href} className={`text-[9px] font-black tracking-[.25em] transition hover:text-[#c2a378] ${K.muted}`}>{label}</a>)}
           </nav>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
@@ -1187,6 +1192,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
             <button onClick={() => setLang(ar ? 'en' : 'ar')} className={`nf4-hdr-btn rounded-full border px-4 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{ar ? 'EN' : 'العربية'}</button>
           </div>
         </div>
+              <nav aria-label={ar ? 'أقسام الصفحة' : 'Page sections'} className={`nf4-mobile-nav flex gap-2 overflow-x-auto border-t px-4 py-2 md:hidden ${K.line}`}>
+          {nav.map(([label, href]) => <a key={href} href={href} className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[8px] font-black tracking-[.14em] ${K.chip}`}>{label}</a>)}
+        </nav>
       </header>
 
       
@@ -1315,6 +1323,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
 <main id="top" className="relative z-10">
         <section className="relative flex min-h-[100vh] items-start overflow-hidden">
+          <div aria-hidden="true" className={`pointer-events-none absolute inset-0 ${isDark ? 'bg-[linear-gradient(90deg,rgba(2,3,5,.72)_0%,rgba(2,3,5,.35)_55%,transparent_100%)]' : 'bg-[linear-gradient(90deg,rgba(255,255,255,.82)_0%,rgba(255,255,255,.45)_55%,transparent_100%)]'} nf4-hero-scrim`} />
           <div className="nf4-hero-inner mx-auto grid w-full max-w-[1500px] items-start gap-12 px-5 pt-24 lg:grid-cols-[1.25fr_.75fr] lg:px-10 lg:pt-28">
             <div className="nf4-reveal">
               <div className="mb-5 flex items-center gap-4">
@@ -1325,11 +1334,11 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                 {tx.heroTitle}
               </h1>
               <p className={`mt-6 max-w-2xl text-sm font-medium leading-7 sm:text-base ${K.soft}`}>
-                {ar ? 'نيل فليت لخدمات النقل واللوجستيات — نقل الشاحنات والحاويات وحلول لوجستية متكاملة مع رؤية تشغيلية كاملة.' : 'Nile Fleet for Transport and Logistics Service — trucking, container transportation and integrated logistics built around safe movement and operational visibility.'}
+                {ar ? 'أسطول النيل لخدمات النقل واللوجستيات — نقل الشاحنات والحاويات وحلول لوجستية متكاملة مع رؤية تشغيلية كاملة.' : 'Nile Fleet for Transport and Logistics Service — trucking, container transportation and integrated logistics built around safe movement and operational visibility.'}
               </p>
               <div className="nf4-hero-actions mt-7 flex flex-wrap items-center gap-4">
                 <a href="#quote" className="nf4-pulse rounded-full bg-[#c2a378] px-7 py-3 text-[9px] font-black uppercase tracking-[.24em] text-black">{ar ? 'اطلب عرض سعر' : 'Get a quote'}</a>
-                <a href="#operations" className={`rounded-full border border-[#c2a378]/60 bg-[#c2a378]/10 px-7 py-3 text-[9px] font-black uppercase tracking-[.24em] ${gold}`}>{tx.explore}</a>
+                <a href="#operations" className={`rounded-full border border-[#c2a378]/60 px-7 py-3 text-[9px] font-black uppercase tracking-[.24em] backdrop-blur-md ${isDark ? 'bg-black/50 text-[#e3c99f]' : 'bg-white/80 text-[#6f5428]'}`}>{tx.explore}</a>
               </div>
             </div>
 
@@ -1441,9 +1450,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
               </div>
               <div className="nf4-network-grid mt-14 grid gap-4 md:grid-cols-3">
                 {[
-                  ['PORTS', ar ? 'الإسكندرية · دمياط · بورسعيد · الدخيلة · السخنة' : 'Alexandria · Damietta · Port Said · Dekheila · Sokhna'],
-                  ['CARGO', ar ? 'حاويات · حاويات مبردة · استيراد · تصدير' : 'Containers · Reefers · Import · Export'],
-                  ['CONTROL', ar ? 'تشغيل · أسطول · موانئ · رؤية تشغيلية' : 'Operations · Fleet · Ports · Visibility'],
+                  [ar ? 'الموانئ' : 'PORTS', ar ? 'الإسكندرية · دمياط · بورسعيد · الدخيلة · السخنة' : 'Alexandria · Damietta · Port Said · Dekheila · Sokhna'],
+                  [ar ? 'البضائع' : 'CARGO', ar ? 'حاويات · حاويات مبردة · استيراد · تصدير' : 'Containers · Reefers · Import · Export'],
+                  [ar ? 'التحكم' : 'CONTROL', ar ? 'تشغيل · أسطول · موانئ · رؤية تشغيلية' : 'Operations · Fleet · Ports · Visibility'],
                 ].map(([title, body], i) => (
                   <div key={title} className={`relative overflow-hidden rounded-[1.7rem] border p-8 ${K.card}`}>
                     <div className={`text-[8px] font-black tracking-[.25em] ${gold}`}>0{i + 1}</div>
@@ -1617,7 +1626,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                   const members = PARTNER_LOGOS.filter(p => group.types.includes(p.type));
                   return members.length ? (
                     <div key={group.title}>
-                      <div className={`mb-3 text-[8px] font-black uppercase tracking-[.24em] ${gold}`}>{group.title}</div>
+                      <div className={`mb-3 text-[8px] font-black uppercase tracking-[.24em] ${gold}`}>{ar ? group.titleAr : group.title}</div>
                       <div className="flex flex-wrap gap-2">
                         {members.map((p) => (
                           <a key={p.name} href={p.url} target="_blank" rel="noreferrer" className={`group flex items-center gap-2 rounded-xl border px-3 py-2 transition duration-300 hover:border-[#c2a378]/60 ${isDark ? 'border-white/10 bg-white/[.025] hover:bg-white/[.06]' : 'border-black/10 bg-white hover:bg-slate-50 shadow-sm'}`}>
@@ -1683,8 +1692,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                 <h2 className="mt-5 text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{ar ? <>اطلب <span className={gold}>عرض سعر.</span></> : <>Get a <span className={gold}>quote.</span></>}</h2>
                 <p className={`mt-7 max-w-md text-sm leading-7 ${K.muted}`}>{ar ? 'املأ التفاصيل وأرسلها على واتساب أو بالبريد الإلكتروني، وسيتواصل معك فريق التشغيل.' : 'Fill in the details and send them on WhatsApp or by email, and our operations team will get back to you.'}</p>
                 <div className={`mt-10 space-y-3 text-xs font-bold ${K.soft}`}>
-                  <a href="tel:+201000992858" className="block hover:text-[#c2a378]">☎ {ar ? 'النقل' : 'Transport'}: +20 10 0099 2858</a>
-                  <a href="tel:+201212229077" className="block hover:text-[#c2a378]">☎ {ar ? 'الجينسيت' : 'Genset'}: +20 12 1222 9077</a>
+                  <a href="tel:+201000992858" className="block hover:text-[#c2a378]">☎ {ar ? 'النقل' : 'Transport'}: <span dir="ltr">+20 10 0099 2858</span></a>
+                  <a href="tel:+201212229077" className="block hover:text-[#c2a378]">☎ {ar ? 'الجينسيت' : 'Genset'}: <span dir="ltr">+20 12 1222 9077</span></a>
                   <a href={`mailto:${CONTACT_EMAIL}`} className="block hover:text-[#c2a378]">✉ {CONTACT_EMAIL}</a>
                 </div>
               </div>
@@ -1714,8 +1723,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           <div className="mx-auto max-w-[1500px] px-5 pb-24 pt-20 lg:px-10">
             <div className="mt-16 flex flex-col items-center justify-center text-center">
               <div className="nf4-footer-signature-line">
-                <strong>Nile Fleet</strong>
-                <span>Safe. Reliable. Visible. Connected.</span>
+                <strong>{ar ? 'أسطول النيل' : 'Nile Fleet'}</strong>
+                <span>{tx.safe}</span>
               </div>
               <div className="mt-5 nf4-bebito-signature" aria-label="Powered by Bebito">
                 <span className="nf4-bebito-powered">POWERED BY</span>
@@ -1725,9 +1734,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                   style={{fontFamily:bebitoStyles[bebitoStyleIndex].fontFamily,color:bebitoStyles[bebitoStyleIndex].color,textShadow:`0 0 20px ${bebitoStyles[bebitoStyleIndex].shadow}`}}
                   aria-label="Change Bebito signature style">Bebito</span>
                 <div className="nf4-footer-contact">
-                  <div>23 July St. · Abo Elkheer Building · 2nd Floor</div>
-                  <div>Port Said, Egypt</div>
-                  <div>nilefleet@nilefleetlogistics.com · Transport 01000992858 · Genset 01212229077</div>
+                  <div>{ar ? 'شارع 23 يوليو · عمارة أبو الخير · الدور الثاني' : '23 July St. · Abo Elkheer Building · 2nd Floor'}</div>
+                  <div>{ar ? 'بورسعيد، مصر' : 'Port Said, Egypt'}</div>
+                  <div><span dir="ltr">nilefleet@nilefleetlogistics.com</span> · {ar ? 'النقل' : 'Transport'} <span dir="ltr">01000992858</span> · {ar ? 'الجينسيت' : 'Genset'} <span dir="ltr">01212229077</span></div>
                 </div>
               </div>
             </div>
@@ -1740,7 +1749,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       </a>
 
       {/* speedometer */}
-      <div className={`pointer-events-none fixed bottom-4 right-4 z-30 rounded-2xl border px-4 py-3 backdrop-blur-md ${K.card}`} aria-hidden="true">
+      <div className={`nf4-speedo pointer-events-none fixed bottom-4 right-4 z-30 rounded-2xl border px-4 py-3 backdrop-blur-md ${K.card}`} aria-hidden="true">
         <div className="flex items-end gap-2"><span className="text-3xl font-black tabular-nums leading-none">{String(hud.kmh).padStart(3, '0')}</span><span className={`pb-0.5 text-[8px] font-black tracking-[.25em] ${gold}`}>KM/H</span></div>
         <div className={`mt-1 text-[7px] font-black tracking-[.25em] ${K.faint}`}>ODO {hud.km.toFixed(2)} KM</div>
       </div>
