@@ -1092,11 +1092,13 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         .nf4-hdr-btn{white-space:nowrap}
         [dir=rtl] .nf4-hero-scrim{transform:scaleX(-1)}
         .nf4-mobile-nav{scrollbar-width:none}
+        .nf-home a.rounded-full,.nf-home button.rounded-full{display:inline-flex;align-items:center;justify-content:center}
+        .nf-home .nf4-mobile-nav a{min-height:36px}
         .nf4-mobile-nav::-webkit-scrollbar{display:none}
         @media(max-width:640px){.nf-home .nf4-speedo{display:none}}
         @media(max-width:767px){.nf-home.nf4-dark .nf4-hero-scrim{background:linear-gradient(180deg,rgba(2,3,5,.7),rgba(2,3,5,.35) 70%,transparent)}.nf-home.nf4-light .nf4-hero-scrim{background:linear-gradient(180deg,rgba(255,255,255,.85),rgba(255,255,255,.5) 70%,transparent)}}
         @media(max-width:767px){
-          .nf-home [data-desktop-only]{display:none}
+          .nf-home [data-desktop-only]{display:none!important}
           .nf-home .nf4-hdr-btn{padding:7px 10px;font-size:8px;letter-spacing:.08em}
           .nf-home .nf4-hero-actions a{white-space:nowrap}
           .nf-home .nf4-hero-inner p{max-width:92%}
@@ -1177,11 +1179,11 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
             <img src="/nile-fleet-logo.png" className="h-8 w-8 shrink-0 object-contain sm:h-10 sm:w-10 transition-transform duration-500 group-hover:rotate-6" alt="Nile Fleet" />
             <div>
               <div dir="ltr" className="flex items-baseline gap-2 whitespace-nowrap text-[15px] font-black tracking-tight sm:text-[17px]">NILE <span className={gold}>FLEET</span><span className="hidden text-[7px] font-black uppercase tracking-[.18em] text-[#c2a378] whitespace-nowrap sm:inline">POWERED BY <span className="text-white">BEBITO</span></span></div>
-              <div className={`text-[7px] font-black uppercase tracking-[.34em] ${K.faint}`}>{tx.brandSub}</div>
+              <div className={`whitespace-nowrap text-[7px] font-black uppercase tracking-[.12em] sm:tracking-[.34em] ${K.faint}`}>{tx.brandSub}</div>
             </div>
           </a>
           <nav className="hidden items-center gap-6 lg:gap-8 md:flex">
-            {nav.map(([label, href]) => <a key={href} href={href} className={`text-[9px] font-black tracking-[.25em] transition hover:text-[#c2a378] ${K.muted}`}>{label}</a>)}
+            {nav.map(([label, href]) => <a key={href} href={href} className={`inline-flex items-center text-[9px] font-black tracking-[.25em] transition hover:text-[#c2a378] ${K.muted}`}>{label}</a>)}
           </nav>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
             <button onClick={toggleFullscreen} data-desktop-only aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'} className={`nf4-hdr-btn rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isFullscreen ? tx.exit : tx.full}</button>
