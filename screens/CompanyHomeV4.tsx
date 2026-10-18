@@ -394,11 +394,18 @@ const PARTNER_LOGOS = [
   { name: 'Freight & Logistics Egypt', type: 'FREIGHT TRANSPORT', url: 'https://www.fle.com.eg/', logo: 'https://www.google.com/s2/favicons?domain=fle.com.eg&sz=128' },
 ];
 const PARTNER_GROUPS = [
-  { title: 'Shipping Lines', types: ['SHIPPING LINE','SHIPPING & LOGISTICS','CONTAINER SHIPPING'] },
-  { title: 'Logistics & Freight', types: ['LOGISTICS','LOGISTICS & TRANSPORT','LOGISTICS SERVICES','LOGISTICS INTERNATIONAL','LOGISTICS & FREIGHT','INTERNATIONAL TRANSPORT','FREIGHT & LOGISTICS','FREIGHT SERVICES','FREIGHT FORWARDING','CARGO & LOGISTICS','EXPRESS & LOGISTICS'] },
-  { title: 'Shipping Agencies', types: ['SHIPPING AGENCY','SHIPPING SERVICES','SHIPPING & LOGISTICS'] },
-  { title: 'Transport & Trucking', types: ['TRANSPORT & LOGISTICS','ROAD FREIGHT','TRUCKING & FREIGHT','TRUCK TRANSPORTATION','TRANSPORT SERVICES','FREIGHT TRANSPORT'] },
+  { title: 'Shipping Lines', titleAr: 'خطوط ملاحية', types: ['SHIPPING LINE','SHIPPING & LOGISTICS','CONTAINER SHIPPING'] },
+  { title: 'Logistics & Freight', titleAr: 'لوجستيات وشحن', types: ['LOGISTICS','LOGISTICS & TRANSPORT','LOGISTICS SERVICES','LOGISTICS INTERNATIONAL','LOGISTICS & FREIGHT','INTERNATIONAL TRANSPORT','FREIGHT & LOGISTICS','FREIGHT SERVICES','FREIGHT FORWARDING','CARGO & LOGISTICS','EXPRESS & LOGISTICS'] },
+  { title: 'Shipping Agencies', titleAr: 'وكالات ملاحية', types: ['SHIPPING AGENCY','SHIPPING SERVICES','SHIPPING & LOGISTICS'] },
+  { title: 'Transport & Trucking', titleAr: 'نقل وشاحنات', types: ['TRANSPORT & LOGISTICS','ROAD FREIGHT','TRUCKING & FREIGHT','TRUCK TRANSPORTATION','TRANSPORT SERVICES','FREIGHT TRANSPORT'] },
 ];
+
+const CONTACT_EMAIL = 'nilefleet@nilefleetlogistics.com';
+// Transport desk number, used for WhatsApp quotes as well as calls.
+const WHATSAPP_NUMBER = '201000992858';
+
+type QuoteForm = { name: string; company: string; phone: string; service: string; origin: string; destination: string; containers: string; date: string; notes: string };
+const EMPTY_QUOTE: QuoteForm = { name: '', company: '', phone: '', service: '', origin: '', destination: '', containers: '', date: '', notes: '' };
 
 const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
   const { lang, setLang } = useContext(LanguageContext);
@@ -453,6 +460,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
   }, []);
   const soundOnRef = useRef(false);
   const [hud, setHud] = useState({ kmh: 25, km: 0 });
+  const [quote, setQuote] = useState<QuoteForm>(EMPTY_QUOTE);
+  const setQuoteField = (k: keyof QuoteForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setQuote(q => ({ ...q, [k]: e.target.value }));
 
   // ---- audio -------------------------------------------------------
   type Audio = { ctx: AudioContext; master: GainNode; o1: OscillatorNode; o2: OscillatorNode; lp: BiquadFilterNode; eg: GainNode; wf: BiquadFilterNode; wg: GainNode; noise: AudioBuffer };
@@ -834,11 +843,11 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     ops24: ar ? 'العمليات' : 'OPERATIONS',
     company: ar ? 'الشركة' : 'Company',
     built: ar ? <>مصمم من أجل<br /><span className={gold}>الطريق.</span></> : <>Built for<br /><span className={gold}>the road.</span></>,
-    about1: ar ? 'نيل فليت لخدمات النقل واللوجستيات هي إحدى شركات النقل واللوجستيات الرائدة في مصر، وتقدم خدمات نقل الشاحنات والحاويات وحلولاً لوجستية متكاملة منذ عام 2009.' : 'Nile Fleet for Transport and Logistics Service is one of Egypt’s leading transportation and logistics providers, offering reliable trucking, container transportation, and integrated logistics solutions since 2009.',
+    about1: ar ? 'أسطول النيل لخدمات النقل واللوجستيات هي إحدى شركات النقل واللوجستيات الرائدة في مصر، وتقدم خدمات نقل الشاحنات والحاويات وحلولاً لوجستية متكاملة منذ عام 2009.' : 'Nile Fleet for Transport and Logistics Service is one of Egypt’s leading transportation and logistics providers, offering reliable trucking, container transportation, and integrated logistics solutions since 2009.',
     about2: ar ? 'بخبرة تتجاوز 17 عاماً في المجال، تخدم الشركة خطوط الملاحة ووكلاء الشحن والمستوردين والمصدرين والعملاء الصناعيين من خلال إدارة الأسطول وعمليات الخدمات اللوجستية بالموانئ ودعم سلاسل الإمداد.' : 'With more than 17 years of industry experience, the company supports shipping lines, freight forwarders, importers, exporters, and industrial clients through fleet management, port logistics operations, and supply chain support.',
     values: ar ? ['السلامة', 'الموثوقية', 'الرؤية التشغيلية', 'الابتكار', 'نجاح العملاء'] : ['SAFETY', 'RELIABILITY', 'VISIBILITY', 'INNOVATION', 'CUSTOMER SUCCESS'],
     oneFleet: ar ? <>أسطول واحد.<br /><span className={gold}>مهام متعددة.</span></> : <>One fleet.<br /><span className={gold}>Many missions.</span></>,
-    opsDesc: ar ? 'من النقل البري إلى عمليات الجينسيت داخل الموانئ، تربط نيل فليت بين الحركة الفعلية والتحكم التشغيلي.' : 'From road transport to port-side genset operations, Nile Fleet connects physical movement with operational control.',
+    opsDesc: ar ? 'من النقل البري إلى عمليات الجينسيت داخل الموانئ، تربط أسطول النيل بين الحركة الفعلية والتحكم التشغيلي.' : 'From road transport to port-side genset operations, Nile Fleet connects physical movement with operational control.',
     authorized: ar ? 'دخول مصرح' : 'Authorized access',
     gensetControl: ar ? <>تحكم<br />الجينسيت</> : <>GENSET<br />CONTROL</>,
     liveSystem: ar ? 'نظام مباشر' : 'LIVE SYSTEM',
@@ -854,7 +863,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     roles: ar ? ['الرئيس التنفيذي', 'رئيس قطاع النقل', 'رئيس قطاع الجينسيت'] : ['CEO', 'HEAD OF TRANSPORT DEPARTMENT', 'HEAD OF GENSET DEPARTMENT'],
     areas: ar ? ['الشركة', 'النقل', 'الجينسيت'] : ['COMPANY', 'TRANSPORT', 'GENSET'],
     safe: ar ? 'آمن. موثوق. واضح. متصل.' : 'Safe. Reliable. Visible. Connected.',
-    whyTitle: ar ? <>لماذا <span className={gold}>نيل فليت؟</span></> : <>Why <span className={gold}>Nile Fleet?</span></>,
+    whyTitle: ar ? <>لماذا <span className={gold}>أسطول النيل؟</span></> : <>Why <span className={gold}>Nile Fleet?</span></>,
     whyDesc: ar ? 'خبرة تشغيلية، استجابة سريعة، إدارة أسطول ورؤية واضحة للحركة — مصممة لخدمة الأعمال التي لا تتوقف.' : 'Operational experience, fast response, fleet control and clear visibility — built for businesses that cannot afford to stop.',
     standards: ar ? [
       { title: 'الجودة أولاً', desc: 'نراجع تفاصيل التشغيل قبل الحركة، ونركز على تنفيذ الخدمة بمستوى ثابت وواضح.' },
@@ -899,10 +908,35 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     globalDesc: ar ? 'نخدم عمليات تتصل بخطوط الملاحة ووكلاء الشحن والمستوردين والمصدرين والعملاء الصناعيين.' : 'We support operations connected to shipping lines, freight forwarders, importers, exporters and industrial clients.',
   };
 
-  const nav = [[tx.about, '#about'], [tx.operations, '#operations'], [ar ? 'لماذا نحن' : 'WHY US', '#why-us'], [tx.leadership, '#leadership']];
+  const nav = [[tx.about, '#about'], [ar ? 'الخدمات' : 'SERVICES', '#services'], [ar ? 'النقل الدولي' : 'INTERNATIONAL', '#international'], [ar ? 'لماذا نحن' : 'WHY US', '#why-us'], [tx.leadership, '#leadership'], [ar ? 'طلب عرض سعر' : 'GET A QUOTE', '#quote']];
+
+  const quoteLines = () => [
+    ar ? 'مرحباً أسطول النيل، أرغب في طلب عرض سعر.' : 'Hello Nile Fleet, I would like to request a quotation.',
+    '',
+    `${ar ? 'الاسم' : 'Name'}: ${quote.name}`,
+    `${ar ? 'الشركة' : 'Company'}: ${quote.company}`,
+    `${ar ? 'الهاتف' : 'Phone'}: ${quote.phone}`,
+    `${ar ? 'الخدمة' : 'Service'}: ${quote.service}`,
+    `${ar ? 'من' : 'Origin'}: ${quote.origin}`,
+    `${ar ? 'إلى' : 'Destination'}: ${quote.destination}`,
+    `${ar ? 'الحاويات' : 'Containers'}: ${quote.containers}`,
+    `${ar ? 'التاريخ المطلوب' : 'Preferred date'}: ${quote.date}`,
+    `${ar ? 'تفاصيل إضافية' : 'Details'}: ${quote.notes}`,
+  ].join('\n');
+  const sendQuoteWhatsApp = (e: React.FormEvent) => {
+    e.preventDefault();
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(quoteLines())}`, '_blank', 'noopener');
+  };
+  const sendQuoteEmail = () => {
+    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('NILE FLEET - Request for Quote')}&body=${encodeURIComponent(quoteLines())}`;
+  };
+  const services = ar
+    ? ['نقل حاويات محلي', 'نقل حاويات مبردة', 'نقل بري دولي (الخليج والمنطقة)', 'خدمات الجينسيت للحاويات المبردة', 'أخرى']
+    : ['Local container transport', 'Reefer container transport', 'International land freight (GCC & region)', 'Reefer genset service', 'Other'];
+  const field = `w-full rounded-xl border px-4 py-3 text-xs font-semibold outline-none transition focus:border-[#c2a378] ${isDark ? 'border-white/15 bg-black/40 text-white placeholder:text-slate-500' : 'border-black/15 bg-white text-[#26231f] placeholder:text-slate-400'}`;
 
   return (
-    <div ref={wrapRef} className={`nf-home nf4 ${isDark ? 'nf4-dark' : 'nf4-light'} min-h-screen overflow-x-hidden selection:bg-[#c2a378] selection:text-black ${K.root}`}>
+    <div ref={wrapRef} data-no-translate dir={ar ? "rtl" : "ltr"} className={`nf-home nf4 ${isDark ? 'nf4-dark' : 'nf4-light'} min-h-screen overflow-x-hidden selection:bg-[#c2a378] selection:text-black ${K.root}`}>
       <style>{`
         @keyframes nf4Reveal { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
         @keyframes nf4Pulse { 0%,100%{box-shadow:0 0 0 rgba(194,163,120,0)} 50%{box-shadow:0 0 42px rgba(194,163,120,.28)} }
@@ -1052,12 +1086,20 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
             .nf-home .nf4-about-layout h2,.nf-home #why-us h2,.nf-home #network h2,.nf-home #services h2,.nf-home #proof h2,.nf-home #partners h2,.nf-home #leadership h2{text-shadow:0 14px 45px rgba(0,0,0,.22)}
             .nf-home .nf4-network-grid>div{min-height:250px;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(0,0,0,.12))}
             .nf-home .nf4-network-grid>div:first-child{border-color:rgba(194,163,120,.48)}
-            .nf-home .nf4-services-grid>div{min-height:210px}
-            .nf-home .nf4-services-grid>div:first-child{grid-column:span 2}
             .nf-home .nf4-leadership-grid>div{min-height:330px}
-            @media(max-width:1023px){.nf-home .nf4-about-layout>div:first-child{position:static}.nf-home .nf4-services-grid>div:first-child{grid-column:span 1}}
-            @media(max-width:767px){.nf-home .nf4-hero-title{font-size:clamp(3.2rem,18vw,5.2rem)}.nf-home .nf4-network-grid>div,.nf-home .nf4-services-grid>div,.nf-home .nf4-leadership-grid>div{min-height:220px}}
+            @media(max-width:1023px){.nf-home .nf4-about-layout>div:first-child{position:static}}
+            @media(max-width:767px){.nf-home .nf4-hero-title{font-size:clamp(3.2rem,18vw,5.2rem)}.nf-home .nf4-network-grid>div,.nf-home .nf4-leadership-grid>div{min-height:220px}}
+        .nf4-hdr-btn{white-space:nowrap}
+        [dir=rtl] .nf4-hero-scrim{transform:scaleX(-1)}
+        .nf4-mobile-nav{scrollbar-width:none}
+        .nf4-mobile-nav::-webkit-scrollbar{display:none}
+        @media(max-width:640px){.nf-home .nf4-speedo{display:none}}
+        @media(max-width:767px){.nf-home.nf4-dark .nf4-hero-scrim{background:linear-gradient(180deg,rgba(2,3,5,.7),rgba(2,3,5,.35) 70%,transparent)}.nf-home.nf4-light .nf4-hero-scrim{background:linear-gradient(180deg,rgba(255,255,255,.85),rgba(255,255,255,.5) 70%,transparent)}}
         @media(max-width:767px){
+          .nf-home [data-desktop-only]{display:none}
+          .nf-home .nf4-hdr-btn{padding:7px 10px;font-size:8px;letter-spacing:.08em}
+          .nf-home .nf4-hero-actions a{white-space:nowrap}
+          .nf-home .nf4-hero-inner p{max-width:92%}
           .nf-home{font-size:14px}
           .nf-home main{width:100%;overflow-x:clip}
           .nf-home .nf4-route-line{padding-left:16px!important;padding-right:16px!important}
@@ -1077,10 +1119,10 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           .nf-home .nf4-hero-stats{padding-top:1.5rem}
           .nf-home .nf4-stat{min-height:100px;padding:12px!important;border-radius:18px}
           .nf-home .nf4-stat>div:first-child{font-size:2rem}
-          .nf-home #about>div,.nf-home #operations>div,.nf-home #why-us>div,.nf-home #network>div,.nf-home #services>div,.nf-home #proof>div,.nf-home #partners>div,.nf-home #leadership>div{padding:3.25rem 16px!important}
-          .nf-home #about h2,.nf-home #why-us h2,.nf-home #network h2,.nf-home #services h2,.nf-home #proof h2,.nf-home #partners h2,.nf-home #leadership h2{font-size:clamp(2.25rem,11vw,3.5rem);line-height:.92}
+          .nf-home #about>div,.nf-home #operations>div,.nf-home #why-us>div,.nf-home #network>div,.nf-home #services>div,.nf-home #proof>div,.nf-home #partners>div,.nf-home #leadership>div,.nf-home #international>div,.nf-home #quote>div{padding:3.25rem 16px!important}
+          .nf-home #about h2,.nf-home #why-us h2,.nf-home #network h2,.nf-home #services h2,.nf-home #proof h2,.nf-home #partners h2,.nf-home #leadership h2,.nf-home #international h2,.nf-home #quote h2{font-size:clamp(2.25rem,11vw,3.5rem);line-height:.92}
           .nf-home #about .grid,.nf-home #operations .grid,.nf-home #why-us .grid,.nf-home #network .grid,.nf-home #services .grid,.nf-home #proof .grid,.nf-home #leadership .grid{gap:12px}
-          .nf-home .nf4-network-grid>div,.nf-home .nf4-services-grid>div,.nf-home .nf4-leadership-grid>div{min-height:180px}
+          .nf-home .nf4-network-grid>div,.nf-home .nf4-leadership-grid>div{min-height:180px}
           .nf-home .nf4-experience-card{padding:18px!important;border-radius:22px}
           .nf-home .nf4-experience-cell{min-height:42px;padding:9px 10px;font-size:8px}
           .nf-home .nf4-logo-viewport{width:100%;max-width:100%;overflow:hidden!important}
@@ -1116,38 +1158,41 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       <div className={`nf4-contact-bar border-b ${isDark ? "nf4-route-dark text-white" : "nf4-route-light text-[#26231f]"}`}>
         <div className="nf4-route-line mx-auto max-w-[1500px] px-4 lg:px-10">
           <div className="nf4-route-welcome">
-            <span>WELCOME TO</span><strong>NILE FLEET</strong>
+            <span>{ar ? 'مرحباً بكم في' : 'WELCOME TO'}</span><strong>{ar ? 'أسطول النيل' : 'NILE FLEET'}</strong>
           </div>
 
           <div className="nf4-route-track" aria-hidden="true"></div>
           <div className="nf4-route-actions">
-            <a href="tel:+201000992858" className="nf4-route-action nf4-route-phone" aria-label="Call Nile Fleet"><span>☎</span><div><small>24/7 TRANSPORT DESK</small><strong>+20 10 0099 2858</strong></div></a>
+            <a href="tel:+201000992858" className="nf4-route-action nf4-route-phone" aria-label={ar ? 'اتصل بأسطول النيل' : 'Call Nile Fleet'}><span>☎</span><div><small>{ar ? 'مكتب النقل 24/7' : '24/7 TRANSPORT DESK'}</small><strong dir="ltr">+20 10 0099 2858</strong></div></a>
             <a href="https://www.linkedin.com/company/nile-fleet-for-transport-and-logistics-service" target="_blank" rel="noreferrer" className="nf4-route-social" aria-label="Nile Fleet LinkedIn">in</a>
             <a href="https://www.facebook.com/profile.php?id=61591362501143" target="_blank" rel="noreferrer" className="nf4-route-social nf4-route-fb" aria-label="Nile Fleet Facebook">f</a>
-            <a href="mailto:nilefleet@nilefleetlogistics.com?subject=NILE%20FLEET%20-%20Request%20for%20Quote&body=Hello%20NILE%20FLEET%2C%0A%0AI%20would%20like%20to%20request%20a%20quotation.%0A%0ACompany%3A%20%0AService%20required%3A%20%0AOrigin%3A%20%0ADestination%3A%20%0ACargo%2FContainer%20details%3A%20%0APreferred%20date%3A%20%0AAdditional%20details%3A%20%0A%0AThank%20you." className="nf4-route-quote">REQUEST QUOTE <span>↗</span></a>
+            <a href="#quote" className="nf4-route-quote">{ar ? 'طلب عرض سعر' : 'REQUEST QUOTE'} <span>↗</span></a>
           </div>
         </div>
       </div>
 
       <header className={`sticky top-0 z-40 border-b backdrop-blur-2xl ${K.head}`}>
-        <div className="mx-auto flex max-w-[1500px] items-center justify-between px-5 py-4 lg:px-10">
-          <a href="#top" className="group flex items-center gap-3">
-            <img src="/nile-fleet-logo.png" className="h-10 w-10 object-contain transition-transform duration-500 group-hover:rotate-6" alt="Nile Fleet" />
+        <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4 lg:px-10">
+          <a href="#top" className="group flex min-w-0 items-center gap-2 sm:gap-3">
+            <img src="/nile-fleet-logo.png" className="h-8 w-8 shrink-0 object-contain sm:h-10 sm:w-10 transition-transform duration-500 group-hover:rotate-6" alt="Nile Fleet" />
             <div>
-              <div className="flex items-baseline gap-2 text-[17px] font-black tracking-tight">NILE <span className={gold}>FLEET</span><span className="text-[7px] font-black uppercase tracking-[.18em] text-[#c2a378] whitespace-nowrap">POWERED BY <span className="text-white">BEBITO</span></span></div>
+              <div dir="ltr" className="flex items-baseline gap-2 whitespace-nowrap text-[15px] font-black tracking-tight sm:text-[17px]">NILE <span className={gold}>FLEET</span><span className="hidden text-[7px] font-black uppercase tracking-[.18em] text-[#c2a378] whitespace-nowrap sm:inline">POWERED BY <span className="text-white">BEBITO</span></span></div>
               <div className={`text-[7px] font-black uppercase tracking-[.34em] ${K.faint}`}>{tx.brandSub}</div>
             </div>
           </a>
-          <nav className="hidden items-center gap-8 md:flex">
+          <nav className="hidden items-center gap-6 lg:gap-8 md:flex">
             {nav.map(([label, href]) => <a key={href} href={href} className={`text-[9px] font-black tracking-[.25em] transition hover:text-[#c2a378] ${K.muted}`}>{label}</a>)}
           </nav>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <button onClick={toggleFullscreen} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'} className={`rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isFullscreen ? tx.exit : tx.full}</button>
-            <button onClick={toggleSound} aria-pressed={soundOn} className={`rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{soundOn ? tx.soundOn : tx.soundOff}</button>
-            <button onClick={() => setTheme(isDark ? 'white' : 'phantom')} className={`rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isDark ? tx.white : tx.dark}</button>
-            <button onClick={() => setLang(ar ? 'en' : 'ar')} className={`rounded-full border px-4 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{ar ? 'EN' : 'العربية'}</button>
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
+            <button onClick={toggleFullscreen} data-desktop-only aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'} className={`nf4-hdr-btn rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isFullscreen ? tx.exit : tx.full}</button>
+            <button onClick={toggleSound} data-desktop-only aria-pressed={soundOn} className={`nf4-hdr-btn rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{soundOn ? tx.soundOn : tx.soundOff}</button>
+            <button onClick={() => setTheme(isDark ? 'white' : 'phantom')} className={`nf4-hdr-btn rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isDark ? tx.white : tx.dark}</button>
+            <button onClick={() => setLang(ar ? 'en' : 'ar')} className={`nf4-hdr-btn rounded-full border px-4 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{ar ? 'EN' : 'العربية'}</button>
           </div>
         </div>
+              <nav aria-label={ar ? 'أقسام الصفحة' : 'Page sections'} className={`nf4-mobile-nav flex gap-2 overflow-x-auto border-t px-4 py-2 md:hidden ${K.line}`}>
+          {nav.map(([label, href]) => <a key={href} href={href} className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[8px] font-black tracking-[.14em] ${K.chip}`}>{label}</a>)}
+        </nav>
       </header>
 
       
@@ -1166,6 +1211,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 .nf-home #network,
 .nf-home #services,
 .nf-home #proof,
+.nf-home #international,
+.nf-home #quote,
 .nf-home #leadership {
   background-image: linear-gradient(180deg, rgba(3,8,13,.08), rgba(3,8,13,.22));
 }
@@ -1225,12 +1272,6 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
   transform: translateY(-5px);
   box-shadow: 0 22px 55px rgba(0,0,0,.16);
 }
-.nf-home #services .grid > div {
-  min-height: 190px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-}
 .nf-home #services .grid > div:hover {
   box-shadow: 0 20px 50px rgba(0,0,0,.14);
 }
@@ -1265,7 +1306,6 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     padding-bottom: 4.75rem;
   }
   .nf-home #why-us .grid > div,
-  .nf-home #services .grid > div,
   .nf-home #leadership .grid > div {
     min-height: 240px;
   }
@@ -1274,6 +1314,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
 <main id="top" className="relative z-10">
         <section className="relative flex min-h-[100vh] items-start overflow-hidden">
+          <div aria-hidden="true" className={`pointer-events-none absolute inset-0 ${isDark ? 'bg-[linear-gradient(90deg,rgba(2,3,5,.72)_0%,rgba(2,3,5,.35)_55%,transparent_100%)]' : 'bg-[linear-gradient(90deg,rgba(255,255,255,.82)_0%,rgba(255,255,255,.45)_55%,transparent_100%)]'} nf4-hero-scrim`} />
           <div className="nf4-hero-inner mx-auto grid w-full max-w-[1500px] items-start gap-12 px-5 pt-24 lg:grid-cols-[1.25fr_.75fr] lg:px-10 lg:pt-28">
             <div className="nf4-reveal">
               <div className="mb-5 flex items-center gap-4">
@@ -1284,11 +1325,12 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                 {tx.heroTitle}
               </h1>
               <p className={`mt-6 max-w-2xl text-sm font-medium leading-7 sm:text-base ${K.soft}`}>
-                {ar ? 'نيل فليت لخدمات النقل واللوجستيات — نقل الشاحنات والحاويات وحلول لوجستية متكاملة مع رؤية تشغيلية كاملة.' : 'Nile Fleet for Transport and Logistics Service — trucking, container transportation and integrated logistics built around safe movement and operational visibility.'}
+                {ar ? 'أسطول النيل لخدمات النقل واللوجستيات — نقل الشاحنات والحاويات وحلول لوجستية متكاملة مع رؤية تشغيلية كاملة.' : 'Nile Fleet for Transport and Logistics Service — trucking, container transportation and integrated logistics built around safe movement and operational visibility.'}
               </p>
               <div className="nf4-hero-actions mt-7 flex flex-wrap items-center gap-4">
-                <a href="#operations" className={`nf4-pulse rounded-full border border-[#c2a378]/60 bg-[#c2a378]/10 px-7 py-3 text-[9px] font-black uppercase tracking-[.24em] ${gold}`}>{tx.explore}</a>
-                              </div>
+                <a href="#quote" className="nf4-pulse rounded-full bg-[#c2a378] px-7 py-3 text-[9px] font-black uppercase tracking-[.24em] text-black">{ar ? 'اطلب عرض سعر' : 'Get a quote'}</a>
+                <a href="#operations" className={`rounded-full border border-[#c2a378]/60 px-7 py-3 text-[9px] font-black uppercase tracking-[.24em] backdrop-blur-md ${isDark ? 'bg-black/50 text-[#e3c99f]' : 'bg-white/80 text-[#6f5428]'}`}>{tx.explore}</a>
+              </div>
             </div>
 
             <div className="nf4-hero-stats hidden lg:block">
@@ -1317,7 +1359,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                 <p className={`mt-7 text-sm leading-7 ${K.muted}`}>{tx.about2}</p>
                 <div className="mt-12 h-px w-full bg-gradient-to-r from-[#c2a378] via-[#c2a378]/20 to-transparent" />
                 <div className="mt-7 flex flex-wrap gap-3">
-                  {tx.values.map(x => <span key={x} className={`rounded-full border px-4 py-2 text-[7px] font-black tracking-[.2em] ${K.chip}`}>{x}</span>)}
+                  {tx.values.map(x => <span key={x} className={`rounded-full border px-3.5 py-1.5 text-[10px] font-black tracking-[.16em] sm:text-[11px] ${K.chip}`}>{x}</span>)}
                 </div>
               </div>
             </div>
@@ -1399,9 +1441,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
               </div>
               <div className="nf4-network-grid mt-14 grid gap-4 md:grid-cols-3">
                 {[
-                  ['PORTS', ar ? 'الإسكندرية · دمياط · بورسعيد · الدخيلة · السخنة' : 'Alexandria · Damietta · Port Said · Dekheila · Sokhna'],
-                  ['CARGO', ar ? 'حاويات · حاويات مبردة · استيراد · تصدير' : 'Containers · Reefers · Import · Export'],
-                  ['CONTROL', ar ? 'تشغيل · أسطول · موانئ · رؤية تشغيلية' : 'Operations · Fleet · Ports · Visibility'],
+                  [ar ? 'الموانئ' : 'PORTS', ar ? 'الإسكندرية · دمياط · بورسعيد · الدخيلة · السخنة' : 'Alexandria · Damietta · Port Said · Dekheila · Sokhna'],
+                  [ar ? 'البضائع' : 'CARGO', ar ? 'حاويات · حاويات مبردة · استيراد · تصدير' : 'Containers · Reefers · Import · Export'],
+                  [ar ? 'التحكم' : 'CONTROL', ar ? 'تشغيل · أسطول · موانئ · رؤية تشغيلية' : 'Operations · Fleet · Ports · Visibility'],
                 ].map(([title, body], i) => (
                   <div key={title} className={`relative overflow-hidden rounded-[1.7rem] border p-8 ${K.card}`}>
                     <div className={`text-[8px] font-black tracking-[.25em] ${gold}`}>0{i + 1}</div>
@@ -1414,19 +1456,90 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           </Reveal>
         </section>
 
+
+        <section id="international" className={`relative overflow-hidden border-y backdrop-blur-[2px] ${K.band}`}>
+          <Reveal>
+            <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
+              <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>05 / {ar ? 'النقل الدولي' : 'INTERNATIONAL'}</div>
+              <div className="mt-5 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+                <h2 className="text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{ar ? <>مصر <span className={gold}>والخليج والمنطقة.</span></> : <>Egypt, <span className={gold}>the GCC & beyond.</span></>}</h2>
+                <p className={`max-w-md text-xs leading-6 ${K.muted}`}>{ar ? 'خدمات النقل البري الدولي تشمل الاستيراد والتصدير في الاتجاهين: من مصر إلى دول الخليج والمنطقة، ومنها إلى مصر، مع متابعة الشحنة من التحميل حتى التسليم.' : 'Our international transportation covers both inbound and outbound movements between Egypt, the GCC and regional countries, with follow-up from loading to delivery.'}</p>
+              </div>
+              <div className="mt-14 grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
+                {(ar ? [
+                  ['مصر ⇄ الإمارات', 'ذهاباً وإياباً'],
+                  ['مصر ⇄ السعودية', 'ذهاباً وإياباً'],
+                  ['مصر ⇄ الكويت', 'ذهاباً وإياباً'],
+                  ['مصر ⇄ قطر', 'ذهاباً وإياباً'],
+                  ['مصر ⇄ البحرين', 'ذهاباً وإياباً'],
+                  ['مصر ⇄ عُمان', 'ذهاباً وإياباً'],
+                  ['مصر ⇄ سوريا', 'ذهاباً وإياباً'],
+                  ['مصر ⇄ باقي دول الخليج والمنطقة', 'ذهاباً وإياباً'],
+                  ['الإمارات ⇄ مصر والوجهات الإقليمية', 'من الإمارات وإليها'],
+                  ['الخليج والدول الأخرى ← مصر', 'استيراد إلى مصر'],
+                  ['مصر ← الخليج والدول الأخرى', 'تصدير من مصر'],
+                  ['بين دول المنطقة ⇄ مصر / الإمارات / الخليج', 'ذهاباً وإياباً'],
+                ] : [
+                  ['EGYPT ⇄ UAE', 'Inbound & outbound'],
+                  ['EGYPT ⇄ SAUDI ARABIA', 'Inbound & outbound'],
+                  ['EGYPT ⇄ KUWAIT', 'Inbound & outbound'],
+                  ['EGYPT ⇄ QATAR', 'Inbound & outbound'],
+                  ['EGYPT ⇄ BAHRAIN', 'Inbound & outbound'],
+                  ['EGYPT ⇄ OMAN', 'Inbound & outbound'],
+                  ['EGYPT ⇄ SYRIA', 'Inbound & outbound'],
+                  ['EGYPT ⇄ OTHER GCC & REGIONAL COUNTRIES', 'Inbound & outbound'],
+                  ['UAE ⇄ EGYPT & REGIONAL DESTINATIONS', 'To and from the UAE'],
+                  ['GCC & OTHER COUNTRIES → EGYPT', 'Inbound to Egypt'],
+                  ['EGYPT → GCC & OTHER COUNTRIES', 'Outbound from Egypt'],
+                  ['REGIONAL COUNTRIES ⇄ EGYPT / UAE / GCC', 'Inbound & outbound'],
+                ]).map(([route, dir]) => (
+                  <div key={route} className={`flex min-h-[92px] flex-col justify-between rounded-2xl border p-4 sm:p-5 transition duration-300 hover:border-[#c2a378]/60 ${K.card}`} dir={ar ? 'rtl' : 'ltr'}>
+                    <div className="text-[12px] font-black uppercase leading-5 tracking-[.04em]" dir="auto">{route}</div>
+                    <div className={`mt-3 text-[8px] font-black uppercase tracking-[.2em] ${gold}`}>{dir}</div>
+                  </div>
+                ))}
+              </div>
+              <div className={`mt-14 text-[9px] font-black uppercase tracking-[.3em] ${gold}`}>{ar ? 'كيف تتم الرحلة' : 'HOW A TRIP WORKS'}</div>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {(ar ? [
+                  { t: 'الاستلام من نقطة البداية', d: 'استلام الحاوية أو البضاعة من المصنع أو الميناء، سواء في مصر (الإسكندرية، دمياط، بورسعيد، السخنة) أو في دولة الشحن.' },
+                  { t: 'المستندات والتنسيق', d: 'تنسيق المستندات وخطوات العبور مع المخلّص الجمركي الخاص بك قبل التحرك.' },
+                  { t: 'الطريق البري', d: 'شاحنة مخصصة للرحلة مع متابعة الحالة وتحديثات منتظمة طوال الطريق.' },
+                  { t: 'التسليم في الوجهة', d: 'التسليم إلى المدينة أو الدولة المتفق عليها، حتى باب العميل.' },
+                ] : [
+                  { t: 'PICKUP AT ORIGIN', d: 'Pickup of your container or cargo from the factory or port, in Egypt (Alexandria, Damietta, Port Said, Sokhna) or in the origin country.' },
+                  { t: 'DOCUMENTS & COORDINATION', d: 'Documents and border steps coordinated with your clearance agent before the truck moves.' },
+                  { t: 'ON THE ROAD', d: 'A dedicated truck for the trip, with status follow-up and regular updates along the way.' },
+                  { t: 'DELIVERY AT DESTINATION', d: 'Delivery to the agreed city or country, right to your door.' },
+                ]).map((x, i) => (
+                  <div key={x.t} className={`group relative min-h-[230px] overflow-hidden rounded-[1.5rem] border p-7 transition duration-500 hover:-translate-y-1 hover:border-[#c2a378]/60 ${K.card}`}>
+                    <div className={`text-[8px] font-black tracking-[.25em] ${gold}`}>{ar ? 'المرحلة' : 'STEP'} 0{i + 1}</div>
+                    <div className="mt-12 text-sm font-black uppercase leading-5">{x.t}</div>
+                    <p className={`mt-5 text-[11px] leading-6 ${K.muted}`}>{x.d}</p>
+                    <div className="absolute bottom-0 left-0 h-1 w-0 bg-[#c2a378] transition-all duration-700 group-hover:w-full" />
+                  </div>
+                ))}
+              </div>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <a href="#quote" className="rounded-full bg-[#c2a378] px-7 py-3 text-[9px] font-black uppercase tracking-[.24em] text-black transition hover:-translate-y-0.5">{ar ? 'اطلب سعر شحنة دولية' : 'Quote an international shipment'}</a>
+                <a href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(ar ? 'مرحباً أسطول النيل، أريد الاستفسار عن النقل البري الدولي.' : 'Hello Nile Fleet, I would like to ask about international land freight.')}`} target="_blank" rel="noreferrer" className={`rounded-full border px-7 py-3 text-[9px] font-black uppercase tracking-[.24em] transition hover:border-[#25D366] ${K.line} ${gold}`}>WhatsApp</a>
+              </div>
+            </div>
+          </Reveal>
+        </section>
+
         <section id="services" className={`relative overflow-hidden border-y backdrop-blur-[2px] ${K.band}`}>
           <Reveal>
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
-              <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>05 / {ar ? 'الخدمات' : 'SERVICES'}</div>
+              <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>06 / {ar ? 'الخدمات' : 'SERVICES'}</div>
               <h2 className="mt-5 max-w-5xl text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{tx.serviceTitle}</h2>
               <div className="nf4-services-grid mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {tx.serviceItems.map((x, i) => (
-                  <div key={x.title} className={`group relative min-h-[250px] overflow-hidden rounded-[1.5rem] border p-7 transition duration-500 hover:-translate-y-1 hover:border-[#c2a378]/60 ${K.card}`}>
-                    <div className={`text-[8px] font-black tracking-[.25em] ${gold}`}>0{i + 1}</div>
-                    <div className="absolute right-7 top-7 text-5xl font-black opacity-10">{String(i + 1).padStart(2, '0')}</div>
+                  <div key={x.title} className={`group relative overflow-hidden rounded-[1.5rem] border p-6 transition sm:p-7 duration-500 hover:-translate-y-1 hover:border-[#c2a378]/60 ${K.card}`}>
+                    <div className={`absolute top-5 text-4xl font-black opacity-10 ${ar ? 'left-6' : 'right-6'}`}>{String(i + 1).padStart(2, '0')}</div>
                     <div className="absolute bottom-0 left-0 h-1 w-0 bg-[#c2a378] transition-all duration-700 group-hover:w-full" />
-                    <div className="mt-12 max-w-[250px] text-sm font-black uppercase leading-5">{x.title}</div>
-                    <p className={`mt-5 max-w-[280px] text-[11px] leading-6 ${K.muted}`}>{x.desc}</p>
+                    <div className={`mt-4 text-base font-black uppercase leading-6 sm:text-lg ${ar ? 'pl-14' : 'pr-14'}`}>{x.title}</div>
+                    <p className={`mt-3 text-sm leading-6 ${K.muted}`}>{x.desc}</p>
                   </div>
                 ))}
               </div>
@@ -1437,7 +1550,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         <section id="proof" className={`relative overflow-hidden border-y backdrop-blur-[2px] ${K.band}`}>
           <Reveal>
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
-              <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>06 / {ar ? 'الثقة والجودة' : 'QUALITY & TRUST'}</div>
+              <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>07 / {ar ? 'الثقة والجودة' : 'QUALITY & TRUST'}</div>
               <div className="mt-5 grid gap-10 lg:grid-cols-[1fr_.8fr]">
                 <div>
                   <h2 className="text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{tx.proofTitle}</h2>
@@ -1474,7 +1587,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         <section id="partners" className={`relative overflow-hidden border-y backdrop-blur-[2px] ${K.band}`}>
           <Reveal>
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
-              <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>07 / {ar ? 'شبكة الشحن والنقل' : 'SHIPPING & TRUCKING NETWORK'}</div>
+              <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>08 / {ar ? 'شبكة الشحن والنقل' : 'SHIPPING & TRUCKING NETWORK'}</div>
               <div className="mt-5 flex flex-col justify-between gap-6 md:flex-row md:items-end">
                 <h2 className="text-5xl font-black italic leading-[.9] tracking-[-.05em] sm:text-7xl">{ar ? <>شركاء <span className={gold}>النجاح.</span></> : <>Partners in <span className={gold}>success.</span></>}</h2>
                 <p className={`max-w-sm text-xs leading-6 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{tx.partnersDesc}</p>
@@ -1503,7 +1616,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                   const members = PARTNER_LOGOS.filter(p => group.types.includes(p.type));
                   return members.length ? (
                     <div key={group.title}>
-                      <div className={`mb-3 text-[8px] font-black uppercase tracking-[.24em] ${gold}`}>{group.title}</div>
+                      <div className={`mb-3 text-[8px] font-black uppercase tracking-[.24em] ${gold}`}>{ar ? group.titleAr : group.title}</div>
                       <div className="flex flex-wrap gap-2">
                         {members.map((p) => (
                           <a key={p.name} href={p.url} target="_blank" rel="noreferrer" className={`group flex items-center gap-2 rounded-xl border px-3 py-2 transition duration-300 hover:border-[#c2a378]/60 ${isDark ? 'border-white/10 bg-white/[.025] hover:bg-white/[.06]' : 'border-black/10 bg-white hover:bg-slate-50 shadow-sm'}`}>
@@ -1530,7 +1643,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         <section id="leadership" className={`border-y backdrop-blur-[2px] ${K.band}`}>
           <Reveal>
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
-              <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>03 / {tx.leadLabel}</div>
+              <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>09 / {tx.leadLabel}</div>
               <div className="mt-4 flex flex-col justify-between gap-6 md:flex-row md:items-end">
                 <h2 className="text-5xl font-black uppercase italic tracking-[-.05em] sm:text-7xl">{tx.people}</h2>
                 <p className={`max-w-sm text-xs leading-6 ${K.muted}`}>{tx.leadDesc}</p>
@@ -1560,12 +1673,48 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           </Reveal>
         </section>
 
+
+        <section id="quote" className={`relative overflow-hidden border-y backdrop-blur-[2px] ${K.band}`}>
+          <Reveal>
+            <div className="mx-auto grid max-w-[1500px] gap-12 px-5 py-28 lg:grid-cols-[.8fr_1.2fr] lg:px-10">
+              <div>
+                <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>10 / {ar ? 'عرض سعر' : 'QUOTE'}</div>
+                <h2 className="mt-5 text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{ar ? <>اطلب <span className={gold}>عرض سعر.</span></> : <>Get a <span className={gold}>quote.</span></>}</h2>
+                <p className={`mt-7 max-w-md text-sm leading-7 ${K.muted}`}>{ar ? 'املأ التفاصيل وأرسلها على واتساب أو بالبريد الإلكتروني، وسيتواصل معك فريق التشغيل.' : 'Fill in the details and send them on WhatsApp or by email, and our operations team will get back to you.'}</p>
+                <div className={`mt-10 space-y-3 text-xs font-bold ${K.soft}`}>
+                  <a href="tel:+201000992858" className="block hover:text-[#c2a378]">☎ {ar ? 'النقل' : 'Transport'}: <span dir="ltr">+20 10 0099 2858</span></a>
+                  <a href="tel:+201212229077" className="block hover:text-[#c2a378]">☎ {ar ? 'الجينسيت' : 'Genset'}: <span dir="ltr">+20 12 1222 9077</span></a>
+                  <a href={`mailto:${CONTACT_EMAIL}`} className="block hover:text-[#c2a378]">✉ {CONTACT_EMAIL}</a>
+                </div>
+              </div>
+              <form onSubmit={sendQuoteWhatsApp} className={`grid gap-3 rounded-[2rem] border p-6 sm:grid-cols-2 sm:p-8 ${K.card}`} dir={ar ? 'rtl' : 'ltr'}>
+                <input required className={field} placeholder={ar ? 'الاسم *' : 'Your name *'} value={quote.name} onChange={setQuoteField('name')} aria-label={ar ? 'الاسم' : 'Name'} />
+                <input className={field} placeholder={ar ? 'الشركة' : 'Company'} value={quote.company} onChange={setQuoteField('company')} aria-label={ar ? 'الشركة' : 'Company'} />
+                <input required type="tel" className={field} placeholder={ar ? 'رقم الهاتف *' : 'Phone *'} value={quote.phone} onChange={setQuoteField('phone')} aria-label={ar ? 'رقم الهاتف' : 'Phone'} />
+                <select required className={field} value={quote.service} onChange={setQuoteField('service')} aria-label={ar ? 'الخدمة' : 'Service'}>
+                  <option value="">{ar ? 'الخدمة المطلوبة *' : 'Service required *'}</option>
+                  {services.map(x => <option key={x} value={x}>{x}</option>)}
+                </select>
+                <input className={field} placeholder={ar ? 'من (ميناء / مدينة)' : 'From (port / city)'} value={quote.origin} onChange={setQuoteField('origin')} aria-label={ar ? 'من' : 'Origin'} />
+                <input className={field} placeholder={ar ? 'إلى (مدينة / دولة)' : 'To (city / country)'} value={quote.destination} onChange={setQuoteField('destination')} aria-label={ar ? 'إلى' : 'Destination'} />
+                <input className={field} placeholder={ar ? 'عدد ونوع الحاويات (مثال: 2 × 40 مبردة)' : 'Containers (e.g. 2 × 40ft reefer)'} value={quote.containers} onChange={setQuoteField('containers')} aria-label={ar ? 'الحاويات' : 'Containers'} />
+                <input type="date" className={field} value={quote.date} onChange={setQuoteField('date')} aria-label={ar ? 'التاريخ المطلوب' : 'Preferred date'} />
+                <textarea rows={3} className={`${field} sm:col-span-2`} placeholder={ar ? 'تفاصيل إضافية' : 'Additional details'} value={quote.notes} onChange={setQuoteField('notes')} aria-label={ar ? 'تفاصيل إضافية' : 'Additional details'} />
+                <div className="flex flex-wrap gap-3 sm:col-span-2">
+                  <button type="submit" className="rounded-full bg-[#25D366] px-7 py-3 text-[9px] font-black uppercase tracking-[.2em] text-black transition hover:-translate-y-0.5">{ar ? 'إرسال على واتساب' : 'Send on WhatsApp'}</button>
+                  <button type="button" onClick={sendQuoteEmail} className={`rounded-full border px-7 py-3 text-[9px] font-black uppercase tracking-[.2em] transition hover:border-[#c2a378] ${K.line} ${gold}`}>{ar ? 'إرسال بالبريد' : 'Send by email'}</button>
+                </div>
+              </form>
+            </div>
+          </Reveal>
+        </section>
+
         <section className={`relative overflow-hidden backdrop-blur-md ${K.foot}`}>
           <div className="mx-auto max-w-[1500px] px-5 pb-24 pt-20 lg:px-10">
             <div className="mt-16 flex flex-col items-center justify-center text-center">
               <div className="nf4-footer-signature-line">
-                <strong>Nile Fleet</strong>
-                <span>Safe. Reliable. Visible. Connected.</span>
+                <strong>{ar ? 'أسطول النيل' : 'Nile Fleet'}</strong>
+                <span>{tx.safe}</span>
               </div>
               <div className="mt-5 nf4-bebito-signature" aria-label="Powered by Bebito">
                 <span className="nf4-bebito-powered">POWERED BY</span>
@@ -1575,9 +1724,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                   style={{fontFamily:bebitoStyles[bebitoStyleIndex].fontFamily,color:bebitoStyles[bebitoStyleIndex].color,textShadow:`0 0 20px ${bebitoStyles[bebitoStyleIndex].shadow}`}}
                   aria-label="Change Bebito signature style">Bebito</span>
                 <div className="nf4-footer-contact">
-                  <div>23 July St. · Abo Elkheer Building · 2nd Floor</div>
-                  <div>Port Said, Egypt</div>
-                  <div>nilefleet@nilefleetlogistics.com · Transport 01000992858 · Genset 01212229077</div>
+                  <div>{ar ? 'شارع 23 يوليو · عمارة أبو الخير · الدور الثاني' : '23 July St. · Abo Elkheer Building · 2nd Floor'}</div>
+                  <div>{ar ? 'بورسعيد، مصر' : 'Port Said, Egypt'}</div>
+                  <div><span dir="ltr">nilefleet@nilefleetlogistics.com</span> · {ar ? 'النقل' : 'Transport'} <span dir="ltr">01000992858</span> · {ar ? 'الجينسيت' : 'Genset'} <span dir="ltr">01212229077</span></div>
                 </div>
               </div>
             </div>
@@ -1585,8 +1734,12 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         </section>
       </main>
 
+      <a href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(ar ? 'مرحباً أسطول النيل' : 'Hello Nile Fleet')}`} target="_blank" rel="noreferrer" aria-label={ar ? 'تواصل على واتساب' : 'Chat on WhatsApp'} className="nf4-whatsapp fixed bottom-4 left-4 z-40 grid h-14 w-14 place-items-center rounded-full bg-[#25D366] text-black shadow-[0_10px_30px_rgba(37,211,102,.35)] transition hover:-translate-y-1">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.9-4.45 9.9-9.91C21.95 6.45 17.5 2 12.04 2zm5.8 14.03c-.25.69-1.44 1.33-1.98 1.38-.51.05-.99.24-3.33-.69-2.82-1.11-4.6-4-4.74-4.18-.14-.19-1.13-1.5-1.13-2.87 0-1.36.71-2.03.97-2.31.25-.28.55-.35.73-.35l.53.01c.17 0 .4-.06.62.48.25.6.85 2.07.92 2.22.08.15.13.32.03.51-.1.19-.15.31-.29.48-.15.17-.31.38-.44.51-.15.15-.3.31-.13.6.17.29.76 1.25 1.63 2.03 1.12 1 2.06 1.31 2.35 1.45.29.15.46.12.63-.07.17-.19.73-.85.92-1.14.19-.29.38-.24.65-.15.27.1 1.7.8 1.99.95.29.15.48.22.55.34.07.12.07.69-.18 1.38z"/></svg>
+      </a>
+
       {/* speedometer */}
-      <div className={`pointer-events-none fixed bottom-4 right-4 z-30 rounded-2xl border px-4 py-3 backdrop-blur-md ${K.card}`} aria-hidden="true">
+      <div className={`nf4-speedo pointer-events-none fixed bottom-4 right-4 z-30 rounded-2xl border px-4 py-3 backdrop-blur-md ${K.card}`} aria-hidden="true">
         <div className="flex items-end gap-2"><span className="text-3xl font-black tabular-nums leading-none">{String(hud.kmh).padStart(3, '0')}</span><span className={`pb-0.5 text-[8px] font-black tracking-[.25em] ${gold}`}>KM/H</span></div>
         <div className={`mt-1 text-[7px] font-black tracking-[.25em] ${K.faint}`}>ODO {hud.km.toFixed(2)} KM</div>
       </div>
