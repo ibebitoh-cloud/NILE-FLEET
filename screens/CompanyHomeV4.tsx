@@ -931,8 +931,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('NILE FLEET - Request for Quote')}&body=${encodeURIComponent(quoteLines())}`;
   };
   const services = ar
-    ? ['نقل حاويات محلي', 'نقل حاويات مبردة', 'نقل بري دولي', 'خدمات الجينسيت للحاويات المبردة', 'أخرى']
-    : ['Local container transport', 'Reefer container transport', 'International land freight', 'Reefer genset service', 'Other'];
+    ? ['نقل حاويات محلي', 'نقل حاويات مبردة', 'نقل بري دولي (الخليج والمنطقة)', 'خدمات الجينسيت للحاويات المبردة', 'أخرى']
+    : ['Local container transport', 'Reefer container transport', 'International land freight (GCC & region)', 'Reefer genset service', 'Other'];
   const field = `w-full rounded-xl border px-4 py-3 text-xs font-semibold outline-none transition focus:border-[#c2a378] ${isDark ? 'border-white/15 bg-black/40 text-white placeholder:text-slate-500' : 'border-black/15 bg-white text-[#26231f] placeholder:text-slate-400'}`;
 
   return (
@@ -1457,17 +1457,52 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
               <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>05 / {ar ? 'النقل الدولي' : 'INTERNATIONAL'}</div>
               <div className="mt-5 flex flex-col justify-between gap-6 md:flex-row md:items-end">
-                <h2 className="text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{ar ? <>من مصر <span className={gold}>إلى أي وجهة.</span></> : <>Egypt <span className={gold}>to anywhere.</span></>}</h2>
-                <p className={`max-w-md text-xs leading-6 ${K.muted}`}>{ar ? 'نقل بري دولي للحاويات والبضائع من المصانع والموانئ المصرية حتى باب العميل في الوجهة المتفق عليها، مع متابعة الشحنة من التحميل حتى التسليم.' : 'International land freight for containers and cargo from Egyptian factories and ports to your door at any agreed destination, with follow-up from loading to delivery.'}</p>
+                <h2 className="text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{ar ? <>مصر <span className={gold}>والخليج والمنطقة.</span></> : <>Egypt, <span className={gold}>the GCC & beyond.</span></>}</h2>
+                <p className={`max-w-md text-xs leading-6 ${K.muted}`}>{ar ? 'خدمات النقل البري الدولي تشمل الاستيراد والتصدير في الاتجاهين: من مصر إلى دول الخليج والمنطقة، ومنها إلى مصر، مع متابعة الشحنة من التحميل حتى التسليم.' : 'Our international transportation covers both inbound and outbound movements between Egypt, the GCC and regional countries, with follow-up from loading to delivery.'}</p>
               </div>
-              <div className="mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="mt-14 grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
                 {(ar ? [
-                  { t: 'التحميل في مصر', d: 'استلام الحاوية أو البضاعة من المصنع أو الميناء: الإسكندرية، دمياط، بورسعيد، السخنة.' },
+                  ['مصر ⇄ الإمارات', 'ذهاباً وإياباً'],
+                  ['مصر ⇄ السعودية', 'ذهاباً وإياباً'],
+                  ['مصر ⇄ الكويت', 'ذهاباً وإياباً'],
+                  ['مصر ⇄ قطر', 'ذهاباً وإياباً'],
+                  ['مصر ⇄ البحرين', 'ذهاباً وإياباً'],
+                  ['مصر ⇄ عُمان', 'ذهاباً وإياباً'],
+                  ['مصر ⇄ سوريا', 'ذهاباً وإياباً'],
+                  ['مصر ⇄ باقي دول الخليج والمنطقة', 'ذهاباً وإياباً'],
+                  ['الإمارات ⇄ مصر والوجهات الإقليمية', 'من الإمارات وإليها'],
+                  ['الخليج والدول الأخرى ← مصر', 'استيراد إلى مصر'],
+                  ['مصر ← الخليج والدول الأخرى', 'تصدير من مصر'],
+                  ['بين دول المنطقة ⇄ مصر / الإمارات / الخليج', 'ذهاباً وإياباً'],
+                ] : [
+                  ['EGYPT ⇄ UAE', 'Inbound & outbound'],
+                  ['EGYPT ⇄ SAUDI ARABIA', 'Inbound & outbound'],
+                  ['EGYPT ⇄ KUWAIT', 'Inbound & outbound'],
+                  ['EGYPT ⇄ QATAR', 'Inbound & outbound'],
+                  ['EGYPT ⇄ BAHRAIN', 'Inbound & outbound'],
+                  ['EGYPT ⇄ OMAN', 'Inbound & outbound'],
+                  ['EGYPT ⇄ SYRIA', 'Inbound & outbound'],
+                  ['EGYPT ⇄ OTHER GCC & REGIONAL COUNTRIES', 'Inbound & outbound'],
+                  ['UAE ⇄ EGYPT & REGIONAL DESTINATIONS', 'To and from the UAE'],
+                  ['GCC & OTHER COUNTRIES → EGYPT', 'Inbound to Egypt'],
+                  ['EGYPT → GCC & OTHER COUNTRIES', 'Outbound from Egypt'],
+                  ['REGIONAL COUNTRIES ⇄ EGYPT / UAE / GCC', 'Inbound & outbound'],
+                ]).map(([route, dir]) => (
+                  <div key={route} className={`flex min-h-[92px] flex-col justify-between rounded-2xl border p-4 sm:p-5 transition duration-300 hover:border-[#c2a378]/60 ${K.card}`} dir={ar ? 'rtl' : 'ltr'}>
+                    <div className="text-[12px] font-black uppercase leading-5 tracking-[.04em]" dir="auto">{route}</div>
+                    <div className={`mt-3 text-[8px] font-black uppercase tracking-[.2em] ${gold}`}>{dir}</div>
+                  </div>
+                ))}
+              </div>
+              <div className={`mt-14 text-[9px] font-black uppercase tracking-[.3em] ${gold}`}>{ar ? 'كيف تتم الرحلة' : 'HOW A TRIP WORKS'}</div>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {(ar ? [
+                  { t: 'الاستلام من نقطة البداية', d: 'استلام الحاوية أو البضاعة من المصنع أو الميناء، سواء في مصر (الإسكندرية، دمياط، بورسعيد، السخنة) أو في دولة الشحن.' },
                   { t: 'المستندات والتنسيق', d: 'تنسيق المستندات وخطوات العبور مع المخلّص الجمركي الخاص بك قبل التحرك.' },
                   { t: 'الطريق البري', d: 'شاحنة مخصصة للرحلة مع متابعة الحالة وتحديثات منتظمة طوال الطريق.' },
                   { t: 'التسليم في الوجهة', d: 'التسليم إلى المدينة أو الدولة المتفق عليها، حتى باب العميل.' },
                 ] : [
-                  { t: 'LOADING IN EGYPT', d: 'Pickup of your container or cargo from the factory or port: Alexandria, Damietta, Port Said, Sokhna.' },
+                  { t: 'PICKUP AT ORIGIN', d: 'Pickup of your container or cargo from the factory or port, in Egypt (Alexandria, Damietta, Port Said, Sokhna) or in the origin country.' },
                   { t: 'DOCUMENTS & COORDINATION', d: 'Documents and border steps coordinated with your clearance agent before the truck moves.' },
                   { t: 'ON THE ROAD', d: 'A dedicated truck for the trip, with status follow-up and regular updates along the way.' },
                   { t: 'DELIVERY AT DESTINATION', d: 'Delivery to the agreed city or country, right to your door.' },
@@ -1482,7 +1517,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
               </div>
               <div className="mt-8 flex flex-wrap gap-3">
                 <a href="#quote" className="rounded-full bg-[#c2a378] px-7 py-3 text-[9px] font-black uppercase tracking-[.24em] text-black transition hover:-translate-y-0.5">{ar ? 'اطلب سعر شحنة دولية' : 'Quote an international shipment'}</a>
-                <a href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(ar ? 'مرحباً أسطول النيل، أريد الاستفسار عن النقل البري الدولي من مصر.' : 'Hello Nile Fleet, I would like to ask about international land freight from Egypt.')}`} target="_blank" rel="noreferrer" className={`rounded-full border px-7 py-3 text-[9px] font-black uppercase tracking-[.24em] transition hover:border-[#25D366] ${K.line} ${gold}`}>WhatsApp</a>
+                <a href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(ar ? 'مرحباً أسطول النيل، أريد الاستفسار عن النقل البري الدولي.' : 'Hello Nile Fleet, I would like to ask about international land freight.')}`} target="_blank" rel="noreferrer" className={`rounded-full border px-7 py-3 text-[9px] font-black uppercase tracking-[.24em] transition hover:border-[#25D366] ${K.line} ${gold}`}>WhatsApp</a>
               </div>
             </div>
           </Reveal>
