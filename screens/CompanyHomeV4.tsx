@@ -908,7 +908,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     globalDesc: ar ? 'نخدم عمليات تتصل بخطوط الملاحة ووكلاء الشحن والمستوردين والمصدرين والعملاء الصناعيين.' : 'We support operations connected to shipping lines, freight forwarders, importers, exporters and industrial clients.',
   };
 
-  const nav = [[tx.about, '#about'], [ar ? 'الخدمات' : 'SERVICES', '#services'], [ar ? 'مصر ← الإمارات' : 'EGYPT → UAE', '#uae'], [ar ? 'لماذا نحن' : 'WHY US', '#why-us'], [tx.leadership, '#leadership'], [ar ? 'طلب عرض سعر' : 'GET A QUOTE', '#quote']];
+  const nav = [[tx.about, '#about'], [ar ? 'الخدمات' : 'SERVICES', '#services'], [ar ? 'النقل الدولي' : 'INTERNATIONAL', '#international'], [ar ? 'لماذا نحن' : 'WHY US', '#why-us'], [tx.leadership, '#leadership'], [ar ? 'طلب عرض سعر' : 'GET A QUOTE', '#quote']];
 
   const quoteLines = () => [
     ar ? 'مرحباً أسطول النيل، أرغب في طلب عرض سعر.' : 'Hello Nile Fleet, I would like to request a quotation.',
@@ -931,8 +931,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('NILE FLEET - Request for Quote')}&body=${encodeURIComponent(quoteLines())}`;
   };
   const services = ar
-    ? ['نقل حاويات محلي', 'نقل حاويات مبردة', 'نقل بري دولي: مصر ← الإمارات', 'خدمات الجينسيت للحاويات المبردة', 'أخرى']
-    : ['Local container transport', 'Reefer container transport', 'International land freight: Egypt → UAE', 'Reefer genset service', 'Other'];
+    ? ['نقل حاويات محلي', 'نقل حاويات مبردة', 'نقل بري دولي', 'خدمات الجينسيت للحاويات المبردة', 'أخرى']
+    : ['Local container transport', 'Reefer container transport', 'International land freight', 'Reefer genset service', 'Other'];
   const field = `w-full rounded-xl border px-4 py-3 text-xs font-semibold outline-none transition focus:border-[#c2a378] ${isDark ? 'border-white/15 bg-black/40 text-white placeholder:text-slate-500' : 'border-black/15 bg-white text-[#26231f] placeholder:text-slate-400'}`;
 
   return (
@@ -1111,8 +1111,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           .nf-home .nf4-hero-stats{padding-top:1.5rem}
           .nf-home .nf4-stat{min-height:100px;padding:12px!important;border-radius:18px}
           .nf-home .nf4-stat>div:first-child{font-size:2rem}
-          .nf-home #about>div,.nf-home #operations>div,.nf-home #why-us>div,.nf-home #network>div,.nf-home #services>div,.nf-home #proof>div,.nf-home #partners>div,.nf-home #leadership>div,.nf-home #uae>div,.nf-home #quote>div{padding:3.25rem 16px!important}
-          .nf-home #about h2,.nf-home #why-us h2,.nf-home #network h2,.nf-home #services h2,.nf-home #proof h2,.nf-home #partners h2,.nf-home #leadership h2,.nf-home #uae h2,.nf-home #quote h2{font-size:clamp(2.25rem,11vw,3.5rem);line-height:.92}
+          .nf-home #about>div,.nf-home #operations>div,.nf-home #why-us>div,.nf-home #network>div,.nf-home #services>div,.nf-home #proof>div,.nf-home #partners>div,.nf-home #leadership>div,.nf-home #international>div,.nf-home #quote>div{padding:3.25rem 16px!important}
+          .nf-home #about h2,.nf-home #why-us h2,.nf-home #network h2,.nf-home #services h2,.nf-home #proof h2,.nf-home #partners h2,.nf-home #leadership h2,.nf-home #international h2,.nf-home #quote h2{font-size:clamp(2.25rem,11vw,3.5rem);line-height:.92}
           .nf-home #about .grid,.nf-home #operations .grid,.nf-home #why-us .grid,.nf-home #network .grid,.nf-home #services .grid,.nf-home #proof .grid,.nf-home #leadership .grid{gap:12px}
           .nf-home .nf4-network-grid>div,.nf-home .nf4-services-grid>div,.nf-home .nf4-leadership-grid>div{min-height:180px}
           .nf-home .nf4-experience-card{padding:18px!important;border-radius:22px}
@@ -1200,7 +1200,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 .nf-home #network,
 .nf-home #services,
 .nf-home #proof,
-.nf-home #uae,
+.nf-home #international,
 .nf-home #quote,
 .nf-home #leadership {
   background-image: linear-gradient(180deg, rgba(3,8,13,.08), rgba(3,8,13,.22));
@@ -1452,25 +1452,25 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         </section>
 
 
-        <section id="uae" className={`relative overflow-hidden border-y backdrop-blur-[2px] ${K.band}`}>
+        <section id="international" className={`relative overflow-hidden border-y backdrop-blur-[2px] ${K.band}`}>
           <Reveal>
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
               <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>05 / {ar ? 'النقل الدولي' : 'INTERNATIONAL'}</div>
               <div className="mt-5 flex flex-col justify-between gap-6 md:flex-row md:items-end">
-                <h2 className="text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{ar ? <>من مصر <span className={gold}>إلى الإمارات.</span></> : <>Egypt <span className={gold}>to the UAE.</span></>}</h2>
-                <p className={`max-w-md text-xs leading-6 ${K.muted}`}>{ar ? 'نقل بري للحاويات والبضائع من المصانع والموانئ المصرية حتى باب العميل في الإمارات، مع متابعة الشحنة من التحميل حتى التسليم.' : 'Land freight for containers and cargo from Egyptian factories and ports to your door in the UAE, with follow-up from loading to delivery.'}</p>
+                <h2 className="text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{ar ? <>من مصر <span className={gold}>إلى أي وجهة.</span></> : <>Egypt <span className={gold}>to anywhere.</span></>}</h2>
+                <p className={`max-w-md text-xs leading-6 ${K.muted}`}>{ar ? 'نقل بري دولي للحاويات والبضائع من المصانع والموانئ المصرية حتى باب العميل في الوجهة المتفق عليها، مع متابعة الشحنة من التحميل حتى التسليم.' : 'International land freight for containers and cargo from Egyptian factories and ports to your door at any agreed destination, with follow-up from loading to delivery.'}</p>
               </div>
               <div className="mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {(ar ? [
                   { t: 'التحميل في مصر', d: 'استلام الحاوية أو البضاعة من المصنع أو الميناء: الإسكندرية، دمياط، بورسعيد، السخنة.' },
                   { t: 'المستندات والتنسيق', d: 'تنسيق المستندات وخطوات العبور مع المخلّص الجمركي الخاص بك قبل التحرك.' },
                   { t: 'الطريق البري', d: 'شاحنة مخصصة للرحلة مع متابعة الحالة وتحديثات منتظمة طوال الطريق.' },
-                  { t: 'التسليم في الإمارات', d: 'التسليم إلى دبي أو أبوظبي أو الشارقة أو أي وجهة متفق عليها.' },
+                  { t: 'التسليم في الوجهة', d: 'التسليم إلى المدينة أو الدولة المتفق عليها، حتى باب العميل.' },
                 ] : [
                   { t: 'LOADING IN EGYPT', d: 'Pickup of your container or cargo from the factory or port: Alexandria, Damietta, Port Said, Sokhna.' },
                   { t: 'DOCUMENTS & COORDINATION', d: 'Documents and border steps coordinated with your clearance agent before the truck moves.' },
                   { t: 'ON THE ROAD', d: 'A dedicated truck for the trip, with status follow-up and regular updates along the way.' },
-                  { t: 'DELIVERY IN THE UAE', d: 'Delivery to Dubai, Abu Dhabi, Sharjah or any agreed destination.' },
+                  { t: 'DELIVERY AT DESTINATION', d: 'Delivery to the agreed city or country, right to your door.' },
                 ]).map((x, i) => (
                   <div key={x.t} className={`group relative min-h-[230px] overflow-hidden rounded-[1.5rem] border p-7 transition duration-500 hover:-translate-y-1 hover:border-[#c2a378]/60 ${K.card}`}>
                     <div className={`text-[8px] font-black tracking-[.25em] ${gold}`}>{ar ? 'المرحلة' : 'STEP'} 0{i + 1}</div>
@@ -1481,8 +1481,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                 ))}
               </div>
               <div className="mt-8 flex flex-wrap gap-3">
-                <a href="#quote" className="rounded-full bg-[#c2a378] px-7 py-3 text-[9px] font-black uppercase tracking-[.24em] text-black transition hover:-translate-y-0.5">{ar ? 'اطلب سعر شحنة للإمارات' : 'Quote a shipment to the UAE'}</a>
-                <a href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(ar ? 'مرحباً أسطول النيل، أريد الاستفسار عن النقل البري من مصر إلى الإمارات.' : 'Hello Nile Fleet, I would like to ask about land freight from Egypt to the UAE.')}`} target="_blank" rel="noreferrer" className={`rounded-full border px-7 py-3 text-[9px] font-black uppercase tracking-[.24em] transition hover:border-[#25D366] ${K.line} ${gold}`}>WhatsApp</a>
+                <a href="#quote" className="rounded-full bg-[#c2a378] px-7 py-3 text-[9px] font-black uppercase tracking-[.24em] text-black transition hover:-translate-y-0.5">{ar ? 'اطلب سعر شحنة دولية' : 'Quote an international shipment'}</a>
+                <a href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(ar ? 'مرحباً أسطول النيل، أريد الاستفسار عن النقل البري الدولي من مصر.' : 'Hello Nile Fleet, I would like to ask about international land freight from Egypt.')}`} target="_blank" rel="noreferrer" className={`rounded-full border px-7 py-3 text-[9px] font-black uppercase tracking-[.24em] transition hover:border-[#25D366] ${K.line} ${gold}`}>WhatsApp</a>
               </div>
             </div>
           </Reveal>
