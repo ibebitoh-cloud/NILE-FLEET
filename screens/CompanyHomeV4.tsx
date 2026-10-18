@@ -1091,7 +1091,12 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
             .nf-home .nf4-leadership-grid>div{min-height:330px}
             @media(max-width:1023px){.nf-home .nf4-about-layout>div:first-child{position:static}.nf-home .nf4-services-grid>div:first-child{grid-column:span 1}}
             @media(max-width:767px){.nf-home .nf4-hero-title{font-size:clamp(3.2rem,18vw,5.2rem)}.nf-home .nf4-network-grid>div,.nf-home .nf4-services-grid>div,.nf-home .nf4-leadership-grid>div{min-height:220px}}
+        .nf4-hdr-btn{white-space:nowrap}
         @media(max-width:767px){
+          .nf-home [data-desktop-only]{display:none}
+          .nf-home .nf4-hdr-btn{padding:7px 10px;font-size:8px;letter-spacing:.08em}
+          .nf-home .nf4-hero-actions a{white-space:nowrap}
+          .nf-home .nf4-hero-inner p{max-width:92%}
           .nf-home{font-size:14px}
           .nf-home main{width:100%;overflow-x:clip}
           .nf-home .nf4-route-line{padding-left:16px!important;padding-right:16px!important}
@@ -1164,22 +1169,22 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       </div>
 
       <header className={`sticky top-0 z-40 border-b backdrop-blur-2xl ${K.head}`}>
-        <div className="mx-auto flex max-w-[1500px] items-center justify-between px-5 py-4 lg:px-10">
-          <a href="#top" className="group flex items-center gap-3">
-            <img src="/nile-fleet-logo.png" className="h-10 w-10 object-contain transition-transform duration-500 group-hover:rotate-6" alt="Nile Fleet" />
+        <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4 lg:px-10">
+          <a href="#top" className="group flex min-w-0 items-center gap-2 sm:gap-3">
+            <img src="/nile-fleet-logo.png" className="h-8 w-8 shrink-0 object-contain sm:h-10 sm:w-10 transition-transform duration-500 group-hover:rotate-6" alt="Nile Fleet" />
             <div>
-              <div className="flex items-baseline gap-2 text-[17px] font-black tracking-tight">NILE <span className={gold}>FLEET</span><span className="text-[7px] font-black uppercase tracking-[.18em] text-[#c2a378] whitespace-nowrap">POWERED BY <span className="text-white">BEBITO</span></span></div>
+              <div className="flex items-baseline gap-2 whitespace-nowrap text-[15px] font-black tracking-tight sm:text-[17px]">NILE <span className={gold}>FLEET</span><span className="hidden text-[7px] font-black uppercase tracking-[.18em] text-[#c2a378] whitespace-nowrap sm:inline">POWERED BY <span className="text-white">BEBITO</span></span></div>
               <div className={`text-[7px] font-black uppercase tracking-[.34em] ${K.faint}`}>{tx.brandSub}</div>
             </div>
           </a>
           <nav className="hidden items-center gap-8 md:flex">
             {nav.map(([label, href]) => <a key={href} href={href} className={`text-[9px] font-black tracking-[.25em] transition hover:text-[#c2a378] ${K.muted}`}>{label}</a>)}
           </nav>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <button onClick={toggleFullscreen} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'} className={`rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isFullscreen ? tx.exit : tx.full}</button>
-            <button onClick={toggleSound} aria-pressed={soundOn} className={`rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{soundOn ? tx.soundOn : tx.soundOff}</button>
-            <button onClick={() => setTheme(isDark ? 'white' : 'phantom')} className={`rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isDark ? tx.white : tx.dark}</button>
-            <button onClick={() => setLang(ar ? 'en' : 'ar')} className={`rounded-full border px-4 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{ar ? 'EN' : 'العربية'}</button>
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
+            <button onClick={toggleFullscreen} data-desktop-only aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'} className={`nf4-hdr-btn rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isFullscreen ? tx.exit : tx.full}</button>
+            <button onClick={toggleSound} data-desktop-only aria-pressed={soundOn} className={`nf4-hdr-btn rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{soundOn ? tx.soundOn : tx.soundOff}</button>
+            <button onClick={() => setTheme(isDark ? 'white' : 'phantom')} className={`nf4-hdr-btn rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isDark ? tx.white : tx.dark}</button>
+            <button onClick={() => setLang(ar ? 'en' : 'ar')} className={`nf4-hdr-btn rounded-full border px-4 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{ar ? 'EN' : 'العربية'}</button>
           </div>
         </div>
       </header>
