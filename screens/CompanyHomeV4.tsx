@@ -1086,11 +1086,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
             .nf-home .nf4-about-layout h2,.nf-home #why-us h2,.nf-home #network h2,.nf-home #services h2,.nf-home #proof h2,.nf-home #partners h2,.nf-home #leadership h2{text-shadow:0 14px 45px rgba(0,0,0,.22)}
             .nf-home .nf4-network-grid>div{min-height:250px;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(0,0,0,.12))}
             .nf-home .nf4-network-grid>div:first-child{border-color:rgba(194,163,120,.48)}
-            .nf-home .nf4-services-grid>div{min-height:210px}
-            .nf-home .nf4-services-grid>div:first-child{grid-column:span 2}
             .nf-home .nf4-leadership-grid>div{min-height:330px}
-            @media(max-width:1023px){.nf-home .nf4-about-layout>div:first-child{position:static}.nf-home .nf4-services-grid>div:first-child{grid-column:span 1}}
-            @media(max-width:767px){.nf-home .nf4-hero-title{font-size:clamp(3.2rem,18vw,5.2rem)}.nf-home .nf4-network-grid>div,.nf-home .nf4-services-grid>div,.nf-home .nf4-leadership-grid>div{min-height:220px}}
+            @media(max-width:1023px){.nf-home .nf4-about-layout>div:first-child{position:static}}
+            @media(max-width:767px){.nf-home .nf4-hero-title{font-size:clamp(3.2rem,18vw,5.2rem)}.nf-home .nf4-network-grid>div,.nf-home .nf4-leadership-grid>div{min-height:220px}}
         .nf4-hdr-btn{white-space:nowrap}
         [dir=rtl] .nf4-hero-scrim{transform:scaleX(-1)}
         .nf4-mobile-nav{scrollbar-width:none}
@@ -1124,7 +1122,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           .nf-home #about>div,.nf-home #operations>div,.nf-home #why-us>div,.nf-home #network>div,.nf-home #services>div,.nf-home #proof>div,.nf-home #partners>div,.nf-home #leadership>div,.nf-home #international>div,.nf-home #quote>div{padding:3.25rem 16px!important}
           .nf-home #about h2,.nf-home #why-us h2,.nf-home #network h2,.nf-home #services h2,.nf-home #proof h2,.nf-home #partners h2,.nf-home #leadership h2,.nf-home #international h2,.nf-home #quote h2{font-size:clamp(2.25rem,11vw,3.5rem);line-height:.92}
           .nf-home #about .grid,.nf-home #operations .grid,.nf-home #why-us .grid,.nf-home #network .grid,.nf-home #services .grid,.nf-home #proof .grid,.nf-home #leadership .grid{gap:12px}
-          .nf-home .nf4-network-grid>div,.nf-home .nf4-services-grid>div,.nf-home .nf4-leadership-grid>div{min-height:180px}
+          .nf-home .nf4-network-grid>div,.nf-home .nf4-leadership-grid>div{min-height:180px}
           .nf-home .nf4-experience-card{padding:18px!important;border-radius:22px}
           .nf-home .nf4-experience-cell{min-height:42px;padding:9px 10px;font-size:8px}
           .nf-home .nf4-logo-viewport{width:100%;max-width:100%;overflow:hidden!important}
@@ -1274,12 +1272,6 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
   transform: translateY(-5px);
   box-shadow: 0 22px 55px rgba(0,0,0,.16);
 }
-.nf-home #services .grid > div {
-  min-height: 190px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-}
 .nf-home #services .grid > div:hover {
   box-shadow: 0 20px 50px rgba(0,0,0,.14);
 }
@@ -1314,7 +1306,6 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     padding-bottom: 4.75rem;
   }
   .nf-home #why-us .grid > div,
-  .nf-home #services .grid > div,
   .nf-home #leadership .grid > div {
     min-height: 240px;
   }
@@ -1368,7 +1359,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                 <p className={`mt-7 text-sm leading-7 ${K.muted}`}>{tx.about2}</p>
                 <div className="mt-12 h-px w-full bg-gradient-to-r from-[#c2a378] via-[#c2a378]/20 to-transparent" />
                 <div className="mt-7 flex flex-wrap gap-3">
-                  {tx.values.map(x => <span key={x} className={`rounded-full border px-4 py-2 text-[7px] font-black tracking-[.2em] ${K.chip}`}>{x}</span>)}
+                  {tx.values.map(x => <span key={x} className={`rounded-full border px-3.5 py-1.5 text-[10px] font-black tracking-[.16em] sm:text-[11px] ${K.chip}`}>{x}</span>)}
                 </div>
               </div>
             </div>
@@ -1544,12 +1535,11 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
               <h2 className="mt-5 max-w-5xl text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{tx.serviceTitle}</h2>
               <div className="nf4-services-grid mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {tx.serviceItems.map((x, i) => (
-                  <div key={x.title} className={`group relative min-h-[250px] overflow-hidden rounded-[1.5rem] border p-7 transition duration-500 hover:-translate-y-1 hover:border-[#c2a378]/60 ${K.card}`}>
-                    <div className={`text-[8px] font-black tracking-[.25em] ${gold}`}>0{i + 1}</div>
-                    <div className="absolute right-7 top-7 text-5xl font-black opacity-10">{String(i + 1).padStart(2, '0')}</div>
+                  <div key={x.title} className={`group relative overflow-hidden rounded-[1.5rem] border p-6 transition sm:p-7 duration-500 hover:-translate-y-1 hover:border-[#c2a378]/60 ${K.card}`}>
+                    <div className={`absolute top-5 text-4xl font-black opacity-10 ${ar ? 'left-6' : 'right-6'}`}>{String(i + 1).padStart(2, '0')}</div>
                     <div className="absolute bottom-0 left-0 h-1 w-0 bg-[#c2a378] transition-all duration-700 group-hover:w-full" />
-                    <div className="mt-12 max-w-[250px] text-sm font-black uppercase leading-5">{x.title}</div>
-                    <p className={`mt-5 max-w-[280px] text-[11px] leading-6 ${K.muted}`}>{x.desc}</p>
+                    <div className={`mt-4 text-base font-black uppercase leading-6 sm:text-lg ${ar ? 'pl-14' : 'pr-14'}`}>{x.title}</div>
+                    <p className={`mt-3 text-sm leading-6 ${K.muted}`}>{x.desc}</p>
                   </div>
                 ))}
               </div>
