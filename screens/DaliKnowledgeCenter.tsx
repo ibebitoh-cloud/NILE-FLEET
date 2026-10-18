@@ -163,7 +163,7 @@ const DaliKnowledgeCenter: React.FC = () => {
         canonical_value: termCanonical.trim(),
         canonical_type: termType as any,
         alias: termInput.trim(),
-        language: /[\\u0600-\\u06ff]/.test(termInput) ? 'ar' : /[A-Za-z]/.test(termInput) ? 'en' : 'mixed',
+        language: /[\u0600-\u06ff]/.test(termInput) ? 'ar' : /[A-Za-z]/.test(termInput) ? 'en' : 'mixed',
         alias_type: 'manual',
         context: [termType],
         confidence: 0.98,
