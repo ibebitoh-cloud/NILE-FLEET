@@ -1241,13 +1241,13 @@ class SupabaseDB {
 
   // ─── gensets ───────────────────────────────────────────────────────────────
 
-  async addGenset(genset: Genset): Promise<void> {
+  async addGenset(genset: Genset): Promise<boolean> {
     const saved = await insert<Genset>('gensets', genset);
-    if (saved) {
-      _stock = [saved, ..._stock];
-      await auditLog('STOCK', `Registered new unit ${genset.unitNumber}`);
-      dispatchChange();
-    }
+    if (!saved) return false;
+    _stock = [saved, ..._stock];
+    await auditLog('STOCK', `Registered new unit ${genset.unitNumber}`);
+    dispatchChange();
+    return true;
   }
 
   async updateGenset(updatedGenset: Genset): Promise<boolean> {
@@ -1448,21 +1448,24 @@ class SupabaseDB {
     return candidates.reduce<CustomerPrice | null>((best, p) => score(p) > (best ? score(best) : 0) ? p : best, null);
   }
 
-  async setCustomerPrice(priceData: CustomerPrice): Promise<void> {
+  async setCustomerPrice(priceData: CustomerPrice): Promise<boolean> {
     const normRule = (v?: string) => String(v || '').trim().toUpperCase();
     const existing = _customerPrices.find(p =>
       p.customerName === priceData.customerName && p.portIn === priceData.portIn && p.portOut === priceData.portOut &&
       normRule(p.destination) === normRule(priceData.destination) && normRule(p.commodity) === normRule(priceData.commodity)
     );
     if (existing) {
-      await update('customer_prices', existing.id, priceData);
-      _customerPrices = _customerPrices.map(p => p.id === existing.id ? priceData : p);
+      const saved = await update('customer_prices', existing.id, priceData);
+      if (!saved) return false;
+      _customerPrices = _customerPrices.map(p => p.id === existing.id ? { ...priceData, id: existing.id } : p);
     } else {
       const saved = await insert<CustomerPrice>('customer_prices', priceData);
-      if (saved) _customerPrices = [..._customerPrices, saved];
+      if (!saved) return false;
+      _customerPrices = [..._customerPrices, saved];
     }
     await auditLog('RATE', `Rate update for ${priceData.customerName}`);
     dispatchChange();
+    return true;
   }
 
   // ─── maintenance logs ──────────────────────────────────────────────────────

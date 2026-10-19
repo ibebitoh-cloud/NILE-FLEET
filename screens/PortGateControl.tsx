@@ -662,13 +662,6 @@ const PortGateControl: React.FC = () => {
                 </h3>
                 <div className="flex items-center gap-2">
                   <span className="text-[8px] font-black bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full text-slate-500">{terminalOps.upcoming.length} {isAr ? 'سجل' : 'LOADED'}</span>
-                  <button 
-                    type="button"
-                    onClick={handleExportExcel}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider shadow flex items-center gap-1.5 transition-all"
-                  >
-                    <span>📊</span> {isAr ? 'تصدير جدولة القادمين إكسيل' : 'EXPORT NEXT SCHEDULE EXCEL'}
-                  </button>
                 </div>
              </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

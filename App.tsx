@@ -756,7 +756,7 @@ const App: React.FC = () => {
       case 'financials': return <Financials />;
       case 'intelligence': return <Intelligence />;
       case 'reports': return <Reports />;
-      case 'stock': return <StockManagement />;
+      case 'stock': return <StockManagement focus={highlightId} />;
       case 'reservations': return <Reservations />;
       case 'daily-dispatch': return <DailyDispatchPlan />;
       case 'customers': return <Customers />;

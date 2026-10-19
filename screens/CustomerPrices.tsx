@@ -39,7 +39,7 @@ const CustomerPrices: React.FC = () => {
     }
   }, [quickEditKey]);
 
-  const handlePriceChange = (cust: any, portIn: Location, portOut: Location, price: string, currentVat?: boolean) => {
+  const handlePriceChange = async (cust: any, portIn: Location, portOut: Location, price: string, currentVat?: boolean) => {
     const numericPrice = parseFloat(price) || 0;
     const existing = prices.find(p => p.customerName === (cust.companyName || cust.name) && p.portIn === portIn && p.portOut === portOut);
     
@@ -52,11 +52,13 @@ const CustomerPrices: React.FC = () => {
       price: numericPrice,
       includeVat: currentVat !== undefined ? currentVat : (existing?.includeVat ?? false)
     };
-    db.setCustomerPrice(newPriceObj);
+    if (!(await db.setCustomerPrice(newPriceObj))) {
+      alert(lang === 'ar' ? `فشل حفظ السعر: ${db.getLastDbError() || ''}` : `Price save failed: ${db.getLastDbError() || ''}`);
+    }
     setPrices([...db.getCustomerPrices()]);
   };
 
-  const toggleVat = (cust: any, portIn: Location, portOut: Location) => {
+  const toggleVat = async (cust: any, portIn: Location, portOut: Location) => {
     const existing = prices.find(p => p.customerName === (cust.companyName || cust.name) && p.portIn === portIn && p.portOut === portOut);
     const newPriceObj: CustomerPrice = {
       id: existing?.id || `price-${cust.id}-${portIn}-${portOut}`,
@@ -67,7 +69,9 @@ const CustomerPrices: React.FC = () => {
       price: existing?.price || 0,
       includeVat: !existing?.includeVat
     };
-    db.setCustomerPrice(newPriceObj);
+    if (!(await db.setCustomerPrice(newPriceObj))) {
+      alert(lang === 'ar' ? `فشل حفظ السعر: ${db.getLastDbError() || ''}` : `Price save failed: ${db.getLastDbError() || ''}`);
+    }
     setPrices([...db.getCustomerPrices()]);
   };
 
@@ -76,7 +80,7 @@ const CustomerPrices: React.FC = () => {
     return prices.find(p => p.customerName === name && (kind === 'destination' ? (p.destination || '').toUpperCase() === 'MINYA' : (p.commodity || '').toUpperCase() === 'GRAPES'));
   };
 
-  const saveSpecialPrice = (cust: any, kind: 'destination' | 'commodity', value: string) => {
+  const saveSpecialPrice = async (cust: any, kind: 'destination' | 'commodity', value: string) => {
     const existing = getSpecialPrice(cust, kind);
     const base = prices.find(p => p.customerName === (cust.companyName || cust.name) && !p.destination && !p.commodity);
     const obj: CustomerPrice = {
@@ -90,7 +94,9 @@ const CustomerPrices: React.FC = () => {
       destination: kind === 'destination' ? 'MINYA' : undefined,
       commodity: kind === 'commodity' ? 'GRAPES' : undefined
     };
-    db.setCustomerPrice(obj);
+    if (!(await db.setCustomerPrice(obj))) {
+      alert(lang === 'ar' ? `فشل حفظ السعر: ${db.getLastDbError() || ''}` : `Price save failed: ${db.getLastDbError() || ''}`);
+    }
     setPrices([...db.getCustomerPrices()]);
   };
 

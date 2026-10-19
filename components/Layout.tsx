@@ -1634,7 +1634,7 @@ I’ll search with you. 🤖`;
     : Array.isArray(user.allowedScreens)
       ? allPossibleMenuItems.filter(item =>
           user.allowedScreens?.includes(item.id) ||
-          ((user.role === UserRole.ADMIN || user.role === UserRole.MANAGER) && item.id === 'daily-dispatch')
+          ((user.role === UserRole.ADMIN || user.role === UserRole.MANAGER) && (item.id === 'daily-dispatch' || item.id === 'financials'))
         )
     : roleDefaultScreenIds
       ? allPossibleMenuItems.filter(item => roleDefaultScreenIds.includes(item.id))

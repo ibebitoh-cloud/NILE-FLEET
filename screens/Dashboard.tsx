@@ -187,7 +187,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       }
     });
     if (maintenanceStats.dueSoon > 0) {
-      alerts.push({ level: 'MEDIUM', text: `${maintenanceStats.dueSoon} genset(s) due for maintenance`, action: () => onNavigate('maintenance') });
+      alerts.push({ level: 'MEDIUM', text: `${maintenanceStats.dueSoon} genset(s) due for maintenance`, action: () => onNavigate('stock', 'maintenance') });
     }
     if (financialTotals.outstanding > 0) {
       alerts.push({ level: 'INFO', text: `${money(financialTotals.outstanding)} customer outstanding balance`, action: () => onNavigate('financials') });
@@ -396,7 +396,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               <h2 className="font-black text-[#3a3833] dark:text-white uppercase italic">{translateEntity('Maintenance Performance & Log', lang)}</h2>
               <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">{translateEntity('Service execution and latest records', lang)}</p>
             </div>
-            <button onClick={() => onNavigate('maintenance')} className="text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Maintenance</button>
+            <button onClick={() => onNavigate('stock', 'maintenance')} className="text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Maintenance</button>
           </div>
           <div className="grid grid-cols-4 gap-2 p-4 border-b border-slate-100 dark:border-slate-700">
             <div><span className="block text-[8px] text-slate-400 uppercase font-black">{translateEntity('Rate', lang)}</span><b className="text-xl text-emerald-500">{maintenanceStats.completionRate}%</b></div>
@@ -406,7 +406,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           </div>
           <div className="divide-y divide-slate-100 dark:divide-slate-700">
             {maintenanceLogs.slice(0, 5).map(log => (
-              <button key={log.id} onClick={() => onNavigate('maintenance', log.gensetNumber)} className="w-full px-5 py-3 flex items-center justify-between gap-3 text-start hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
+              <button key={log.id} onClick={() => onNavigate('stock', `maintenance:${log.gensetNumber}`)} className="w-full px-5 py-3 flex items-center justify-between gap-3 text-start hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
                 <div className="min-w-0"><p className="font-black text-xs text-[#3a3833] dark:text-slate-200 uppercase">GENSET {log.gensetNumber}</p><span className="text-[8px] text-slate-400 font-bold">{log.serviceDate} • {log.serviceType.replace(/_/g, ' ')}</span></div>
                 <span className={`text-[8px] font-black uppercase px-2 py-1 rounded-lg ${log.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600' : log.status === 'IN_PROGRESS' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>{log.status.replace(/_/g, ' ')}</span>
               </button>
@@ -422,9 +422,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           { label: 'Total Gensets', value: stock.length, action: 'stock' },
           { label: 'In Operation', value: operationStats.active, action: 'operations' },
           { label: 'Under Operate', value: operationStats.underOperate, action: 'operations' },
-          { label: 'Maintenance', value: stock.filter(g => g.status === 'MAINTENANCE').length, action: 'maintenance' },
+          { label: 'Maintenance', value: stock.filter(g => g.status === 'MAINTENANCE').length, action: 'stock', focus: 'maintenance' },
         ].map(item => (
-          <button key={item.label} onClick={() => onNavigate(item.action)} className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm text-start hover:shadow-lg transition-all">
+          <button key={item.label} onClick={() => onNavigate(item.action, item.focus)} className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm text-start hover:shadow-lg transition-all">
             <span className="block text-[8px] text-slate-400 font-black uppercase tracking-widest">{item.label}</span>
             <b className="text-2xl text-[#3a3833] dark:text-white">{item.value}</b>
           </button>
