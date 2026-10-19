@@ -459,7 +459,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     return () => document.removeEventListener('fullscreenchange', onFs);
   }, []);
   const soundOnRef = useRef(false);
-  const [hud, setHud] = useState({ kmh: 25, km: 0 });
+  // Speedometer text is written straight to the DOM; a state update here re-rendered the whole page several times a second.
+  const hudKmhRef = useRef<HTMLSpanElement>(null);
+  const hudKmRef = useRef<HTMLDivElement>(null);
   const [quote, setQuote] = useState<QuoteForm>(EMPTY_QUOTE);
   const setQuoteField = (k: keyof QuoteForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setQuote(q => ({ ...q, [k]: e.target.value }));
 
@@ -548,8 +550,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
     let W = 0, H = 0, dpr = 1;
     const resize = () => {
-      dpr = Math.min(2, window.devicePixelRatio || 1);
       W = window.innerWidth; H = window.innerHeight;
+      // Phones get a lighter backing store; the scene is soft enough that 1.5x looks the same.
+      dpr = Math.min(W < 768 ? 1.5 : 2, window.devicePixelRatio || 1);
       canvas.width = Math.floor(W * dpr); canvas.height = Math.floor(H * dpr);
       canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -586,7 +589,6 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         if (soundOnRef.current) playHorn();
       }
     };
-    window.addEventListener('resize', resize);
     window.addEventListener('mousemove', onMove, { passive: true });
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('pointerdown', onDown);
@@ -789,14 +791,21 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       // HUD (throttled)
       sim.km += (25 + sN * 95) / 3600 * dt;
       sim.hudT += dt;
-      if (sim.hudT > 0.12) { sim.hudT = 0; setHud({ kmh: Math.round(25 + sN * 95), km: sim.km }); }
+      if (sim.hudT > 0.12) {
+        sim.hudT = 0;
+        if (hudKmhRef.current) hudKmhRef.current.textContent = String(Math.round(25 + sN * 95)).padStart(3, '0');
+        if (hudKmRef.current) hudKmRef.current.textContent = `ODO ${sim.km.toFixed(2)} KM`;
+      }
     };
 
+    // Phones draw at ~30fps so scrolling keeps the main thread free.
+    const minFrameMs = W < 768 ? 32 : 0;
     const frame = (now: number) => {
+      raf = requestAnimationFrame(frame);
+      if (now - last < minFrameMs) return;
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       if (!document.hidden) { step(dt); render(); }
-      raf = requestAnimationFrame(frame);
     };
     if (reduce) { render(); } else { raf = requestAnimationFrame(frame); }
     const redrawOnResize = () => { resize(); if (reduce) render(); };
@@ -804,7 +813,6 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener('resize', resize);
       window.removeEventListener('resize', redrawOnResize);
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('scroll', onScroll);
@@ -1092,6 +1100,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         .nf4-hdr-btn{white-space:nowrap}
         [dir=rtl] .nf4-hero-scrim{transform:scaleX(-1)}
         .nf4-mobile-nav{scrollbar-width:none}
+        @media(max-width:767px){.nf-home *{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}}
         .nf-home a.rounded-full,.nf-home button.rounded-full{display:inline-flex;align-items:center;justify-content:center}
         .nf-home .nf4-mobile-nav a{min-height:36px}
         .nf4-mobile-nav::-webkit-scrollbar{display:none}
@@ -1354,7 +1363,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           </div>
         </section>
 
-        <section id="about" className={`relative border-y backdrop-blur-[2px] ${K.band}`}>
+        <section id="about" className={`relative border-y ${K.band}`}>
           <Reveal>
             <div className="nf4-about-layout mx-auto grid max-w-[1500px] gap-14 px-5 py-28 lg:grid-cols-[.75fr_1.25fr] lg:px-10">
               <div>
@@ -1373,7 +1382,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           </Reveal>
         </section>
 
-        <section id="operations" className={`relative overflow-hidden border-y backdrop-blur-[2px] ${K.band}`}>
+        <section id="operations" className={`relative overflow-hidden border-y ${K.band}`}>
           <Reveal>
             <div className="relative mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
               <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
@@ -1414,7 +1423,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         </section>
 
 
-        <section id="why-us" className={`relative overflow-hidden border-y backdrop-blur-[2px] ${K.band}`}>
+        <section id="why-us" className={`relative overflow-hidden border-y ${K.band}`}>
           <Reveal>
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
               <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>03 / {ar ? 'لماذا نحن' : 'WHY US'}</div>
@@ -1438,7 +1447,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           </Reveal>
         </section>
 
-        <section id="network" className={`relative overflow-hidden border-y backdrop-blur-[2px] ${K.band}`}>
+        <section id="network" className={`relative overflow-hidden border-y ${K.band}`}>
           <Reveal>
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
               <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>04 / {ar ? 'شبكة الحركة' : 'NETWORK'}</div>
@@ -1464,7 +1473,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         </section>
 
 
-        <section id="international" className={`relative overflow-hidden border-y backdrop-blur-[2px] ${K.band}`}>
+        <section id="international" className={`relative overflow-hidden border-y ${K.band}`}>
           <Reveal>
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
               <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>05 / {ar ? 'النقل الدولي' : 'INTERNATIONAL'}</div>
@@ -1535,7 +1544,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           </Reveal>
         </section>
 
-        <section id="services" className={`relative overflow-hidden border-y backdrop-blur-[2px] ${K.band}`}>
+        <section id="services" className={`relative overflow-hidden border-y ${K.band}`}>
           <Reveal>
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
               <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>06 / {ar ? 'الخدمات' : 'SERVICES'}</div>
@@ -1554,7 +1563,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           </Reveal>
         </section>
 
-        <section id="proof" className={`relative overflow-hidden border-y backdrop-blur-[2px] ${K.band}`}>
+        <section id="proof" className={`relative overflow-hidden border-y ${K.band}`}>
           <Reveal>
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
               <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>07 / {ar ? 'الثقة والجودة' : 'QUALITY & TRUST'}</div>
@@ -1591,7 +1600,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           </Reveal>
         </section>
 
-        <section id="partners" className={`relative overflow-hidden border-y backdrop-blur-[2px] ${K.band}`}>
+        <section id="partners" className={`relative overflow-hidden border-y ${K.band}`}>
           <Reveal>
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
               <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>08 / {ar ? 'شبكة الشحن والنقل' : 'SHIPPING & TRUCKING NETWORK'}</div>
@@ -1647,7 +1656,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           </Reveal>
         </section>
 
-        <section id="leadership" className={`border-y backdrop-blur-[2px] ${K.band}`}>
+        <section id="leadership" className={`border-y ${K.band}`}>
           <Reveal>
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
               <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>09 / {tx.leadLabel}</div>
@@ -1681,7 +1690,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         </section>
 
 
-        <section id="quote" className={`relative overflow-hidden border-y backdrop-blur-[2px] ${K.band}`}>
+        <section id="quote" className={`relative overflow-hidden border-y ${K.band}`}>
           <Reveal>
             <div className="mx-auto grid max-w-[1500px] gap-12 px-5 py-28 lg:grid-cols-[.8fr_1.2fr] lg:px-10">
               <div>
@@ -1747,8 +1756,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
       {/* speedometer */}
       <div className={`nf4-speedo pointer-events-none fixed bottom-4 right-4 z-30 rounded-2xl border px-4 py-3 backdrop-blur-md ${K.card}`} aria-hidden="true">
-        <div className="flex items-end gap-2"><span className="text-3xl font-black tabular-nums leading-none">{String(hud.kmh).padStart(3, '0')}</span><span className={`pb-0.5 text-[8px] font-black tracking-[.25em] ${gold}`}>KM/H</span></div>
-        <div className={`mt-1 text-[7px] font-black tracking-[.25em] ${K.faint}`}>ODO {hud.km.toFixed(2)} KM</div>
+        <div className="flex items-end gap-2"><span ref={hudKmhRef} className="text-3xl font-black tabular-nums leading-none">025</span><span className={`pb-0.5 text-[8px] font-black tracking-[.25em] ${gold}`}>KM/H</span></div>
+        <div ref={hudKmRef} className={`mt-1 text-[7px] font-black tracking-[.25em] ${K.faint}`}>ODO 0.00 KM</div>
       </div>
     </div>
   );
