@@ -1,10 +1,6 @@
 /**
  * supabaseDb.ts
- * Drop-in replacement for mockDb.ts — identical public method signatures,
- * all backed by real Supabase tables instead of in-memory arrays.
- *
- * Usage: replace `import { db } from './services/mockDb'`
- *        with   `import { db } from './services/supabaseDb'`
+ * App data layer backed by Supabase tables.
  */
 
 import { supabase } from './supabaseClient';
