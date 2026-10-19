@@ -4,7 +4,7 @@ import { User, UserRole, Location, UserPermissions, hasReadOnlyAccess } from '..
 import { LanguageContext, ThemeContext } from '../App';
 import { translateEntity } from '../translations';
 import { runThinkingAudit } from '../services/aiService';
-import { createRealAccount, activateAllCustomerUsers, resetCustomerPassword } from '../services/authService';
+import { createRealAccount } from '../services/authService';
 import { AVATARS } from '../constants';
 
 const ALL_SYSTEM_SCREENS = [
@@ -122,8 +122,6 @@ const UserMgmt: React.FC = () => {
   const [isThinking, setIsThinking] = useState(false);
   const [authAdvice, setAuthAdvice] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isActivatingCustomers, setIsActivatingCustomers] = useState(false);
-  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'HYGIENE' | 'ISOLATION' | 'ROTATION' | 'GEOFENCE'>('HYGIENE');
 
@@ -389,65 +387,6 @@ const UserMgmt: React.FC = () => {
     e.target.value = '';
   };
 
-  const handleGenerateCustomerPassword = async () => {
-    if (!editingUser || editingUser.role !== UserRole.CUSTOMER || isReadOnly || !isAdmin || isResettingPassword) return;
-    const confirmed = window.confirm(
-      lang === 'ar'
-        ? 'سيتم إنشاء كلمة مرور جديدة لهذا العميل وتأكيد البريد الإلكتروني. كلمة المرور الحالية لن يمكن استرجاعها بعد التغيير. هل تريد المتابعة؟'
-        : 'Generate a new password for this customer and confirm the email? The current password cannot be recovered after this change. Continue?'
-    );
-    if (!confirmed) return;
-
-    setIsResettingPassword(true);
-    try {
-      const result = await resetCustomerPassword(editingUser.id);
-      if (result.error || !result.password) {
-        alert((lang === 'ar' ? 'فشل إنشاء كلمة المرور: ' : 'Password generation failed: ') + (result.error || 'Unknown error'));
-        return;
-      }
-      setEditingUser((prev: any) => prev ? { ...prev, password: result.password } : prev);
-      setShowPassword(true);
-      alert(lang === 'ar'
-        ? 'تم إنشاء كلمة مرور جديدة. احفظها وأرسلها للعميل بشكل آمن.'
-        : 'A new password was generated. Save it and send it to the customer securely.');
-    } finally {
-      setIsResettingPassword(false);
-    }
-  };
-
-  const handleActivateAllCustomers = async () => {
-    if (isReadOnly || !isAdmin || isActivatingCustomers) return;
-    const customerCount = users.filter(u => u.role === UserRole.CUSTOMER && !u.revoked).length;
-    if (!customerCount) {
-      alert(lang === 'ar' ? 'لا توجد حسابات عملاء نشطة للتفعيل.' : 'No active customer accounts found.');
-      return;
-    }
-    const confirmed = window.confirm(
-      lang === 'ar'
-        ? `سيتم إنشاء كلمة مرور عشوائية جديدة لكل حساب من حسابات العملاء النشطة (${customerCount}) وتأكيد البريد الإلكتروني وتفعيل الحساب. هل تريد المتابعة؟`
-        : `This will generate a new random password for all ${customerCount} active customer accounts, confirm their email, and activate them. Continue?`
-    );
-    if (!confirmed) return;
-
-    setIsActivatingCustomers(true);
-    try {
-      const result = await activateAllCustomerUsers();
-      if (result.error) {
-        alert((lang === 'ar' ? 'فشل تفعيل حسابات العملاء: ' : 'Customer activation failed: ') + result.error);
-        return;
-      }
-      await db.reloadUsers();
-      refreshData();
-      const credentials = (result.users || []).map(u => `${u.email}\t${u.password}`).join('\n');
-      const summary = lang === 'ar'
-        ? `تم تفعيل ${result.count || 0} حساب عميل. فشل: ${result.failed || 0}.\n\nسيتم عرض بيانات الدخول مرة واحدة فقط. احفظها بأمان.`
-        : `Activated ${result.count || 0} customer accounts. Failed: ${result.failed || 0}.\n\nCredentials are shown only once. Save them securely.`;
-      alert(summary + (credentials ? `\n\nEMAIL\tPASSWORD\n${credentials}` : ''));
-    } finally {
-      setIsActivatingCustomers(false);
-    }
-  };
-
   const runAuthAudit = async () => {
     setIsThinking(true);
     setAuthAdvice('');
@@ -489,17 +428,6 @@ const UserMgmt: React.FC = () => {
           >
             <span>📊</span> System Access Matrix
           </button>
-          {!isReadOnly && isAdmin && (
-            <button
-              type="button"
-              onClick={handleActivateAllCustomers}
-              disabled={isActivatingCustomers}
-              className="bg-emerald-600 text-white border border-emerald-400 px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl hover:bg-emerald-700 hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-wait"
-              title="Generate new passwords, confirm emails, and activate all active customer accounts"
-            >
-              {isActivatingCustomers ? '⏳ Activating Customers...' : '🔐 Activate All Customers'}
-            </button>
-          )}
           {!isReadOnly && (
             <button 
               type="button"
@@ -955,30 +883,13 @@ const UserMgmt: React.FC = () => {
                         <div>
                           <label className={labelClass}>{lang === 'ar' ? 'كلمة مرور البوابة' : 'Portal Password'}</label>
                           <div className="relative">
-                            <input type={showPassword ? "text" : "password"} className={inputClass} value={editingUser.password || ''} onChange={e => setEditingUser({...editingUser, password: e.target.value})} placeholder={editingUser.role === UserRole.CUSTOMER && !editingUser.password ? (lang === 'ar' ? 'كلمة المرور غير متاحة — أنشئ كلمة جديدة' : 'Password not available — generate a new one') : ''} />
+                            <input type={showPassword ? "text" : "password"} className={inputClass} value={editingUser.password || ''} onChange={e => setEditingUser({...editingUser, password: e.target.value})} />
                             <div className="absolute right-2 top-2 flex items-center gap-1">
                               <button type="button" onClick={() => setShowPassword(!showPassword)} className="px-2 py-1 text-xs text-slate-400 font-bold uppercase">
                                 {showPassword ? (lang === 'ar' ? 'إخفاء' : 'Hide') : (lang === 'ar' ? 'إظهار' : 'Show')}
                               </button>
                             </div>
                           </div>
-                          {editingUser.role === UserRole.CUSTOMER && (
-                            <button
-                              type="button"
-                              onClick={handleGenerateCustomerPassword}
-                              disabled={isReadOnly || !isAdmin || isResettingPassword}
-                              className="mt-2 w-full rounded-xl border border-[#C2A378]/40 bg-[#C2A378]/10 px-3 py-2 text-xs font-black uppercase tracking-wider text-[#C2A378] hover:bg-[#C2A378]/20 disabled:opacity-50"
-                            >
-                              {isResettingPassword
-                                ? (lang === 'ar' ? 'جاري إنشاء كلمة المرور...' : 'Generating New Password...')
-                                : (lang === 'ar' ? 'إنشاء كلمة مرور جديدة' : 'Generate New Password')}
-                            </button>
-                          )}
-                          {editingUser.role === UserRole.CUSTOMER && (
-                            <p className="mt-1.5 text-[10px] text-slate-400">
-                              {lang === 'ar' ? 'يتم ضبط كلمة المرور مباشرة في Supabase Auth ولا يتم حفظها في ملف العميل.' : 'The new password is set directly in Supabase Auth and is not stored in the customer profile.'}
-                            </p>
-                          )}
                         </div>
                       </div>
                     </div>
