@@ -69,9 +69,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [showAvatarStudio, setShowAvatarStudio] = useState(false);
   const [shieldActive, setShieldActive] = useState(false);
-  const [purgeAuthPassword, setPurgeAuthPassword] = useState('');
   const [purgeConfirmText, setPurgeConfirmText] = useState('');
-  const [customWipePassword, setCustomWipePassword] = useState(user.wipePassword || 'WIPE123');
   const [holdTimer, setHoldTimer] = useState(0);
   const holdIntervalRef = useRef<any>(null);
 
@@ -232,21 +230,8 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
     setLangUpdateTrigger(p => p + 1);
   };
 
-  const handleUpdateWipePassword = () => {
-    if (!customWipePassword.trim()) {
-      addNotification(isAr ? 'لا يمكن ترك رمز المرور فارغاً' : 'Wipe passcode cannot be empty');
-      return;
-    }
-    const updatedData = { ...profileData, wipePassword: customWipePassword };
-    setProfileData(updatedData);
-    db.updateUser(user.id, updatedData);
-    onUpdate(updatedData);
-    addNotification(isAr ? 'تم تحديث رمز مرور التصفير المخصص' : 'Custom wipe passcode updated successfully');
-  };
-
   const startPurgeHold = () => {
-    const requiredPasscode = user.wipePassword || 'WIPE123';
-    if (purgeConfirmText !== NUCLEAR_PHRASE || purgeAuthPassword !== requiredPasscode) {
+    if (purgeConfirmText !== NUCLEAR_PHRASE) {
       addNotification(isAr ? 'فشل التحقق من الهوية' : 'Identity Verification Failed');
       return;
     }
@@ -277,7 +262,6 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
     setShieldActive(false);
     setHoldTimer(0);
     setPurgeConfirmText('');
-    setPurgeAuthPassword('');
   };
 
   const labelClass = "text-[9px] font-black uppercase text-slate-400 block mb-2 tracking-[0.15em] px-1";
@@ -732,35 +716,6 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
                    
                    <div className="relative z-10 space-y-8">
                       {/* Set Wipe Passcode Section */}
-                      <div className="p-6 bg-black/40 rounded-2xl border-2 border-rose-950/20 space-y-4">
-                         <div>
-                            <h4 className="text-xs font-black text-[#C2A378] uppercase tracking-wider mb-1 font-sans">
-                               {isAr ? 'رمز تصفير النظام المخصص' : 'Dedicated Wipe Passcode'}
-                            </h4>
-                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wide leading-normal">
-                               {isAr 
-                                 ? 'حدد رمز مرور خاصاً لهذا الإجراء فقط كبديل لكلمة مرور حسابك الرئيسية.' 
-                                 : 'Configure a dedicated single-purpose code for this protocol instead of your main account password.'}
-                            </p>
-                         </div>
-                         <div className="flex flex-col sm:flex-row gap-3">
-                            <input 
-                               type="text" 
-                               className="flex-1 px-4 py-3 rounded-xl bg-slate-950 border border-white/10 text-white font-mono text-xs font-bold outline-none focus:border-[#C2A378] transition-all"
-                               value={customWipePassword}
-                               onChange={(e) => setCustomWipePassword(e.target.value)}
-                               placeholder={isAr ? "رمز التصفير (مثال: WIPE123)" : "Wipe Passcode (e.g. WIPE123)"}
-                            />
-                            <button
-                               type="button"
-                               onClick={handleUpdateWipePassword}
-                               className="px-6 py-3 bg-[#C2A378] hover:bg-[#C2A378]/90 text-[#3a3833] font-black uppercase text-[9px] tracking-widest rounded-xl transition-all active:scale-95 shrink-0"
-                            >
-                               {isAr ? 'حفظ الرمز' : 'Save Passcode'}
-                            </button>
-                         </div>
-                      </div>
-
                       <div className="p-6 bg-black/40 rounded-2xl border-2 border-rose-900/30 flex items-center justify-between">
                          <div className="flex items-center gap-4">
                             <button onClick={() => setShieldActive(!shieldActive)} className={toggleClass(shieldActive)}><span className={toggleThumbClass(shieldActive)} /></button>
@@ -774,21 +729,6 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
                       {shieldActive ? (
                         <div className="space-y-8 animate-in slide-in-from-top-6 duration-500">
                            <div className="grid grid-cols-1 gap-6">
-                              <div>
-                                 <div className="flex justify-between items-center mb-2">
-                                    <label className="text-[9px] font-black uppercase text-rose-700 block tracking-widest font-sans">Root Auth Key</label>
-                                    <span className="text-[8px] font-black text-slate-500 tracking-wider font-mono">
-                                       {isAr ? `الرمز المطلوب: ${user.wipePassword || 'WIPE123'}` : `Required Code: ${user.wipePassword || 'WIPE123'}`}
-                                    </span>
-                                 </div>
-                                 <input 
-                                    type="password" 
-                                    className="w-full p-5 rounded-2xl bg-black border-2 border-rose-900/50 text-rose-500 font-mono text-lg tracking-[0.5em] outline-none focus:border-rose-500 focus:shadow-[0_0_20px_rgba(225,29,72,0.1)] transition-all" 
-                                    value={purgeAuthPassword} 
-                                    onChange={e => setPurgeAuthPassword(e.target.value)} 
-                                    placeholder="••••••••" 
-                                 />
-                              </div>
                               <div>
                                  <label className="text-[9px] font-black uppercase text-rose-700 block mb-2 tracking-widest font-sans">Confirm Terminal String</label>
                                  <input 
@@ -807,7 +747,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
                                 onMouseLeave={stopPurgeHold} 
                                 onTouchStart={startPurgeHold}
                                 onTouchEnd={stopPurgeHold}
-                                disabled={purgeConfirmText !== NUCLEAR_PHRASE || purgeAuthPassword !== (user.wipePassword || 'WIPE123')} 
+                                disabled={purgeConfirmText !== NUCLEAR_PHRASE} 
                                 className="w-full py-10 rounded-[2.5rem] bg-rose-600 hover:bg-rose-500 disabled:bg-slate-800 disabled:opacity-20 text-white font-black uppercase text-sm tracking-[0.5em] shadow-[0_20px_50px_rgba(225,29,72,0.4)] transition-all relative overflow-hidden group/burn"
                               >
                                 <span className="relative z-10">{holdTimer > 0 ? 'PURGING DATA CORE...' : 'HOLD TO EXECUTE TERMINATION'}</span>
