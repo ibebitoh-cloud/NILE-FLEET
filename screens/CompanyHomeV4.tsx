@@ -68,6 +68,24 @@ const drawCrane = (ctx: CanvasRenderingContext2D, x: number, g: number, h: numbe
   ctx.stroke();
 };
 
+// NF loop mark painted on the container sides. Loaded once; the canvas simply
+// skips it until the image is ready.
+const containerLogo = typeof Image !== 'undefined' ? Object.assign(new Image(), { src: '/nf-loop-navy.png' }) : null;
+const containerLogoLight = typeof Image !== 'undefined' ? Object.assign(new Image(), { src: '/nf-loop-white.png' }) : null;
+const logoReady = (img: HTMLImageElement | null): img is HTMLImageElement => Boolean(img && img.complete && img.naturalWidth);
+
+// Re-draw the corrugation over paint so the logo and lettering follow the
+// steel ribs instead of floating on top, with a little light falloff and grime.
+const paintCorrugation = (ctx: CanvasRenderingContext2D, x0: number, y0: number, w: number, h: number, step: number) => {
+  for (let x = x0 + step * 0.6; x < x0 + w - 4; x += step) {
+    ctx.fillStyle = 'rgba(0,0,0,.16)'; ctx.fillRect(x, y0 + 6, 2, h - 12);
+    ctx.fillStyle = 'rgba(255,255,255,.10)'; ctx.fillRect(x + 2, y0 + 6, 1.5, h - 12);
+  }
+  const shade = ctx.createLinearGradient(0, y0, 0, y0 + h);
+  shade.addColorStop(0, 'rgba(255,255,255,.08)'); shade.addColorStop(.55, 'rgba(0,0,0,0)'); shade.addColorStop(1, 'rgba(40,25,10,.22)');
+  ctx.fillStyle = shade; ctx.fillRect(x0, y0, w, h);
+};
+
 const drawWheel = (ctx: CanvasRenderingContext2D, x: number, y: number, r: number, ang: number, dark: boolean) => {
   ctx.fillStyle = '#07090c'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = dark ? '#1c2530' : '#2b3644'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, r - 4, 0, Math.PI * 2); ctx.stroke();
@@ -102,12 +120,15 @@ const drawTruck = (ctx: CanvasRenderingContext2D, o: TruckOpts) => {
   const cg = ctx.createLinearGradient(0, -198, 0, -80);
   cg.addColorStop(0, '#dcc197'); cg.addColorStop(1, '#a58248');
   ctx.fillStyle = cg; ctx.fillRect(-380, -198, 340, 118);
-  ctx.strokeStyle = 'rgba(0,0,0,.2)'; ctx.lineWidth = 2;
-  for (let x = -368; x < -45; x += 20) { ctx.beginPath(); ctx.moveTo(x, -192); ctx.lineTo(x, -86); ctx.stroke(); }
-  ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(-380, -198, 340, 6); ctx.fillRect(-380, -86, 340, 6);
+  // painted livery: NF loop mark + lettering, slightly worn
+  ctx.globalAlpha = 0.92;
+  if (logoReady(containerLogo)) ctx.drawImage(containerLogo, -368, -180, 76, 76);
   ctx.fillStyle = '#0b1b2c'; ctx.textAlign = 'center';
-  ctx.font = 'italic 900 38px system-ui, Arial, sans-serif'; ctx.fillText('NILE FLEET', -210, -132);
-  ctx.font = '800 11px system-ui, Arial, sans-serif'; ctx.fillText('TRANSPORT · LOGISTICS · EGYPT', -210, -110);
+  ctx.font = 'italic 900 32px system-ui, Arial, sans-serif'; ctx.fillText('NILE FLEET', -176, -136);
+  ctx.font = '800 10px system-ui, Arial, sans-serif'; ctx.fillText('TRANSPORT · LOGISTICS · EGYPT', -176, -114);
+  ctx.globalAlpha = 1;
+  paintCorrugation(ctx, -380, -198, 340, 118, 20);
+  ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(-380, -198, 340, 6); ctx.fillRect(-380, -86, 340, 6);
   // tail lights
   ctx.fillStyle = '#ff2b2b'; ctx.fillRect(-384, -100, 6, 16);
 
@@ -201,12 +222,16 @@ const drawFrontTruck = (ctx: CanvasRenderingContext2D, o: {
   ctx.fill();
   ctx.strokeStyle = 'rgba(194,163,120,.45)'; ctx.lineWidth = 3;
   ctx.strokeRect(-112, -375, 224, 150);
+  ctx.globalAlpha = 0.9;
+  if (logoReady(containerLogoLight)) ctx.drawImage(containerLogoLight, -30, -368, 60, 60);
   ctx.fillStyle = '#c2a378';
   ctx.font = '900 19px system-ui,Arial';
   ctx.textAlign = 'center';
-  ctx.fillText('NILE FLEET', 0, -300);
+  ctx.fillText('NILE FLEET', 0, -282);
   ctx.font = '700 8px system-ui,Arial';
-  ctx.fillText('TRANSPORT · LOGISTICS · EGYPT', 0, -281);
+  ctx.fillText('TRANSPORT · LOGISTICS · EGYPT', 0, -265);
+  ctx.globalAlpha = 1;
+  paintCorrugation(ctx, -112, -375, 224, 150, 16);
 
   // Cab main shell — wide, tapered, forward-facing
   const body = ctx.createLinearGradient(-155, -250, 155, -40);
@@ -420,6 +445,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
   const [soundOn, setSoundOn] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  // Night-port hero photo from the reference design. Hidden until
+  // public/hero-night-port.jpg exists; the animated convoy shows instead.
+  const [heroPhoto, setHeroPhoto] = useState(true);
   const bebitoStyles = [
     { fontFamily: '"Brush Script MT","Segoe Script","Lucida Handwriting",cursive', color: '#ffffff', shadow: 'rgba(194,163,120,.34)' },
     { fontFamily: 'Georgia, "Times New Roman", serif', color: '#c2a378', shadow: 'rgba(194,163,120,.38)' },
@@ -846,7 +874,6 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     explore: ar ? 'استكشف العمليات' : 'Explore Operations',
     founded: ar ? 'التأسيس' : 'FOUNDED',
     years: ar ? 'سنوات' : 'YEARS',
-    coverage: ar ? 'التغطية · 5 موانئ' : 'COVERAGE · 5 PORTS',
     coveragePorts: ar ? ['العين السخنة', 'الإسكندرية', 'دمياط', 'بورسعيد', 'SCCT'] : ['SOKHNA', 'ALEXANDRIA', 'DAMIETTA', 'PORT SAID', 'SCCT'],
     ops24: ar ? 'العمليات' : 'OPERATIONS',
     company: ar ? 'الشركة' : 'Company',
@@ -1185,7 +1212,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       <header className={`sticky top-0 z-40 border-b backdrop-blur-2xl ${K.head}`}>
         <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4 lg:px-10">
           <a href="#top" className="group flex min-w-0 items-center gap-2 sm:gap-3">
-            <img src="/nile-fleet-logo.png" className="h-8 w-8 shrink-0 object-contain sm:h-10 sm:w-10 transition-transform duration-500 group-hover:rotate-6" alt="Nile Fleet" />
+            <img src={isDark ? '/nf-loop-white.png' : '/nf-loop-navy.png'} className="h-8 w-8 shrink-0 object-contain sm:h-10 sm:w-10 transition-transform duration-500 group-hover:rotate-6" alt="Nile Fleet" />
             <div>
               <div dir="ltr" className="flex items-baseline gap-2 whitespace-nowrap text-[15px] font-black tracking-tight sm:text-[17px]">NILE <span className={gold}>FLEET</span><span className="hidden text-[7px] font-black uppercase tracking-[.18em] text-[#c2a378] whitespace-nowrap sm:inline">POWERED BY <span className="text-white">BEBITO</span></span></div>
               <div className={`whitespace-nowrap text-[7px] font-black uppercase tracking-[.12em] sm:tracking-[.34em] ${K.faint}`}>{tx.brandSub}</div>
@@ -1330,6 +1357,10 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
 <main id="top" className="relative z-10">
         <section className="relative flex min-h-[100vh] items-start overflow-hidden">
+          {heroPhoto && (
+            <img src="/hero-night-port.jpg" alt="" aria-hidden="true" fetchPriority="high" onError={() => setHeroPhoto(false)}
+              className={`nf4-hero-photo pointer-events-none absolute inset-0 h-full w-full object-cover object-[70%_center] ${isDark ? '' : 'opacity-35'}`} />
+          )}
           <div aria-hidden="true" className={`pointer-events-none absolute inset-0 ${isDark ? 'bg-[linear-gradient(90deg,rgba(2,3,5,.72)_0%,rgba(2,3,5,.35)_55%,transparent_100%)]' : 'bg-[linear-gradient(90deg,rgba(255,255,255,.82)_0%,rgba(255,255,255,.45)_55%,transparent_100%)]'} nf4-hero-scrim`} />
           <div className="nf4-hero-inner mx-auto grid w-full max-w-[1500px] items-start gap-12 px-5 pt-24 lg:grid-cols-[1.25fr_.75fr] lg:px-10 lg:pt-28">
             <div className="nf4-reveal">
@@ -1350,12 +1381,13 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
             </div>
 
             <div className="nf4-hero-stats hidden lg:block">
+              {/* Reference layout: Founded on its own, Years and 24/7 stacked with the ports they cover. */}
               <div className="grid grid-cols-2 gap-3">
-                {[['2009', tx.founded], ['17+', tx.years], ['5', tx.coverage], ['24/7', tx.ops24]].map(([v, l]) => (
-                  <div key={l} className={`nf4-stat rounded-2xl border p-4 backdrop-blur-md ${K.card}`}>
-                    <div className="text-2xl font-black">{v}</div>
-                    <div className={`mt-1 text-[7px] font-black tracking-[.16em] ${gold}`}>{l}</div>
-                    {l === tx.coverage && <div className={`mt-2 text-[7px] font-bold leading-4 ${K.faint}`}>{tx.coveragePorts.join(' · ')}</div>}
+                {([['2009', tx.founded, false], ['17+', tx.years, true], ['24/7', tx.ops24, true]] as const).map(([v, l, ports], i) => (
+                  <div key={l} className={`nf4-stat min-h-[170px] rounded-2xl border p-5 backdrop-blur-md ${K.card} ${i === 2 ? 'col-start-2' : ''}`}>
+                    <div className="text-5xl font-black tracking-[-.04em]">{v}</div>
+                    <div className={`mt-1 text-[9px] font-black tracking-[.16em] ${gold}`}>{l}</div>
+                    {ports && <div className={`mt-4 text-[9px] font-bold leading-4 ${K.soft}`}>{tx.coveragePorts.join(' · ')}</div>}
                   </div>
                 ))}
               </div>
