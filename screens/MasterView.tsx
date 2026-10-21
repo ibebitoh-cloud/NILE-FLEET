@@ -578,6 +578,7 @@ const MasterView: React.FC = () => {
     preset: 'all'
   });
   const [sortConfig, setSortConfig] = useState<SortConfig>(null);
+  const rowOrderRef = useRef<{ key: string; ids: string[] }>({ key: '', ids: [] });
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
   const [collapsedStatusGroups, setCollapsedStatusGroups] = useState<Set<string>>(new Set());
   const [showSettings, setShowSettings] = useState(false);
@@ -972,11 +973,13 @@ const MasterView: React.FC = () => {
   const handleBulkStatusChange = async (newStatus: 'IN PROGRESS' | 'UNDER OPERATE' | 'DONE' | 'HOLD' | 'CANCEL') => {
     if (isReadOnly) return;
     const ids = Array.from(selectedRowIds) as string[];
-    const jobs = ids.map(id => {
+    // Sequential on purpose: each DONE update may auto-generate the booking's
+    // invoice, and parallel runs each billed the same operations again.
+    const results: boolean[] = [];
+    for (const id of ids) {
       const op = operations.find(o => o.id === id);
-      return op ? db.updateOperation({ ...op, status: newStatus }) : Promise.resolve(true);
-    });
-    const results = await Promise.all(jobs);
+      results.push(op ? await db.updateOperation({ ...op, status: newStatus }) : true);
+    }
     const failed = results.filter(saved => saved === false).length;
     if (failed) {
       alert(isAr ? `فشل تحديث ${failed} عملية. ${db.getLastDbError() || ''}` : `Failed to update ${failed} operations. ${db.getLastDbError() || ''}`);
@@ -1309,20 +1312,36 @@ const MasterView: React.FC = () => {
       return matchesSearch && matchesColumnSearches && matchesPorts && matchesStatuses && matchesDate;
     });
 
+    // Deterministic last resort: many imported rows share date and created_at.
+    const tieBreak = (a: Operation, b: Operation) =>
+      String(b.createdAt || '').localeCompare(String(a.createdAt || '')) || String(a.id).localeCompare(String(b.id));
+
     if (sortConfig) {
       result.sort((a, b) => {
         const aVal = (a[sortConfig.key] || '').toString(); const bVal = (b[sortConfig.key] || '').toString();
         if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
         if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
+        return tieBreak(a, b);
       });
     } else {
       const statusOrder: Record<string, number> = { 'UNDER OPERATE': 1, 'IN PROGRESS': 2, 'DONE': 3, 'HOLD': 4, 'CANCEL': 5 };
       result.sort((a, b) => {
-        if (statusOrder[a.status] !== statusOrder[b.status]) return statusOrder[a.status] - statusOrder[b.status];
-        return b.operationDate.localeCompare(a.operationDate);
+        if (statusOrder[a.status] !== statusOrder[b.status]) return (statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99);
+        return String(b.operationDate || '').localeCompare(String(a.operationDate || '')) || tieBreak(a, b);
       });
     }
+
+    // Keep rows where they are while the user edits. Re-sort only when the
+    // sort, search or filters change; rows added since then go on top.
+    const viewKey = JSON.stringify([searchTerm, columnSearches, selectedPorts, selectedStatuses, dateFilter, sortConfig]);
+    if (viewKey === rowOrderRef.current.key && rowOrderRef.current.ids.length) {
+      const position = new Map(rowOrderRef.current.ids.map((id, index) => [id, index]));
+      const added = result.filter(op => !position.has(op.id));
+      const kept = result.filter(op => position.has(op.id))
+        .sort((a, b) => (position.get(a.id) as number) - (position.get(b.id) as number));
+      result = [...added, ...kept];
+    }
+    rowOrderRef.current = { key: viewKey, ids: result.map(op => op.id) };
     return result;
   }, [operations, searchTerm, columnSearches, selectedPorts, selectedStatuses, dateFilter, sortConfig, invoices, lang]);
 

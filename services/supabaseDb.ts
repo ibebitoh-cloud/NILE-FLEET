@@ -68,7 +68,9 @@ async function query<T>(table: string, options?: { filter?: Record<string, any>;
     Object.entries(options.filter).forEach(([k, v]) => { q = q.eq(k, v) as any; });
   }
   if (options?.order) {
-    q = q.order(options.order, { ascending: options.ascending ?? false }) as any;
+    // Tie-break on id: imported rows share timestamps, and without a unique
+    // second key Postgres returns them in a different order on each reload.
+    q = q.order(options.order, { ascending: options.ascending ?? false }).order('id', { ascending: true }) as any;
   }
   const { data, error } = await q;
   if (error) {
@@ -259,6 +261,7 @@ let _lastDbError = '';
 // tab, device, or user changes an operation/invoice/reservation/genset.
 let _realtimeChannel: ReturnType<typeof supabase.channel> | null = null;
 let _realtimeRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+const _invoiceGenerationLocks = new Map<string, Promise<Invoice | null>>();
 const _realtimeRefreshKinds = new Set<string>();
 
 function scheduleRealtimeRefresh(kind: string) {
@@ -539,7 +542,7 @@ class SupabaseDB {
   getLastDbError(): string { return _lastDbError; }
 
   async reloadOperations(): Promise<boolean> {
-    const { data, error } = await supabase.from('operations').select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('operations').select('*').order('created_at', { ascending: false }).order('id', { ascending: true });
     if (error) {
       _lastDbError = `operations: ${error.message}`;
       console.error('[supabaseDb] reload operations:', error.message);
@@ -1013,6 +1016,19 @@ class SupabaseDB {
   // ─── invoices ──────────────────────────────────────────────────────────────
 
   async generateInvoiceFromBooking(bookingNumber: string, customerName: string): Promise<Invoice | null> {
+    // Serialize per booking so concurrent callers cannot bill the same operations twice.
+    const key = `${bookingNumber}\u0000${customerName}`;
+    const pending = _invoiceGenerationLocks.get(key) || Promise.resolve(null);
+    const run = pending.catch(() => null).then(() => this._generateInvoiceFromBooking(bookingNumber, customerName));
+    _invoiceGenerationLocks.set(key, run);
+    try {
+      return await run;
+    } finally {
+      if (_invoiceGenerationLocks.get(key) === run) _invoiceGenerationLocks.delete(key);
+    }
+  }
+
+  private async _generateInvoiceFromBooking(bookingNumber: string, customerName: string): Promise<Invoice | null> {
     const units = _operations.filter(o =>
       o.bookingNumber === bookingNumber &&
       o.customerName === customerName &&

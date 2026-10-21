@@ -278,6 +278,8 @@ export interface GensetReplacement {
 
 export interface Operation {
   id: string;
+  /** Set by the database; read-only in the app. */
+  createdAt?: string;
   customerId?: string;
   internalSerial: string;
   reservationId?: string;
