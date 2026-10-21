@@ -240,12 +240,16 @@ const App: React.FC = () => {
         ? element.value
         : element.textContent || '';
       const hasArabic = arabicPattern.test(value);
-      element.classList.toggle('nf-arabic-text', hasArabic);
+      const wasArabic = element.classList.contains('nf-arabic-text');
+      // Only touch the DOM when something changes; rewriting identical
+      // attributes on every render forces extra style work on big tables.
       if (hasArabic) {
         const hasLatin = /[A-Za-z]/.test(value);
-        element.setAttribute('lang', 'ar');
-        element.setAttribute('dir', hasLatin ? 'auto' : 'rtl');
-      } else if (element.classList.contains('nf-arabic-text')) {
+        if (!wasArabic) element.classList.add('nf-arabic-text');
+        if (element.getAttribute('lang') !== 'ar') element.setAttribute('lang', 'ar');
+        if (element.getAttribute('dir') !== (hasLatin ? 'auto' : 'rtl')) element.setAttribute('dir', hasLatin ? 'auto' : 'rtl');
+      } else if (wasArabic) {
+        element.classList.remove('nf-arabic-text');
         element.removeAttribute('lang');
         element.removeAttribute('dir');
       }
@@ -267,16 +271,28 @@ const App: React.FC = () => {
     };
 
     scan();
-    const observer = new MutationObserver(mutations => {
+    // Collect changes and handle them once per frame instead of on every
+    // mutation, so typing or a table re-render doesn't rescan synchronously.
+    let pending: MutationRecord[] = [];
+    let frame = 0;
+    const flush = () => {
+      frame = 0;
+      const mutations = pending;
+      pending = [];
       observer.disconnect();
       for (const mutation of mutations) {
         if (mutation.type === 'characterData' && mutation.target.parentElement) applyArabicTypography(mutation.target.parentElement);
         mutation.addedNodes.forEach(node => {
+          if (!node.isConnected) return;
           if (node.nodeType === Node.ELEMENT_NODE) scan(node);
           else if (node.nodeType === Node.TEXT_NODE && node.parentElement) applyArabicTypography(node.parentElement);
         });
       }
       observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    };
+    const observer = new MutationObserver(mutations => {
+      pending.push(...mutations);
+      if (!frame) frame = requestAnimationFrame(flush);
     });
     observer.observe(document.body, { childList: true, subtree: true, characterData: true });
 
@@ -288,6 +304,7 @@ const App: React.FC = () => {
     document.addEventListener('change', handleInput, true);
     return () => {
       observer.disconnect();
+      if (frame) cancelAnimationFrame(frame);
       document.removeEventListener('input', handleInput, true);
       document.removeEventListener('change', handleInput, true);
     };

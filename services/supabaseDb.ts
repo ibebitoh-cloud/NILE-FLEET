@@ -209,6 +209,29 @@ async function remove(table: string, id: string): Promise<boolean> {
   return true;
 }
 
+// Screens call getInvoicePaidAmount once per invoice row, which used to scan
+// every allocation and invoice each time. The cache arrays are replaced (never
+// mutated) on change, so these indexes rebuild only when the array changes.
+let _allocIndexSource: PaymentAllocation[] | null = null;
+let _allocIndex = new Map<string, number>();
+function getAllocatedByInvoice(): Map<string, number> {
+  if (_allocIndexSource !== _paymentAllocations) {
+    _allocIndex = new Map();
+    for (const a of _paymentAllocations) _allocIndex.set(a.invoiceId, (_allocIndex.get(a.invoiceId) || 0) + Number(a.amount || 0));
+    _allocIndexSource = _paymentAllocations;
+  }
+  return _allocIndex;
+}
+let _invoiceIndexSource: Invoice[] | null = null;
+let _invoiceIndex = new Map<string, Invoice>();
+function getInvoiceById(): Map<string, Invoice> {
+  if (_invoiceIndexSource !== _invoices) {
+    _invoiceIndex = new Map(_invoices.map(i => [i.id, i]));
+    _invoiceIndexSource = _invoices;
+  }
+  return _invoiceIndex;
+}
+
 function dispatchChange(detail?: { entity?: string; id?: string }) {
   window.dispatchEvent(new CustomEvent('db-undo-success', { detail }));
   window.dispatchEvent(new CustomEvent('db-change', { detail }));
@@ -284,19 +307,16 @@ function scheduleRealtimeRefresh(kind: string) {
     };
 
     if (kinds.has('operations')) {
-      await reload<Operation>('operations', rows => { _operations = rows; }, 'created_at');
-      await reload<Genset>('gensets', rows => { _stock = rows; }, 'created_at');
-      await reload<Invoice>('invoices', rows => { _invoices = rows; }, 'created_at');
+      kinds.add('gensets');
+      kinds.add('invoices');
     }
-    if (kinds.has('gensets')) {
-      await reload<Genset>('gensets', rows => { _stock = rows; }, 'created_at');
-    }
-    if (kinds.has('invoices')) {
-      await reload<Invoice>('invoices', rows => { _invoices = rows; }, 'created_at');
-    }
-    if (kinds.has('reservations')) {
-      await reload<Reservation>('reservations', rows => { _reservations = rows; }, 'created_at');
-    }
+    // Fetch the affected tables in parallel instead of one after another.
+    await Promise.all([
+      kinds.has('operations') && reload<Operation>('operations', rows => { _operations = rows; }, 'created_at'),
+      kinds.has('gensets') && reload<Genset>('gensets', rows => { _stock = rows; }, 'created_at'),
+      kinds.has('invoices') && reload<Invoice>('invoices', rows => { _invoices = rows; }, 'created_at'),
+      kinds.has('reservations') && reload<Reservation>('reservations', rows => { _reservations = rows; }, 'created_at'),
+    ]);
 
     if (changed) dispatchChange();
   }, 150);
@@ -568,10 +588,8 @@ class SupabaseDB {
   getPayments(): Payment[] { return _payments; }
   getPaymentAllocations(): PaymentAllocation[] { return _paymentAllocations; }
   getInvoicePaidAmount(invoiceId: string): number {
-    const allocated = _paymentAllocations
-      .filter(a => a.invoiceId === invoiceId)
-      .reduce((sum, a) => sum + Number(a.amount || 0), 0);
-    const invoice = _invoices.find(i => i.id === invoiceId);
+    const allocated = getAllocatedByInvoice().get(invoiceId) || 0;
+    const invoice = getInvoiceById().get(invoiceId);
 
     // The invoice editor has an explicit PAID/UNPAID control. Keep dashboard
     // and Financials consistent with that authoritative settlement status while
