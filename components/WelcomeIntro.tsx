@@ -70,6 +70,8 @@ const WelcomeIntro: React.FC = () => {
           <DrawText text="FLEET" color="#c2a378" delay={1.42} />
         </h1>
         <p className="nfw-tag" dir="ltr"><span>Transport and logistics</span><span className="nfw-tag-gold">Egypt - UAE</span></p>
+      </div>
+      <div className="nfw-foot">
         <div className="nfw-actions">
           <button type="button" className="nfw-btn nfw-primary" onClick={() => close()}>
             {t.enter} <span className="nfw-arrow" aria-hidden="true">→</span>
@@ -78,10 +80,10 @@ const WelcomeIntro: React.FC = () => {
             {t.quote} <span className="nfw-arrow" aria-hidden="true">↗</span>
           </button>
         </div>
-      </div>
-      <div className="nfw-sig">
-        <span>{t.by}</span>
-        <img src="/dali/dali-studio-on-dark.png" alt="Dali Studio" />
+        <div className="nfw-sig">
+          <span>{t.by}</span>
+          <img src="/dali/dali-studio-on-dark.png" alt="Dali Studio" />
+        </div>
       </div>
     </div>
   );
