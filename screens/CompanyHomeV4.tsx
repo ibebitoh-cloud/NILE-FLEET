@@ -1355,7 +1355,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         <section id="in-motion" aria-label={ar ? 'نيل فليت، دائماً في حركة' : 'Nile Fleet, always in motion'}>
           <TubesCursor light={!isDark} className="nf4-tubes h-[60svh] min-h-[420px] max-h-[900px] select-none sm:h-[calc(100svh-64px)] sm:min-h-[480px]">
             <div className={`flex h-full flex-col items-center justify-center px-5 text-center ${isDark ? 'text-white' : 'text-[#0b2a4a]'}`}>
-              <img src={isDark ? '/nf-badge-navy.png' : '/nf-badge-white.png'} alt="Nile Fleet" className={`h-44 w-44 rounded-[22%] sm:h-56 sm:w-56 lg:h-72 lg:w-72 ${isDark ? 'shadow-[0_0_0_1px_rgba(255,255,255,.14),0_18px_60px_rgba(0,0,0,.55)]' : 'shadow-[0_18px_50px_rgba(11,42,74,.25)]'}`} />
+              <img src={isDark ? '/nf-mark-white.png' : '/nf-mark-navy.png'} alt="Nile Fleet" className={`h-36 w-auto sm:h-48 lg:h-60 ${isDark ? 'drop-shadow-[0_0_34px_rgba(194,163,120,.4)]' : 'drop-shadow-[0_10px_30px_rgba(11,42,74,.2)]'}`} />
               <h2 dir="ltr" aria-label="Nile Fleet" className={`mt-8 flex items-center gap-[.22em] text-5xl font-black uppercase italic leading-none tracking-[-.05em] sm:text-7xl lg:text-8xl ${isDark ? 'drop-shadow-[0_4px_30px_rgba(0,0,0,.6)]' : 'drop-shadow-[0_4px_24px_rgba(255,255,255,.8)]'}`}>
                 <DrawText text="Nile" color={isDark ? '#ffffff' : '#0b2a4a'} />
                 <DrawText text="Fleet" color={isDark ? '#c2a378' : '#8a6a35'} delay={0.6} />
