@@ -4,6 +4,7 @@ import BeamWordmarkFooter from '@/components/ui/beam-wordmark-footer';
 import DaliSignature from '@/components/DaliSignature';
 import TubesCursor from '@/components/ui/tubes-cursor';
 import DrawText from '@/components/ui/draw-text';
+import WelcomeIntro from '@/components/WelcomeIntro';
 
 interface Props { onGenset: () => void; }
 
@@ -967,6 +968,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
   return (
     <div ref={wrapRef} data-no-translate dir={ar ? "rtl" : "ltr"} className={`nf-home nf4 ${isDark ? 'nf4-dark' : 'nf4-light'} min-h-screen overflow-x-hidden selection:bg-[#c2a378] selection:text-black ${K.root}`}>
+      <WelcomeIntro ar={ar} />
       <style>{`
         @keyframes nf4Reveal { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
         @keyframes nf4Pulse { 0%,100%{box-shadow:0 0 0 rgba(194,163,120,0)} 50%{box-shadow:0 0 42px rgba(194,163,120,.28)} }
