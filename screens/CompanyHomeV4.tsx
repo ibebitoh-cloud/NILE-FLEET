@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { LanguageContext, ThemeContext } from '../App';
+import BeamWordmarkFooter from '@/components/ui/beam-wordmark-footer';
 
 interface Props { onGenset: () => void; }
 
@@ -1126,6 +1127,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
             @media(max-width:767px){.nf-home .nf4-hero-title{font-size:clamp(3.2rem,18vw,5.2rem)}.nf-home .nf4-network-grid>div,.nf-home .nf4-leadership-grid>div{min-height:220px}}
         .nf4-hdr-btn{white-space:nowrap}
         [dir=rtl] .nf4-hero-scrim{transform:scaleX(-1)}
+        @container (max-width: 480px){.nf4-beam-footer .bwf-inner{grid-template-columns:minmax(0,1fr)}.nf4-beam-footer .bwf-link-t{overflow-wrap:anywhere}}
         .nf4-mobile-nav{scrollbar-width:none}
         @media(max-width:767px){.nf-home *{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}}
         .nf-home a.rounded-full,.nf-home button.rounded-full{display:inline-flex;align-items:center;justify-content:center}
@@ -1757,29 +1759,38 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           </Reveal>
         </section>
 
-        <section className={`relative overflow-hidden backdrop-blur-md ${K.foot}`}>
-          <div className="mx-auto max-w-[1500px] px-5 pb-24 pt-20 lg:px-10">
-            <div className="mt-16 flex flex-col items-center justify-center text-center">
-              <div className="nf4-footer-signature-line">
-                <strong>{ar ? 'أسطول النيل' : 'Nile Fleet'}</strong>
-                <span>{tx.safe}</span>
-              </div>
-              <div className="mt-5 nf4-bebito-signature" aria-label="Powered by Bebito">
-                <span className="nf4-bebito-powered">POWERED BY</span>
-                <span className="nf4-bebito-name" role="button" tabIndex={0}
-                  onClick={cycleBebitoStyle} onTouchStart={cycleBebitoStyle}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cycleBebitoStyle(); } }}
-                  style={{fontFamily:bebitoStyles[bebitoStyleIndex].fontFamily,color:bebitoStyles[bebitoStyleIndex].color,textShadow:`0 0 20px ${bebitoStyles[bebitoStyleIndex].shadow}`}}
-                  aria-label="Change Bebito signature style">Bebito</span>
-                <div className="nf4-footer-contact">
-                  <div>{ar ? 'شارع 23 يوليو · عمارة أبو الخير · الدور الثاني' : '23 July St. · Abo Elkheer Building · 2nd Floor'}</div>
-                  <div>{ar ? 'بورسعيد، مصر' : 'Port Said, Egypt'}</div>
-                  <div><span dir="ltr">nilefleet@nilefleetlogistics.com</span> · {ar ? 'النقل' : 'Transport'} <span dir="ltr">01000992858</span> · {ar ? 'الجينسيت' : 'Genset'} <span dir="ltr">01212229077</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        <BeamWordmarkFooter
+          brand="Nile Fleet"
+          wordmark="NILE FLEET"
+          company={ar ? 'أسطول النيل لخدمات النقل واللوجستيات' : 'Nile Fleet for Transport and Logistics Service'}
+          socials={[
+            { label: 'LinkedIn', href: 'https://www.linkedin.com/company/nile-fleet-for-transport-and-logistics-service', icon: 'linkedin' },
+            { label: 'Facebook', href: 'https://www.facebook.com/profile.php?id=61591362501143', icon: 'facebook' },
+            { label: 'WhatsApp', href: `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(ar ? 'مرحباً أسطول النيل' : 'Hello Nile Fleet')}`, icon: 'whatsapp' },
+          ]}
+          credits={[
+            { lead: ar ? 'شارع 23 يوليو · عمارة أبو الخير · الدور الثاني · ' : '23 July St. · Abo Elkheer Building · 2nd Floor · ', label: ar ? 'بورسعيد، مصر' : 'Port Said, Egypt' },
+            { lead: ar ? 'مدعوم من ' : 'Powered by ', label: 'Bebito' },
+          ]}
+          columns={[
+            { title: ar ? 'الشركة' : 'Company', links: nav.slice(0, 5).map(([label, href]) => { const t = String(label); return { label: ar ? t : t.charAt(0) + t.slice(1).toLowerCase(), href: String(href) }; }) },
+            { title: ar ? 'تواصل معنا' : 'Contact', links: [
+              { label: ar ? 'طلب عرض سعر' : 'Get a quote', href: '#quote' },
+              { label: `${ar ? 'النقل' : 'Transport'} \u2066+20 100 099 2858\u2069`, href: 'tel:+201000992858' },
+              { label: `${ar ? 'الجينسيت' : 'Genset'} \u2066+20 121 222 9077\u2069`, href: 'tel:+201212229077' },
+              { label: CONTACT_EMAIL, href: `mailto:${CONTACT_EMAIL}` },
+            ] },
+          ]}
+          background="#05070a"
+          ink="#eef1f5"
+          muted="#8f99a6"
+          accent="#c2a378"
+          wordTop="#7a6342"
+          wordFoot="#05070a"
+          fontSans='Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif'
+          wordWeight={900}
+          className="nf4-beam-footer"
+        />
       </main>
 
       <a href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(ar ? 'مرحباً أسطول النيل' : 'Hello Nile Fleet')}`} target="_blank" rel="noreferrer" aria-label={ar ? 'تواصل على واتساب' : 'Chat on WhatsApp'} className="nf4-whatsapp fixed bottom-4 left-4 z-40 grid h-14 w-14 place-items-center rounded-full bg-[#25D366] text-black shadow-[0_10px_30px_rgba(37,211,102,.35)] transition hover:-translate-y-1">
