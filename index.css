@@ -66,11 +66,12 @@
 .nfw-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(12px, 2vh, 22px); padding-top: 6vh; padding-bottom: 16vh; text-align: center; pointer-events: none; }
 .nfw-content button, .nfw-content a { pointer-events: auto; }
 .nfw-markwrap { position: relative; display: grid; place-items: center; }
-.nfw-markwrap::before { content: ""; position: absolute; inset: -25% -35%; z-index: -1; background: radial-gradient(closest-side, rgba(194,163,120,.32), transparent); opacity: 0; transition: opacity var(--lamp) ease; }
+.nfw-markwrap::before { content: ""; position: absolute; inset: -25% -35%; z-index: -1; background: radial-gradient(closest-side, rgba(194,163,120,.42), rgba(194,163,120,.12) 60%, transparent); opacity: 0; transition: opacity var(--lamp) ease; }
 .nfw-open .nfw-markwrap::before { opacity: 1; }
-.nfw-mark { width: clamp(230px, 34vw, 400px); height: auto; opacity: 0; transform: translateY(-18px) scale(.94); filter: blur(6px) drop-shadow(0 0 30px rgba(194,163,120,.45));
-  transition: opacity 1.4s ease, transform 1.6s cubic-bezier(.16,.84,.24,1), filter 1.4s ease; }
-.nfw-text .nfw-mark { opacity: 1; transform: none; filter: blur(0) drop-shadow(0 0 30px rgba(194,163,120,.45)); }
+/* No CSS filter on the mark: iOS WebKit drew the blurred, drop-shadowed PNG as a solid white box. The glow comes from .nfw-markwrap::before. */
+.nfw-mark { display: block; width: clamp(230px, 34vw, 400px); height: auto; opacity: 0; transform: translateY(-18px) scale(.94);
+  transition: opacity 1.4s ease, transform 1.6s cubic-bezier(.16,.84,.24,1); }
+.nfw-text .nfw-mark { opacity: 1; transform: none; }
 .nfw-word { display: flex; gap: .24em; font-weight: 900; font-style: italic; text-transform: uppercase; letter-spacing: -.05em; font-size: clamp(2rem, 6.4vw, 4.6rem); line-height: 1; margin: 0; }
 .nfw-word svg { filter: drop-shadow(0 0 1px rgba(255,255,255,.35)) drop-shadow(0 0 22px rgba(194,163,120,.28)); }
 .nfw .nf-draw tspan { animation: none; }
