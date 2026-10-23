@@ -1209,7 +1209,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           <a href="#top" className="group flex min-w-0 items-center gap-2 sm:gap-3">
             <img src={isDark ? '/nf-loop-white.png' : '/nf-loop-navy.png'} className="h-8 w-8 shrink-0 object-contain sm:h-10 sm:w-10 transition-transform duration-500 group-hover:rotate-6" alt="Nile Fleet" />
             <div>
-              <div dir="ltr" className="flex items-baseline gap-2 whitespace-nowrap text-[15px] font-black tracking-tight sm:text-[17px]">NILE <span className={gold}>FLEET</span><span className="hidden text-[7px] font-black uppercase tracking-[.18em] text-[#c2a378] whitespace-nowrap sm:inline">POWERED BY <img src="/dali/dali-mark.png" alt="" className="mx-1 inline h-[9px] w-auto align-[-1px]" /><span className="text-white">DALI STUDIO</span></span></div>
+              <div dir="ltr" className="flex items-baseline gap-2 whitespace-nowrap text-[15px] font-black tracking-tight sm:text-[17px]">NILE <span className={gold}>FLEET</span><span className="hidden text-[7px] font-black uppercase tracking-[.18em] text-[#c2a378] whitespace-nowrap sm:inline">POWERED BY <img src="/dali/dali-mark.png" alt="" className="mx-1 inline h-[9px] w-auto align-[-1px]" /><span className={isDark ? 'text-white' : 'text-[#0b2a4a]'}>DALI STUDIO</span></span></div>
               <div className={`whitespace-nowrap text-[7px] font-black uppercase tracking-[.12em] sm:tracking-[.34em] ${K.faint}`}>{tx.brandSub}</div>
             </div>
           </a>
@@ -1351,13 +1351,15 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 `}</style>
 
 <main id="top" className="relative z-10">
-        <section id="in-motion" aria-label={ar ? 'نيل فليت، حلول تثق بها' : 'Nile Fleet, a solution you trust'}>
-          <TubesCursor className="nf4-tubes h-[60svh] min-h-[420px] max-h-[900px] select-none sm:h-[calc(100svh-64px)] sm:min-h-[480px]">
-            <div className="flex h-full flex-col items-center justify-center px-5 text-center text-white">
-              <h2 dir="ltr" className="font-black uppercase italic leading-[.88] tracking-[-.05em] drop-shadow-[0_4px_30px_rgba(0,0,0,.6)] text-7xl sm:text-8xl lg:text-9xl">
-                Nile<br /><span className="font-light not-italic">Fleet</span>
+        <section id="in-motion" aria-label={ar ? 'مرحباً بك في نيل فليت، دائماً في حركة' : 'Welcome to Nile Fleet, always in motion'}>
+          <TubesCursor light={!isDark} className="nf4-tubes h-[60svh] min-h-[420px] max-h-[900px] select-none sm:h-[calc(100svh-64px)] sm:min-h-[480px]">
+            <div className={`flex h-full flex-col items-center justify-center px-5 text-center ${isDark ? 'text-white' : 'text-[#0b2a4a]'}`}>
+              <img src={isDark ? '/nf-loop-white.png' : '/nf-loop-navy.png'} alt="Nile Fleet" className="h-16 w-auto drop-shadow-[0_0_24px_rgba(194,163,120,.35)] sm:h-20 lg:h-24" />
+              <div className={`mt-6 text-[11px] font-black uppercase tracking-[.48em] sm:text-xs ${gold}`}>{ar ? 'مرحباً بك' : 'Welcome'}</div>
+              <h2 dir="ltr" className={`mt-3 whitespace-nowrap pr-[.06em] text-5xl font-black uppercase italic leading-none tracking-[-.05em] sm:text-7xl lg:text-8xl ${isDark ? 'drop-shadow-[0_4px_30px_rgba(0,0,0,.6)]' : 'drop-shadow-[0_4px_24px_rgba(255,255,255,.8)]'}`}>
+                Nile <span className={gold}>Fleet</span>
               </h2>
-              <p className="mt-6 text-sm font-bold uppercase tracking-[.32em] text-[#c2a378] sm:text-base">{ar ? 'حلول تثق بها' : 'A solution you trust'}</p>
+              <p className={`mt-5 text-xs font-black uppercase tracking-[.42em] sm:text-sm ${isDark ? 'text-white/85' : 'text-[#0b2a4a]/80'}`}>{ar ? 'دائماً في حركة' : 'Always in motion'}</p>
             </div>
           </TubesCursor>
         </section>

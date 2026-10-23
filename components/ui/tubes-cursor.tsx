@@ -9,6 +9,14 @@ import React, { useEffect, useRef } from "react";
 
 export type TubesPalette = { colors: string[]; glow: string };
 
+/** Deeper colours for light backgrounds, where additive glow would wash out. */
+export const LIGHT_TUBES_PALETTES: TubesPalette[] = [
+  { colors: ["#a8844f", "#1d4ed8", "#c2a378", "#0b2a4a", "#3b82f6"], glow: "#c2a37833" },
+  { colors: ["#c026d3", "#7c3aed", "#2563eb", "#db2777", "#4f46e5"], glow: "#7c3aed26" },
+  { colors: ["#059669", "#0d9488", "#65a30d", "#ea580c", "#0891b2"], glow: "#05966926" },
+  { colors: ["#ea580c", "#ca8a04", "#e11d48", "#0b2a4a", "#c2410c"], glow: "#ea580c26" },
+];
+
 export const DEFAULT_TUBES_PALETTES: TubesPalette[] = [
   { colors: ["#c2a378", "#4f8cff", "#f3d9a4", "#8fd3ff", "#2f5bff"], glow: "#c2a37833" },
   { colors: ["#ff3fd8", "#8b5cff", "#3fa8ff", "#ff6aa8", "#5b3cff"], glow: "#7b3cff33" },
@@ -27,10 +35,13 @@ export interface TubesCursorProps {
   style?: React.CSSProperties;
   children?: React.ReactNode;
   onPaletteChange?: (index: number) => void;
+  /** Light theme: pale background and normal (non-additive) blending. */
+  light?: boolean;
 }
 
 export default function TubesCursor({
-  palettes = DEFAULT_TUBES_PALETTES,
+  light = false,
+  palettes = light ? LIGHT_TUBES_PALETTES : DEFAULT_TUBES_PALETTES,
   tubes = 5,
   length = 48,
   className,
@@ -120,12 +131,14 @@ export default function TubesCursor({
     const draw = () => {
       const pal = palettes[paletteRef.current % palettes.length];
       ctx.clearRect(0, 0, w, h);
-      ctx.globalCompositeOperation = "lighter";
+      ctx.globalCompositeOperation = light ? "source-over" : "lighter";
       ctx.lineCap = "butt";
       ctx.lineJoin = "round";
       // Each pass is drawn as a few long chunks (not per segment) so the
       // additive blend doesn't leave bright beads where segments overlap.
-      const passes: Array<[number, number]> = [[6, 0.06], [3.2, 0.12], [1.6, 0.35], [0.7, 0.9]];
+      const passes: Array<[number, number]> = light
+        ? [[4, 0.05], [2, 0.14], [0.9, 0.85]]
+        : [[6, 0.06], [3.2, 0.12], [1.6, 0.35], [0.7, 0.9]];
       const CHUNKS = 4;
       const path = (pts: Pt[], from: number, to: number) => {
         ctx.beginPath();
@@ -153,7 +166,8 @@ export default function TubesCursor({
             ctx.stroke();
           }
         }
-        // white-hot core along the head
+        // white-hot core along the head (dark theme only; it greys out on a light background)
+        if (light) return;
         ctx.strokeStyle = "#ffffff";
         ctx.globalAlpha = 0.45;
         ctx.lineWidth = Math.max(0.6, tube.width * scale * 0.3);
@@ -225,13 +239,13 @@ export default function TubesCursor({
       wrap.removeEventListener("click", onClick);
       document.removeEventListener("visibilitychange", onVis);
     };
-  }, [palettes, tubes, length, onPaletteChange]);
+  }, [palettes, tubes, length, onPaletteChange, light]);
 
   return (
     <div
       ref={wrapRef}
       className={className}
-      style={{ position: "relative", overflow: "hidden", background: "#030308", cursor: "pointer", touchAction: "pan-y", ...style }}
+      style={{ position: "relative", overflow: "hidden", background: light ? "#eef2f8" : "#030308", cursor: "pointer", touchAction: "pan-y", ...style }}
     >
       <div ref={glowRef} aria-hidden style={{ position: "absolute", inset: 0, transition: "background .6s ease", pointerEvents: "none" }} />
       <canvas ref={canvasRef} aria-hidden style={{ position: "absolute", inset: 0, display: "block", pointerEvents: "none" }} />
