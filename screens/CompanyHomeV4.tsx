@@ -1355,12 +1355,11 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         <section id="in-motion" aria-label={ar ? 'نيل فليت، دائماً في حركة' : 'Nile Fleet, always in motion'}>
           <TubesCursor light={!isDark} className="nf4-tubes h-[60svh] min-h-[420px] max-h-[900px] select-none sm:h-[calc(100svh-64px)] sm:min-h-[480px]">
             <div className={`flex h-full flex-col items-center justify-center px-5 text-center ${isDark ? 'text-white' : 'text-[#0b2a4a]'}`}>
-              <img src={isDark ? '/nf-badge-black.png' : '/nf-badge-white.png'} alt="Nile Fleet" className={`h-20 w-20 rounded-[22%] sm:h-24 sm:w-24 lg:h-28 lg:w-28 ${isDark ? 'shadow-[0_0_0_1px_rgba(255,255,255,.18),0_12px_40px_rgba(194,163,120,.35)]' : 'shadow-[0_12px_36px_rgba(11,42,74,.25)]'}`} />
-              <h2 dir="ltr" aria-label="Nile Fleet" className={`mt-6 flex flex-col items-center text-[5.5rem] font-black uppercase italic leading-[.85] tracking-[-.05em] sm:text-9xl lg:text-[11rem] ${isDark ? 'drop-shadow-[0_4px_30px_rgba(0,0,0,.6)]' : 'drop-shadow-[0_4px_24px_rgba(255,255,255,.8)]'}`}>
-                <DrawText text="Nile" color={isDark ? '#ffffff' : '#0b2a4a'} className="block" />
-                <DrawText text="Fleet" color={isDark ? '#c2a378' : '#8a6a35'} delay={0.6} className="mt-[.04em] block" />
+              <img src={isDark ? '/nf-mark-white.png' : '/nf-mark-navy.png'} alt="Nile Fleet" className={`h-36 w-auto sm:h-48 lg:h-60 ${isDark ? 'drop-shadow-[0_0_34px_rgba(194,163,120,.4)]' : 'drop-shadow-[0_10px_30px_rgba(11,42,74,.2)]'}`} />
+              <h2 dir="ltr" aria-label="Nile Fleet" className={`mt-8 flex items-center gap-[.22em] text-5xl font-black uppercase italic leading-none tracking-[-.05em] sm:text-7xl lg:text-8xl ${isDark ? 'drop-shadow-[0_4px_30px_rgba(0,0,0,.6)]' : 'drop-shadow-[0_4px_24px_rgba(255,255,255,.8)]'}`}>
+                <DrawText text="Nile" color={isDark ? '#ffffff' : '#0b2a4a'} />
+                <DrawText text="Fleet" color={isDark ? '#c2a378' : '#8a6a35'} delay={0.6} />
               </h2>
-              <p className={`mt-6 text-xs font-black uppercase tracking-[.42em] sm:text-base ${isDark ? 'text-white/85' : 'text-[#0b2a4a]/80'}`}>{ar ? 'دائماً في حركة' : 'Always in motion'}</p>
             </div>
           </TubesCursor>
         </section>
