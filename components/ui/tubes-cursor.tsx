@@ -51,7 +51,7 @@ export default function TubesCursor({
     if (!ctx) return;
 
     const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    let w = 0, h = 0, dpr = 1;
+    let w = 0, h = 0, dpr = 1, scale = 1;
     let raf = 0, running = false, visible = false;
     let t = 0;
     const pointer = { x: 0, y: 0, last: -1e9 };
@@ -72,6 +72,8 @@ export default function TubesCursor({
       dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       w = Math.max(1, r.width);
       h = Math.max(1, r.height);
+      // Thinner, tighter tubes on phones so they frame the text instead of swamping it.
+      scale = Math.max(0.8, Math.min(1, w / 900));
       canvas.width = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
       canvas.style.width = `${w}px`;
@@ -82,10 +84,15 @@ export default function TubesCursor({
       }
     };
 
-    const idleTarget = (time: number) => ({
-      x: w / 2 + Math.sin(time * 0.61) * w * 0.3 + Math.sin(time * 1.7) * w * 0.05,
-      y: h / 2 + Math.sin(time * 0.93 + 1.2) * h * 0.28 + Math.cos(time * 2.1) * h * 0.04,
-    });
+    const idleTarget = (time: number) => w < 640
+      ? { // narrow screens: a wide, flat orbit around the headline
+          x: w / 2 + Math.sin(time * 0.7) * w * 0.4,
+          y: h / 2 + Math.sin(time * 1.4) * h * 0.26,
+        }
+      : {
+          x: w / 2 + Math.sin(time * 0.61) * w * 0.3 + Math.sin(time * 1.7) * w * 0.05,
+          y: h / 2 + Math.sin(time * 0.93 + 1.2) * h * 0.28 + Math.cos(time * 2.1) * h * 0.04,
+        };
 
     const step = (now: number) => {
       t += 1 / 60;
@@ -96,8 +103,8 @@ export default function TubesCursor({
 
       for (const tube of tubeList) {
         const a = t * tube.speed * 2.2 + tube.phase;
-        const hx = target.x + Math.cos(a) * tube.radius;
-        const hy = target.y + Math.sin(a * 1.3) * tube.radius;
+        const hx = target.x + Math.cos(a) * tube.radius * scale;
+        const hy = target.y + Math.sin(a * 1.3) * tube.radius * scale;
         tube.vx = (tube.vx + (hx - tube.pts[0].x) * 0.12) * 0.72;
         tube.vy = (tube.vy + (hy - tube.pts[0].y) * 0.12) * 0.72;
         tube.pts[0].x += tube.vx;
@@ -141,7 +148,7 @@ export default function TubesCursor({
             if (to <= from) break;
             const k = 1 - c / CHUNKS;
             ctx.globalAlpha = alpha * (0.3 + 0.7 * k);
-            ctx.lineWidth = Math.max(0.6, tube.width * wMul * (0.35 + 0.65 * k));
+            ctx.lineWidth = Math.max(0.6, tube.width * scale * wMul * (0.35 + 0.65 * k));
             path(pts, from, to);
             ctx.stroke();
           }
@@ -149,7 +156,7 @@ export default function TubesCursor({
         // white-hot core along the head
         ctx.strokeStyle = "#ffffff";
         ctx.globalAlpha = 0.45;
-        ctx.lineWidth = Math.max(0.6, tube.width * 0.3);
+        ctx.lineWidth = Math.max(0.6, tube.width * scale * 0.3);
         path(pts, 0, Math.min(n - 1, 12));
         ctx.stroke();
       });

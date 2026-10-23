@@ -645,16 +645,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           ctx.fillStyle = `rgba(255,255,255,${a})`;
           ctx.fillRect(s.x * W - ox * 14 * s.s, s.y * H, s.s, s.s);
         }
-        const mg = ctx.createRadialGradient(W * 0.78 - ox * 24, H * 0.2, 0, W * 0.78 - ox * 24, H * 0.2, 120);
-        mg.addColorStop(0, 'rgba(255,244,214,.9)'); mg.addColorStop(0.3, 'rgba(255,244,214,.25)'); mg.addColorStop(1, 'rgba(255,244,214,0)');
-        ctx.fillStyle = mg; ctx.beginPath(); ctx.arc(W * 0.78 - ox * 24, H * 0.2, 120, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#f6efd9'; ctx.beginPath(); ctx.arc(W * 0.78 - ox * 24, H * 0.2, 30, 0, Math.PI * 2); ctx.fill();
       } else {
-        const sx = W * 0.78 - ox * 24, sy = H * 0.2;
-        const sg = ctx.createRadialGradient(sx, sy, 0, sx, sy, 200);
-        sg.addColorStop(0, 'rgba(255,240,170,.95)'); sg.addColorStop(0.25, 'rgba(255,230,140,.4)'); sg.addColorStop(1, 'rgba(255,230,140,0)');
-        ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(sx, sy, 200, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#fff6c9'; ctx.beginPath(); ctx.arc(sx, sy, 38, 0, Math.PI * 2); ctx.fill();
         for (const c of CLOUDS) {
           const cx = ((c.x - sim.worldX * 0.03 - ox * 30) % (W + 500) + (W + 500)) % (W + 500) - 250;
           ctx.fillStyle = `rgba(255,255,255,${c.a})`;
@@ -1361,9 +1352,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
 <main id="top" className="relative z-10">
         <section id="in-motion" aria-label={ar ? 'نيل فليت، حلول تثق بها' : 'Nile Fleet, a solution you trust'}>
-          <TubesCursor className="nf4-tubes h-[calc(100svh-64px)] min-h-[480px] max-h-[900px] select-none">
+          <TubesCursor className="nf4-tubes h-[60svh] min-h-[420px] max-h-[900px] select-none sm:h-[calc(100svh-64px)] sm:min-h-[480px]">
             <div className="flex h-full flex-col items-center justify-center px-5 text-center text-white">
-              <h2 dir="ltr" className="text-6xl font-black uppercase italic leading-[.88] tracking-[-.05em] drop-shadow-[0_4px_30px_rgba(0,0,0,.6)] sm:text-8xl lg:text-9xl">
+              <h2 dir="ltr" className="font-black uppercase italic leading-[.88] tracking-[-.05em] drop-shadow-[0_4px_30px_rgba(0,0,0,.6)] text-7xl sm:text-8xl lg:text-9xl">
                 Nile<br /><span className="font-light not-italic">Fleet</span>
               </h2>
               <p className="mt-6 text-sm font-bold uppercase tracking-[.32em] text-[#c2a378] sm:text-base">{ar ? 'حلول تثق بها' : 'A solution you trust'}</p>
