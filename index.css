@@ -63,7 +63,7 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.2 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   animation: nfw-grain 1.2s steps(6) infinite; }
 @keyframes nfw-grain { 0%,100% { transform: translate(0,0) } 20% { transform: translate(-3%,2%) } 40% { transform: translate(2%,-3%) } 60% { transform: translate(-2%,-1%) } 80% { transform: translate(3%,3%) } }
-.nfw-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(12px, 2vh, 22px); padding-top: 6vh; padding-bottom: 10vh; text-align: center; pointer-events: none; }
+.nfw-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(12px, 2vh, 22px); padding-top: 6vh; padding-bottom: 16vh; text-align: center; pointer-events: none; }
 .nfw-content button, .nfw-content a { pointer-events: auto; }
 .nfw-markwrap { position: relative; display: grid; place-items: center; }
 .nfw-markwrap::before { content: ""; position: absolute; inset: -25% -35%; z-index: -1; background: radial-gradient(closest-side, rgba(194,163,120,.32), transparent); opacity: 0; transition: opacity var(--lamp) ease; }
@@ -79,8 +79,9 @@
 .nfw-tag { margin: -.2em 0 0; display: flex; flex-direction: column; align-items: center; gap: .35em; font-family: "Inter", "Arial Black", system-ui, sans-serif !important; font-weight: 900; font-style: italic; text-transform: uppercase; letter-spacing: .02em; line-height: 1; font-size: clamp(.74rem, 1.4vw, 1.05rem); color: #f4f1ea; opacity: 0; transform: translateY(8px); transition: opacity 1.2s ease, transform 1.2s ease; }
 .nfw-tag-gold { color: #c2a378; }
 .nfw-go .nfw-tag { opacity: 1; transform: none; }
-.nfw-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 6px; }
-.nfw-btn { position: relative; display: inline-flex; align-items: center; gap: 10px; font: 800 10.5px/1 inherit; font-size: 10.5px; letter-spacing: .22em; text-transform: uppercase; padding: 12px 20px; border-radius: 999px; border: 0; cursor: pointer; overflow: hidden;
+.nfw-foot { position: absolute; z-index: 2; left: 0; right: 0; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; align-items: center; gap: clamp(14px, 2.4vh, 22px); }
+.nfw-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.nfw-btn { position: relative; display: inline-flex; align-items: center; gap: 10px; font: 800 9px/1 inherit; font-size: 9px; letter-spacing: .22em; text-transform: uppercase; padding: 9px 15px; border-radius: 999px; border: 0; cursor: pointer; overflow: hidden;
   opacity: 0; transform: translateY(16px); transition: opacity .9s ease, transform .9s cubic-bezier(.16,.84,.24,1), box-shadow .35s ease, background .35s ease; }
 .nfw-go .nfw-btn { opacity: 1; transform: none; }
 .nfw-go .nfw-btn:nth-child(2) { transition-delay: .18s, .18s, 0s, 0s; }
@@ -99,7 +100,7 @@
   animation: nfw-spin 4s linear infinite; }
 @keyframes nfw-spin { to { --nfw-spin: 360deg } }
 .nfw-ghost:hover { background: rgba(194,163,120,.12); box-shadow: 0 0 30px rgba(79,140,255,.25); }
-.nfw-sig { position: absolute; z-index: 2; left: 0; right: 0; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; align-items: center; gap: 6px; opacity: 0; transform: translateY(8px); transition: opacity 1.2s ease .7s, transform 1.2s ease .7s; }
+.nfw-sig { display: flex; flex-direction: column; align-items: center; gap: 6px; opacity: 0; transform: translateY(8px); transition: opacity 1.2s ease .7s, transform 1.2s ease .7s; }
 .nfw-sig span { font-size: 9px; font-weight: 800; letter-spacing: .42em; text-transform: uppercase; color: #8e9aab; }
 .nfw-sig img { height: 46px; width: auto; }
 .nfw-go .nfw-sig { opacity: 1; transform: none; }
@@ -112,7 +113,7 @@
 /* Brand words stay Latin, uppercase and spaced even on the Arabic site */
 .nf-latin-title, .nf-latin-title * { font-family: "Inter", "Arial Black", system-ui, sans-serif !important; }
 .nfw .nfw-btn, .nfw .nfw-skip, .nfw .nfw-sig span { font-family: "Inter", system-ui, sans-serif !important; text-transform: uppercase !important; }
-.nfw .nfw-btn { letter-spacing: .22em !important; }
+.nfw .nfw-btn { letter-spacing: .2em !important; }
 .nfw .nfw-skip { letter-spacing: .24em !important; }
 .nfw .nfw-sig span { letter-spacing: .42em !important; }
 .nfw .nfw-tag, .nfw .nfw-tag * { text-transform: uppercase !important; letter-spacing: .02em !important; }
