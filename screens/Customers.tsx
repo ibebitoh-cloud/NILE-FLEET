@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo, useContext, useEffect } from 'react';
+import DaliSignature from '../components/DaliSignature';
 import { db } from '../services/supabaseDb';
 import { UserRole, User, Operation, Invoice, CustomerPrice, Location, hasReadOnlyAccess } from '../types';
 import { LanguageContext, ThemeContext } from '../App';
@@ -169,6 +170,7 @@ const CustomerDossier: React.FC<{
 
   return (
     <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-2xl z-[500] flex items-center justify-center p-4 lg:p-10 animate-in fade-in">
+      <DaliSignature variant="popup" />
       <div className={`w-full max-w-7xl h-full rounded-[4rem] border-[10px] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 ${isDark ? 'bg-slate-900 border-slate-950' : 'bg-white border-slate-900'}`}>
         
         {/* Header Block */}
@@ -397,10 +399,8 @@ const CustomerDossier: React.FC<{
           )}
 
           {/* Dossier Branding Footer */}
-          <div className="mt-20 mb-4 flex flex-col items-center gap-3 opacity-20 pointer-events-none text-center">
-             <div className="w-16 h-px bg-slate-300"></div>
-             <p className={`text-[8px] font-black uppercase tracking-[0.6em] ${isDark ? 'text-white' : 'text-[#3a3833]'}`}>POWERED BY BEBITO</p>
-             <p className={`text-[7px] font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'} uppercase italic mt-1 leading-none`}>Mohamed A-Alawy | +20 114 647 5759</p>
+          <div className="mt-20 mb-4 flex flex-col items-center opacity-80 print:opacity-100 pointer-events-none text-center">
+             <DaliSignature tone={isDark ? 'dark' : 'light'} variant="paper" />
           </div>
         </div>
       </div>

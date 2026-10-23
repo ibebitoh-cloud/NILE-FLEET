@@ -1,5 +1,6 @@
 
 import React, { lazy, Suspense, useState, createContext, useContext, useEffect, useMemo, useCallback, useRef } from 'react';
+import DaliLoader from './components/DaliLoader';
 import Layout from './components/Layout';
 import { User, UserRole } from './types';
 import { db } from './services/supabaseDb';
@@ -707,10 +708,7 @@ const App: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center bg-[#05070a] text-white overflow-hidden">
         <div className="relative text-center">
           <div className="absolute -inset-16 rounded-full bg-[#C2A378]/5 blur-3xl pointer-events-none" />
-          <div className="relative mx-auto mb-7 h-24 w-24 rounded-full border border-[#C2A378]/25 bg-[#0b0e12] flex items-center justify-center shadow-[0_0_55px_rgba(194,163,120,.08)]">
-            <img src="/nile-fleet-logo.png" className="h-16 w-16 object-contain" alt="Nile Fleet" />
-            <span className="absolute inset-1 rounded-full border-2 border-transparent border-t-[#C2A378] animate-spin" />
-          </div>
+          <DaliLoader size={72} className="relative mb-7" />
           <p className="text-[11px] font-black uppercase tracking-[0.35em] text-[#C2A378]">NILE FLEET</p>
           <p className="mt-2 text-[9px] font-bold uppercase tracking-[0.28em] text-white/55">
             {lang === 'ar' ? (user ? 'جاري تحميل بيانات النظام' : 'جاري التحقق من الجلسة') : (user ? 'LOADING SYSTEM DATA' : 'VERIFYING SESSION')}
@@ -727,7 +725,7 @@ const App: React.FC = () => {
     return (
       <LanguageContext value={languageContextValue}>
         <ThemeContext value={themeContextValue}>
-          <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-slate-500">Loading…</div>}>
+          <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#05070a]"><DaliLoader /></div>}>
             {showCompanyHome ? (
               <CompanyHome onGenset={() => setShowCompanyHome(false)} />
             ) : (
@@ -832,7 +830,7 @@ const App: React.FC = () => {
           openScreens={openScreens}
           onCloseScreen={closeScreenTab}
         >
-          <Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center text-slate-500">Loading…</div>}>
+          <Suspense fallback={<DaliLoader fullScreen />}>
             {(isMobileViewport ? [activeScreen] : (openScreens.length ? openScreens : ['no-access'])).map(screen => (
               <div key={screen} hidden={!isMobileViewport && screen !== activeScreen} className="min-h-full min-w-0">
                 {renderScreen(screen)}

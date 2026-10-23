@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import DaliLoader from '../components/DaliLoader';
 import { supabase } from '../services/supabaseClient';
 
 type OrgRow = {
@@ -40,7 +41,7 @@ const Organization:React.FC=()=>{
  return <div dir={ar?'rtl':'ltr'} className="min-h-full pb-10">
    <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
      <div><div className="text-[9px] font-black uppercase tracking-[.35em] text-[#C2A378]">{ar?'خريطة القيادة':'ORGANIZATION MAP'}</div><h1 className="mt-2 text-3xl font-black text-white">{ar?'الهيكل التنظيمي':'Organization Structure'}</h1><p className="mt-1 max-w-2xl text-xs font-medium text-slate-400">{ar?'هيكل أسطول النيل ومواقع المسؤولية، مع طبقة دالي والرقابة منفصلة عن الهيكل الإداري.':'Nile Fleet leadership and responsibility map. DALI and Sentinel are intelligence layers, not people in the hierarchy.'}</p></div>
-     <div className="rounded-2xl border border-white/10 bg-white/[.04] px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">{loading?(ar?'جاري التحميل…':'LOADING…'):(ar?rows.length+' أفراد مسجلين':rows.length+' ACTIVE PEOPLE')}</div>
+     <div className="rounded-2xl border border-white/10 bg-white/[.04] px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">{loading?<DaliLoader size={18} />:(ar?rows.length+' أفراد مسجلين':rows.length+' ACTIVE PEOPLE')}</div>
    </div>
    <div className="mx-auto max-w-md"><Card row={ceo} ar={ar} featured/></div>
    <div className="mx-auto my-4 h-8 w-px bg-gradient-to-b from-[#C2A378]/70 to-white/10"/>

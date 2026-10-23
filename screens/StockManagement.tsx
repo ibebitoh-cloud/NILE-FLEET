@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useContext, useEffect } from 'react';
+import DaliSignature from '../components/DaliSignature';
 import { db } from '../services/supabaseDb';
 import { Location, GensetStatus, Genset, User, UserRole, GensetMaintenanceLog, MaintenanceServiceType, hasReadOnlyAccess } from '../types';
 import { LanguageContext, ThemeContext } from '../App';
@@ -1358,6 +1359,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
 
       {showFleetImportModal && (
         <div className="fixed inset-0 bg-[#3a3833]/85 backdrop-blur-md z-[250] flex items-center justify-center p-4">
+          <DaliSignature variant="popup" />
           <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-3xl w-full border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div className="p-4 bg-[#3a3833] text-white flex items-center justify-between">
               <div>
@@ -1434,6 +1436,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
 
       {showBulkMaintenanceModal && (
         <div className="fixed inset-0 bg-[#3a3833]/80 backdrop-blur-md z-[200] flex items-center justify-center p-4">
+          <DaliSignature variant="popup" />
           <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-lg w-full border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div className="p-4 bg-[#3a3833] text-white flex items-center justify-between">
               <div><h3 className="font-black uppercase text-sm">{isAr ? 'إضافة سجلات صيانة جماعية' : 'BULK MAINTENANCE RECORDS'}</h3><p className="text-[8px] text-[#C2A378] font-bold">{selectedIds.size} {isAr ? 'مولد محدد' : 'GENSET(S) SELECTED'}</p></div>
@@ -1716,6 +1719,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
       {/* ================= MODAL: UNIT MAINTENANCE HISTORY TIMELINE ================= */}
       {selectedUnitForMaint && (
         <div className="fixed inset-0 bg-[#3a3833]/80 backdrop-blur-md z-[200] flex items-center justify-center p-4">
+          <DaliSignature variant="popup" />
           <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col animate-in zoom-in-95">
             {/* Header */}
             <div className="p-6 bg-[#3a3833] text-white flex justify-between items-center border-b border-white/10">
@@ -1902,6 +1906,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
       {/* ================= MODAL: LOG / EDIT MAINTENANCE RECORD ================= */}
       {maintModalState.isOpen && (
         <div className="fixed inset-0 bg-[#3a3833]/85 backdrop-blur-md z-[250] flex items-center justify-center p-4">
+          <DaliSignature variant="popup" />
           <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl max-w-xl w-full overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 flex flex-col max-h-[92vh]">
             
             {/* Modal Header */}
@@ -2192,6 +2197,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
       {/* ================= MODAL: REGISTER NEW ASSET ================= */}
       {showAddModal && (
         <div className="fixed inset-0 bg-[#3a3833]/90 backdrop-blur-xl z-[200] flex items-center justify-center p-4">
+          <DaliSignature variant="popup" />
           <div className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl max-w-md w-full overflow-hidden border-[10px] border-slate-900 animate-in zoom-in-95">
             <div className="p-6 bg-slate-900 text-white flex justify-between items-center">
               <h3 className="text-xl font-black italic uppercase">{isAr ? 'تسجيل مولد جديد' : 'New Asset Identity'}</h3>
@@ -2217,6 +2223,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
       {/* ================= MODAL: MODIFY ASSET ================= */}
       {editingGenset && (
         <div className="fixed inset-0 bg-[#3a3833]/90 backdrop-blur-xl z-[200] flex items-center justify-center p-4">
+          <DaliSignature variant="popup" />
           <div className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl max-w-md w-full overflow-hidden border-[10px] border-slate-900 animate-in zoom-in-95">
             <div className="p-6 bg-slate-900 text-white flex justify-between items-center">
               <div>

@@ -1,4 +1,5 @@
 import React, { useState, useContext, useMemo } from 'react';
+import DaliSignature from '../components/DaliSignature';
 import { db } from '../services/supabaseDb';
 import { LanguageContext, ThemeContext } from '../App';
 import { Location, Operation, Reservation, Invoice, UserRole } from '../types';
@@ -569,6 +570,7 @@ const BookingInvoices: React.FC = () => {
       {/* Editing Invoice Modal */}
       {editingInvoice && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[900] flex items-center justify-center p-4 overflow-y-auto">
+          <DaliSignature variant="popup" />
           <div className={`rounded-3xl shadow-2xl max-w-md w-full p-8 border border-white/10 animate-in zoom-in-95 ${isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}`}>
             <div className="flex justify-between items-center mb-6">
               <div className="space-y-1">

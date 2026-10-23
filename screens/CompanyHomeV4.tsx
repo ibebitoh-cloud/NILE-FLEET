@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { LanguageContext, ThemeContext } from '../App';
 import BeamWordmarkFooter from '@/components/ui/beam-wordmark-footer';
+import DaliSignature from '@/components/DaliSignature';
 import TubesCursor from '@/components/ui/tubes-cursor';
 
 interface Props { onGenset: () => void; }
@@ -1217,7 +1218,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           <a href="#top" className="group flex min-w-0 items-center gap-2 sm:gap-3">
             <img src={isDark ? '/nf-loop-white.png' : '/nf-loop-navy.png'} className="h-8 w-8 shrink-0 object-contain sm:h-10 sm:w-10 transition-transform duration-500 group-hover:rotate-6" alt="Nile Fleet" />
             <div>
-              <div dir="ltr" className="flex items-baseline gap-2 whitespace-nowrap text-[15px] font-black tracking-tight sm:text-[17px]">NILE <span className={gold}>FLEET</span><span className="hidden text-[7px] font-black uppercase tracking-[.18em] text-[#c2a378] whitespace-nowrap sm:inline">POWERED BY <span className="text-white">BEBITO</span></span></div>
+              <div dir="ltr" className="flex items-baseline gap-2 whitespace-nowrap text-[15px] font-black tracking-tight sm:text-[17px]">NILE <span className={gold}>FLEET</span><span className="hidden text-[7px] font-black uppercase tracking-[.18em] text-[#c2a378] whitespace-nowrap sm:inline">POWERED BY <img src="/dali/dali-mark.png" alt="" className="mx-1 inline h-[9px] w-auto align-[-1px]" /><span className="text-white">DALI STUDIO</span></span></div>
               <div className={`whitespace-nowrap text-[7px] font-black uppercase tracking-[.12em] sm:tracking-[.34em] ${K.faint}`}>{tx.brandSub}</div>
             </div>
           </a>
@@ -1783,7 +1784,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           ]}
           credits={[
             { lead: ar ? 'شارع 23 يوليو · عمارة أبو الخير · الدور الثاني · ' : '23 July St. · Abo Elkheer Building · 2nd Floor · ', label: ar ? 'بورسعيد، مصر' : 'Port Said, Egypt' },
-            { lead: ar ? 'مدعوم من ' : 'Powered by ', label: 'Bebito' },
+            { lead: ar ? 'تصميم وتطوير ' : 'Designed & built by ', label: 'Dali Studio' },
           ]}
           columns={[
             { title: ar ? 'الشركة' : 'Company', links: nav.slice(0, 5).map(([label, href]) => { const t = String(label); return { label: ar ? t : t.charAt(0) + t.slice(1).toLowerCase(), href: String(href) }; }) },
@@ -1804,6 +1805,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           wordWeight={900}
           className="nf4-beam-footer"
         />
+        <div className="flex justify-center bg-[#05070a] pb-10 pt-4">
+          <DaliSignature tone="dark" brand={false} />
+        </div>
       </main>
 
       <a href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(ar ? 'مرحباً أسطول النيل' : 'Hello Nile Fleet')}`} target="_blank" rel="noreferrer" aria-label={ar ? 'تواصل على واتساب' : 'Chat on WhatsApp'} className="nf4-whatsapp fixed bottom-4 left-4 z-40 grid h-14 w-14 place-items-center rounded-full bg-[#25D366] text-black shadow-[0_10px_30px_rgba(37,211,102,.35)] transition hover:-translate-y-1">

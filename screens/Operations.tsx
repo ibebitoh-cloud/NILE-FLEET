@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo, useContext, useRef, useEffect } from 'react';
+import DaliSignature from '../components/DaliSignature';
 import { db } from '../services/supabaseDb';
 import { Operation, Location, User, UserRole } from '../types';
 import { LanguageContext, ThemeContext } from '../App';
@@ -82,6 +83,7 @@ const EditOperationModal: React.FC<{
 
   return (
     <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-xl z-[600] flex items-center justify-center p-4">
+      <DaliSignature variant="popup" />
       <div className={`bg-white dark:bg-slate-900 rounded-[3.5rem] shadow-2xl max-w-5xl w-full overflow-hidden border-[10px] border-[#3a3833] animate-in zoom-in-95 ${isAr ? 'rtl font-cairo' : 'ltr'}`}>
         <div className="p-8 bg-[#3a3833] text-white flex justify-between items-center text-start">
           <div>
@@ -715,6 +717,7 @@ const Operations: React.FC<{ highlightId?: string | null; clearHighlight?: () =>
       {/* FULL PHOTO VIEWER MODAL */}
       {viewingPhoto && (
         <div className="fixed inset-0 bg-black/95 z-[1000] flex items-center justify-center p-4" onClick={() => setViewingPhoto(null)}>
+          <DaliSignature variant="popup" />
            <div className="relative max-w-5xl w-full">
               <img src={viewingPhoto} className="w-full h-auto rounded-[2rem] shadow-2xl" alt="Large Evidence" />
               <button className="absolute -top-12 right-0 text-white text-2xl font-black">✕ CLOSE</button>

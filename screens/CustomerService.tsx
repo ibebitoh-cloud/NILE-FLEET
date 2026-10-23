@@ -1,5 +1,6 @@
 
 import React, { useContext, useState, useMemo, useEffect } from 'react';
+import DaliSignature from '../components/DaliSignature';
 import { LanguageContext, ThemeContext } from '../App';
 import { translateEntity } from '../translations';
 import { db } from '../services/supabaseDb';
@@ -290,6 +291,7 @@ const CustomerService: React.FC = () => {
       {/* MODAL FOR ADD/EDIT */}
       {showModal !== 'NONE' && (
         <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-xl z-[600] flex items-center justify-center p-6">
+          <DaliSignature variant="popup" />
            <div className="bg-white dark:bg-slate-900 rounded-[3.5rem] shadow-2xl max-w-2xl w-full overflow-hidden border-[10px] border-[#3a3833] animate-in zoom-in-95">
               <div className="p-8 bg-[#3a3833] text-white flex justify-between items-center text-start">
                  <h3 className="text-xl font-black uppercase italic tracking-widest">{editingId ? (isAr ? 'تعديل البيانات' : 'Edit Item') : (isAr ? 'إضافة بيانات' : 'Create Entry')}</h3>

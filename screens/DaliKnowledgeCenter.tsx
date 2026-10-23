@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
+import DaliLoader from '../components/DaliLoader';
 import { LanguageContext } from '../App';
 import { User, UserRole } from '../types';
 import { db } from '../services/supabaseDb';
@@ -336,7 +337,7 @@ const DaliKnowledgeCenter: React.FC = () => {
           <button onClick={load} className="px-4 rounded-xl border font-black text-xs">↻</button>
         </div>
         {loading ? (
-          <div className="p-8 text-center opacity-50">{ar ? 'جاري التحميل…' : 'Loading…'}</div>
+          <div className="p-8"><DaliLoader size={44} /></div>
         ) : (
           <div className="space-y-3 max-h-[650px] overflow-y-auto">
             {filteredLessons.map(x => (

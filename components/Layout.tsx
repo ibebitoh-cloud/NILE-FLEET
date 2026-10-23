@@ -1,5 +1,6 @@
 
 import React, { useContext, useState, useEffect, useRef } from 'react';
+import DaliSignature from './DaliSignature';
 import { User, UserRole, SystemNotification, GensetStatus } from '../types';
 import { LanguageContext, ThemeContext } from '../App';
 import { translations, translateEntity, dynamicTranslations } from '../translations';
@@ -1398,7 +1399,7 @@ DATA BEHAVIOR:
 وأقدر أكمل معاك من نفس السياق، مثل: "فين المولد 125؟" وبعدها "وماذا عن صيانته؟".`
             : `I’m DALI 🤖
 
-I was created by Bebito to be part of Nile Fleet, specifically to support the Genset Department.
+I was created by Dali Studio to be part of Nile Fleet, specifically to support the Genset Department.
 
 I’m ${daliAgeEn} now, and I’m still learning. I started as an idea and grew through the work around the system: gensets and stock, operations, bookings and containers, ports and locations, maintenance and workshop, fuel, prices and invoices, customers and reporting.
 
@@ -2077,16 +2078,11 @@ I’ll search with you. 🤖`;
         <div className="p-4 lg:p-6 flex-1">
           {children}
           
-          <div className="mt-16 mb-8 flex flex-col items-center gap-3 opacity-30 hover:opacity-100 transition-opacity duration-700 pointer-events-none no-print text-center">
-            <div className="w-16 h-px bg-gradient-to-r from-transparent via-[#C2A378] to-transparent"></div>
-            <div>
-              <p className={`text-[8px] font-black uppercase tracking-[0.5em] ${textSecondary} mb-1`}>
-                 POWERED BY BEBITO
-              </p>
-              <p className={`text-[9px] font-black italic tracking-widest ${textSecondary}`}>
-                Mohamed A-Alawy <span className="opacity-30 px-2">|</span> +20 114 647 5759
-              </p>
-            </div>
+          <div className="mt-16 mb-8 flex flex-col items-center gap-2 opacity-70 hover:opacity-100 print:opacity-100 transition-opacity duration-700 pointer-events-none text-center">
+            <DaliSignature tone={isDark ? 'dark' : 'light'} />
+            <p className={`text-[9px] font-black italic tracking-widest ${textSecondary}`} dir="ltr">
+              Mohamed A-Alawy <span className="opacity-30 px-2">|</span> +20 114 647 5759
+            </p>
           </div>
         </div>
       </main>

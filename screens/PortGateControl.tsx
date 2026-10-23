@@ -1,5 +1,7 @@
 
 import React, { useState, useMemo, useContext, useRef, useEffect } from 'react';
+import DaliSignature from '../components/DaliSignature';
+import DaliLoader from '../components/DaliLoader';
 import * as XLSX from 'xlsx';
 import { db } from '../services/supabaseDb';
 import { Operation, Location, GensetStatus, UserRole, User } from '../types';
@@ -543,7 +545,7 @@ const PortGateControl: React.FC = () => {
                           <img src={previewImage} alt="OCR Preview" className="w-full h-full object-cover" />
                           {isScanning && (
                             <div className="absolute inset-0 bg-[#3a3833]/60 backdrop-blur-sm flex flex-col items-center justify-center text-white">
-                              <div className="w-8 h-8 border-4 border-white/20 border-t-white rounded-full animate-spin mb-2"></div>
+                              <DaliLoader size={36} className="mb-2" />
                               <p className="text-[8px] font-black uppercase tracking-widest">{analysisStatus}</p>
                             </div>
                           )}
@@ -722,6 +724,7 @@ const PortGateControl: React.FC = () => {
       {/* FULL PHOTO VIEWER MODAL */}
       {viewingPhoto && (
         <div className="fixed inset-0 bg-black/95 z-[1000] flex items-center justify-center p-4" onClick={() => setViewingPhoto(null)}>
+          <DaliSignature variant="popup" />
            <div className="relative max-w-5xl w-full">
               <img src={viewingPhoto} className="w-full h-auto rounded-[2rem] shadow-2xl" alt="Large Evidence" />
               <button className="absolute -top-12 right-0 text-white text-sm font-black uppercase tracking-widest">✕ Close Evidence</button>
@@ -740,6 +743,7 @@ const PortGateControl: React.FC = () => {
 
       {clipOffCandidate && (
         <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-2xl z-[200] flex items-center justify-center p-6 font-cairo no-print">
+          <DaliSignature variant="popup" />
           <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-10 text-center space-y-6 animate-in zoom-in-95">
              <h3 className="text-2xl font-black text-[#3a3833] uppercase italic tracking-tighter text-start">
                {isAr ? 'تأكيد الاستلام' : 'COMMIT RETURN'}
@@ -760,6 +764,7 @@ const PortGateControl: React.FC = () => {
 
       {showDoubleConfirm && (
         <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-2xl z-[200] flex items-center justify-center p-6 font-cairo no-print">
+          <DaliSignature variant="popup" />
           <div className="bg-white rounded-3xl shadow-2xl max-sm w-full p-10 text-center space-y-8 animate-in zoom-in-95">
              <h3 className="text-2xl font-black text-[#3a3833] uppercase italic tracking-tighter text-start">
                {isAr ? 'مراجعة البيانات' : 'VERIFY SYNC'}

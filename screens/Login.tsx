@@ -1,4 +1,5 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
+import DaliSignature from '../components/DaliSignature';
 import { ThemeContext, LanguageContext } from '../App';
 import { translations } from '../translations';
 
@@ -423,7 +424,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBackToHome, welcomeName }) => 
                       <p className={`mt-3 max-w-md text-slate-300 text-sm sm:text-base font-medium leading-relaxed ${isAr ? 'tracking-normal' : 'tracking-tight'}`}>{isAr ? 'سعيدون بوجودك معنا. لنحافظ معاً على سير كل عملية بسلاسة.' : 'Good to see you. Let’s keep every operation moving smoothly.'}</p>
                       <p className={`mt-2 max-w-md text-slate-400 text-xs sm:text-sm font-medium leading-relaxed ${isAr ? 'tracking-normal' : 'tracking-tight'}`}>{welcomeQuote}</p>
                       <button type="button" onClick={enterApp} className="mt-7 px-9 py-3.5 rounded-full bg-[#001F3F] border border-[#C2A378]/50 text-white text-[10px] sm:text-xs font-bold tracking-[0.2em] uppercase hover:bg-[#002b57] transition-all active:scale-[0.97] shadow-[0_0_30px_rgba(194,163,120,.12)]">{isAr ? 'دخول إلى النظام' : 'ENTER SYSTEM'}</button>
-                      <div className="mt-6 text-[8px] sm:text-[9px] font-bold tracking-[0.25em] text-slate-500 uppercase">POWERED BY <span className="text-slate-300">BEBITO</span></div>
+                      <DaliSignature tone="dark" className="mt-7 opacity-80" />
                     </div>
                   </div>
 )}
