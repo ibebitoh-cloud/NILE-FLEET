@@ -5,6 +5,7 @@ import DaliSignature from '@/components/DaliSignature';
 import TubesCursor from '@/components/ui/tubes-cursor';
 import DrawText from '@/components/ui/draw-text';
 import WelcomeIntro from '@/components/WelcomeIntro';
+import DaliPublicChat from '@/components/DaliPublicChat';
 
 interface Props { onGenset: () => void; }
 
@@ -1807,6 +1808,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       <a href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(ar ? 'مرحباً أسطول النيل' : 'Hello Nile Fleet')}`} target="_blank" rel="noreferrer" aria-label={ar ? 'تواصل على واتساب' : 'Chat on WhatsApp'} className="nf4-whatsapp fixed bottom-4 left-4 z-40 grid h-14 w-14 place-items-center rounded-full bg-[#25D366] text-black shadow-[0_10px_30px_rgba(37,211,102,.35)] transition hover:-translate-y-1">
         <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.9-4.45 9.9-9.91C21.95 6.45 17.5 2 12.04 2zm5.8 14.03c-.25.69-1.44 1.33-1.98 1.38-.51.05-.99.24-3.33-.69-2.82-1.11-4.6-4-4.74-4.18-.14-.19-1.13-1.5-1.13-2.87 0-1.36.71-2.03.97-2.31.25-.28.55-.35.73-.35l.53.01c.17 0 .4-.06.62.48.25.6.85 2.07.92 2.22.08.15.13.32.03.51-.1.19-.15.31-.29.48-.15.17-.31.38-.44.51-.15.15-.3.31-.13.6.17.29.76 1.25 1.63 2.03 1.12 1 2.06 1.31 2.35 1.45.29.15.46.12.63-.07.17-.19.73-.85.92-1.14.19-.29.38-.24.65-.15.27.1 1.7.8 1.99.95.29.15.48.22.55.34.07.12.07.69-.18 1.38z"/></svg>
       </a>
+
+      <DaliPublicChat ar={ar} isDark={isDark} onLogin={onGenset} />
 
       {/* speedometer */}
       <div className={`nf4-speedo pointer-events-none fixed bottom-4 right-4 z-30 rounded-2xl border px-4 py-3 backdrop-blur-md ${K.card}`} aria-hidden="true">
