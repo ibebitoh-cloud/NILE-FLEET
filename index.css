@@ -10,3 +10,23 @@
 @media (prefers-reduced-motion: reduce) { .dali-spin { animation-duration: 1.6s; } }
 /* Creator signature must survive printing */
 @media print { .dali-signature:not(.dali-popup) { opacity: 1 !important; display: flex !important; } }
+
+/* DrawText: outline draws letter by letter, then fills, holds, repeats */
+.nf-draw tspan {
+  fill: var(--nf-ink);
+  fill-opacity: 0;
+  stroke: var(--nf-ink);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-dasharray: 900;
+  stroke-dashoffset: 900;
+  animation: nf-draw 10s cubic-bezier(.55,.1,.35,1) infinite both;
+}
+@keyframes nf-draw {
+  0% { stroke-dashoffset: 900; fill-opacity: 0; }
+  30% { stroke-dashoffset: 0; fill-opacity: 0; }
+  42%, 86% { stroke-dashoffset: 0; fill-opacity: 1; }
+  94% { stroke-dashoffset: 0; fill-opacity: 0; }
+  100% { stroke-dashoffset: 900; fill-opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .nf-draw tspan { animation: none; fill-opacity: 1; stroke-dashoffset: 0; } }
