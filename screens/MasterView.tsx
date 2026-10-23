@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo, useContext, useEffect, useRef } from 'react';
+import DaliSignature from '../components/DaliSignature';
 import { db } from '../services/supabaseDb';
 import { Operation, Location, GensetStatus, UserRole, User, CustomerPrice, Invoice, GensetReplacement, hasReadOnlyAccess } from '../types';
 import { LanguageContext, ThemeContext } from '../App';
@@ -2055,6 +2056,7 @@ const MasterView: React.FC = () => {
 
       {replacementOperation && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-xl z-[600] flex items-center justify-center p-4">
+          <DaliSignature variant="popup" />
           <div className={`w-full max-w-lg rounded-3xl shadow-2xl border-2 overflow-hidden ${isDark ? 'bg-slate-950 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
             <div className="p-5 bg-rose-600 text-white flex items-center justify-between">
               <div><div className="text-[10px] font-black uppercase tracking-widest">{isAr ? 'استبدال مولد' : 'REPLACE GENSET'}</div><div className="text-lg font-black mt-1">{replacementOperation.gensetNumber}</div></div>
@@ -2082,6 +2084,7 @@ const MasterView: React.FC = () => {
 
       {showAddModal && (
         <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-2xl z-[500] flex items-center justify-center p-4">
+          <DaliSignature variant="popup" />
           <div className={`rounded-[3.5rem] shadow-2xl max-w-[98vw] w-full h-[85vh] overflow-hidden border-[10px] border-slate-900 flex flex-col animate-in zoom-in-95 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-900'}`}>
              <div className={`p-8 flex justify-between items-center shrink-0 ${isDark ? 'bg-slate-950 text-white' : 'bg-slate-900 text-white'}`}>
                 <div className="text-start">
@@ -2168,6 +2171,7 @@ const MasterView: React.FC = () => {
        {/* Show Invoice Modal */}
       {selectedInvoice && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4 overflow-y-auto no-print">
+          <DaliSignature variant="popup" />
           <div className={`relative w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden p-6 ${isDark ? 'bg-slate-950 border-2 border-slate-800 text-white' : 'bg-white text-slate-900 border border-slate-200'}`}>
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-dashed border-slate-200 dark:border-white/10">
               <span className="text-sm font-black text-[#C2A378] tracking-widest uppercase">{isAr ? 'عرض تفاصيل الفاتورة' : 'INVOICE PREVIEW'}</span>
@@ -2192,6 +2196,7 @@ const MasterView: React.FC = () => {
       {/* Edit Invoice Modal */}
       {editingInvoice && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-lg flex items-center justify-center z-[110] p-4 no-print text-slate-900 dark:text-white">
+          <DaliSignature variant="popup" />
           <div className="w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 animate-in zoom-in-95 duration-200">
             <div className="p-6 border-b border-slate-100 dark:border-white/5 flex justify-between items-center">
               <h3 className="font-sans font-black uppercase text-xs tracking-widest text-slate-800 dark:text-white">

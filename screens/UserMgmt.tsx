@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useContext, useEffect } from 'react';
+import DaliSignature from '../components/DaliSignature';
 import { db } from '../services/supabaseDb';
 import { User, UserRole, Location, UserPermissions, hasReadOnlyAccess } from '../types';
 import { LanguageContext, ThemeContext } from '../App';
@@ -674,6 +675,7 @@ const UserMgmt: React.FC = () => {
       {/* FULL USER ACCESS DATA MODAL / EDITOR */}
       {showAddModal && editingUser && !isReadOnly && (
         <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-xl z-[300] flex items-center justify-center p-3 md:p-6 overflow-y-auto">
+          <DaliSignature variant="popup" />
           <div className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl max-w-4xl w-full overflow-hidden border-[8px] border-slate-900 animate-in zoom-in-95 my-auto max-h-[92vh] flex flex-col">
              {/* Modal Header */}
              <div className="p-6 md:p-8 bg-slate-900 text-white flex justify-between items-center shrink-0">
@@ -1113,6 +1115,7 @@ const UserMgmt: React.FC = () => {
       {/* SYSTEM ACCESS MATRIX SPREADSHEET MODAL */}
       {showMatrixModal && (
         <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-xl z-[400] flex items-center justify-center p-4 overflow-y-auto">
+          <DaliSignature variant="popup" />
           <div className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden border-[8px] border-slate-900 flex flex-col my-auto">
              <div className="p-6 bg-slate-900 text-white flex justify-between items-center shrink-0">
                 <div>
@@ -1207,6 +1210,7 @@ const UserMgmt: React.FC = () => {
       {/* AVATAR SELECTOR STUDIO MODAL */}
       {showAvatarStudio && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-2xl z-[500] flex items-center justify-center p-6" onClick={() => setShowAvatarStudio(false)}>
+          <DaliSignature variant="popup" />
           <div className="bg-white dark:bg-slate-900 rounded-[3rem] max-w-4xl w-full h-[80vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
              <div className="p-8 bg-[#3a3833] text-white flex justify-between items-center text-start">
                 <h3 className="text-xl font-black italic uppercase tracking-widest text-[#C2A378]">Identity Avatar Hub</h3>

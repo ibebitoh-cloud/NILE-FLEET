@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo, useContext, useEffect } from 'react';
+import DaliSignature from '../components/DaliSignature';
 import { User, Reservation, Invoice, Location, ReservationStatus } from '../types';
 import { db } from '../services/supabaseDb';
 import InvoiceView from '../components/InvoiceView';
@@ -180,6 +181,7 @@ const CustomerPortal: React.FC<CustomerPortalProps> = ({ user, type }) => {
 
         {isBooking && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <DaliSignature variant="popup" />
             <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden">
               <div className="p-6 bg-blue-600 text-white flex justify-between items-center">
                 <h4 className="text-lg font-bold">{isAr ? 'حجز جديد عبر الإنترنت' : 'New Online Reservation'}</h4>

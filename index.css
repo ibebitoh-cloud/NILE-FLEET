@@ -3,3 +3,10 @@
 @tailwind utilities;
 
 /* Nile Fleet keeps its existing application theme in index.html. */
+
+/* Dali Studio loader: the D mark spinning fast */
+@keyframes dali-spin { to { transform: rotate(360deg); } }
+.dali-spin { animation: dali-spin .6s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .dali-spin { animation-duration: 1.6s; } }
+/* Creator signature must survive printing */
+@media print { .dali-signature:not(.dali-popup) { opacity: 1 !important; display: flex !important; } }

@@ -1,5 +1,6 @@
 
 import React, { useState, useContext, useRef, useEffect } from 'react';
+import DaliSignature from '../components/DaliSignature';
 import { User, UserRole, InvoiceSettings, Location } from '../types';
 import { db } from '../services/supabaseDb';
 import { LanguageContext, ThemeContext } from '../App';
@@ -806,6 +807,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
       {/* Avatar Studio Modal */}
       {showAvatarStudio && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-2xl z-[500] flex items-center justify-center p-6" onClick={() => setShowAvatarStudio(false)}>
+          <DaliSignature variant="popup" />
           <div className="bg-white dark:bg-slate-900 rounded-[3rem] max-w-4xl w-full h-[80vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
              <div className="p-8 bg-[#3a3833] text-white flex justify-between items-center text-start">
                 <h3 className="text-xl font-black italic uppercase tracking-widest text-[#C2A378]">Identity Hub</h3>

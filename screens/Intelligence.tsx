@@ -1,5 +1,6 @@
 
 import React, { useState, useContext, useMemo, useEffect } from 'react';
+import DaliLoader from '../components/DaliLoader';
 import { db } from '../services/supabaseDb';
 import { LanguageContext, ThemeContext } from '../App';
 import { translations } from '../translations';
@@ -757,10 +758,7 @@ ${question}`;
                   {chatLoading && (
                     <div className="mt-2 overflow-hidden rounded-2xl border border-[#C2A378]/15 bg-[#C2A378]/5 p-4 animate-in fade-in duration-300">
                       <div className="flex items-center gap-3">
-                        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#C2A378]/30 bg-black/20 text-[#C2A378]">
-                          <span className="absolute inset-1 animate-spin rounded-lg border border-[#C2A378]/20"></span>
-                          <span className="animate-pulse">◉</span>
-                        </div>
+                        <DaliLoader size={34} className="shrink-0" />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-[7px] font-black uppercase tracking-[0.25em] text-[#C2A378]">{isAr ? 'دالي يعمل' : 'DALI IS WORKING'}</span>

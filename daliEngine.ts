@@ -276,7 +276,7 @@ export function answerDali(question: string, data: DaliData, contextKey: string 
     return L(
 `I'm DALI 🤖
 
-I'm the intelligence layer inside Nile Fleet, created by Bebito to help users understand and work with the system's operational data, especially the Genset Department.
+I'm the intelligence layer inside Nile Fleet, created by Dali Studio to help users understand and work with the system's operational data, especially the Genset Department.
 
 I'm ${daliAge} ${daliAge === 1 ? 'year' : 'years'} old, and I'm still learning. I started as an idea and grew through the real work represented in the system.
 

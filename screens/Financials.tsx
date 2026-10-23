@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo, useContext, useEffect } from 'react';
+import DaliSignature from '../components/DaliSignature';
 import { db } from '../services/supabaseDb';
 import { LanguageContext, ThemeContext } from '../App';
 import { translations, translateEntity } from '../translations';
@@ -48,6 +49,7 @@ export const ProLedger: React.FC<{
 
   return (
     <div className={`fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-[700] flex items-center justify-center p-0 lg:p-12 overflow-hidden ${isAr ? 'rtl font-cairo' : 'ltr'}`}>
+      <DaliSignature variant="popup" />
        <style>{`
          @media print {
            @page { margin: 0; size: A4; }
@@ -207,10 +209,8 @@ export const ProLedger: React.FC<{
                    </div>
                 </div>
 
-                <div className="mt-12 flex flex-col items-center gap-2 opacity-20 text-slate-900 no-print text-center">
-                   <div className="w-12 h-px bg-slate-300"></div>
-                   <p className="text-[8px] font-black uppercase tracking-[0.5em]">POWERED BY BEBITO</p>
-                   <p className="text-[7px] font-bold text-slate-500 uppercase mt-1 italic leading-none">Mohamed A-Alawy | +20 114 647 5759</p>
+                <div className="mt-12 flex flex-col items-center text-center">
+                   <DaliSignature tone="light" variant="paper" />
                 </div>
              </div>
           </div>
@@ -615,6 +615,7 @@ const Financials: React.FC = () => {
       {/* RECEIVE PAYMENT MODAL */}
       {showPaymentModal && selectedUser && (
         <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-xl z-[500] flex items-center justify-center p-6">
+          <DaliSignature variant="popup" />
            <div className={`bg-white rounded-[4rem] shadow-2xl max-w-2xl w-full overflow-hidden border-[12px] border-slate-900 animate-in zoom-in-95 ${isAr ? 'rtl font-cairo' : 'ltr'}`}>
               <div className="p-10 bg-slate-900 text-white flex justify-between items-center text-start relative overflow-hidden">
                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#C2A378]/20 rounded-full blur-2xl -mr-16 -mt-16"></div>
@@ -685,6 +686,7 @@ const Financials: React.FC = () => {
 
       {showPaymentsRegister && (
         <div className={`fixed inset-0 z-[600] flex items-center justify-center bg-slate-950/80 p-3 backdrop-blur-md sm:p-6 ${isAr ? 'rtl font-cairo' : 'ltr'}`}>
+          <DaliSignature variant="popup" />
           <div className={`flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border shadow-2xl ${isDark ? 'border-slate-700 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-900'}`}>
             <div className="flex items-center justify-between gap-4 bg-slate-900 p-5 text-white sm:p-7">
               <div>
@@ -728,6 +730,7 @@ const Financials: React.FC = () => {
 
       {editingPayment && paymentDraft && (
         <div className={`fixed inset-0 z-[700] flex items-center justify-center bg-slate-950/70 p-4 ${isAr ? 'rtl font-cairo' : 'ltr'}`}>
+          <DaliSignature variant="popup" />
           <div className={`w-full max-w-lg rounded-3xl p-6 shadow-2xl ${isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}`}>
             <h3 className="text-xl font-black">{isAr ? 'تعديل بيانات المقبوض' : 'Edit received payment'}</h3>
             <p className="mt-1 text-sm font-semibold text-slate-500">{translateEntity(editingPayment.customerName, lang)} · {editingPayment.id}</p>

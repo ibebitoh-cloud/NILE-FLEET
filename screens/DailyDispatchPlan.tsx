@@ -1,4 +1,5 @@
 import React, { useContext, useMemo, useState } from 'react';
+import DaliSignature from '../components/DaliSignature';
 import { db } from '../services/supabaseDb';
 import { Location, Operation } from '../types';
 import { LanguageContext, ThemeContext } from '../App';
@@ -289,6 +290,9 @@ const DailyDispatchPlan: React.FC = () => {
       <div className="no-print flex items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-[8px] font-bold text-slate-400">
         <span>{isAr ? 'خطة التوزيع مقسمة حسب الميناء — الشاحن والناقل ظاهرين دائماً.' : 'Dispatch is separated by port — Shipper and Trucker are always visible.'}</span>
         <span className="font-black">{isDark ? 'NILE FLEET • CONTROL' : 'NILE FLEET • DISPATCH'}</span>
+      </div>
+      <div className="hidden print:flex justify-center pt-6">
+        <DaliSignature tone="light" variant="paper" />
       </div>
     </div>
   );

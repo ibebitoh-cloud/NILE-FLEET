@@ -1,5 +1,6 @@
 
 import React, { useContext, useMemo, useState } from 'react';
+import DaliSignature from './DaliSignature';
 import { Invoice, Operation, User, UserRole, InvoiceSettings } from '../types';
 import { db } from '../services/supabaseDb';
 import { LanguageContext, ThemeContext } from '../App';
@@ -92,6 +93,7 @@ const InvoiceView: React.FC<InvoiceViewProps> = ({ invoice, onClose, settings })
 
   return (
     <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-xl z-[800] flex items-center justify-center p-0 lg:p-4 overflow-hidden">
+      <DaliSignature variant="popup" />
       <style>{`
         @media print {
           @page { margin: 0; size: A4; }
@@ -359,9 +361,8 @@ const InvoiceView: React.FC<InvoiceViewProps> = ({ invoice, onClose, settings })
                </div>
             </div>
 
-            <div className="mt-auto pt-8 border-t border-slate-50 flex flex-col items-center opacity-30 no-print text-center">
-               <span className="text-[8px] font-black uppercase tracking-[0.5em]">POWERED BY BEBITO</span>
-               <p className="text-[7px] font-bold text-slate-500 uppercase mt-1 italic leading-none">Mohamed A-Alawy | +20 114 647 5759</p>
+            <div className="mt-auto pt-8 border-t border-slate-50 flex flex-col items-center text-center">
+               <DaliSignature tone="light" variant="paper" />
             </div>
           </div>
         </div>

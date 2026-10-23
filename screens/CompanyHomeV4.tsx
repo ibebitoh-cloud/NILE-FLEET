@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { LanguageContext, ThemeContext } from '../App';
 import BeamWordmarkFooter from '@/components/ui/beam-wordmark-footer';
+import DaliSignature from '@/components/DaliSignature';
 
 interface Props { onGenset: () => void; }
 
@@ -1770,7 +1771,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           ]}
           credits={[
             { lead: ar ? 'شارع 23 يوليو · عمارة أبو الخير · الدور الثاني · ' : '23 July St. · Abo Elkheer Building · 2nd Floor · ', label: ar ? 'بورسعيد، مصر' : 'Port Said, Egypt' },
-            { lead: ar ? 'مدعوم من ' : 'Powered by ', label: 'Bebito' },
+            { lead: ar ? 'تصميم وتطوير ' : 'Designed & built by ', label: 'Dali Studio' },
           ]}
           columns={[
             { title: ar ? 'الشركة' : 'Company', links: nav.slice(0, 5).map(([label, href]) => { const t = String(label); return { label: ar ? t : t.charAt(0) + t.slice(1).toLowerCase(), href: String(href) }; }) },
@@ -1791,6 +1792,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           wordWeight={900}
           className="nf4-beam-footer"
         />
+        <div className="flex justify-center bg-[#05070a] pb-10 pt-4">
+          <DaliSignature tone="dark" brand={false} />
+        </div>
       </main>
 
       <a href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(ar ? 'مرحباً أسطول النيل' : 'Hello Nile Fleet')}`} target="_blank" rel="noreferrer" aria-label={ar ? 'تواصل على واتساب' : 'Chat on WhatsApp'} className="nf4-whatsapp fixed bottom-4 left-4 z-40 grid h-14 w-14 place-items-center rounded-full bg-[#25D366] text-black shadow-[0_10px_30px_rgba(37,211,102,.35)] transition hover:-translate-y-1">

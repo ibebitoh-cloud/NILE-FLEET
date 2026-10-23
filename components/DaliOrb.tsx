@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import DaliSignature from './DaliSignature';
 
 type Message = { role: 'user' | 'dali'; text: string };
 
@@ -103,6 +104,7 @@ const DaliOrb: React.FC<DaliOrbProps> = ({
 
       {open && (
         <div className="dali-orb-in fixed inset-0 z-[90] flex items-center justify-center bg-black/55 p-3 backdrop-blur-md sm:p-6" onMouseDown={e => { if (e.target === e.currentTarget) setOpen(false); }}>
+          <DaliSignature variant="popup" />
           <section className="relative flex h-[min(88vh,760px)] w-full max-w-4xl flex-col overflow-hidden rounded-[2rem] border border-white/15 bg-[#071522]/90 shadow-[0_35px_120px_rgba(0,0,0,.7)] backdrop-blur-3xl">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(194,163,120,.12),transparent_42%)]" />
 
