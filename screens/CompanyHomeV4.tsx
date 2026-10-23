@@ -1360,6 +1360,17 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 `}</style>
 
 <main id="top" className="relative z-10">
+        <section id="in-motion" aria-label={ar ? 'نيل فليت، حلول تثق بها' : 'Nile Fleet, a solution you trust'}>
+          <TubesCursor className="nf4-tubes h-[calc(100svh-64px)] min-h-[480px] max-h-[900px] select-none">
+            <div className="flex h-full flex-col items-center justify-center px-5 text-center text-white">
+              <h2 dir="ltr" className="text-6xl font-black uppercase italic leading-[.88] tracking-[-.05em] drop-shadow-[0_4px_30px_rgba(0,0,0,.6)] sm:text-8xl lg:text-9xl">
+                Nile<br /><span className="font-light not-italic">Fleet</span>
+              </h2>
+              <p className="mt-6 text-sm font-bold uppercase tracking-[.32em] text-[#c2a378] sm:text-base">{ar ? 'حلول تثق بها' : 'A solution you trust'}</p>
+            </div>
+          </TubesCursor>
+        </section>
+
         <section className="relative flex min-h-[100vh] items-start overflow-hidden">
           {heroPhoto && (
             <img src="/hero-night-port.jpg" alt="" aria-hidden="true" fetchPriority="high" onError={() => setHeroPhoto(false)}
@@ -1725,18 +1736,6 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           </Reveal>
         </section>
 
-
-        <section id="in-motion" aria-label={ar ? 'نيل فليت دائماً في حركة' : 'Nile Fleet, always in motion'}>
-          <TubesCursor className="nf4-tubes h-[78vh] min-h-[460px] max-h-[760px] select-none">
-            <div className="flex h-full flex-col items-center justify-center px-5 text-center text-white">
-              <div className="text-[9px] font-black uppercase tracking-[.42em] text-[#c2a378]">NILE FLEET</div>
-              <h2 className="mt-4 text-6xl font-black uppercase italic leading-[.88] tracking-[-.05em] drop-shadow-[0_4px_30px_rgba(0,0,0,.6)] sm:text-8xl">
-                {ar ? <>دائماً<br /><span className="font-light not-italic">في حركة</span></> : <>Always<br /><span className="font-light not-italic">in motion</span></>}
-              </h2>
-              <p className="mt-5 text-xs font-bold tracking-[.12em] text-white/75">{ar ? 'اضغط لتغيير الألوان' : 'Click to change colors'}</p>
-            </div>
-          </TubesCursor>
-        </section>
 
         <section id="quote" className={`relative overflow-hidden border-y ${K.band}`}>
           <Reveal>
