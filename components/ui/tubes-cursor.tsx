@@ -245,7 +245,7 @@ export default function TubesCursor({
     <div
       ref={wrapRef}
       className={className}
-      style={{ position: "relative", overflow: "hidden", background: light ? "rgba(238,242,248,.55)" : "rgba(3,3,8,.5)", cursor: "pointer", touchAction: "pan-y", ...style }}
+      style={{ position: "relative", overflow: "hidden", background: light ? "rgba(238,242,248,.8)" : "rgba(3,3,8,.8)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)", cursor: "pointer", touchAction: "pan-y", ...style }}
     >
       <div ref={glowRef} aria-hidden style={{ position: "absolute", inset: 0, transition: "background .6s ease", pointerEvents: "none" }} />
       <canvas ref={canvasRef} aria-hidden style={{ position: "absolute", inset: 0, display: "block", pointerEvents: "none" }} />
