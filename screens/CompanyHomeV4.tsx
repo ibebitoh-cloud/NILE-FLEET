@@ -968,7 +968,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
   return (
     <div ref={wrapRef} data-no-translate dir={ar ? "rtl" : "ltr"} className={`nf-home nf4 ${isDark ? 'nf4-dark' : 'nf4-light'} min-h-screen overflow-x-hidden selection:bg-[#c2a378] selection:text-black ${K.root}`}>
-      <WelcomeIntro ar={ar} />
+      <WelcomeIntro />
       <style>{`
         @keyframes nf4Reveal { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
         @keyframes nf4Pulse { 0%,100%{box-shadow:0 0 0 rgba(194,163,120,0)} 50%{box-shadow:0 0 42px rgba(194,163,120,.28)} }
@@ -1358,9 +1358,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           <TubesCursor light={!isDark} className="nf4-tubes h-[60svh] min-h-[420px] max-h-[900px] select-none sm:h-[calc(100svh-64px)] sm:min-h-[480px]">
             <div className={`flex h-full flex-col items-center justify-center px-5 text-center ${isDark ? 'text-white' : 'text-[#0b2a4a]'}`}>
               <img src={isDark ? '/nf-mark-white.png' : '/nf-mark-navy.png'} alt="Nile Fleet" className={`h-36 w-auto sm:h-48 lg:h-60 ${isDark ? 'drop-shadow-[0_0_34px_rgba(194,163,120,.4)]' : 'drop-shadow-[0_10px_30px_rgba(11,42,74,.2)]'}`} />
-              <h2 dir="ltr" aria-label="Nile Fleet" className={`mt-8 flex items-center gap-[.22em] text-5xl font-black uppercase italic leading-none tracking-[-.05em] sm:text-7xl lg:text-8xl ${isDark ? 'drop-shadow-[0_4px_30px_rgba(0,0,0,.6)]' : 'drop-shadow-[0_4px_24px_rgba(255,255,255,.8)]'}`}>
-                <DrawText text="Nile" color={isDark ? '#ffffff' : '#0b2a4a'} />
-                <DrawText text="Fleet" color={isDark ? '#c2a378' : '#8a6a35'} delay={0.6} />
+              <h2 dir="ltr" aria-label="Nile Fleet" className={`nf-latin-title mt-5 flex items-center gap-[.22em] text-[3.4rem] font-black uppercase italic leading-none tracking-[-.05em] sm:mt-6 sm:text-7xl lg:text-8xl ${isDark ? 'drop-shadow-[0_4px_30px_rgba(0,0,0,.6)]' : 'drop-shadow-[0_4px_24px_rgba(255,255,255,.8)]'}`}>
+                <DrawText text="NILE" color={isDark ? '#ffffff' : '#0b2a4a'} />
+                <DrawText text="FLEET" color={isDark ? '#c2a378' : '#8a6a35'} delay={0.6} />
               </h2>
             </div>
           </TubesCursor>
