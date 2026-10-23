@@ -3,6 +3,7 @@ import { LanguageContext, ThemeContext } from '../App';
 import BeamWordmarkFooter from '@/components/ui/beam-wordmark-footer';
 import DaliSignature from '@/components/DaliSignature';
 import TubesCursor from '@/components/ui/tubes-cursor';
+import DrawText from '@/components/ui/draw-text';
 
 interface Props { onGenset: () => void; }
 
@@ -1355,8 +1356,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           <TubesCursor light={!isDark} className="nf4-tubes h-[60svh] min-h-[420px] max-h-[900px] select-none sm:h-[calc(100svh-64px)] sm:min-h-[480px]">
             <div className={`flex h-full flex-col items-center justify-center px-5 text-center ${isDark ? 'text-white' : 'text-[#0b2a4a]'}`}>
               <img src={isDark ? '/nf-loop-white.png' : '/nf-loop-navy.png'} alt="Nile Fleet" className="h-16 w-auto drop-shadow-[0_0_24px_rgba(194,163,120,.35)] sm:h-20 lg:h-24" />
-              <h2 dir="ltr" className={`mt-6 pr-[.06em] text-[5.5rem] font-black uppercase italic leading-[.85] tracking-[-.05em] sm:text-9xl lg:text-[11rem] ${isDark ? 'drop-shadow-[0_4px_30px_rgba(0,0,0,.6)]' : 'drop-shadow-[0_4px_24px_rgba(255,255,255,.8)]'}`}>
-                Nile<br /><span className={gold}>Fleet</span>
+              <h2 dir="ltr" aria-label="Nile Fleet" className={`mt-6 flex flex-col items-center text-[5.5rem] font-black uppercase italic leading-[.85] tracking-[-.05em] sm:text-9xl lg:text-[11rem] ${isDark ? 'drop-shadow-[0_4px_30px_rgba(0,0,0,.6)]' : 'drop-shadow-[0_4px_24px_rgba(255,255,255,.8)]'}`}>
+                <DrawText text="Nile" color={isDark ? '#ffffff' : '#0b2a4a'} className="block" />
+                <DrawText text="Fleet" color={isDark ? '#c2a378' : '#8a6a35'} delay={0.6} className="mt-[.04em] block" />
               </h2>
               <p className={`mt-6 text-xs font-black uppercase tracking-[.42em] sm:text-base ${isDark ? 'text-white/85' : 'text-[#0b2a4a]/80'}`}>{ar ? 'دائماً في حركة' : 'Always in motion'}</p>
             </div>
