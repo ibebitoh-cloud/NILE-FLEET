@@ -1351,15 +1351,14 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 `}</style>
 
 <main id="top" className="relative z-10">
-        <section id="in-motion" aria-label={ar ? 'مرحباً بك في نيل فليت، دائماً في حركة' : 'Welcome to Nile Fleet, always in motion'}>
+        <section id="in-motion" aria-label={ar ? 'نيل فليت، دائماً في حركة' : 'Nile Fleet, always in motion'}>
           <TubesCursor light={!isDark} className="nf4-tubes h-[60svh] min-h-[420px] max-h-[900px] select-none sm:h-[calc(100svh-64px)] sm:min-h-[480px]">
             <div className={`flex h-full flex-col items-center justify-center px-5 text-center ${isDark ? 'text-white' : 'text-[#0b2a4a]'}`}>
               <img src={isDark ? '/nf-loop-white.png' : '/nf-loop-navy.png'} alt="Nile Fleet" className="h-16 w-auto drop-shadow-[0_0_24px_rgba(194,163,120,.35)] sm:h-20 lg:h-24" />
-              <div className={`mt-6 text-[11px] font-black uppercase tracking-[.48em] sm:text-xs ${gold}`}>{ar ? 'مرحباً بك' : 'Welcome'}</div>
-              <h2 dir="ltr" className={`mt-3 whitespace-nowrap pr-[.06em] text-5xl font-black uppercase italic leading-none tracking-[-.05em] sm:text-7xl lg:text-8xl ${isDark ? 'drop-shadow-[0_4px_30px_rgba(0,0,0,.6)]' : 'drop-shadow-[0_4px_24px_rgba(255,255,255,.8)]'}`}>
-                Nile <span className={gold}>Fleet</span>
+              <h2 dir="ltr" className={`mt-6 pr-[.06em] text-[5.5rem] font-black uppercase italic leading-[.85] tracking-[-.05em] sm:text-9xl lg:text-[11rem] ${isDark ? 'drop-shadow-[0_4px_30px_rgba(0,0,0,.6)]' : 'drop-shadow-[0_4px_24px_rgba(255,255,255,.8)]'}`}>
+                Nile<br /><span className={gold}>Fleet</span>
               </h2>
-              <p className={`mt-5 text-xs font-black uppercase tracking-[.42em] sm:text-sm ${isDark ? 'text-white/85' : 'text-[#0b2a4a]/80'}`}>{ar ? 'دائماً في حركة' : 'Always in motion'}</p>
+              <p className={`mt-6 text-xs font-black uppercase tracking-[.42em] sm:text-base ${isDark ? 'text-white/85' : 'text-[#0b2a4a]/80'}`}>{ar ? 'دائماً في حركة' : 'Always in motion'}</p>
             </div>
           </TubesCursor>
         </section>
