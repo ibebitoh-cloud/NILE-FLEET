@@ -6,6 +6,17 @@ const TEXT_MODEL = '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b';
 const VISION_MODEL = '@cf/qwen/qwen3.8-27b';
 const VISION_FALLBACK_MODEL = '@cf/meta/llama-3.2-11b-vision-instruct';
 const TEXT_FALLBACK_MODEL = '@cf/qwen/qwen3-30b-a3b-fp8';
+const CREATOR_EMAIL = 'bebito@nilefleet.com';
+
+// Which profile roles may call each AI action. Checked here on the server so a
+// customer or gate account cannot reach DALI's operations prompts by calling
+// this endpoint directly. Public visitors never get this far (no session).
+const ACTION_ROLES = {
+  translateBusinessEntities: ['ADMIN', 'MANAGER', 'VIEWER', 'GATE_OPERATOR', 'CUSTOMER'],
+  runThinkingAudit: ['ADMIN', 'MANAGER', 'VIEWER'],
+  scanImageForContainer: ['ADMIN', 'MANAGER', 'GATE_OPERATOR'],
+  mapSpreadsheetToSchema: ['ADMIN', 'MANAGER'],
+};
 
 // Open models are less reliable than Claude/GPT at strictly following
 // "return only JSON" instructions — strip code fences and grab the first
@@ -69,6 +80,14 @@ export async function onRequestPost(context) {
   }
 
   const { action, payload } = body;
+
+  const allowedRoles = ACTION_ROLES[action];
+  if (!allowedRoles) return json({ error: 'Unknown action' }, 400);
+  const profile = await loadProfile(supabaseUrl, supabaseAnonKey, accessToken, authenticatedUser.id);
+  const isCreator = String(authenticatedUser.email || '').trim().toLowerCase() === CREATOR_EMAIL;
+  if (!isCreator && (!profile || profile.revoked === true || !allowedRoles.includes(String(profile.role || '').toUpperCase()))) {
+    return json({ error: 'DALI is not available for this account' }, 403);
+  }
 
   try {
     switch (action) {
@@ -158,6 +177,21 @@ Respond with ONLY the raw JSON array — no markdown, no code fences, no comment
       model: TEXT_MODEL,
       fallbackModel: TEXT_FALLBACK_MODEL,
     }, 500);
+  }
+}
+
+async function loadProfile(supabaseUrl, anonKey, accessToken, userId) {
+  // Read with the caller's own token, so row-level security applies as usual.
+  try {
+    const res = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(userId)}&select=role,revoked`, {
+      headers: { Authorization: `Bearer ${accessToken}`, apikey: anonKey, Accept: 'application/json' },
+    });
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return Array.isArray(rows) && rows[0] ? rows[0] : null;
+  } catch (e) {
+    console.error('DALI profile lookup failed', e);
+    return null;
   }
 }
 

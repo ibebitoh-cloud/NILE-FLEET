@@ -63,6 +63,7 @@ const DaliPublicChat: React.FC<Props> = ({ ar, isDark, onLogin }) => {
       const data = await res.json().catch(() => null);
       if (res.status === 429 || data?.limit) { markUsed(FREE_MESSAGES); return; }
       if (!res.ok || !data?.text) throw new Error(data?.error || 'failed');
+      if (data.free) markUsed(used);
       setMsgs([...next, { role: 'assistant', content: data.text }]);
     } catch {
       setError(ar ? 'تعذر الوصول إلى دالي الآن. حاول مرة أخرى.' : "DALI couldn't answer right now. Please try again.");
