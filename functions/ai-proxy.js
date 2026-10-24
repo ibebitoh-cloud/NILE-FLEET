@@ -14,6 +14,7 @@ const CREATOR_EMAIL = 'bebito@nilefleet.com';
 const ACTION_ROLES = {
   translateBusinessEntities: ['ADMIN', 'MANAGER', 'VIEWER', 'GATE_OPERATOR', 'CUSTOMER'],
   runThinkingAudit: ['ADMIN', 'MANAGER', 'VIEWER'],
+  daliAction: ['ADMIN', 'MANAGER'],
   scanImageForContainer: ['ADMIN', 'MANAGER', 'GATE_OPERATOR'],
   mapSpreadsheetToSchema: ['ADMIN', 'MANAGER'],
 };
@@ -122,6 +123,28 @@ export async function onRequestPost(context) {
           throw new Error('Workers AI returned no text from the primary/fallback model.');
         }
         return json({ text });
+      }
+
+      case 'daliAction': {
+        // Only reads the request into structured fields. Nothing is written here:
+        // the app shows the user a confirm card and saves through Supabase (with RLS).
+        const { question, today } = payload || {};
+        if (!String(question || '').trim()) return json({ error: 'Empty request' }, 400);
+        const result = await runTextModel(env, {
+          messages: [
+            { role: 'system', content: `You turn a Nile Fleet staff request (English, Arabic, Egyptian Arabic or Arabizi) into one action. Today is ${String(today || '').slice(0, 10)}. Respond with ONLY a raw JSON object, no markdown.
+Allowed shapes:
+{"type":"log_maintenance","gensetNumber":"","serviceType":"OIL_CHANGE|FILTER_REPLACEMENT|ENGINE_OVERHAUL|ELECTRICAL_CHECK|ROUTINE_INSPECTION|EMERGENCY_REPAIR|GENERAL_SERVICE|RADIATOR","status":"IN_PROGRESS|SCHEDULED|COMPLETED","serviceDate":"YYYY-MM-DD","technician":"","description":"","cost":0}
+{"type":"create_reservation","customerName":"","bookingNumber":"","gensetsNeeded":1,"portIn":"DAM|ALEX|GOUDA|SOKHNA|SCCT|PSD","portOut":"DAM|ALEX|GOUDA|SOKHNA|SCCT|PSD","reservationDate":"YYYY-MM-DD","shipper":""}
+{"type":"set_reservation_status","bookingNumber":"","status":"APPROVED|CANCELLED|COMPLETED"}
+{"type":"none"}
+Use "none" when the message is a question rather than a request to record or change something. Copy IDs, booking numbers and names exactly as written. Leave a field as "" when it is not given; never invent values. Convert relative dates (today, tomorrow, بكرة) to YYYY-MM-DD.` },
+            { role: 'user', content: String(question).slice(0, 1000) },
+          ],
+          max_tokens: 400,
+          temperature: 0,
+        });
+        return json(parseJsonLoose(extractText(result)));
       }
 
       case 'scanImageForContainer': {

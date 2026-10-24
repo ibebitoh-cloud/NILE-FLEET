@@ -5,7 +5,9 @@ import { User, UserRole, SystemNotification, GensetStatus } from '../types';
 import { LanguageContext, ThemeContext } from '../App';
 import { translations, translateEntity, dynamicTranslations } from '../translations';
 import { db } from '../services/supabaseDb';
-import { runThinkingAudit } from '../services/aiService';
+import { runThinkingAudit, extractDaliAction } from '../services/aiService';
+import { looksLikeAction, planDaliAction } from '../services/daliActions';
+import type { DaliActionPlan } from '../services/daliActions';
 import { getDaliRecentMemory, getDaliConversationMemory, saveDaliConversationMessage, getDaliChatSessions, archiveDaliConversation } from '../services/daliMemory';
 import { searchDaliKnowledge } from '../services/daliKnowledge';
 import { getTerminology } from '../services/daliTerminology';
@@ -78,6 +80,8 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   const [daliArchivedChats, setDaliArchivedChats] = useState<any[]>([]);
   const [daliHistoryLoading, setDaliHistoryLoading] = useState(false);
   const daliSessionIdRef = useRef<string>(crypto.randomUUID());
+  const [pendingDaliAction, setPendingDaliAction] = useState<DaliActionPlan | null>(null);
+  const [daliActionSaving, setDaliActionSaving] = useState(false);
   const [daliMemory, setDaliMemory] = useState<{ role: 'user' | 'assistant'; message: string; entities?: any; created_at?: string }[]>([]);
   const [daliButtonPosition, setDaliButtonPosition] = useState(() => {
     try { return JSON.parse(localStorage.getItem('nile-dali-button-position-v2') || '{"right":24,"bottom":72}'); }
@@ -265,7 +269,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
     }
     setAiChatMessages([]);
     setAiChatInput('');
-    setDaliMemory([]);
+    setDaliMemory([]); setPendingDaliAction(null);
     setDaliArchiveOpen(false);
     setDaliPostIntroSuggestion(false);
     daliSessionIdRef.current = crypto.randomUUID();
@@ -309,7 +313,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       await archiveDaliConversation(daliSessionIdRef.current, true);
       setAiChatMessages([]);
       setAiChatInput('');
-      setDaliMemory([]);
+      setDaliMemory([]); setPendingDaliAction(null);
       setDaliArchiveOpen(false);
       daliSessionIdRef.current = crypto.randomUUID();
     } catch (archiveError) {
@@ -328,6 +332,31 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
     } catch (memoryError) {
       console.warn('DALI memory save failed:', memoryError);
     }
+  };
+
+  const confirmDaliAction = async () => {
+    const plan = pendingDaliAction;
+    if (!plan || daliActionSaving) return;
+    setDaliActionSaving(true);
+    let ok = false;
+    try { ok = await plan.execute(); } catch (e) { console.warn('DALI action failed:', e); }
+    setDaliActionSaving(false);
+    setPendingDaliAction(null);
+    const reply = ok
+      ? (isAr ? `تم: ${plan.title}.` : `Done: ${plan.title}.`)
+      : (isAr ? 'لم يتم الحفظ. ' : 'Not saved. ') + (db.getLastDbError() || (isAr ? 'حاول مرة أخرى.' : 'Please try again.'));
+    setAiChatMessages(prev => [...prev, { role: 'ai', text: reply }]);
+    setDaliMemory(prev => [...prev, { role: 'assistant', message: reply }].slice(-30));
+    void saveDaliMemory('assistant', reply, { action: plan.kind, saved: ok });
+  };
+
+  const cancelDaliAction = () => {
+    if (!pendingDaliAction || daliActionSaving) return;
+    setPendingDaliAction(null);
+    const reply = isAr ? 'تمام، لغيت الطلب ومحفظتش حاجة.' : 'OK, cancelled. Nothing was saved.';
+    setAiChatMessages(prev => [...prev, { role: 'ai', text: reply }]);
+    setDaliMemory(prev => [...prev, { role: 'assistant', message: reply }].slice(-30));
+    void saveDaliMemory('assistant', reply);
   };
 
   // Each mounted app starts a fresh visible chat. Persistent DALI memory remains in Supabase
@@ -349,6 +378,30 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
     if (aiChatMessages.length === 0) {
       setDaliFirstMessageAnimation(true);
       window.setTimeout(() => setDaliFirstMessageAnimation(false), 1200);
+    }
+
+    // DALI ACTIONS: a request to record or change something becomes a confirm card.
+    // Nothing is saved until the user presses Confirm.
+    setPendingDaliAction(null);
+    if (canUseDali && looksLikeAction(question)) {
+      try {
+        let aliases: DaliCustomerAlias[] = [];
+        try { aliases = await getDaliCustomerAliases(); } catch { /* aliases are optional */ }
+        const result = planDaliAction(await extractDaliAction(question), responseIsAr, aliases);
+        if (result.status !== 'none') {
+          const reply = result.status === 'missing'
+            ? result.message
+            : (responseIsAr ? 'جهزت الطلب ده. راجعه واضغط تأكيد عشان أحفظه:' : 'Here is what I will save. Check it and press Confirm:') + '\n' + result.plan.lines.join('\n');
+          if (result.status === 'ready') setPendingDaliAction(result.plan);
+          setAiChatMessages(prev => [...prev, { role: 'ai', text: reply }]);
+          setDaliMemory(prev => [...prev, { role: 'assistant', message: reply }].slice(-30));
+          void saveDaliMemory('assistant', reply);
+          setAiChatLoading(false);
+          return;
+        }
+      } catch (actionError) {
+        console.warn('DALI action reading failed; answering as a question:', actionError);
+      }
     }
 
     // HARD DATA-FIRST ROUTES: never send simple operational counts to the AI model.
@@ -1988,7 +2041,7 @@ I’ll search with you. 🤖`;
                 <p className="mt-2 max-w-[270px] text-[10px] leading-5 text-white/42">{isAr?'أنا دالي. جاهز نشتغل على بيانات النظام.':'I’m DALI. Ready to work through the system with you.'}</p>
                 <div className="mt-5 w-full max-w-[320px]"><div className="mb-2 flex items-center gap-2"><span className="h-px flex-1 bg-white/10"></span><span className="text-[7px] font-black tracking-[0.2em] text-white/30">{isAr?'ابدأ بسؤال':'START WITH A QUESTION'}</span><span className="h-px flex-1 bg-white/10"></span></div><div className="grid gap-2">{(()=>{const prompts=!daliIntroCompleted?(isAr?['مين دالي؟']:['Who is DALI?']):(isAr?[['كم مولد يعمل اليوم؟','اعرض حجوزات اليوم','أين المولد 125؟'],['⚠️ في تعارض في البيانات؟','📍 المولدات موجودة فين؟','📦 إيه الحجوزات اللي محتاجة متابعة؟']][daliSuggestedSet]:[['How many gensets are operating today?','Show today’s bookings','Where is genset 125?'],['⚠️ Are there any data conflicts?','📍 Where are the gensets?','📦 Which bookings need follow-up?']][daliSuggestedSet]);return prompts.map(prompt=><button key={prompt} type="button" onClick={()=>setAiChatInput(prompt.replace(/^[^\p{L}\p{N}]+/u,'').trim())} className="min-h-10 w-full rounded-xl border border-white/10 bg-white/[0.045] px-3.5 py-2.5 text-left text-[10px] font-semibold leading-5 text-white/75 transition hover:border-white/20 hover:bg-white/[0.075] hover:text-white active:scale-[.99]">{prompt}</button>)})()}</div></div>
               </div>}
-              {aiChatMessages.length>0&&<div className="flex flex-col gap-3 pt-1">{aiChatMessages.map((m,i)=><div key={i} className={`flex ${m.role==='user'?'justify-end':'justify-start'}`}><div className={`max-w-[88%] px-3.5 py-2.5 text-[12px] leading-5.5 sm:text-[13px] sm:leading-6 whitespace-pre-wrap break-words overflow-wrap-anywhere ${m.role==='user'?'rounded-[20px] rounded-br-md bg-[#C2A378] text-[#07131f]':'rounded-[20px] rounded-bl-md bg-white/[0.055] text-white/90'}`}>{m.text}</div></div>)}{!aiChatLoading&&daliPostIntroSuggestion&&<div className="flex justify-start pt-1"><button type="button" onClick={()=>{setAiChatInput(isAr?'دالي يقدر يعمل إيه؟':'What can DALI do?');setDaliPostIntroSuggestion(false)}} className="rounded-full border border-[#C2A378]/30 bg-[#C2A378]/10 px-4 py-2 text-[9px] font-bold text-[#C2A378] transition hover:bg-[#C2A378]/15">{isAr?'دالي يقدر يعمل إيه؟':'What can DALI do?'}</button></div>}</div>}
+              {aiChatMessages.length>0&&<div className="flex flex-col gap-3 pt-1">{aiChatMessages.map((m,i)=><div key={i} className={`flex ${m.role==='user'?'justify-end':'justify-start'}`}><div className={`max-w-[88%] px-3.5 py-2.5 text-[12px] leading-5.5 sm:text-[13px] sm:leading-6 whitespace-pre-wrap break-words overflow-wrap-anywhere ${m.role==='user'?'rounded-[20px] rounded-br-md bg-[#C2A378] text-[#07131f]':'rounded-[20px] rounded-bl-md bg-white/[0.055] text-white/90'}`}>{m.text}</div></div>)}{!aiChatLoading&&pendingDaliAction&&<div className="flex justify-start gap-2 pt-1"><button type="button" onClick={confirmDaliAction} disabled={daliActionSaving} className="rounded-full bg-[#C2A378] px-4 py-2 text-[10px] font-black text-[#07131f] transition hover:brightness-110 disabled:opacity-40">{daliActionSaving?(isAr?'جاري الحفظ…':'Saving…'):(isAr?'تأكيد':'Confirm')}</button><button type="button" onClick={cancelDaliAction} disabled={daliActionSaving} className="rounded-full border border-white/15 px-4 py-2 text-[10px] font-bold text-white/70 transition hover:bg-white/5 disabled:opacity-40">{isAr?'إلغاء':'Cancel'}</button></div>}{!aiChatLoading&&daliPostIntroSuggestion&&<div className="flex justify-start pt-1"><button type="button" onClick={()=>{setAiChatInput(isAr?'دالي يقدر يعمل إيه؟':'What can DALI do?');setDaliPostIntroSuggestion(false)}} className="rounded-full border border-[#C2A378]/30 bg-[#C2A378]/10 px-4 py-2 text-[9px] font-bold text-[#C2A378] transition hover:bg-[#C2A378]/15">{isAr?'دالي يقدر يعمل إيه؟':'What can DALI do?'}</button></div>}</div>}
               {aiChatLoading&&<div className="flex flex-col items-center justify-center py-10 text-center"><div className="relative h-24 w-28"><div className="dali-blob absolute inset-0 overflow-hidden border border-[#C2A378]/25 bg-[radial-gradient(ellipse_at_35%_28%,rgba(255,255,255,.30),rgba(194,163,120,.18)_38%,rgba(0,31,63,.76)_100%)] shadow-[0_0_55px_rgba(194,163,120,.16)]"><div className="pointer-events-none absolute inset-[10%] rounded-[48%] bg-[radial-gradient(ellipse_at_30%_25%,rgba(255,255,255,.38),rgba(194,163,120,.12)_40%,transparent_72%)] opacity-80" style={{animation:'daliOrbCore 1.8s ease-in-out infinite'}}></div><div className="absolute inset-[30%] rounded-full bg-[#C2A378]/55 blur-md"></div></div></div><p className="mt-4 text-[9px] font-black tracking-[0.18em] text-[#C2A378]">{isAr?'دالي يفكر':'DALI IS THINKING'}</p><p className="mt-1 text-[9px] leading-5 text-white/35">{false?'•••':isAr?(false?['بشوف الموضوع 👀…','براجع البيانات…','بربط النتائج…','تمام، بجمعها لك…'][daliThinkingPhase]:false?['أحدد نوع الطلب…','أطابق المصطلحات…','أراجع السجلات المرتبطة…','أتحقق من النتيجة…'][daliThinkingPhase]:['براجع البيانات المرتبطة…','ببحث في سجلات النظام…','براجع النتائج المرتبطة…','بجمع الإجابة…'][daliThinkingPhase]):(false?['Taking a quick look 👀…','Checking the data…','Connecting the results…','Got it — putting it together…'][daliThinkingPhase]:false?['Classifying the request…','Matching terminology…','Reviewing related records…','Validating the result…'][daliThinkingPhase]:['Checking the relevant system data…','Searching the system records…','Reviewing the related results…','Putting the answer together…'][daliThinkingPhase])}</p></div>}
             </div>
             <footer className="shrink-0 border-t border-white/10 bg-black/10 p-2.5 sm:p-3.5"><div className="flex items-end gap-2 rounded-[20px] border border-white/10 bg-white/[0.045] p-1.5 focus-within:border-white/20 focus-within:bg-white/[0.065]"><textarea value={aiChatInput} onChange={e=>setAiChatInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();askNileAi()}}} placeholder={isAr?'اكتب لدالي...':'Message DALI...'} onFocus={e=>{if(window.innerWidth<640){const target=e.currentTarget;window.setTimeout(()=>{if(target&&target.isConnected)target.scrollIntoView({block:'nearest',behavior:'smooth'})},80)}}} className="min-h-[46px] max-h-28 flex-1 resize-none rounded-[15px] border-0 bg-transparent px-3 py-2.5 text-[16px] leading-6 text-white outline-none placeholder:text-white/30 sm:text-[13px]"/><button data-dali-send onClick={askNileAi} disabled={aiChatLoading||!aiChatInput.trim()} className="h-11 w-11 shrink-0 rounded-[15px] bg-[#C2A378] text-[#07131f] transition hover:brightness-110 active:scale-95 disabled:opacity-25" title={isAr?'إرسال':'Send'}>↑</button></div><p className="mt-2 px-1 text-[7px] text-white/25">{isAr?'دالي يبحث في بيانات النظام قبل أن يخمّن.':'DALI checks system data before guessing.'}</p></footer>
