@@ -866,10 +866,10 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     white: ar ? '☀ فاتح' : '☀ WHITE',
     dark: ar ? '🌙 داكن' : '🌙 DARK',
     gensetAccess: ar ? 'دخول الجينسيت' : 'GENSET ACCESS',
-    since: ar ? 'منذ 2009 · مصر' : 'Since 2009 · Egypt',
+    since: ar ? 'النقل واللوجستيات · مصر - الإمارات' : 'Transport and logistics · Egypt - UAE',
     heroTitle: ar ? <>الشحن<br /><span className={gold}>في حركة.</span></> : <>Cargo<br /><span className={gold}>in motion.</span></>,
     explore: ar ? 'استكشف العمليات' : 'Explore Operations',
-    founded: ar ? 'التأسيس' : 'FOUNDED',
+    ports: ar ? 'موانئ' : 'PORTS',
     years: ar ? 'سنوات' : 'YEARS',
     coveragePorts: ar ? ['العين السخنة', 'الإسكندرية', 'دمياط', 'بورسعيد', 'SCCT'] : ['SOKHNA', 'ALEXANDRIA', 'DAMIETTA', 'PORT SAID', 'SCCT'],
     ops24: ar ? 'العمليات' : 'OPERATIONS',
@@ -1392,9 +1392,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
             </div>
 
             <div className="nf4-hero-stats hidden lg:block">
-              {/* Reference layout: Founded on its own, Years and 24/7 stacked with the ports they cover. */}
+              {/* Reference layout: Ports on its own, Years and 24/7 stacked with the ports they cover. */}
               <div className="grid grid-cols-2 gap-3">
-                {([['2009', tx.founded, false], ['17+', tx.years, true], ['24/7', tx.ops24, true]] as const).map(([v, l, ports], i) => (
+                {([['5', tx.ports, false], ['17+', tx.years, true], ['24/7', tx.ops24, true]] as const).map(([v, l, ports], i) => (
                   <div key={l} className={`nf4-stat min-h-[170px] rounded-2xl border p-5 backdrop-blur-md ${K.card} ${i === 2 ? 'col-start-2' : ''}`}>
                     <div className="text-5xl font-black tracking-[-.04em]">{v}</div>
                     <div className={`mt-1 text-[9px] font-black tracking-[.16em] ${gold}`}>{l}</div>
