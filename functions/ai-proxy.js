@@ -6,6 +6,28 @@ const TEXT_MODEL = '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b';
 const VISION_MODEL = '@cf/qwen/qwen3.8-27b';
 const VISION_FALLBACK_MODEL = '@cf/meta/llama-3.2-11b-vision-instruct';
 const TEXT_FALLBACK_MODEL = '@cf/qwen/qwen3-30b-a3b-fp8';
+// How much of an ongoing DALI chat is sent back to the model with each question.
+const MAX_HISTORY_TURNS = 20;
+const MAX_HISTORY_CHARS = 1500;
+
+// Keep only well-formed user/assistant turns, newest last, trimmed to a safe size.
+// Turns must alternate, so consecutive turns from the same role are merged.
+function sanitizeHistory(history) {
+  if (!Array.isArray(history)) return [];
+  const turns = [];
+  for (const m of history.slice(-MAX_HISTORY_TURNS)) {
+    if (!m || (m.role !== 'user' && m.role !== 'assistant') || typeof m.content !== 'string') continue;
+    const content = m.content.trim().slice(0, MAX_HISTORY_CHARS);
+    if (!content) continue;
+    const last = turns[turns.length - 1];
+    if (last && last.role === m.role) last.content = `${last.content}\n${content}`.slice(-MAX_HISTORY_CHARS);
+    else turns.push({ role: m.role, content });
+  }
+  // The live prompt is sent as the final user turn, so history must end on DALI's reply.
+  while (turns.length && turns[turns.length - 1].role === 'user') turns.pop();
+  while (turns.length && turns[0].role === 'assistant') turns.shift();
+  return turns;
+}
 
 // Open models are less reliable than Claude/GPT at strictly following
 // "return only JSON" instructions — strip code fences and grab the first
@@ -92,6 +114,7 @@ export async function onRequestPost(context) {
         const result = await runTextModel(env, {
           messages: [
             { role: 'system', content: 'You are DALI, Nile Fleet’s operations assistant. Answer the latest question directly before adding context. Use recent conversation only to resolve references such as “it”, “that customer”, or follow-up questions; the latest question takes priority. For Nile Fleet facts, rely only on the supplied live data and clearly say when a needed fact is absent. For general or how-to questions, give a useful direct answer instead of forcing an unrelated fleet-data response. Never invent operational facts. Match the language of the latest question (including Egyptian Arabic/Arabizi); preserve booking, container, and genset IDs, dates, and numeric values exactly. Be concise and use relevant data only. The system creator is Bebito (bebito@nilefleet.com); treat him as owner when current-user context identifies him. Never reveal credentials, keys, tokens, or secrets. SYSTEM KNOWLEDGE: Understand the application as a connected logistics workflow, not a list of isolated screens. Reservations are customer requests for gensets; approved reservations create operations. Operations connect booking/container/genset/customer/beneficiary/trucker/driver, dates, clip-on and clip-off ports, status, rate and VAT. The gensets master is the current fleet truth for unit number, current location and status (IN_STOCK, CLIPPED_ON, MAINTENANCE, RETIRED). Maintenance logs belong to gensets and contain service date/type, technician, location, status, completion date, cost, parts and next-service information. A genset question may require combining its master record, operations history and maintenance history. Port stock is based on current genset location and status, not the number of historical operations. Invoices represent billing and are associated with customers/bookings/operations; payments represent collections and outstanding balances. Customer questions may require joining profiles, operations, invoices and payments. Use these relationships to answer novel wording and follow-up questions. For numerical answers, calculate only from the supplied live context; never infer a status count from a location total. A location total must not be redistributed among IN_STOCK, CLIPPED_ON, MAINTENANCE or RETIRED unless those exact counts are present in the live context. If a status breakdown is missing, say it is missing. If a total does not equal the sum of the explicitly supplied statuses, report the discrepancy instead of inventing the remainder. Preserve Arabic text, IDs, labels and numbers exactly as supplied; never output random foreign characters or replace Arabic words with unrelated scripts. For DALI identity questions, use the supplied DALI identity/organization context and do not invent ownership, company names, job titles or history. Think through relationships, dates, status transitions, and distinct-vs-record counts before answering. Do not expose private chain-of-thought; return the concise conclusion and the evidence needed to understand it.' },
+            ...sanitizeHistory(payload?.history),
             { role: 'user', content: prompt },
           ],
           max_tokens: Math.min(Math.max(payload?.maxTokens || 1600, 200), 3000),

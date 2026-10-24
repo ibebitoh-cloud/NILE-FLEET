@@ -81,7 +81,9 @@ async function buildDaliData(): Promise<DaliData> {
 
 export const getSafeApiKey = (): string | null => 'open-source-nile-ai';
 
-export const runThinkingAudit = async (prompt: string, budget: number = 1200) => {
+export type DaliTurn = { role: 'user' | 'assistant'; content: string };
+
+export const runThinkingAudit = async (prompt: string, budget: number = 1200, history: DaliTurn[] = []) => {
   // DALI's deterministic engine is the source of truth for operational questions.
   // This prevents the LLM from rewriting counts, locations, statuses, IDs or dates.
   const question = extractQuestion(prompt);
@@ -101,6 +103,7 @@ export const runThinkingAudit = async (prompt: string, budget: number = 1200) =>
   try {
     const { text, error, detail } = await callAi('runThinkingAudit', {
       prompt,
+      history,
       model: OPEN_SOURCE_MODEL,
       maxTokens: Math.min(Math.max(budget, 200), 3000),
     });
