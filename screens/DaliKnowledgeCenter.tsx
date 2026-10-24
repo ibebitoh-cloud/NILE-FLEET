@@ -3,7 +3,7 @@ import DaliLoader from '../components/DaliLoader';
 import { LanguageContext } from '../App';
 import { User, UserRole } from '../types';
 import { db } from '../services/supabaseDb';
-import { getDaliKnowledge, teachDaliKnowledge, canEditDaliTraining } from '../services/daliKnowledge';
+import { getDaliKnowledge, teachDaliKnowledge, canEditDaliTraining, readDocumentText, teachDaliDocument } from '../services/daliKnowledge';
 import type { DaliKnowledge } from '../services/daliKnowledge';
 import { getDaliCustomerAliases, saveDaliCustomerAlias, deleteDaliCustomerAlias } from '../services/daliCustomerAliases';
 import type { DaliCustomerAlias } from '../services/daliCustomerAliases';
@@ -12,6 +12,7 @@ import type { TerminologyRecord } from '../services/daliTerminology';
 
 const C = [
   ['company_rule', 'Company Rules'],
+  ['document', 'Documents'],
   ['terminology', 'Terminology'],
   ['workflow', 'Workflows'],
   ['port_rule', 'Port Rules'],
@@ -51,6 +52,9 @@ const DaliKnowledgeCenter: React.FC = () => {
   const [termType, setTermType] = useState('entity');
   const [termDebug, setTermDebug] = useState('');
   const [termLoading, setTermLoading] = useState(false);
+  const [docCategory, setDocCategory] = useState('document');
+  const [docKeywords, setDocKeywords] = useState('');
+  const [docBusy, setDocBusy] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -103,6 +107,33 @@ const DaliKnowledgeCenter: React.FC = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const uploadDocuments = async (files: FileList | null) => {
+    if (!canEditTraining || !files?.length) return;
+    setDocBusy(true);
+    setNotice('');
+    let saved = 0;
+    const failed: string[] = [];
+    for (const file of Array.from(files)) {
+      try {
+        const text = await readDocumentText(file);
+        saved += await teachDaliDocument({
+          fileName: file.name,
+          text,
+          category: docCategory,
+          keywords: docKeywords.split(',').map(x => x.trim()).filter(Boolean),
+        });
+      } catch (e) {
+        failed.push(`${file.name}: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
+    setDocBusy(false);
+    setNotice([
+      saved ? (ar ? `تعلّم دالي ${saved} جزء من المستندات.` : `DALI learned ${saved} part(s) from the document(s).`) : '',
+      ...failed,
+    ].filter(Boolean).join('\n'));
+    if (saved) await load();
   };
 
   const saveAlias = async () => {
@@ -238,6 +269,25 @@ const DaliKnowledgeCenter: React.FC = () => {
         </div>
       </div>
 
+      <section className="rounded-3xl border p-5 bg-[var(--card-bg)] border-[var(--border-primary)]">
+        <div className="text-[9px] font-black uppercase tracking-widest text-[#C2A378] mb-2">{ar ? 'تعليم من مستند' : 'Teach from a document'}</div>
+        <p className="text-xs opacity-60 mb-4">
+          {ar
+            ? 'ارفع إجراءات العمل أو العقود أو قوائم الأسعار (PDF أو Excel أو نص). دالي يقرأها ويستخدمها في الإجابة داخل النظام فقط. هذه المعرفة لا تظهر أبداً للزوار على الموقع العام.'
+            : 'Upload SOPs, contracts or price lists (PDF, Excel or text). DALI reads them and uses them in answers inside the system only. This knowledge is never shown to visitors on the public website.'}
+        </p>
+        <div className="grid sm:grid-cols-[180px_1fr_auto] gap-2">
+          <select value={docCategory} onChange={e => setDocCategory(e.target.value)} disabled={!canEditTraining || docBusy} className="rounded-xl border p-3 text-sm bg-[var(--input-bg)]">
+            {C.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
+          <input value={docKeywords} onChange={e => setDocKeywords(e.target.value)} disabled={!canEditTraining || docBusy} placeholder={ar ? 'كلمات مفتاحية (اختياري)' : 'Keywords (optional)'} className="rounded-xl border p-3 text-sm bg-[var(--input-bg)]" />
+          <label className={`px-5 py-3 rounded-xl bg-[#C2A378] text-[#001F3F] font-black uppercase text-xs text-center ${!canEditTraining || docBusy ? 'opacity-40 pointer-events-none' : 'cursor-pointer'}`}>
+            {docBusy ? (ar ? 'جاري القراءة...' : 'Reading...') : (ar ? 'ارفع مستند' : 'Upload document')}
+            <input type="file" multiple accept=".pdf,.txt,.md,.csv,.xlsx,.xls" className="hidden" disabled={!canEditTraining || docBusy} onChange={e => { void uploadDocuments(e.target.files); e.target.value = ''; }} />
+          </label>
+        </div>
+      </section>
+
       <div className="grid lg:grid-cols-2 gap-5">
         <section className="rounded-3xl border p-5 bg-[var(--card-bg)] border-[var(--border-primary)]">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#C2A378] mb-4">{ar ? 'تعليم جديد' : 'Teach DALI'}</div>
@@ -329,7 +379,7 @@ const DaliKnowledgeCenter: React.FC = () => {
         {termDebug && <pre dir="ltr" className="mt-3 max-h-72 overflow-auto rounded-xl bg-black/90 text-emerald-300 p-3 text-[9px] whitespace-pre-wrap">{termDebug}</pre>}
       </section>
 
-      {notice && <div className="rounded-2xl border border-[#C2A37855] bg-[#C2A37810] text-[#C2A378] p-3 text-xs font-bold">{notice}</div>}
+      {notice && <div className="rounded-2xl border border-[#C2A37855] bg-[#C2A37810] text-[#C2A378] p-3 text-xs font-bold whitespace-pre-line">{notice}</div>}
 
       <section className="rounded-3xl border p-5 bg-[var(--card-bg)] border-[var(--border-primary)]">
         <div className="flex gap-3 mb-4">

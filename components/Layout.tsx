@@ -1592,6 +1592,7 @@ I’ll search with you. 🤖`;
     { id: 'cust-reservations', label: t.reservations, icon: '📅' },
     { id: 'cust-invoices', label: t.financials, icon: '🏦' },
     { id: 'user-settings', label: t.userSettings, icon: '⚙️' },
+    { id: 'dali-knowledge', label: isAr ? 'معرفة دالي' : 'DALI KNOWLEDGE', icon: '📚' },
   ];
 
   const defaultMenu = isInternal ? [
@@ -1630,7 +1631,7 @@ I’ll search with you. 🤖`;
     : user.role === UserRole.VIEWER
       ? ['dashboard', 'master-view', 'reports', 'intelligence', 'notifications', 'support', 'system-log']
       : null;
-  const menu = user.role === UserRole.CUSTOMER
+  const baseMenu = user.role === UserRole.CUSTOMER
     ? allPossibleMenuItems.filter(item => ['cust-reservations', 'cust-invoices', 'notifications', 'support'].includes(item.id))
     : Array.isArray(user.allowedScreens)
       ? allPossibleMenuItems.filter(item =>
@@ -1640,6 +1641,10 @@ I’ll search with you. 🤖`;
     : roleDefaultScreenIds
       ? allPossibleMenuItems.filter(item => roleDefaultScreenIds.includes(item.id))
       : defaultMenu;
+  // DALI users get the Knowledge Center in the menu (documents, rules, aliases).
+  const menu = canUseDali && !baseMenu.some(item => item.id === 'dali-knowledge')
+    ? [...baseMenu, allPossibleMenuItems.find(item => item.id === 'dali-knowledge')!]
+    : baseMenu;
 
     const sidebarBg = isDark ? 'bg-[#001224]' : 'bg-[#e9e5de] shadow-xl';
   const mainBg = isDark ? 'bg-[#000b14]' : 'bg-[#f3f1ec]';
