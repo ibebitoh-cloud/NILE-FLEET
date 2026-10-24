@@ -143,3 +143,10 @@ export const mapSpreadsheetToSchema = async (csvData: string): Promise<any[]> =>
     return [];
   }
 };
+
+/** Reads a staff request ("log maintenance for NFG-12") into structured action fields. Never writes data. */
+export const extractDaliAction = async (question: string): Promise<Record<string, any>> => {
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  return callAi('daliAction', { question, today });
+};

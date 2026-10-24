@@ -6,6 +6,19 @@ const TEXT_MODEL = '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b';
 const VISION_MODEL = '@cf/qwen/qwen3.8-27b';
 const VISION_FALLBACK_MODEL = '@cf/meta/llama-3.2-11b-vision-instruct';
 const TEXT_FALLBACK_MODEL = '@cf/qwen/qwen3-30b-a3b-fp8';
+const CREATOR_EMAIL = 'bebito@nilefleet.com';
+
+// Which profile roles may call each AI action. Checked here on the server so a
+// customer or gate account cannot reach DALI's operations prompts by calling
+// this endpoint directly. Public visitors never get this far (no session).
+const ACTION_ROLES = {
+  translateBusinessEntities: ['ADMIN', 'MANAGER', 'VIEWER', 'GATE_OPERATOR', 'CUSTOMER'],
+  runThinkingAudit: ['ADMIN', 'MANAGER', 'VIEWER'],
+  daliAction: ['ADMIN', 'MANAGER'],
+  scanImageForContainer: ['ADMIN', 'MANAGER', 'GATE_OPERATOR'],
+  mapSpreadsheetToSchema: ['ADMIN', 'MANAGER'],
+};
+
 // How much of an ongoing DALI chat is sent back to the model with each question.
 const MAX_HISTORY_TURNS = 20;
 const MAX_HISTORY_CHARS = 1500;
@@ -92,6 +105,14 @@ export async function onRequestPost(context) {
 
   const { action, payload } = body;
 
+  const allowedRoles = ACTION_ROLES[action];
+  if (!allowedRoles) return json({ error: 'Unknown action' }, 400);
+  const profile = await loadProfile(supabaseUrl, supabaseAnonKey, accessToken, authenticatedUser.id);
+  const isCreator = String(authenticatedUser.email || '').trim().toLowerCase() === CREATOR_EMAIL;
+  if (!isCreator && (!profile || profile.revoked === true || !allowedRoles.includes(String(profile.role || '').toUpperCase()))) {
+    return json({ error: 'DALI is not available for this account' }, 403);
+  }
+
   try {
     switch (action) {
       case 'translateBusinessEntities': {
@@ -126,6 +147,28 @@ export async function onRequestPost(context) {
           throw new Error('Workers AI returned no text from the primary/fallback model.');
         }
         return json({ text });
+      }
+
+      case 'daliAction': {
+        // Only reads the request into structured fields. Nothing is written here:
+        // the app shows the user a confirm card and saves through Supabase (with RLS).
+        const { question, today } = payload || {};
+        if (!String(question || '').trim()) return json({ error: 'Empty request' }, 400);
+        const result = await runTextModel(env, {
+          messages: [
+            { role: 'system', content: `You turn a Nile Fleet staff request (English, Arabic, Egyptian Arabic or Arabizi) into one action. Today is ${String(today || '').slice(0, 10)}. Respond with ONLY a raw JSON object, no markdown.
+Allowed shapes:
+{"type":"log_maintenance","gensetNumber":"","serviceType":"OIL_CHANGE|FILTER_REPLACEMENT|ENGINE_OVERHAUL|ELECTRICAL_CHECK|ROUTINE_INSPECTION|EMERGENCY_REPAIR|GENERAL_SERVICE|RADIATOR","status":"IN_PROGRESS|SCHEDULED|COMPLETED","serviceDate":"YYYY-MM-DD","technician":"","description":"","cost":0}
+{"type":"create_reservation","customerName":"","bookingNumber":"","gensetsNeeded":1,"portIn":"DAM|ALEX|GOUDA|SOKHNA|SCCT|PSD","portOut":"DAM|ALEX|GOUDA|SOKHNA|SCCT|PSD","reservationDate":"YYYY-MM-DD","shipper":""}
+{"type":"set_reservation_status","bookingNumber":"","status":"APPROVED|CANCELLED|COMPLETED"}
+{"type":"none"}
+Use "none" when the message is a question rather than a request to record or change something. Copy IDs, booking numbers and names exactly as written. Leave a field as "" when it is not given; never invent values. Convert relative dates (today, tomorrow, بكرة) to YYYY-MM-DD.` },
+            { role: 'user', content: String(question).slice(0, 1000) },
+          ],
+          max_tokens: 400,
+          temperature: 0,
+        });
+        return json(parseJsonLoose(extractText(result)));
       }
 
       case 'scanImageForContainer': {
@@ -181,6 +224,21 @@ Respond with ONLY the raw JSON array — no markdown, no code fences, no comment
       model: TEXT_MODEL,
       fallbackModel: TEXT_FALLBACK_MODEL,
     }, 500);
+  }
+}
+
+async function loadProfile(supabaseUrl, anonKey, accessToken, userId) {
+  // Read with the caller's own token, so row-level security applies as usual.
+  try {
+    const res = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(userId)}&select=role,revoked`, {
+      headers: { Authorization: `Bearer ${accessToken}`, apikey: anonKey, Accept: 'application/json' },
+    });
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return Array.isArray(rows) && rows[0] ? rows[0] : null;
+  } catch (e) {
+    console.error('DALI profile lookup failed', e);
+    return null;
   }
 }
 

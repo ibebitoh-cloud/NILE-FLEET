@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useDaliVoice } from './useDaliVoice';
+import { useDaliSpeech } from './useDaliSpeech';
 
 /**
  * DALI chat popup on the public homepage. Visitors get a few free messages,
@@ -25,6 +27,9 @@ const DaliPublicChat: React.FC<Props> = ({ ar, isDark, onLogin }) => {
   const [error, setError] = useState('');
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const voice = useDaliVoice(ar, text => setInput(text.slice(0, 600)));
+  const speech = useDaliSpeech();
+  useEffect(() => { if (!open) speech.stop(); }, [open, speech.stop]);
 
   const left = FREE_MESSAGES - used;
   const locked = left <= 0;
@@ -53,6 +58,7 @@ const DaliPublicChat: React.FC<Props> = ({ ar, isDark, onLogin }) => {
     setInput('');
     setError('');
     setBusy(true);
+    speech.stop();
     markUsed(used + 1);
     try {
       const res = await fetch('/dali-public', {
@@ -63,7 +69,9 @@ const DaliPublicChat: React.FC<Props> = ({ ar, isDark, onLogin }) => {
       const data = await res.json().catch(() => null);
       if (res.status === 429 || data?.limit) { markUsed(FREE_MESSAGES); return; }
       if (!res.ok || !data?.text) throw new Error(data?.error || 'failed');
+      if (data.free) markUsed(used);
       setMsgs([...next, { role: 'assistant', content: data.text }]);
+      if (speech.enabled) speech.speak(data.text);
     } catch {
       setError(ar ? 'تعذر الوصول إلى دالي الآن. حاول مرة أخرى.' : "DALI couldn't answer right now. Please try again.");
     } finally {
@@ -118,6 +126,11 @@ const DaliPublicChat: React.FC<Props> = ({ ar, isDark, onLogin }) => {
               <div dir="ltr" className={`text-sm font-black tracking-[.2em] ${ar ? 'text-right' : ''}`}>DALI</div>
               <div className={`truncate text-[11px] ${muted}`}>{t.sub}</div>
             </div>
+            {speech.supported && (
+              <button type="button" onClick={speech.toggle} aria-pressed={speech.enabled} title={speech.enabled ? (ar ? 'دالي يتكلم: شغال' : 'DALI speaks: on') : (ar ? 'دالي يتكلم: مقفول' : 'DALI speaks: off')} className={`grid h-8 w-8 place-items-center rounded-full ${speech.enabled ? 'text-[#c2a378]' : muted} hover:text-[#c2a378]`}>
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z" />{speech.enabled ? <path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" /> : <path d="m16 9 5 6M21 9l-5 6" />}</svg>
+              </button>
+            )}
             <button type="button" onClick={() => setOpen(false)} aria-label={t.close} className={`grid h-8 w-8 place-items-center rounded-full text-lg ${muted} hover:text-[#c2a378]`}>×</button>
           </div>
 
@@ -156,8 +169,14 @@ const DaliPublicChat: React.FC<Props> = ({ ar, isDark, onLogin }) => {
               <div className={`mb-1.5 px-1 text-[10px] ${muted}`}>{t.left(left)}</div>
               <div className="flex gap-2">
                 <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} maxLength={600} placeholder={t.ph} disabled={busy} className={`min-w-0 flex-1 rounded-full border px-4 py-2.5 text-[13px] outline-none focus:border-[#c2a378] ${field}`} />
+                {voice.supported && (
+                  <button type="button" onClick={voice.toggle} disabled={busy} aria-pressed={voice.listening} title={voice.listening ? (ar ? 'إيقاف التسجيل' : 'Stop listening') : (ar ? 'تحدث مع دالي' : 'Speak to DALI')} className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition disabled:opacity-40 ${voice.listening ? 'animate-pulse border-red-400/70 bg-red-500/15 text-red-400' : 'border-[#c2a378]/40 text-[#c2a378]'}`}>
+                    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
+                  </button>
+                )}
                 <button type="submit" disabled={busy || !input.trim()} className="rounded-full bg-gradient-to-br from-[#e6cc9c] to-[#a9875a] px-4 text-[10px] font-black uppercase tracking-[.16em] text-[#130f08] transition disabled:opacity-40">{t.send}</button>
               </div>
+              {voice.error && <div className="mt-1.5 px-1 text-[10px] text-red-400">{voice.error}</div>}
             </form>
           )}
         </div>
