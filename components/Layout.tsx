@@ -1344,7 +1344,6 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       }));
       const context = {
         question,
-        recentConversation: aiChatMessages.slice(-6).map(message => ({ role: message.role === 'ai' ? 'assistant' : 'user', text: message.text.slice(0, 1200) })),
         totals: { operations: operations.length, invoices: invoices.length, gensets: gensets.length, maintenance: maintenance.length },
         statusCounts,
         portCounts,
@@ -1368,7 +1367,14 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
           allPending: pendingWork.slice(0, 200)
         }
       };
-      const prompt = `DALI ORGANIZATION CONTEXT:\n${organizationContext}\n\nDALI CONVERSATION MEMORY (recent turns):\n${memoryContext}\n\n${organizationContext}\n\nLATEST USER QUESTION:\n${question}\n\nYou are DALI, the natural in-system colleague for NILE FLEET. Talk like a helpful human coworker who knows the ongoing conversation—not like a database report, search engine, or robot. Understand Egyptian Arabic, Modern Standard Arabic, English, Arabizi/transliterated names, and mixed language naturally.
+      // Earlier turns of this chat go to the model as real chat messages, so DALI
+      // can follow a long conversation instead of reading it as one text block.
+      // The latest question is already saved to memory, so drop it from history.
+      const daliHistory = recentMemory
+        .filter((m: any) => (m.role === 'user' || m.role === 'assistant') && String(m.message || '').trim())
+        .map((m: any) => ({ role: m.role as 'user' | 'assistant', content: String(m.message) }));
+      if (daliHistory.length && daliHistory[daliHistory.length - 1].role === 'user' && daliHistory[daliHistory.length - 1].content.trim() === question.trim()) daliHistory.pop();
+      const prompt = `DALI ORGANIZATION CONTEXT:\n${organizationContext}\n\nDALI CONVERSATION MEMORY:\n${daliHistory.length ? 'The earlier turns of this chat are the previous messages above.' : memoryContext}\n\n${organizationContext}\n\nLATEST USER QUESTION:\n${question}\n\nYou are DALI, the natural in-system colleague for NILE FLEET. Talk like a helpful human coworker who knows the ongoing conversation—not like a database report, search engine, or robot. Understand Egyptian Arabic, Modern Standard Arabic, English, Arabizi/transliterated names, and mixed language naturally.
 
 CONVERSATION BEHAVIOR:
 - Remember what this user was just talking about and carry the subject forward naturally.
@@ -1400,7 +1406,7 @@ DATA BEHAVIOR:
 - For requested customer work, use reservations.pendingNotLoaded and its today/tomorrow lists. PENDING or APPROVED without a linked operation means the work is still requested and not loaded into Operations.\n\nNILE FLEET SYSTEM FLOW: Reservations are customer requests for one or more gensets; approving a reservation creates operations. Each operation links booking, container, genset, customer, beneficiary/shipper, trucker/driver, dates, clip-on port, clip-off port, status, rate and VAT. The gensets master is the source for current unit number, location and status: IN_STOCK, CLIPPED_ON, MAINTENANCE or RETIRED. Maintenance logs belong to gensets and contain service date/type, technician, location, status, completion date, cost, parts and next service. A genset question may therefore require combining its master record with its operation history and maintenance history. Port stock means the current gensets grouped by their current location/status, not historical operations. Invoices are financial records associated with customers/bookings/operations; payments represent collections and reduce outstanding balances. Customer questions can require joining customer profiles with operations, invoices and payments. Use these relationships to understand new questions, not just exact keywords. For counts, totals, dates, status and location, calculate from the supplied live data. If the live data does not contain the requested fact, say what is missing instead of inventing it.\n${creatorContext}\nLEARNED INTELLIGENCE REGISTRY (shared across desktop and mobile): ${learnedRegistryContext}\nUse these mappings as authoritative Nile Fleet terminology and Arabic logic. Do not invent alternative translations when a registry mapping exists.\nLATEST QUESTION: ${question}\nLIVE CONTEXT: ${JSON.stringify(context)}`
       let answer = '';
       try {
-        answer = await runThinkingAudit(prompt, 650);
+        answer = await runThinkingAudit(prompt, 650, daliHistory);
       } catch (aiError) {
         console.error('DALI general AI route failed; using deterministic fallback', aiError);
 
