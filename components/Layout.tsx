@@ -9,6 +9,8 @@ import { runThinkingAudit, extractDaliAction } from '../services/aiService';
 import { looksLikeAction, planDaliAction } from '../services/daliActions';
 import type { DaliActionPlan } from '../services/daliActions';
 import { useDaliVoice } from './useDaliVoice';
+import { getDaliAlerts } from '../services/daliAlerts';
+import type { DaliAlert } from '../services/daliAlerts';
 import { getDaliRecentMemory, getDaliConversationMemory, saveDaliConversationMessage, getDaliChatSessions, archiveDaliConversation } from '../services/daliMemory';
 import { searchDaliKnowledge } from '../services/daliKnowledge';
 import { getTerminology } from '../services/daliTerminology';
@@ -84,6 +86,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
   const [pendingDaliAction, setPendingDaliAction] = useState<DaliActionPlan | null>(null);
   const [daliActionSaving, setDaliActionSaving] = useState(false);
   const daliVoice = useDaliVoice(isAr, text => setAiChatInput(text));
+  const [daliAlerts, setDaliAlerts] = useState<DaliAlert[]>([]);
   const [daliMemory, setDaliMemory] = useState<{ role: 'user' | 'assistant'; message: string; entities?: any; created_at?: string }[]>([]);
   const [daliButtonPosition, setDaliButtonPosition] = useState(() => {
     try { return JSON.parse(localStorage.getItem('nile-dali-button-position-v2') || '{"right":24,"bottom":72}'); }
@@ -199,6 +202,19 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
       window.removeEventListener('resize', updateDaliViewport);
     };
   }, []);
+
+  // Proactive alerts: recomputed from live data whenever it changes, and every
+  // few minutes so date-based alerts roll over without a reload.
+  useEffect(() => {
+    if (!canUseDali) { setDaliAlerts([]); return; }
+    const refresh = () => {
+      try { setDaliAlerts(getDaliAlerts(isAr)); } catch (alertError) { console.warn('DALI alerts failed:', alertError); }
+    };
+    refresh();
+    window.addEventListener('db-change', refresh);
+    const timer = window.setInterval(refresh, 5 * 60 * 1000);
+    return () => { window.removeEventListener('db-change', refresh); window.clearInterval(timer); };
+  }, [canUseDali, isAr]);
 
   useEffect(() => {
     const handleDaliAsk = (event: Event) => {
@@ -380,6 +396,19 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActive
     if (aiChatMessages.length === 0) {
       setDaliFirstMessageAnimation(true);
       window.setTimeout(() => setDaliFirstMessageAnimation(false), 1200);
+    }
+
+    // "Any alerts?" / "what needs my attention?" is answered straight from the alert list.
+    if (/^(?:(?:any|show|my|today'?s)\s+)?alerts?$|what needs (?:my )?attention|anything urgent|^(?:ايه|إيه|في|فيه)?\s*(?:ال)?تنبيهات|محتاج انتباه|ايه المهم النهارده|إيه المهم النهارده/i.test(question.trim().replace(/[؟?!.,،]+$/g, ''))) {
+      const current = getDaliAlerts(responseIsAr);
+      const reply = current.length
+        ? (responseIsAr ? 'دي الحاجات اللي محتاجة انتباهك دلوقتي:' : 'Here is what needs attention right now:') + '\n' + current.map(a => '• ' + a.text).join('\n')
+        : (responseIsAr ? 'مفيش تنبيهات دلوقتي. كل حاجة ماشية تمام.' : 'No alerts right now. Everything looks on track.');
+      setAiChatMessages(prev => [...prev, { role: 'ai', text: reply }]);
+      setDaliMemory(prev => [...prev, { role: 'assistant', message: reply }].slice(-30));
+      void saveDaliMemory('assistant', reply);
+      setAiChatLoading(false);
+      return;
     }
 
     // DALI ACTIONS: a request to record or change something becomes a confirm card.
@@ -2041,6 +2070,7 @@ I’ll search with you. 🤖`;
                 <p className="text-[9px] font-bold tracking-[0.22em] text-[#C2A378]">{(()=>{const hour=new Date().getHours();return hour<12?(isAr?'صباح الخير':'GOOD MORNING'):hour<18?(isAr?'مساء الخير':'GOOD AFTERNOON'):(isAr?'مساء الخير':'GOOD EVENING')})()}</p>
                 <h2 className="mt-2 text-xl sm:text-2xl font-black tracking-tight text-white">{user.name||(isAr?'مستخدم':'there')}</h2>
                 <p className="mt-2 max-w-[270px] text-[10px] leading-5 text-white/42">{isAr?'أنا دالي. جاهز نشتغل على بيانات النظام.':'I’m DALI. Ready to work through the system with you.'}</p>
+                {daliIntroCompleted&&daliAlerts.length>0&&<div className="mt-5 w-full max-w-[320px] text-start"><div className="mb-2 flex items-center gap-2"><span className="h-px flex-1 bg-white/10"></span><span className="text-[7px] font-black tracking-[0.2em] text-[#C2A378]/80">{isAr?'تنبيهات دالي':'DALI ALERTS'}</span><span className="h-px flex-1 bg-white/10"></span></div><div className="grid gap-1.5">{daliAlerts.slice(0,4).map(a=><button key={a.id} type="button" onClick={()=>window.dispatchEvent(new CustomEvent('dali-ask',{detail:a.ask}))} className={`flex items-start gap-2 rounded-2xl border px-3 py-2 text-start text-[10px] leading-4 transition hover:bg-white/[0.07] ${a.level==='critical'?'border-red-400/30 bg-red-500/[0.08] text-red-100/90':a.level==='warning'?'border-amber-300/25 bg-amber-300/[0.06] text-amber-50/85':'border-white/10 bg-white/[0.035] text-white/70'}`}><span aria-hidden="true" className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${a.level==='critical'?'bg-red-400':a.level==='warning'?'bg-amber-300':'bg-sky-300'}`}></span><span>{a.text}</span></button>)}</div></div>}
                 <div className="mt-5 w-full max-w-[320px]"><div className="mb-2 flex items-center gap-2"><span className="h-px flex-1 bg-white/10"></span><span className="text-[7px] font-black tracking-[0.2em] text-white/30">{isAr?'ابدأ بسؤال':'START WITH A QUESTION'}</span><span className="h-px flex-1 bg-white/10"></span></div><div className="grid gap-2">{(()=>{const prompts=!daliIntroCompleted?(isAr?['مين دالي؟']:['Who is DALI?']):(isAr?[['كم مولد يعمل اليوم؟','اعرض حجوزات اليوم','أين المولد 125؟'],['⚠️ في تعارض في البيانات؟','📍 المولدات موجودة فين؟','📦 إيه الحجوزات اللي محتاجة متابعة؟']][daliSuggestedSet]:[['How many gensets are operating today?','Show today’s bookings','Where is genset 125?'],['⚠️ Are there any data conflicts?','📍 Where are the gensets?','📦 Which bookings need follow-up?']][daliSuggestedSet]);return prompts.map(prompt=><button key={prompt} type="button" onClick={()=>setAiChatInput(prompt.replace(/^[^\p{L}\p{N}]+/u,'').trim())} className="min-h-10 w-full rounded-xl border border-white/10 bg-white/[0.045] px-3.5 py-2.5 text-left text-[10px] font-semibold leading-5 text-white/75 transition hover:border-white/20 hover:bg-white/[0.075] hover:text-white active:scale-[.99]">{prompt}</button>)})()}</div></div>
               </div>}
               {aiChatMessages.length>0&&<div className="flex flex-col gap-3 pt-1">{aiChatMessages.map((m,i)=><div key={i} className={`flex ${m.role==='user'?'justify-end':'justify-start'}`}><div className={`max-w-[88%] px-3.5 py-2.5 text-[12px] leading-5.5 sm:text-[13px] sm:leading-6 whitespace-pre-wrap break-words overflow-wrap-anywhere ${m.role==='user'?'rounded-[20px] rounded-br-md bg-[#C2A378] text-[#07131f]':'rounded-[20px] rounded-bl-md bg-white/[0.055] text-white/90'}`}>{m.text}</div></div>)}{!aiChatLoading&&pendingDaliAction&&<div className="flex justify-start gap-2 pt-1"><button type="button" onClick={confirmDaliAction} disabled={daliActionSaving} className="rounded-full bg-[#C2A378] px-4 py-2 text-[10px] font-black text-[#07131f] transition hover:brightness-110 disabled:opacity-40">{daliActionSaving?(isAr?'جاري الحفظ…':'Saving…'):(isAr?'تأكيد':'Confirm')}</button><button type="button" onClick={cancelDaliAction} disabled={daliActionSaving} className="rounded-full border border-white/15 px-4 py-2 text-[10px] font-bold text-white/70 transition hover:bg-white/5 disabled:opacity-40">{isAr?'إلغاء':'Cancel'}</button></div>}{!aiChatLoading&&daliPostIntroSuggestion&&<div className="flex justify-start pt-1"><button type="button" onClick={()=>{setAiChatInput(isAr?'دالي يقدر يعمل إيه؟':'What can DALI do?');setDaliPostIntroSuggestion(false)}} className="rounded-full border border-[#C2A378]/30 bg-[#C2A378]/10 px-4 py-2 text-[9px] font-bold text-[#C2A378] transition hover:bg-[#C2A378]/15">{isAr?'دالي يقدر يعمل إيه؟':'What can DALI do?'}</button></div>}</div>}
@@ -2069,6 +2099,7 @@ I’ll search with you. 🤖`;
             <span className="absolute -inset-y-8 left-0 w-1/3 rotate-[18deg] bg-white/15 blur-xl" style={{animation:"daliOrbShimmer 3.6s ease-in-out infinite"}}></span>
             <span className="absolute top-[13%] left-[22%] h-2 w-2 rounded-full bg-white/70 blur-[1px]"></span>
           </span>
+          {!isAiChatOpen&&daliAlerts.some(a=>a.level!=='info')&&<span className="absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-black text-white shadow-[0_0_0_2px_rgba(0,0,0,.35)]" aria-label={isAr?'تنبيهات دالي':'DALI alerts'}>{daliAlerts.filter(a=>a.level!=='info').length}</span>}
         </button>
       </div>
 
