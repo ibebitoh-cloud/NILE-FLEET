@@ -32,6 +32,11 @@ const en = {
   importNone: 'No rates found. The sheet needs a header row with Customer, Load port, Destination…',
   adjustTitle: 'Adjust prices', adjustScope: (n: number) => `Applies to ${n} rate(s) in the current list or selection.`,
   adjustBy: 'Change', percent: '%', amount: 'EGP', apply: 'Apply', roundTo: 'Round to nearest',
+  sheetEdit: 'Edit as sheet', sheetTitle: 'Edit price sheet', sheetAll: (n: number) => `${n} rates`, sheetSearch: 'Find in sheet…',
+  sheetChanges: (e: number, a: number, d: number) => `${e} edited · ${a} new · ${d} to delete`, sheetNoChanges: 'No changes yet',
+  sheetSave: 'Save all changes', sheetAddRow: 'Add row', sheetFill: 'Copy the first value down the column', sheetRestore: 'Keep this row',
+  sheetHint: 'Click any cell and type. Enter moves down. You can paste a block copied from Excel. Changed cells turn yellow.',
+  sheetDiscard: 'Close without saving your changes?', sheetTooMany: 'Pick a customer (or narrow the filters) to edit as a sheet.',
   saved: 'Saved.', failed: 'Failed', required: 'Customer and destination are required.',
 };
 
@@ -67,6 +72,11 @@ const ar: typeof en = {
   importNone: 'لم يتم العثور على أسعار. يجب أن يحتوي الشيت على صف عناوين فيه العميل وميناء التحميل والوجهة…',
   adjustTitle: 'تعديل الأسعار', adjustScope: (n: number) => `يطبق على ${n} سعر في القائمة الحالية أو المحدد.`,
   adjustBy: 'التغيير', percent: '%', amount: 'جنيه', apply: 'تطبيق', roundTo: 'تقريب لأقرب',
+  sheetEdit: 'تعديل كشيت', sheetTitle: 'تعديل شيت الأسعار', sheetAll: (n: number) => `${n} سعر`, sheetSearch: 'ابحث في الشيت…',
+  sheetChanges: (e: number, a: number, d: number) => `${e} معدل · ${a} جديد · ${d} للحذف`, sheetNoChanges: 'لا توجد تعديلات بعد',
+  sheetSave: 'حفظ كل التعديلات', sheetAddRow: 'إضافة صف', sheetFill: 'نسخ أول قيمة لباقي العمود', sheetRestore: 'إبقاء هذا الصف',
+  sheetHint: 'اضغط على أي خانة واكتب. Enter ينزل للصف التالي. يمكنك لصق مجموعة خانات من Excel. الخانات المعدلة تظهر باللون الأصفر.',
+  sheetDiscard: 'إغلاق بدون حفظ التعديلات؟', sheetTooMany: 'اختر عميلًا (أو ضيق الفلاتر) للتعديل كشيت.',
   saved: 'تم الحفظ.', failed: 'فشل', required: 'العميل والوجهة مطلوبان.',
 };
 
