@@ -103,12 +103,11 @@ const DaliPublicChat: React.FC<Props> = ({ ar, isDark, onLogin }) => {
         onClick={() => setOpen(o => !o)}
         aria-label={open ? t.close : t.open}
         aria-expanded={open}
-        className="nf-dali-launch fixed bottom-4 right-4 z-40 flex h-14 items-center gap-2 rounded-full border border-[#c2a378]/50 bg-[#05070a] pl-2 pr-4 text-white shadow-[0_12px_34px_rgba(194,163,120,.35)] transition hover:-translate-y-1 sm:bottom-[6.5rem]"
+        className={`nf-dali-launch fixed bottom-[4.5rem] left-4 z-40 grid h-12 w-12 place-items-center rounded-full transition hover:-translate-y-1 sm:bottom-[5.25rem] sm:h-14 sm:w-14 ${isDark ? 'bg-[#ffffff] shadow-[0_10px_30px_rgba(255,255,255,.28)]' : 'bg-[#c2a378] shadow-[0_10px_30px_rgba(194,163,120,.45)]'}`}
       >
-        <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-[#2a2116] to-[#0b0d12]">
-          <img src="/dali/dali-mark.png" alt="" className="h-6 w-auto" />
-        </span>
-        <span dir="ltr" className="text-[10px] font-black uppercase tracking-[.22em]">{open ? '✕' : 'DALI'}</span>
+        {open
+          ? <span aria-hidden="true" className={`text-lg font-black leading-none ${isDark ? 'text-[#c2a378]' : 'text-black'}`}>✕</span>
+          : <img src="/dali/dali-mark.png" alt="" className={`h-6 w-auto sm:h-7 ${isDark ? '' : 'brightness-0'}`} />}
       </button>
 
       {open && (
@@ -116,7 +115,7 @@ const DaliPublicChat: React.FC<Props> = ({ ar, isDark, onLogin }) => {
           role="dialog"
           aria-label={t.title}
           dir={ar ? 'rtl' : 'ltr'}
-          className={`nf-dali-panel fixed bottom-[5.25rem] right-3 z-40 flex h-[min(560px,calc(100dvh-7rem))] w-[min(380px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[1.6rem] border shadow-[0_24px_70px_rgba(0,0,0,.45)] backdrop-blur-xl sm:bottom-[10.5rem] sm:right-4 ${panel}`}
+          className={`nf-dali-panel fixed bottom-[8.25rem] left-3 z-40 flex h-[min(560px,calc(100dvh-7rem))] w-[min(380px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[1.6rem] border shadow-[0_24px_70px_rgba(0,0,0,.45)] backdrop-blur-xl sm:bottom-[9.5rem] sm:left-4 ${panel}`}
         >
           <div className="flex items-center gap-3 border-b border-[#c2a378]/20 px-4 py-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#05070a] ring-1 ring-[#c2a378]/40">
