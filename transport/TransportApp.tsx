@@ -4,7 +4,7 @@ import DaliSignature from '../components/DaliSignature';
 import * as api from './api';
 import { STRINGS, Lang, Strings } from './i18n';
 import { PRICE_KEYS, PRICE_LABELS, PriceKey, Rate, RateDraft, TransportUser, emptyDraft } from './types';
-import { buildPdfHtml, DEFAULT_SIGNER, exportCsv, exportExcelBranded, exportExcelData, ExportOptions, PdfStyle, whatsappText } from './exports';
+import { buildPdfHtml, DEFAULT_SIGNER, DEFAULT_TERMS, exportCsv, exportExcelBranded, exportExcelData, ExportOptions, PdfStyle, whatsappText } from './exports';
 import { parseRateWorkbook } from './importExcel';
 
 const fmt = (n: number) => (n ? n.toLocaleString('en-US') : '—');
@@ -667,14 +667,20 @@ const ExportDialog: React.FC<{ t: Strings; lang: Lang; rows: Rate[]; customer?: 
   const [notes, setNotes] = useState(false);
   const [signer, setSigner] = useState(() => { try { return localStorage.getItem('nf_transport_signer') || DEFAULT_SIGNER; } catch { return DEFAULT_SIGNER; } });
   const [validDays, setValidDays] = useState(30);
+  const termsKey = `nf_transport_terms_${docLang}`;
+  const loadTerms = (l: 'ar' | 'en') => { try { return localStorage.getItem(`nf_transport_terms_${l}`) ?? DEFAULT_TERMS[l].join('\n'); } catch { return DEFAULT_TERMS[l].join('\n'); } };
+  const [termsText, setTermsText] = useState(() => loadTerms('ar'));
+  useEffect(() => { setTermsText(loadTerms(docLang)); }, [docLang]);
+  const editTerms = (v: string) => { setTermsText(v); try { localStorage.setItem(termsKey, v); } catch {} };
+  const terms = termsText.split('\n').map(x => x.trim()).filter(Boolean);
   const [preview, setPreview] = useState(false);
   const frameRef = useRef<HTMLIFrameElement>(null);
   const quoteCustomer = customer || (single ? rows[0]?.customer : undefined);
 
-  const opts: ExportOptions = { lang: docLang, priceKeys: PRICE_KEYS.filter(k => keys.includes(k)), showNotes: notes, signer, customer: quoteCustomer, validDays };
+  const opts: ExportOptions = { lang: docLang, priceKeys: PRICE_KEYS.filter(k => keys.includes(k)), showNotes: notes, signer, customer: quoteCustomer, validDays, terms };
   const isPdf = style === 'quote' || style === 'list' || style === 'grouped';
   const blocked = style === 'quote' && !single;
-  const html = useMemo(() => isPdf && !blocked ? buildPdfHtml(rows, style as PdfStyle, opts) : '', [isPdf, blocked, rows, style, docLang, keys, notes, signer, validDays, quoteCustomer]);
+  const html = useMemo(() => isPdf && !blocked ? buildPdfHtml(rows, style as PdfStyle, opts) : '', [isPdf, blocked, rows, style, docLang, keys, notes, signer, validDays, quoteCustomer, termsText]);
 
   const go = async () => {
     try { localStorage.setItem('nf_transport_signer', signer); } catch {}
@@ -731,6 +737,15 @@ const ExportDialog: React.FC<{ t: Strings; lang: Lang; rows: Rate[]; customer?: 
             {style === 'quote' && <Field label={t.validity}><input type="number" min={0} value={validDays} onChange={e => setValidDays(Number(e.target.value) || 0)} className={`${inputCls} w-full`} /></Field>}
             <Field label={t.signer}><input value={signer} onChange={e => setSigner(e.target.value)} className={`${inputCls} w-full`} /></Field>
           </div>
+          {style !== 'xlsData' && style !== 'csv' && (
+            <Field label={t.terms}>
+              <textarea dir={docLang === 'ar' ? 'rtl' : 'ltr'} rows={5} value={termsText} onChange={e => editTerms(e.target.value)} className={`${inputCls} w-full text-xs leading-6`} />
+              <div className="mt-1 flex items-center justify-between gap-3 text-[11px] font-bold text-slate-500">
+                <span>{t.termsHint}</span>
+                <button type="button" onClick={() => editTerms(DEFAULT_TERMS[docLang].join('\n'))} className="underline" style={{ minHeight: 0 }}>{t.termsReset}</button>
+              </div>
+            </Field>
+          )}
           {style !== 'xlsData' && (
             <div>
               <div className="mb-2 text-[11px] font-black uppercase tracking-wider text-slate-500">{t.columns}</div>

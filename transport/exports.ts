@@ -11,6 +11,8 @@ export interface ExportOptions {
   /** Title for the document (customer name for a quotation). */
   customer?: string;
   validDays?: number;
+  /** Extra terms printed under the prices (one rule per entry). */
+  terms?: string[];
 }
 
 export const COMPANY = {
@@ -22,6 +24,24 @@ export const COMPANY = {
 };
 
 export const DEFAULT_SIGNER = 'سمر حجازي';
+
+/** Standard transport terms (demurrage, Goda yard pickup, diesel price). Editable in the export window. */
+export const DEFAULT_TERMS: Record<ExportLang, string[]> = {
+  ar: [
+    'يتم حساب بياتة رقم 1 بقيمة 3,000 جنيه إذا تأخرت الحاوية من 10 إلى 12 ساعة عند العميل، تُحسب من وقت وصولها للعميل.',
+    'يتم حساب بياتة رقم 2 بقيمة 6,000 جنيه إذا تأخرت الحاوية من 12 ساعة إلى 24 ساعة.',
+    'يتم حساب بياتة رقم 3 بقيمة نصف نولون إذا تأخرت الحاوية من 24 ساعة إلى 48 ساعة.',
+    'في حالة السحب من ساحة جودة يتم إضافة الإيصال على الفاتورة.',
+    'في حالة تغيير سعر لتر السولار سيتم تغيير النولون بنسبة تتفق مع الزيادة.',
+  ],
+  en: [
+    'Overnight charge no. 1: EGP 3,000 if the container is held at the customer for 10 to 12 hours, counted from its arrival at the customer.',
+    'Overnight charge no. 2: EGP 6,000 if the container is held from 12 to 24 hours.',
+    'Overnight charge no. 3: half the freight rate if the container is held from 24 to 48 hours.',
+    'For pickups from the Goda yard, the yard receipt is added to the invoice.',
+    'If the price of a litre of diesel changes, the freight rate changes in proportion to the increase.',
+  ],
+};
 
 const today = () => {
   const d = new Date();
@@ -103,6 +123,7 @@ export async function exportExcelBranded(rows: Rate[], o: ExportOptions) {
     head,
     ...rows.map((r, i) => dataRow(r, i, o)),
     [],
+    ...(o.terms || []).filter(x => x.trim()).map((x, i) => [`${i + 1}. ${x.trim()}`]),
     [t.thanks], [t.regards], [t.company], [`${t.from} ${o.signer}`],
   ];
   const ws = XLSX.utils.aoa_to_sheet(aoa);
@@ -183,7 +204,9 @@ export function whatsappText(rows: Rate[], o: ExportOptions): string {
     if (prices) lines.push(`   ${prices}`);
     if (o.showNotes && r.notes) lines.push(`   📝 ${r.notes}`);
   });
-  lines.push('', t.currency, `${t.phones}: ${COMPANY.phones}`, `${t.from} ${o.signer}`);
+  lines.push('', t.currency);
+  (o.terms || []).filter(x => x.trim()).forEach((x, i) => lines.push(`${i + 1}. ${x.trim()}`));
+  lines.push('', `${t.phones}: ${COMPANY.phones}`, `${t.from} ${o.signer}`);
   return lines.join('\n');
 }
 
@@ -232,6 +255,8 @@ export function buildPdfHtml(rows: Rate[], style: PdfStyle, o: ExportOptions, or
   const x = rtl
     ? { preparedFor: 'مقدم إلى', details: 'بيانات العرض', contact: 'للتواصل', validUntil: 'ساري حتى', allCustomers: 'كل العملاء', terms: 'الشروط', dests: 'وجهة', ports: 'ميناء تحميل', containers: 'أنواع الحاويات' }
     : { preparedFor: 'Prepared for', details: 'Quotation details', contact: 'Contact', validUntil: 'Valid until', allCustomers: 'All customers', terms: 'Terms', dests: 'destinations', ports: 'load ports', containers: 'Containers' };
+  const termItems = [t.currency, ...(style === 'quote' && o.validDays ? [t.valid(o.validDays)] : []), ...(o.terms || []).map(x => x.trim()).filter(Boolean)];
+  const termsHtml = `<div class="terms"><b>${x.terms}</b><ol>${termItems.map(i => `<li>${esc(i)}</li>`).join('')}</ol></div>`;
   const sortedRows = style === 'quote' ? [...rows].sort((a, b) => a.load_port.localeCompare(b.load_port, 'ar')) : rows;
 
   const chips = `
@@ -264,7 +289,7 @@ export function buildPdfHtml(rows: Rate[], style: PdfStyle, o: ExportOptions, or
       <p class="greet">${t.greeting}</p>
       ${chips}
       ${tableHtml(sortedRows, o, false, true)}
-      <div class="terms"><b>${x.terms}</b><ul><li>${t.currency}</li>${o.validDays ? `<li>${t.valid(o.validDays)}</li>` : ''}</ul></div>
+      ${termsHtml}
       <p class="greet">${t.thanks}</p>
       <div class="closing">
         <div class="sig">
@@ -284,9 +309,9 @@ export function buildPdfHtml(rows: Rate[], style: PdfStyle, o: ExportOptions, or
       <section class="group">
         <h3><span>${esc(name)}</span><small>${list.length} ${t.routes}</small></h3>
         ${tableHtml(list, o, false)}
-      </section>`).join('') + `<p class="small">${t.total}: ${rows.length} · ${t.currency}</p>`;
+      </section>`).join('') + `<p class="small">${t.total}: ${rows.length}</p>` + termsHtml;
   } else {
-    content = `${cards}${chips}${tableHtml(rows, o, true)}<p class="small">${t.total}: ${rows.length} · ${t.currency}</p>`;
+    content = `${cards}${chips}${tableHtml(rows, o, true)}<p class="small">${t.total}: ${rows.length}</p>${termsHtml}`;
   }
 
   const start = rtl ? 'right' : 'left';
@@ -342,7 +367,9 @@ export function buildPdfHtml(rows: Rate[], style: PdfStyle, o: ExportOptions, or
   .notes { font-size: 9.5px; color: #4b5563; max-width: 260px; }
   .small { font-size: 9.5px; color: #6b7685; margin: 4px 0 10px; }
   .terms { margin: 10px 0; padding: 9px 14px; border-radius: 10px; background: #f4f8fc; border-${start}: 4px solid #0d2440; font-size: 10.5px; }
-  .terms ul { margin: 4px 0 0; padding-${start}: 18px; color: #3a4757; line-height: 1.7; }
+  .terms ol { margin: 4px 0 0; padding-${start}: 20px; color: #3a4757; line-height: 1.75; }
+  .terms li::marker { color: #8a7350; font-weight: 800; }
+  .terms { page-break-inside: avoid; }
   .group { page-break-inside: auto; margin-bottom: 14px; }
   .group h3 { margin: 12px 0 5px; font-size: 13px; color: #fff; display: flex; justify-content: space-between; padding: 7px 12px; border-radius: 9px; background: linear-gradient(90deg, #07111f, #13345a); border-${start}: 5px solid #c2a378; }
   .group h3 small { color: #e8d3ad; font-size: 10px; }
