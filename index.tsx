@@ -38,12 +38,20 @@ rootElement.innerHTML = `
   </div>
 `;
 
-import('./App')
-  .then(({ default: App }) => {
+// The Transport system lives at #transport and is a separate app with its
+// own sign-in; everything else is the website + Genset app.
+const isTransport = () => /^#\/?transport\b/.test(window.location.hash);
+const mountedTransport = isTransport();
+window.addEventListener('hashchange', () => {
+  if (isTransport() !== mountedTransport) window.location.reload();
+});
+
+(mountedTransport ? import('./transport/TransportApp') : import('./App'))
+  .then(({ default: Root }) => {
     const root = ReactDOM.createRoot(rootElement);
     root.render(
       <React.StrictMode>
-        <App />
+        <Root />
       </React.StrictMode>
     );
   })

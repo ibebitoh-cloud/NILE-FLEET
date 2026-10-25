@@ -887,10 +887,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     liveSystem: ar ? 'نظام مباشر' : 'LIVE SYSTEM',
     gensetDesc: ar ? 'الوصول إلى منصة عمليات الجينسيت للحجوزات والمخزون والحركات والفواتير والتحكم التشغيلي.' : 'Access the existing Genset operations platform for bookings, stock, movements, invoices and operational control.',
     enterSystem: ar ? 'دخول إلى النظام' : 'Enter system',
-    nextLayer: ar ? 'طبقة العمليات التالية' : 'Next operation layer',
-    coming: ar ? 'قريباً' : 'COMING SOON',
+    transportAccess: ar ? 'أسعار · عروض · تصدير' : 'Rates · quotes · exports',
     transport: ar ? 'النقل' : 'TRANSPORT',
-    transportDesc: ar ? 'نظام متكامل لإدارة نقل الشاحنات والحاويات قيد التطوير.' : 'Integrated trucking and container transport management is under development.',
+    transportDesc: ar ? 'الدخول إلى نظام النقل لإدارة أسعار العملاء وعروض الأسعار والتصدير.' : 'Access the Transport system for customer price lists, quotations and exports.',
     leadLabel: ar ? 'القيادة' : 'Leadership',
     people: ar ? <>القيادة التي تحرّك<br /><span className={gold}>أعمالنا.</span></> : <>People who move<br /><span className={gold}>our business.</span></>,
     leadDesc: ar ? 'القيادة عبر عمليات الشركة وقطاع النقل وخدمات الجينسيت.' : 'Leadership across company operations, transport and genset services.',
@@ -1452,16 +1451,17 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                   </div>
                 </button>
 
-                <div className={`group relative min-h-[380px] overflow-hidden rounded-[2rem] border p-8 backdrop-blur-md sm:p-10 ${K.card}`}>
-                  <div className="relative flex h-full flex-col justify-between">
-                    <div className="flex justify-between"><span className={`text-[8px] font-black tracking-[.25em] ${K.faint}`}>02</span><span className={`rounded-full border px-3 py-1 text-[7px] font-black tracking-[.2em] ${K.line} ${K.faint}`}>{tx.coming}</span></div>
+                <button onClick={() => { window.location.hash = 'transport'; }} className={`group relative min-h-[380px] overflow-hidden rounded-[2rem] border p-8 text-left backdrop-blur-md transition duration-500 hover:-translate-y-2 hover:border-[#c2a378] sm:p-10 ${K.card}`}>
+                  <div className="relative flex h-full min-h-[316px] flex-col justify-between">
+                    <div className="flex justify-between"><span className={`rounded-full px-3 py-1 text-[7px] font-black tracking-[.2em] ${gensetTheme.badge}`}>{tx.liveSystem}</span><span className={`text-[8px] font-black tracking-[.25em] ${K.faint}`}>02</span></div>
                     <div>
-                      <div className={`text-[10px] font-black uppercase tracking-[.3em] ${K.faint}`}>{tx.nextLayer}</div>
+                      <div className={`text-[10px] font-black uppercase tracking-[.3em] ${gensetTheme.meta}`}>{tx.transportAccess}</div>
                       <div className="mt-3 text-4xl font-black uppercase italic">{tx.transport}</div>
                       <p className={`mt-4 text-xs leading-6 ${K.muted}`}>{tx.transportDesc}</p>
+                      <div className={`mt-7 inline-flex items-center gap-3 text-[8px] font-black uppercase tracking-[.25em] ${gensetTheme.action}`}>{tx.enterSystem} <span className="transition group-hover:translate-x-2">→</span></div>
                     </div>
                   </div>
-                </div>
+                </button>
               </div>
             </div>
           </Reveal>
