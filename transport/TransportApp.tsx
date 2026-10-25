@@ -36,7 +36,9 @@ const TransportApp: React.FC = () => {
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
   if (checking) return <div dir={dir} className="flex min-h-screen items-center justify-center bg-[#07111f]"><DaliLoader size={64} /></div>;
   return (
-    <div dir={dir} lang={lang} className="min-h-screen bg-[#f4f1ea] text-[#14202e]">
+    <div dir={dir} lang={lang} className="nf-transport min-h-screen bg-[#f4f1ea] text-[#14202e]">
+      {/* Dense table rows: skip the global 44px touch-target minimum inside cells. */}
+      <style>{'.nf-transport td button,.nf-transport td input,.nf-transport th button,.nf-transport th input{min-height:0}'}</style>
       {user
         ? <Shell t={t} lang={lang} setLang={setLang} user={user} onLogout={async () => { await api.signOut(); setUser(null); }} />
         : <LoginView t={t} lang={lang} setLang={setLang} onSignedIn={setUser} />}
@@ -232,7 +234,7 @@ const Overview: React.FC<{ t: Strings; rates: Rate[]; onCustomer: (c: string) =>
             <div className="grid grid-cols-2 gap-3">
               {stats.avgs.map(([k, v, n]) => (
                 <div key={k} className="rounded-xl bg-[#f8f5ef] p-3">
-                  <div className="text-[10px] font-black tracking-widest text-[#8a7350]">{PRICE_LABELS[k]}</div>
+                  <div className="text-[10px] font-black tracking-widest text-[#8a7350]"><span dir="ltr">{PRICE_LABELS[k]}</span></div>
                   <div className="mt-1 text-xl font-black tabular-nums">{fmt(v)}</div>
                   <div className="text-[10px] text-slate-500">{n} {t.routes.toLowerCase()}</div>
                 </div>
@@ -349,7 +351,11 @@ const RatesScreen: React.FC<RatesProps> = ({ t, rates, setRates, isAdmin, filter
   const importFile = async (file: File) => {
     setBusy('import');
     try {
-      const rows = await parseRateWorkbook(file, f.customer);
+      // Skip routes that are already in the list with the same prices, so
+      // importing the same sheet twice does not create duplicates.
+      const sig = (r: RateDraft | Rate) => [r.customer, r.load_port, r.destination, r.transit_port, ...PRICE_KEYS.map(k => Number(r[k]) || 0)].join('|');
+      const existing = new Set(rates.map(sig));
+      const rows = (await parseRateWorkbook(file, f.customer)).filter(r => !existing.has(sig(r)));
       if (!rows.length) { setToast(t.importNone); setBusy(''); return; }
       if (!window.confirm(t.importFound(rows.length))) { setBusy(''); return; }
       const added = await api.insertRates(rows, done => setBusy(`import ${done}/${rows.length}`));
@@ -372,14 +378,14 @@ const RatesScreen: React.FC<RatesProps> = ({ t, rates, setRates, isAdmin, filter
       {/* Filters */}
       <Card className="!p-4">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[2fr_1.3fr_1.2fr_1.3fr]">
-          <input value={f.q} onChange={e => set({ q: e.target.value })} placeholder={t.search} className={inputCls} aria-label={t.search} />
-          <select value={f.customer} onChange={e => set({ customer: e.target.value })} className={inputCls} aria-label={t.customer}>
+          <input value={f.q} onChange={e => set({ q: e.target.value })} placeholder={t.search} className={`${inputCls} w-full min-w-0`} aria-label={t.search} />
+          <select value={f.customer} onChange={e => set({ customer: e.target.value })} className={`${inputCls} w-full min-w-0`} aria-label={t.customer}>
             <option value="">{t.allCustomers}</option>{options.customers.map(c => <option key={c}>{c}</option>)}
           </select>
-          <select value={f.loadPort} onChange={e => set({ loadPort: e.target.value })} className={inputCls} aria-label={t.loadPort}>
+          <select value={f.loadPort} onChange={e => set({ loadPort: e.target.value })} className={`${inputCls} w-full min-w-0`} aria-label={t.loadPort}>
             <option value="">{t.allPorts}</option>{options.ports.map(c => <option key={c}>{c}</option>)}
           </select>
-          <select value={f.destination} onChange={e => set({ destination: e.target.value })} className={inputCls} aria-label={t.destination}>
+          <select value={f.destination} onChange={e => set({ destination: e.target.value })} className={`${inputCls} w-full min-w-0`} aria-label={t.destination}>
             <option value="">{t.allDest}</option>{options.dests.map(c => <option key={c}>{c}</option>)}
           </select>
         </div>
@@ -422,7 +428,7 @@ const RatesScreen: React.FC<RatesProps> = ({ t, rates, setRates, isAdmin, filter
                 <SortTh k="load_port" className="text-start">{t.loadPort}</SortTh>
                 <SortTh k="destination" className="text-start">{t.destination}</SortTh>
                 <SortTh k="transit_port" className="text-start">{t.transitPort}</SortTh>
-                {PRICE_KEYS.map(k => <SortTh key={k} k={k} className="bg-[#1a2a3d] text-center">{PRICE_LABELS[k]}</SortTh>)}
+                {PRICE_KEYS.map(k => <SortTh key={k} k={k} className="bg-[#1a2a3d] text-center"><span dir="ltr">{PRICE_LABELS[k]}</span></SortTh>)}
                 <th className="px-3 py-3 text-start font-black uppercase tracking-wider">{t.notes}</th>
                 {isAdmin && <th className="w-24 px-3 py-3" />}
               </tr>
@@ -567,14 +573,14 @@ const AdjustDialog: React.FC<{ t: Strings; rows: Rate[]; onClose: () => void; on
       <div className="mt-4 flex flex-wrap gap-3">
         {PRICE_KEYS.map(k => (
           <label key={k} className="flex items-center gap-2 rounded-xl border border-[#e3dccf] px-3 py-2 text-xs font-black">
-            <input type="checkbox" className="accent-[#c2a378]" checked={keys.includes(k)} onChange={e => setKeys(ks => e.target.checked ? [...ks, k] : ks.filter(x => x !== k))} />{PRICE_LABELS[k]}
+            <input type="checkbox" className="accent-[#c2a378]" checked={keys.includes(k)} onChange={e => setKeys(ks => e.target.checked ? [...ks, k] : ks.filter(x => x !== k))} /><span dir="ltr">{PRICE_LABELS[k]}</span>
           </label>
         ))}
       </div>
       {sample && (
         <div className="mt-5 rounded-xl bg-[#f8f5ef] p-4 text-xs">
           <div className="font-bold">{sample.customer} · {sample.destination}</div>
-          <div className="mt-2 flex flex-wrap gap-4 tabular-nums">{keys.filter(k => sample[k]).map(k => <span key={k}>{PRICE_LABELS[k]}: {fmt(sample[k])} → <b className="text-[#07111f]">{fmt(apply(sample[k]))}</b></span>)}</div>
+          <div className="mt-2 flex flex-wrap gap-4 tabular-nums">{keys.filter(k => sample[k]).map(k => <span key={k}><span dir="ltr">{PRICE_LABELS[k]}</span>: {fmt(sample[k])} → <b className="text-[#07111f]">{fmt(apply(sample[k]))}</b></span>)}</div>
         </div>
       )}
       {err && <div className="mt-4 text-xs font-bold text-red-600">{t.failed}: {err}</div>}
@@ -596,7 +602,7 @@ const Customers: React.FC<{ t: Strings; rates: Rate[]; isAdmin: boolean; onView:
     rates.forEach(r => {
       const e = m.get(r.customer) || { name: r.customer, routes: 0, dests: new Set<string>(), ports: new Set<string>(), min: Infinity, max: 0, updated: '' };
       e.routes++; e.dests.add(r.destination); if (r.load_port) e.ports.add(r.load_port);
-      PRICE_KEYS.forEach(k => { if (r[k]) { e.min = Math.min(e.min, r[k]); e.max = Math.max(e.max, r[k]); } });
+      PRICE_KEYS.forEach(k => { if (r[k] > 0) { e.min = Math.min(e.min, r[k]); e.max = Math.max(e.max, r[k]); } });
       if ((r.updated_at || '') > e.updated) e.updated = r.updated_at || '';
       m.set(r.customer, e);
     });
@@ -731,7 +737,7 @@ const ExportDialog: React.FC<{ t: Strings; lang: Lang; rows: Rate[]; customer?: 
               <div className="flex flex-wrap gap-2">
                 {PRICE_KEYS.map(k => (
                   <label key={k} className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-black ${keys.includes(k) ? 'border-[#c2a378] bg-[#fbf3e4]' : 'border-[#e3dccf]'}`}>
-                    <input type="checkbox" className="accent-[#c2a378]" checked={keys.includes(k)} onChange={e => setKeys(ks => e.target.checked ? [...ks, k] : ks.filter(x => x !== k))} />{PRICE_LABELS[k]}
+                    <input type="checkbox" className="accent-[#c2a378]" checked={keys.includes(k)} onChange={e => setKeys(ks => e.target.checked ? [...ks, k] : ks.filter(x => x !== k))} /><span dir="ltr">{PRICE_LABELS[k]}</span>
                   </label>
                 ))}
                 <label className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-black ${notes ? 'border-amber-400 bg-amber-50' : 'border-[#e3dccf]'}`}>

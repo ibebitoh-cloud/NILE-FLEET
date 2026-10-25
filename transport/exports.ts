@@ -191,7 +191,7 @@ export function whatsappText(rows: Rate[], o: ExportOptions): string {
 
 function tableHtml(rows: Rate[], o: ExportOptions, withCustomer: boolean) {
   const t = L(o.lang);
-  const head = `<tr><th class="n">${t.no}</th>${withCustomer ? `<th>${t.customer}</th>` : ''}<th>${t.load}</th><th>${t.dest}</th><th>${t.transit}</th>${o.priceKeys.map(k => `<th class="p">${PRICE_LABELS[k]}</th>`).join('')}${o.showNotes ? `<th class="notes">${t.notes}</th>` : ''}</tr>`;
+  const head = `<tr><th class="n">${t.no}</th>${withCustomer ? `<th>${t.customer}</th>` : ''}<th>${t.load}</th><th>${t.dest}</th><th>${t.transit}</th>${o.priceKeys.map(k => `<th class="p"><span dir="ltr">${PRICE_LABELS[k]}</span></th>`).join('')}${o.showNotes ? `<th class="notes">${t.notes}</th>` : ''}</tr>`;
   const body = rows.map((r, i) => `<tr><td class="n">${i + 1}</td>${withCustomer ? `<td>${esc(r.customer)}</td>` : ''}<td>${esc(r.load_port) || '—'}</td><td><b>${esc(r.destination)}</b></td><td>${esc(r.transit_port) || '—'}</td>${o.priceKeys.map(k => `<td class="p">${fmt(r[k])}</td>`).join('')}${o.showNotes ? `<td class="notes">${esc(r.notes)}</td>` : ''}</tr>`).join('');
   return `<table><thead>${head}</thead><tbody>${body}</tbody></table>`;
 }
@@ -236,6 +236,7 @@ export function buildPdfHtml(rows: Rate[], style: PdfStyle, o: ExportOptions, or
 <style>
   @page { size: A4 ${landscape ? 'landscape' : 'portrait'}; margin: 12mm 10mm 14mm; }
   * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @media screen { body { padding: 18px 22px; } }
   body { margin: 0; font-family: "Segoe UI", Tahoma, "Noto Naskh Arabic", "Noto Sans Arabic", Arial, sans-serif; color: #14202e; font-size: 11px; }
   .head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 10px; border-bottom: 3px solid #c2a378; }
   .brand { display: flex; align-items: center; gap: 12px; }
