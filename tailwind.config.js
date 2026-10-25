@@ -6,6 +6,7 @@ export default {
     './screens/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
     './services/**/*.{ts,tsx}',
+    './transport/**/*.{ts,tsx}',
   ],
   theme: { extend: {} },
   plugins: [],
