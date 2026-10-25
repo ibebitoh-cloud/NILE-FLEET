@@ -270,12 +270,14 @@ export function buildPdfHtml(rows: Rate[], style: PdfStyle, o: ExportOptions, or
         <div class="sig">
           <div class="regards">${t.regards}</div>
           <div class="co">${t.company}</div>
-          <div class="who">${t.from} <b>${esc(o.signer)}</b></div>
         </div>
-        <div class="boxes">
-          <div class="box"><div class="line"></div><span>${t.sign}</span></div>
-          <div class="box stamp"><img src="${origin}/nf-mark-navy.png" alt=""><span>${t.stamp}</span></div>
+        <div class="signer">
+          <div class="from">${t.from}</div>
+          <div class="name">${esc(o.signer)}</div>
+          <div class="line"></div>
+          <span>${t.sign}</span>
         </div>
+        <div class="box stamp"><img src="${origin}/nf-mark-navy.png" alt=""><span>${t.stamp}</span></div>
       </div>`;
   } else if (style === 'grouped') {
     content = cards + chips + groupByCustomer(rows).map(([name, list]) => `
@@ -344,13 +346,15 @@ export function buildPdfHtml(rows: Rate[], style: PdfStyle, o: ExportOptions, or
   .group { page-break-inside: auto; margin-bottom: 14px; }
   .group h3 { margin: 12px 0 5px; font-size: 13px; color: #fff; display: flex; justify-content: space-between; padding: 7px 12px; border-radius: 9px; background: linear-gradient(90deg, #07111f, #13345a); border-${start}: 5px solid #c2a378; }
   .group h3 small { color: #e8d3ad; font-size: 10px; }
-  .closing { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-top: 14px; padding: 14px 16px; border-radius: 12px; border: 1px solid #e6dfd2; background: #fffdf9; page-break-inside: avoid; }
-  .sig { line-height: 1.9; font-size: 12px; } .sig .co { font-weight: 900; color: #07111f; font-size: 13px; } .sig .who b { color: #8a7350; }
-  .boxes { display: flex; gap: 18px; align-items: flex-end; }
-  .box { width: 170px; height: 74px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; font-size: 9.5px; color: #6b7685; }
-  .box .line { width: 100%; border-bottom: 1.5px solid #0d2440; margin-bottom: 5px; }
-  .box.stamp { position: relative; border: 2px dashed #c2a378; border-radius: 50%; width: 96px; height: 96px; justify-content: center; }
+  .closing { display: grid; grid-template-columns: 1fr 1.1fr auto; align-items: end; gap: 22px; margin-top: 14px; padding: 14px 18px; border-radius: 12px; border: 1px solid #e6dfd2; background: #fffdf9; page-break-inside: avoid; }
+  .sig { line-height: 1.9; font-size: 12px; align-self: center; } .sig .co { font-weight: 900; color: #07111f; font-size: 14px; }
+  .signer { text-align: center; font-size: 9.5px; color: #6b7685; }
+  .signer .from { font-size: 10.5px; color: #5b6878; }
+  .signer .name { font-size: 15px; font-weight: 900; color: #8a7350; margin: 2px 0 26px; }
+  .signer .line { border-bottom: 1.5px solid #0d2440; margin-bottom: 5px; }
+  .box.stamp { position: relative; display: flex; align-items: center; justify-content: center; border: 2px dashed #c2a378; border-radius: 50%; width: 96px; height: 96px; font-size: 9.5px; color: #6b7685; }
   .box.stamp img { position: absolute; width: 54px; opacity: .12; }
+  .box.stamp span { position: relative; }
   .foot { margin-top: 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 18px; border-radius: 12px; background: #07111f; color: #b8c4d4; font-size: 9.5px; page-break-inside: avoid; border-top: 4px solid #c2a378; }
   .foot .co { color: #fff; font-weight: 800; }
   .foot .dali { display: flex; flex-direction: column; align-items: center; gap: 2px; }
