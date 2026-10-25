@@ -131,7 +131,7 @@ const drawTruck = (ctx: CanvasRenderingContext2D, o: TruckOpts) => {
   if (logoReady(containerLogo)) ctx.drawImage(containerLogo, -368, -180, 76, 76);
   ctx.fillStyle = '#0b1b2c'; ctx.textAlign = 'center';
   ctx.font = 'italic 900 32px system-ui, Arial, sans-serif'; ctx.fillText('NILE FLEET', -176, -136);
-  ctx.font = '800 10px system-ui, Arial, sans-serif'; ctx.fillText('TRANSPORT · LOGISTICS · EGYPT', -176, -114);
+  ctx.font = '800 10px system-ui, Arial, sans-serif'; ctx.fillText('TRANSPORT · LOGISTICS · EGYPT - UAE', -176, -114);
   ctx.globalAlpha = 1;
   paintCorrugation(ctx, -380, -198, 340, 118, 20);
   ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(-380, -198, 340, 6); ctx.fillRect(-380, -86, 340, 6);
@@ -235,7 +235,7 @@ const drawFrontTruck = (ctx: CanvasRenderingContext2D, o: {
   ctx.textAlign = 'center';
   ctx.fillText('NILE FLEET', 0, -282);
   ctx.font = '700 8px system-ui,Arial';
-  ctx.fillText('TRANSPORT · LOGISTICS · EGYPT', 0, -265);
+  ctx.fillText('TRANSPORT · LOGISTICS · EGYPT - UAE', 0, -265);
   ctx.globalAlpha = 1;
   paintCorrugation(ctx, -112, -375, 224, 150, 16);
 
@@ -376,6 +376,14 @@ const Reveal: React.FC<{ children: React.ReactNode; className?: string }> = ({ c
 /* ------------------------------------------------------------------ */
 /*  Page                                                              */
 /* ------------------------------------------------------------------ */
+const PARTNER_GENERIC = /^(logistics|egypt|shipping|cargo|marine|express|freight|line|international|services?|global)$/i;
+const partnerMonogram = (name: string) => {
+  const words = name.split(/[\s/-]+/).filter(Boolean);
+  const core = words.filter(w => !PARTNER_GENERIC.test(w));
+  const use = core.length ? core : words;
+  return use.length === 1 ? use[0].slice(0, 3).toUpperCase() : (use[0][0] + use[1][0]).toUpperCase();
+};
+
 const PARTNER_LOGOS = [
   { name: 'Egytrans', type: 'TRANSPORT & LOGISTICS', url: 'https://egytrans.com/', logo: 'https://www.google.com/s2/favicons?domain=egytrans.com&sz=128' },
   { name: 'NOSCO', type: 'TRANSPORT & LOGISTICS', url: 'http://www.noscoegypt.com/', logo: 'https://www.google.com/s2/favicons?domain=noscoegypt.com&sz=128' },
@@ -450,6 +458,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
   darkRef.current = isDark;
 
   const [soundOn, setSoundOn] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   // Night-port hero photo from the reference design. Hidden until
   // public/hero-night-port.jpg exists; the animated convoy shows instead.
@@ -855,7 +864,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
     : { card: 'border-[#8a6a35]/35 bg-white/90 text-[#26231f] shadow-[0_20px_60px_rgba(15,23,42,.12)]', overlay: 'bg-[radial-gradient(circle_at_75%_35%,rgba(194,163,120,.18),transparent_30%),linear-gradient(135deg,#ffffff,#edf3f8)]', badge: 'bg-[#8a6a35] text-white', meta: 'text-[#8a6a35]', body: 'text-slate-600', action: 'text-[#26231f]' };
 
   const tx = {
-    brandSub: ar ? 'النقل · اللوجستيات · مصر' : 'Transport · Logistics · Egypt',
+    brandSub: ar ? 'النقل · اللوجستيات · مصر - الإمارات' : 'Transport · Logistics · Egypt - UAE',
     about: ar ? 'عن الشركة' : 'ABOUT',
     operations: ar ? 'العمليات' : 'OPERATIONS',
     leadership: ar ? 'القيادة' : 'LEADERSHIP',
@@ -933,11 +942,11 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       { title: 'SUPPLY CHAIN SUPPORT', desc: 'Connect supplier, port and customer movements through a more coordinated operational view.' },
     ],
     proofTitle: ar ? <>ما نقدمه لعملائنا <span className={gold}>كل يوم.</span></> : <>What we deliver to customers <span className={gold}>every day.</span></>,
-    proofDesc: ar ? 'لا نعرض تقييمات أو شعارات عملاء إلا عندما تكون معتمدة وقابلة للنشر. الجودة تُقاس بما يحدث على أرض الواقع.' : 'We only publish customer reviews and partner logos when they are approved and verifiable. Quality is measured by what happens on the ground.',
+    proofDesc: ar ? 'نقيس الجودة بما يحدث على أرض الواقع: شاحنات في موعدها، متابعة واضحة لكل حركة، وفريق يرد بسرعة.' : 'We measure quality by what happens on the ground: trucks on time, clear follow-up on every move, and a team that answers fast.',
     reviewPending: ar ? 'تجربة الخدمة اليومية' : 'Daily service experience',
-    reviewAiNote: ar ? 'ملخصات توضح مستوى الخدمة الذي نهدف إلى تقديمه يومياً — وليست شهادات عملاء حقيقية.' : 'Illustrative summaries of the service experience we aim to deliver every day — not real customer testimonials.',
+    reviewAiNote: ar ? 'هذا ما يحصل عليه كل عميل في كل حركة، من الحجز حتى التسليم.' : 'What every customer gets on every move, from booking to delivery.',
     partnersTitle: ar ? <>شركاء <span className={gold}>النجاح.</span></> : <>Partners in <span className={gold}>success.</span></>,
-    partnersDesc: ar ? 'قسم مخصص للشركاء والعملاء المعتمدين — مع شعارات رسمية بعد الحصول على الموافقة.' : 'A dedicated space for approved customers and partners — with official logos added only after authorization.',
+    partnersDesc: ar ? 'خطوط ملاحية ووكلاء شحن وشركات لوجستيات وشاحنات نعمل معها في الموانئ والطرق.' : 'Shipping lines, forwarders, logistics and trucking companies we work alongside at ports and on the road.',
     globalTitle: ar ? 'منظومة لوجستية عالمية' : 'GLOBAL LOGISTICS ECOSYSTEM',
     globalDesc: ar ? 'نخدم عمليات تتصل بخطوط الملاحة ووكلاء الشحن والمستوردين والمصدرين والعملاء الصناعيين.' : 'We support operations connected to shipping lines, freight forwarders, importers, exporters and industrial clients.',
   };
@@ -1128,6 +1137,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         [dir=rtl] .nf4-hero-scrim{transform:scaleX(-1)}
         @container (max-width: 480px){.nf4-beam-footer .bwf-inner{grid-template-columns:minmax(0,1fr)}.nf4-beam-footer .bwf-link-t{overflow-wrap:anywhere}}
         .nf4-mobile-nav{scrollbar-width:none}
+        @media(max-width:640px){.nf-home .nf4-swipe{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;justify-content:flex-start!important;align-items:stretch;min-width:0;min-height:0!important;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;margin-inline:-16px;padding:0 16px 8px;scroll-padding-inline:16px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.nf-home .nf4-swipe::-webkit-scrollbar{display:none}.nf-home .nf4-swipe>*{flex:0 0 84%;scroll-snap-align:start;min-height:200px!important}.nf-home .nf4-swipe>*:hover{transform:none}}
         @media(max-width:767px){.nf-home *{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}}
         .nf-home a.rounded-full,.nf-home button.rounded-full{display:inline-flex;align-items:center;justify-content:center}
         .nf-home .nf4-mobile-nav a{min-height:36px}
@@ -1194,7 +1204,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
       {/* route progress (scroll) */}
       <div className="fixed left-0 right-0 top-0 z-50 h-[3px] bg-black/10"><div ref={barRef} className="h-full w-0 bg-[#c2a378] shadow-[0_0_12px_#c2a378]" /></div>
 
-      <div className={`nf4-contact-bar border-b ${isDark ? "nf4-route-dark text-white" : "nf4-route-light text-[#26231f]"}`}>
+      <div className={`nf4-contact-bar hidden border-b md:block ${isDark ? "nf4-route-dark text-white" : "nf4-route-light text-[#26231f]"}`}>
         <div className="nf4-route-line mx-auto max-w-[1500px] px-4 lg:px-10">
           <div className="nf4-route-welcome">
             <span>{ar ? 'مرحباً بكم في' : 'WELCOME TO'}</span><strong>{ar ? 'أسطول النيل' : 'NILE FLEET'}</strong>
@@ -1202,7 +1212,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
           <div className="nf4-route-track" aria-hidden="true"></div>
           <div className="nf4-route-actions">
-            <a href="tel:+201000992858" className="nf4-route-action nf4-route-phone" aria-label={ar ? 'اتصل بأسطول النيل' : 'Call Nile Fleet'}><span>☎</span><div><small>{ar ? 'مكتب النقل 24/7' : '24/7 TRANSPORT DESK'}</small><strong dir="ltr">+20 10 0099 2858</strong></div></a>
+            <a href="tel:+201000992858" className="nf4-route-action nf4-route-phone" aria-label={ar ? 'اتصل بأسطول النيل' : 'Call Nile Fleet'}><span>☎</span><div><small>{ar ? 'مكتب النقل 24/7' : '24/7 TRANSPORT DESK'}</small><strong dir="ltr">+20 100 099 2858</strong></div></a>
             <a href="https://www.linkedin.com/company/nile-fleet-for-transport-and-logistics-service" target="_blank" rel="noreferrer" className="nf4-route-social" aria-label="Nile Fleet LinkedIn">in</a>
             <a href="https://www.facebook.com/profile.php?id=61591362501143" target="_blank" rel="noreferrer" className="nf4-route-social nf4-route-fb" aria-label="Nile Fleet Facebook">f</a>
             <a href="#quote" className="nf4-route-quote">{ar ? 'طلب عرض سعر' : 'REQUEST QUOTE'} <span>↗</span></a>
@@ -1227,11 +1237,25 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
             <button onClick={toggleSound} data-desktop-only aria-pressed={soundOn} className={`nf4-hdr-btn rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{soundOn ? tx.soundOn : tx.soundOff}</button>
             <button onClick={() => setTheme(isDark ? 'white' : 'phantom')} className={`nf4-hdr-btn rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isDark ? tx.white : tx.dark}</button>
             <button onClick={() => setLang(ar ? 'en' : 'ar')} className={`nf4-hdr-btn rounded-full border px-4 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{ar ? 'EN' : 'العربية'}</button>
+            <button onClick={() => setMenuOpen(o => !o)} aria-expanded={menuOpen} aria-controls="nf4-mobile-menu" aria-label={ar ? 'القائمة' : 'Menu'} className={`nf4-menu-btn grid h-9 w-9 place-items-center rounded-full border text-base font-black transition hover:border-[#c2a378]/70 md:hidden ${K.line} ${gold}`}>{menuOpen ? '✕' : '☰'}</button>
           </div>
         </div>
-              <nav aria-label={ar ? 'أقسام الصفحة' : 'Page sections'} className={`nf4-mobile-nav flex gap-2 overflow-x-auto border-t px-4 py-2 md:hidden ${K.line}`}>
-          {nav.map(([label, href]) => <a key={href} href={href} className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[8px] font-black tracking-[.14em] ${K.chip}`}>{label}</a>)}
-        </nav>
+        {menuOpen && (
+          <div id="nf4-mobile-menu" className={`nf4-mobile-menu border-t px-4 pb-5 pt-3 md:hidden ${K.line}`}>
+            <nav aria-label={ar ? 'أقسام الصفحة' : 'Page sections'} className="grid">
+              {nav.map(([label, href]) => <a key={href} href={href} onClick={() => setMenuOpen(false)} className={`border-b py-3.5 text-[11px] font-black tracking-[.22em] transition hover:text-[#c2a378] ${K.line}`}>{label}</a>)}
+            </nav>
+            <a href="tel:+201000992858" className={`mt-4 flex items-center justify-between rounded-2xl border px-4 py-3 ${K.line}`}>
+              <span className={`text-[8px] font-black tracking-[.2em] ${K.faint}`}>{ar ? 'مكتب النقل 24/7' : '24/7 TRANSPORT DESK'}</span>
+              <strong dir="ltr" className={`text-sm font-black ${gold}`}>+20 100 099 2858</strong>
+            </a>
+            <div className="mt-3 flex items-center gap-2">
+              <a href="#quote" onClick={() => setMenuOpen(false)} className="flex-1 rounded-full bg-[#c2a378] px-4 py-3 text-center text-[10px] font-black tracking-[.2em] text-[#05070a]">{ar ? 'طلب عرض سعر' : 'REQUEST QUOTE'} ↗</a>
+              <a href="https://www.linkedin.com/company/nile-fleet-for-transport-and-logistics-service" target="_blank" rel="noreferrer" aria-label="Nile Fleet LinkedIn" className={`grid h-11 w-11 place-items-center rounded-full border text-sm font-black ${K.line} ${gold}`}>in</a>
+              <a href="https://www.facebook.com/profile.php?id=61591362501143" target="_blank" rel="noreferrer" aria-label="Nile Fleet Facebook" className={`grid h-11 w-11 place-items-center rounded-full border text-sm font-black ${K.line} ${gold}`}>f</a>
+            </div>
+          </div>
+        )}
       </header>
 
       
@@ -1358,10 +1382,10 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
 <main id="top" className="relative z-10">
         <section id="in-motion" aria-label={ar ? 'نيل فليت، دائماً في حركة' : 'Nile Fleet, always in motion'}>
-          <TubesCursor light={!isDark} className="nf4-tubes h-[60svh] min-h-[420px] max-h-[900px] select-none sm:h-[calc(100svh-64px)] sm:min-h-[480px]">
+          <TubesCursor light={!isDark} className="nf4-tubes h-[44svh] min-h-[330px] max-h-[900px] select-none sm:h-[calc(100svh-64px)] sm:min-h-[480px]">
             <div className={`flex h-full flex-col items-center justify-center px-5 text-center ${isDark ? 'text-white' : 'text-[#0b2a4a]'}`}>
-              <img src={isDark ? '/nf-mark-white.png' : '/nf-mark-navy.png'} alt="Nile Fleet" className={`h-52 w-auto sm:h-64 lg:h-80 ${isDark ? 'drop-shadow-[0_0_34px_rgba(194,163,120,.4)]' : 'drop-shadow-[0_10px_30px_rgba(11,42,74,.2)]'}`} />
-              <h2 dir="ltr" aria-label="Nile Fleet" className={`nf-latin-title mt-5 flex items-center gap-[.22em] text-[2.5rem] font-black uppercase italic leading-none tracking-[-.05em] sm:mt-6 sm:text-5xl lg:text-6xl ${isDark ? 'drop-shadow-[0_4px_30px_rgba(0,0,0,.6)]' : 'drop-shadow-[0_4px_24px_rgba(255,255,255,.8)]'}`}>
+              <img src={isDark ? '/nf-mark-white.png' : '/nf-mark-navy.png'} alt="Nile Fleet" className={`h-40 w-auto sm:h-64 lg:h-80 ${isDark ? 'drop-shadow-[0_0_34px_rgba(194,163,120,.4)]' : 'drop-shadow-[0_10px_30px_rgba(11,42,74,.2)]'}`} />
+              <h2 dir="ltr" aria-label="Nile Fleet" className={`nf-latin-title mt-4 flex items-center gap-[.22em] text-[2.1rem] font-black uppercase italic leading-none tracking-[-.05em] sm:mt-6 sm:text-5xl lg:text-6xl ${isDark ? 'drop-shadow-[0_4px_30px_rgba(0,0,0,.6)]' : 'drop-shadow-[0_4px_24px_rgba(255,255,255,.8)]'}`}>
                 <DrawText text="NILE" color={isDark ? '#ffffff' : '#0b2a4a'} />
                 <DrawText text="FLEET" color={isDark ? '#c2a378' : '#8a6a35'} delay={0.6} />
               </h2>
@@ -1477,7 +1501,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                   <h2 className="text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{tx.whyTitle}</h2>
                   <p className={`mt-7 max-w-xl text-sm leading-7 ${K.muted}`}>{tx.whyDesc}</p>
                 </div>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="nf4-swipe grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {tx.standards.map((x, i) => (
                     <div key={x.title} className={`group min-h-[220px] rounded-[1.5rem] border p-6 backdrop-blur-md transition duration-500 hover:-translate-y-1 hover:border-[#c2a378]/60 ${K.card}`}>
                       <div className={`text-[8px] font-black tracking-[.22em] ${gold}`}>{String(i + 1).padStart(2, '0')}</div>
@@ -1500,7 +1524,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                 <h2 className="text-5xl font-black uppercase italic tracking-[-.05em] sm:text-7xl">{tx.footprint}</h2>
                 <p className={`max-w-sm text-xs leading-6 ${K.muted}`}>{tx.footprintDesc}</p>
               </div>
-              <div className="nf4-network-grid mt-14 grid gap-4 md:grid-cols-3">
+              <div className="nf4-network-grid nf4-swipe mt-14 grid gap-4 md:grid-cols-3">
                 {[
                   [ar ? 'الموانئ' : 'PORTS', ar ? 'الإسكندرية · دمياط · بورسعيد · الدخيلة · السخنة' : 'Alexandria · Damietta · Port Said · Dekheila · Sokhna'],
                   [ar ? 'البضائع' : 'CARGO', ar ? 'حاويات · حاويات مبردة · استيراد · تصدير' : 'Containers · Reefers · Import · Export'],
@@ -1594,7 +1618,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
             <div className="mx-auto max-w-[1500px] px-5 py-28 lg:px-10">
               <div className={`text-[9px] font-black uppercase tracking-[.42em] ${gold}`}>06 / {ar ? 'الخدمات' : 'SERVICES'}</div>
               <h2 className="mt-5 max-w-5xl text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{tx.serviceTitle}</h2>
-              <div className="nf4-services-grid mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="nf4-services-grid nf4-swipe mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {tx.serviceItems.map((x, i) => (
                   <div key={x.title} className={`group relative overflow-hidden rounded-[1.5rem] border p-6 transition sm:p-7 duration-500 hover:-translate-y-1 hover:border-[#c2a378]/60 ${K.card}`}>
                     <div className={`absolute top-5 text-4xl font-black opacity-10 ${ar ? 'left-6' : 'right-6'}`}>{String(i + 1).padStart(2, '0')}</div>
@@ -1617,7 +1641,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                   <h2 className="text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{tx.proofTitle}</h2>
                   <p className={`mt-7 max-w-2xl text-sm leading-7 ${K.muted}`}>{tx.proofDesc}</p>
                   <div className="mt-10 flex flex-wrap gap-2">
-                    {['★★★★★', ar ? 'تقييمات معتمدة' : 'VERIFIED FEEDBACK', ar ? 'جودة' : 'QUALITY', ar ? 'سرعة الاستجابة' : 'FAST RESPONSE'].map(x => (
+                    {[ar ? 'السلامة' : 'SAFETY', ar ? 'في الموعد' : 'ON TIME', ar ? 'جودة' : 'QUALITY', ar ? 'سرعة الاستجابة' : 'FAST RESPONSE'].map(x => (
                       <span key={x} className={`rounded-full border px-4 py-2 text-[8px] font-black tracking-[.18em] ${K.chip}`}>{x}</span>
                     ))}
                   </div>
@@ -1626,7 +1650,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                   <div className="nf4-live-orb" aria-hidden="true" />
                   <div className="relative z-10 flex items-center justify-between gap-4">
                     <div className={`text-[9px] font-black tracking-[.28em] ${gold}`}>{ar ? 'تجربة الخدمة' : 'SERVICE EXPERIENCE'}</div>
-                    <span className="nf4-live-badge"><span className="nf4-live-dot" />{ar ? 'مباشر' : 'LIVE'}</span>
+                    <span className="nf4-live-badge"><span className="nf4-live-dot" />{ar ? 'يومياً' : 'DAILY'}</span>
                   </div>
                   <div className="relative z-10 mt-6 text-2xl font-black leading-tight">{tx.reviewPending}</div>
                   <div className={`relative z-10 mt-4 text-xs leading-6 ${K.muted}`}>{tx.reviewAiNote}</div>
@@ -1659,8 +1683,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                     {[...PARTNER_LOGOS, ...PARTNER_LOGOS].map((p, i) => (
                     <a key={`${p.name}-${i}`} href={p.url} target="_blank" rel="noreferrer" className={`group flex h-[76px] min-w-[190px] items-center justify-center rounded-xl border px-4 text-center transition duration-500 hover:-translate-y-0.5 hover:border-[#c2a378]/70 ${isDark ? 'border-white/[.09] bg-white/[.025] hover:bg-white/[.055]' : 'border-black/[.07] bg-white/75 hover:bg-white shadow-sm'}`}>
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white p-1.5 shadow-[0_4px_18px_rgba(15,23,42,.08)]">
-                          <img src={p.logo} alt={`${p.name} logo`} className="h-full w-full object-contain" loading="lazy" />
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#f3e7d3] to-[#c2a378] p-1.5 shadow-[0_4px_18px_rgba(15,23,42,.08)]">
+                          <span aria-hidden="true" className="text-[11px] font-black tracking-[.02em] text-[#0b2a4a]">{partnerMonogram(p.name)}</span>
                         </div>
                         <div className="text-left">
                           <div className={`text-[8px] font-black tracking-[.1em] ${isDark ? 'text-white' : 'text-[#26231f]'}`}>{p.name}</div>
@@ -1681,8 +1705,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                       <div className="flex flex-wrap gap-2">
                         {members.map((p) => (
                           <a key={p.name} href={p.url} target="_blank" rel="noreferrer" className={`group flex items-center gap-2 rounded-xl border px-3 py-2 transition duration-300 hover:border-[#c2a378]/60 ${isDark ? 'border-white/10 bg-white/[.025] hover:bg-white/[.06]' : 'border-black/10 bg-white hover:bg-slate-50 shadow-sm'}`}>
-                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white p-1">
-                              <img src={p.logo} alt={`${p.name} logo`} className="h-full w-full object-contain" loading="lazy" />
+                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#f3e7d3] to-[#c2a378] p-1">
+                              <span aria-hidden="true" className="text-[9px] font-black tracking-[.02em] text-[#0b2a4a]">{partnerMonogram(p.name)}</span>
                             </div>
                             <span className={`text-[8px] font-black tracking-[.04em] ${isDark ? 'text-white' : 'text-[#26231f]'}`}>{p.name}</span>
                           </a>
@@ -1709,7 +1733,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                 <h2 className="text-5xl font-black uppercase italic tracking-[-.05em] sm:text-7xl">{tx.people}</h2>
                 <p className={`max-w-sm text-xs leading-6 ${K.muted}`}>{tx.leadDesc}</p>
               </div>
-              <div className="nf4-leadership-grid mt-14 grid gap-5 md:grid-cols-3" dir={ar ? 'rtl' : 'ltr'}>
+              <div className="nf4-leadership-grid nf4-swipe mt-14 grid gap-5 md:grid-cols-3" dir={ar ? 'rtl' : 'ltr'}>
                 {[
                   ['SHERIF HEGAZY', tx.roles[0], tx.areas[0]],
                   ['SAMAR HEGAZY', tx.roles[1], tx.areas[1]],
@@ -1723,7 +1747,10 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                       <span className={`text-[8px] font-black tracking-[.25em] ${gold}`}>{String(i + 1).padStart(2, '0')}</span>
                       <span className={`max-w-[65%] text-[8px] font-black leading-4 tracking-[.12em] ${K.faint} ${ar ? 'text-left' : 'text-right'}`}>{area}</span>
                     </div>
-                    <div className="mt-20 h-px w-12 bg-[#c2a378] transition-all duration-500 group-hover:w-24" />
+                    <div className={`mt-10 flex ${ar ? 'justify-end' : 'justify-start'}`}>
+                      <div aria-hidden="true" className="grid h-16 w-16 place-items-center rounded-full border border-[#c2a378]/60 bg-gradient-to-br from-[#c2a378]/25 to-transparent text-xl font-black tracking-[.06em] text-[#c2a378]">{name.split(' ').map(w => w[0]).join('')}</div>
+                    </div>
+                    <div className="mt-6 h-px w-12 bg-[#c2a378] transition-all duration-500 group-hover:w-24" />
                     <div className={`mt-6 text-2xl font-black uppercase leading-tight ${ar ? 'text-right' : 'text-left'}`}>{name}</div>
                     <div className={`mt-3 text-[9px] font-black leading-5 tracking-[.12em] ${K.faint} ${ar ? 'text-right' : 'text-left'}`}>{role}</div>
                     <div className="absolute bottom-0 left-0 h-1 w-0 bg-[#c2a378] transition-all duration-700 group-hover:w-full" />
@@ -1743,8 +1770,8 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                 <h2 className="mt-5 text-5xl font-black uppercase italic leading-[.9] tracking-[-.05em] sm:text-7xl">{ar ? <>اطلب <span className={gold}>عرض سعر.</span></> : <>Get a <span className={gold}>quote.</span></>}</h2>
                 <p className={`mt-7 max-w-md text-sm leading-7 ${K.muted}`}>{ar ? 'املأ التفاصيل وأرسلها على واتساب أو بالبريد الإلكتروني، وسيتواصل معك فريق التشغيل.' : 'Fill in the details and send them on WhatsApp or by email, and our operations team will get back to you.'}</p>
                 <div className={`mt-10 space-y-3 text-xs font-bold ${K.soft}`}>
-                  <a href="tel:+201000992858" className="block hover:text-[#c2a378]">☎ {ar ? 'النقل' : 'Transport'}: <span dir="ltr">+20 10 0099 2858</span></a>
-                  <a href="tel:+201212229077" className="block hover:text-[#c2a378]">☎ {ar ? 'الجينسيت' : 'Genset'}: <span dir="ltr">+20 12 1222 9077</span></a>
+                  <a href="tel:+201000992858" className="block hover:text-[#c2a378]">☎ {ar ? 'النقل' : 'Transport'}: <span dir="ltr">+20 100 099 2858</span></a>
+                  <a href="tel:+201212229077" className="block hover:text-[#c2a378]">☎ {ar ? 'الجينسيت' : 'Genset'}: <span dir="ltr">+20 121 222 9077</span></a>
                   <a href={`mailto:${CONTACT_EMAIL}`} className="block hover:text-[#c2a378]">✉ {CONTACT_EMAIL}</a>
                 </div>
               </div>
@@ -1807,7 +1834,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         </div>
       </main>
 
-      <a href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(ar ? 'مرحباً أسطول النيل' : 'Hello Nile Fleet')}`} target="_blank" rel="noreferrer" aria-label={ar ? 'تواصل على واتساب' : 'Chat on WhatsApp'} className="nf4-whatsapp fixed bottom-4 left-4 z-40 grid h-14 w-14 place-items-center rounded-full bg-[#25D366] text-black shadow-[0_10px_30px_rgba(37,211,102,.35)] transition hover:-translate-y-1">
+      <a href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(ar ? 'مرحباً أسطول النيل' : 'Hello Nile Fleet')}`} target="_blank" rel="noreferrer" aria-label={ar ? 'تواصل على واتساب' : 'Chat on WhatsApp'} className="nf4-whatsapp fixed bottom-4 left-4 z-40 grid h-12 w-12 place-items-center sm:h-14 sm:w-14 rounded-full bg-[#25D366] text-black shadow-[0_10px_30px_rgba(37,211,102,.35)] transition hover:-translate-y-1">
         <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.9-4.45 9.9-9.91C21.95 6.45 17.5 2 12.04 2zm5.8 14.03c-.25.69-1.44 1.33-1.98 1.38-.51.05-.99.24-3.33-.69-2.82-1.11-4.6-4-4.74-4.18-.14-.19-1.13-1.5-1.13-2.87 0-1.36.71-2.03.97-2.31.25-.28.55-.35.73-.35l.53.01c.17 0 .4-.06.62.48.25.6.85 2.07.92 2.22.08.15.13.32.03.51-.1.19-.15.31-.29.48-.15.17-.31.38-.44.51-.15.15-.3.31-.13.6.17.29.76 1.25 1.63 2.03 1.12 1 2.06 1.31 2.35 1.45.29.15.46.12.63-.07.17-.19.73-.85.92-1.14.19-.29.38-.24.65-.15.27.1 1.7.8 1.99.95.29.15.48.22.55.34.07.12.07.69-.18 1.38z"/></svg>
       </a>
 

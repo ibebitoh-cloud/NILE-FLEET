@@ -64,7 +64,7 @@ const WelcomeIntro: React.FC = () => {
       <button type="button" className="nfw-skip" onClick={() => close()}>{t.skip}</button>
 
       <div className="nfw-content">
-        <div className="nfw-markwrap"><img className="nfw-mark" src="/nf-mark-white.png" alt="Nile Fleet" /></div>
+        <div className="nfw-markwrap"><img className="nfw-mark" src="/nf-mark-white.png" alt="Nile Fleet" /><span className="nfw-shine" aria-hidden="true" /></div>
         <h1 className="nfw-word" dir="ltr" aria-label="Nile Fleet">
           <DrawText text="NILE" color="#ffffff" delay={0.5} />
           <DrawText text="FLEET" color="#c2a378" delay={1.42} />

@@ -72,6 +72,16 @@
 .nfw-mark { display: block; width: clamp(230px, 34vw, 400px); height: auto; opacity: 0; transform: translateY(-18px) scale(.94);
   transition: opacity 1.4s ease, transform 1.6s cubic-bezier(.16,.84,.24,1); }
 .nfw-text .nfw-mark { opacity: 1; transform: none; }
+/* Moving light on the logo: a gold-white band clipped to the mark's shape sweeps across it, and the glow behind drifts side to side. */
+.nfw-shine { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1.4s ease;
+  background: linear-gradient(105deg, transparent 30%, rgba(246,223,174,.0) 38%, rgba(246,223,174,.95) 47%, #fff 50%, rgba(246,223,174,.95) 53%, rgba(246,223,174,0) 62%, transparent 70%) no-repeat;
+  background-size: 250% 100%; background-position: 130% 0;
+  -webkit-mask: url(/nf-mark-white.png) center / contain no-repeat; mask: url(/nf-mark-white.png) center / contain no-repeat; }
+.nfw-text .nfw-shine { opacity: 1; animation: nfw-shine 3.6s cubic-bezier(.45,.05,.35,1) 1.2s infinite; }
+@keyframes nfw-shine { 0% { background-position: 130% 0 } 55%, 100% { background-position: -30% 0 } }
+.nfw-text .nfw-markwrap::before { animation: nfw-sway 6s ease-in-out infinite; }
+@keyframes nfw-sway { 0%, 100% { transform: translate(-14%, -6%) } 50% { transform: translate(14%, 4%) } }
+@media (prefers-reduced-motion: reduce) { .nfw-text .nfw-shine, .nfw-text .nfw-markwrap::before { animation: none; } }
 .nfw-word { display: flex; gap: .24em; font-weight: 900; font-style: italic; text-transform: uppercase; letter-spacing: -.05em; font-size: clamp(2rem, 6.4vw, 4.6rem); line-height: 1; margin: 0; }
 .nfw-word svg { filter: drop-shadow(0 0 1px rgba(255,255,255,.35)) drop-shadow(0 0 22px rgba(194,163,120,.28)); }
 .nfw .nf-draw tspan { animation: none; }
