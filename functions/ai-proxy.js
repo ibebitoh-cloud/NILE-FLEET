@@ -19,6 +19,10 @@ const ACTION_ROLES = {
   mapSpreadsheetToSchema: ['ADMIN', 'MANAGER'],
 };
 
+// Actions for the Transport system, checked against the caller's Transport role
+// (rpc my_transport_role) instead of their Genset profile.
+const TRANSPORT_ACTIONS = { transportAsk: ['ADMIN', 'VIEWER'], transportAction: ['ADMIN', 'VIEWER'] };
+
 // How much of an ongoing DALI chat is sent back to the model with each question.
 const MAX_HISTORY_TURNS = 20;
 const MAX_HISTORY_CHARS = 1500;
@@ -105,12 +109,19 @@ export async function onRequestPost(context) {
 
   const { action, payload } = body;
 
-  const allowedRoles = ACTION_ROLES[action];
-  if (!allowedRoles) return json({ error: 'Unknown action' }, 400);
-  const profile = await loadProfile(supabaseUrl, supabaseAnonKey, accessToken, authenticatedUser.id);
   const isCreator = String(authenticatedUser.email || '').trim().toLowerCase() === CREATOR_EMAIL;
-  if (!isCreator && (!profile || profile.revoked === true || !allowedRoles.includes(String(profile.role || '').toUpperCase()))) {
-    return json({ error: 'DALI is not available for this account' }, 403);
+  if (TRANSPORT_ACTIONS[action]) {
+    const role = await loadTransportRole(supabaseUrl, supabaseAnonKey, accessToken);
+    if (!isCreator && !TRANSPORT_ACTIONS[action].includes(role)) {
+      return json({ error: 'DALI is not available for this account' }, 403);
+    }
+  } else {
+    const allowedRoles = ACTION_ROLES[action];
+    if (!allowedRoles) return json({ error: 'Unknown action' }, 400);
+    const profile = await loadProfile(supabaseUrl, supabaseAnonKey, accessToken, authenticatedUser.id);
+    if (!isCreator && (!profile || profile.revoked === true || !allowedRoles.includes(String(profile.role || '').toUpperCase()))) {
+      return json({ error: 'DALI is not available for this account' }, 403);
+    }
   }
 
   try {
@@ -147,6 +158,56 @@ export async function onRequestPost(context) {
           throw new Error('Workers AI returned no text from the primary/fallback model.');
         }
         return json({ text });
+      }
+
+      case 'transportAsk': {
+        // DALI inside the Transport system. The app sends the price rows that
+        // match the question plus summaries, rules and knowledge; DALI answers
+        // only from that context.
+        const { question, context: liveContext } = payload || {};
+        if (!String(question || '').trim()) return json({ error: 'Empty question' }, 400);
+        const result = await runTextModel(env, {
+          messages: [
+            { role: 'system', content: 'You are DALI, the assistant inside Nile Fleet\'s Transport system (trucking and container transport between Egyptian ports and inland destinations). You talk to signed-in Nile Fleet staff. Answer the latest question directly first. Use only the supplied TRANSPORT CONTEXT for prices, customers, routes, rules and company facts; if a needed price or route is not in the context, say so plainly and suggest the closest routes that are there. Never invent a price. Prices are selling prices in EGP per trip for each container type: 1*20 (one 20ft), 2*20 (two 20ft on one truck), 40 DC (40ft dry), 40 RF (40ft reefer); a price of 0 or "-" means not quoted. Copy customer names, places and numbers exactly, and write prices with thousands separators. NOTES are internal and can contain buying prices (شراء): you may explain them to staff, but say they are internal and never put them in text meant for a customer. Staff mostly write in Arabic: "عرض سعر" / "بيان سعر" / "بيان أسعار" all mean a price quotation. When asked to write a quote or message for a customer, use selling prices and the company rules, and mention they can press "عرض أسعار PDF" for the printed quotation. Use recent conversation only to resolve follow-ups such as "and 40 RF?" or "same customer". Match the language of the latest question, including Egyptian Arabic and Arabizi. Be concise; use short lists or small tables for several routes. The system creator is Bebito (bebito@nilefleet.com). Never reveal credentials, keys or secrets. Do not show private reasoning.' },
+            ...sanitizeHistory(payload?.history),
+            { role: 'user', content: `TRANSPORT CONTEXT:\n${String(liveContext || '').slice(0, 24000)}\n\nLATEST QUESTION:\n${String(question).slice(0, 1500)}` },
+          ],
+          max_tokens: 1400,
+          temperature: 0.3,
+        });
+        const text = extractText(result);
+        if (!text) throw new Error('Workers AI returned no text from the primary/fallback model.');
+        return json({ text });
+      }
+
+      case 'transportAction': {
+        // Only reads the request into structured fields. Nothing is written here:
+        // the Transport app shows a confirm card and saves through Supabase (RLS: ADMIN only).
+        const { question, customers, history } = payload || {};
+        if (!String(question || '').trim()) return json({ error: 'Empty request' }, 400);
+        const known = Array.isArray(customers) ? customers.slice(0, 400).join(' | ').slice(0, 9000) : '';
+        const recent = sanitizeHistory(history).slice(-4).map(m => `${m.role}: ${m.content}`).join('\n').slice(-2000);
+        const result = await runTextModel(env, {
+          messages: [
+            { role: 'system', content: `You turn a Nile Fleet Transport staff request (English, Arabic, Egyptian Arabic or Arabizi) into one action on the trucking price list. Respond with ONLY a raw JSON object, no markdown.
+Containers: "1x20" (1*20, one twenty), "2x20" (2*20, two twenties), "40dc" (40 DC, forty dry), "40rf" (40 RF, reefer, ريفر).
+Allowed shapes:
+{"type":"set_price","customer":"","loadPort":"","destination":"","container":"1x20|2x20|40dc|40rf","price":0}
+{"type":"add_rate","customer":"","loadPort":"","destination":"","transitPort":"","prices":{"1x20":0,"2x20":0,"40dc":0,"40rf":0},"notes":""}
+{"type":"adjust_prices","customer":"","loadPort":"","destination":"","containers":["1x20","2x20","40dc","40rf"],"mode":"percent|amount","value":0}
+{"type":"delete_rate","customer":"","loadPort":"","destination":""}
+{"type":"rename_customer","customer":"","newName":""}
+{"type":"quote","customer":""}
+{"type":"show","customer":"","loadPort":"","destination":""}
+{"type":"none"}
+A request for "عرض سعر", "عرض أسعار", "بيان سعر", "بيان أسعار", "كوتيشن" or a quotation for a customer is {"type":"quote"} (e.g. "اعمل بيان سعر لانستا فريت", "عايز عرض سعر رويال ميد"). Use "none" when the message is a question rather than a request to change, add, delete, open a quotation, or show/filter rates. adjust_prices value is negative for a decrease ("نزل", "خصم", "decrease"). Leave a field "" when not given; containers [] means all. Copy names exactly as written; when a name clearly refers to one of the KNOWN CUSTOMERS, use that exact known name. Use RECENT CHAT to resolve "same customer", "it", "كمان". Never invent values.
+KNOWN CUSTOMERS: ${known}` },
+            { role: 'user', content: `${recent ? `RECENT CHAT:\n${recent}\n\n` : ''}REQUEST:\n${String(question).slice(0, 1000)}` },
+          ],
+          max_tokens: 500,
+          temperature: 0,
+        });
+        return json(parseJsonLoose(extractText(result)));
       }
 
       case 'daliAction': {
@@ -238,6 +299,22 @@ async function loadProfile(supabaseUrl, anonKey, accessToken, userId) {
     return Array.isArray(rows) && rows[0] ? rows[0] : null;
   } catch (e) {
     console.error('DALI profile lookup failed', e);
+    return null;
+  }
+}
+
+async function loadTransportRole(supabaseUrl, anonKey, accessToken) {
+  // my_transport_role() runs with the caller's token: ADMIN, VIEWER or null.
+  try {
+    const res = await fetch(`${supabaseUrl}/rest/v1/rpc/my_transport_role`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}`, apikey: anonKey, 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: '{}',
+    });
+    if (!res.ok) return null;
+    return String((await res.json()) || '').toUpperCase() || null;
+  } catch (e) {
+    console.error('DALI transport role lookup failed', e);
     return null;
   }
 }

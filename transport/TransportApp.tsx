@@ -6,6 +6,8 @@ import { STRINGS, Lang, Strings } from './i18n';
 import { PRICE_KEYS, PRICE_LABELS, PriceKey, Rate, RateDraft, TransportUser, emptyDraft } from './types';
 import { buildPdfHtml, DEFAULT_SIGNER, DEFAULT_TERMS, exportCsv, exportExcelBranded, exportExcelData, ExportOptions, PdfStyle, whatsappText } from './exports';
 import { parseRateWorkbook } from './importExcel';
+import SheetEditor, { SheetResult } from './SheetEditor';
+import DaliChat from './DaliChat';
 
 const fmt = (n: number) => (n ? n.toLocaleString('en-US') : '—');
 const goHome = () => { window.location.hash = ''; };
@@ -122,6 +124,7 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [toast, setToast] = useState('');
   const [exportFor, setExportFor] = useState<{ rows: Rate[]; customer?: string; style?: Fmt } | null>(null);
+  const [sheetFor, setSheetFor] = useState<{ rows: Rate[]; customer?: string } | null>(null);
   const isAdmin = user.role === 'ADMIN';
 
   useEffect(() => { try { localStorage.setItem('nf_transport_tab', tab); } catch {} }, [tab]);
@@ -133,6 +136,21 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
   useEffect(() => { if (!toast) return; const id = setTimeout(() => setToast(''), 3500); return () => clearTimeout(id); }, [toast]);
 
   const openCustomer = (customer: string) => { setFilters({ ...NO_FILTERS, customer }); setTab('rates'); };
+  const openSheet = (rows: Rate[], customer?: string) => {
+    if (!customer && rows.length > 1500) { setToast(t.sheetTooMany); return; }
+    setSheetFor({ rows: [...rows].sort((a, b) => a.load_port.localeCompare(b.load_port, 'ar') || a.destination.localeCompare(b.destination, 'ar') || a.id - b.id), customer });
+  };
+  const sheetDone = ({ updated, added, deleted }: SheetResult) => {
+    const m = new Map(updated.map(r => [r.id, r]));
+    const gone = new Set(deleted);
+    setRates(list => [...(list || []).filter(r => !gone.has(r.id)).map(r => m.get(r.id) || r), ...added]);
+    setSheetFor(null); setToast(t.saved);
+  };
+  const sheetOptions = useMemo(() => {
+    const uniq = (xs: string[]) => [...new Set(xs.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar'));
+    const list = rates || [];
+    return { customers: uniq(list.map(r => r.customer)), ports: uniq(list.flatMap(r => [r.load_port, r.transit_port])), dests: uniq(list.map(r => r.destination)) };
+  }, [rates]);
   const quoteCustomer = (customer: string) => setExportFor({ rows: (rates || []).filter(r => r.customer === customer), customer, style: 'quote' });
 
   return (
@@ -172,13 +190,16 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
         {loadError && <div role="alert" className="mb-4 rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-bold text-red-800">{t.failed}: {loadError}</div>}
         {rates === null ? <DaliLoader fullScreen label={<span className="text-xs font-bold text-slate-500">{t.loading}</span>} />
           : tab === 'overview' ? <Overview t={t} rates={rates} onCustomer={openCustomer} />
-          : tab === 'customers' ? <Customers t={t} rates={rates} isAdmin={isAdmin} onView={openCustomer} onQuote={quoteCustomer} setRates={setRates} setToast={setToast} />
+          : tab === 'customers' ? <Customers t={t} rates={rates} isAdmin={isAdmin} onView={openCustomer} onQuote={quoteCustomer} onSheet={c => openSheet((rates || []).filter(r => r.customer === c), c)} setRates={setRates} setToast={setToast} />
           : <RatesScreen t={t} lang={lang} rates={rates} setRates={setRates} isAdmin={isAdmin} filters={filters} setFilters={setFilters} setToast={setToast}
-              onExport={(rows, customer) => setExportFor({ rows, customer })} />}
+              onExport={(rows, customer) => setExportFor({ rows, customer })} onSheet={openSheet} />}
       </main>
 
       <DaliSignature tone="light" className="pb-8 pt-4" />
       {exportFor && <ExportDialog t={t} lang={lang} rows={exportFor.rows} customer={exportFor.customer} initial={exportFor.style} onClose={() => setExportFor(null)} setToast={setToast} />}
+      {rates && <DaliChat lang={lang} user={user} rates={rates} isAdmin={isAdmin} setRates={setRates} onQuote={quoteCustomer}
+        onShow={f => { setFilters({ ...NO_FILTERS, ...f }); setTab('rates'); }} />}
+      {sheetFor && <SheetEditor t={t} rows={sheetFor.rows} customer={sheetFor.customer} options={sheetOptions} onClose={() => setSheetFor(null)} onDone={sheetDone} />}
       {toast && <div role="status" className="fixed bottom-5 left-1/2 z-[60] -translate-x-1/2 rounded-full bg-[#07111f] px-5 py-3 text-xs font-bold text-white shadow-xl">{toast}</div>}
     </div>
   );
@@ -266,9 +287,10 @@ const btnGhost = `${btn} border border-[#d9d0c0] bg-white text-[#07111f] hover:b
 interface RatesProps {
   t: Strings; lang: Lang; rates: Rate[]; setRates: React.Dispatch<React.SetStateAction<Rate[] | null>>; isAdmin: boolean;
   filters: Filters; setFilters: (f: Filters) => void; setToast: (s: string) => void; onExport: (rows: Rate[], customer?: string) => void;
+  onSheet: (rows: Rate[], customer?: string) => void;
 }
 
-const RatesScreen: React.FC<RatesProps> = ({ t, rates, setRates, isAdmin, filters: f, setFilters, setToast, onExport }) => {
+const RatesScreen: React.FC<RatesProps> = ({ t, rates, setRates, isAdmin, filters: f, setFilters, setToast, onExport, onSheet }) => {
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: 'customer', dir: 1 });
   const [pageSize, setPageSize] = useState(100);
   const [page, setPage] = useState(0);
@@ -409,6 +431,7 @@ const RatesScreen: React.FC<RatesProps> = ({ t, rates, setRates, isAdmin, filter
         {busy && <DaliLoader size={20} />}
         {isAdmin && <>
           <button className={btnGold} onClick={() => setEditing({ ...emptyDraft(), customer: f.customer, load_port: f.loadPort, transit_port: f.loadPort })}>＋ {t.add}</button>
+          <button className={btnNavy} onClick={() => onSheet(scopeRows, f.customer || undefined)} disabled={!scopeRows.length}>▦ {t.sheetEdit}</button>
           <button className={btnGhost} onClick={() => fileRef.current?.click()} disabled={!!busy}>⇪ {t.importExcel}</button>
           <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" hidden onChange={e => { const file = e.target.files?.[0]; e.target.value = ''; if (file) importFile(file); }} />
           <button className={btnGhost} onClick={() => setAdjusting(true)} disabled={!scopeRows.length}>± {t.adjust}</button>
@@ -594,7 +617,7 @@ const AdjustDialog: React.FC<{ t: Strings; rows: Rate[]; onClose: () => void; on
 
 /* ============================== Customers ============================== */
 
-const Customers: React.FC<{ t: Strings; rates: Rate[]; isAdmin: boolean; onView: (c: string) => void; onQuote: (c: string) => void; setRates: React.Dispatch<React.SetStateAction<Rate[] | null>>; setToast: (s: string) => void }> = ({ t, rates, isAdmin, onView, onQuote, setRates, setToast }) => {
+const Customers: React.FC<{ t: Strings; rates: Rate[]; isAdmin: boolean; onView: (c: string) => void; onQuote: (c: string) => void; onSheet: (c: string) => void; setRates: React.Dispatch<React.SetStateAction<Rate[] | null>>; setToast: (s: string) => void }> = ({ t, rates, isAdmin, onView, onQuote, onSheet, setRates, setToast }) => {
   const [q, setQ] = useState('');
   const [sort, setSort] = useState<'name' | 'routes' | 'updated'>('routes');
   const list = useMemo(() => {
@@ -645,6 +668,7 @@ const Customers: React.FC<{ t: Strings; rates: Rate[]; isAdmin: boolean; onView:
             <div className="mt-4 flex flex-wrap gap-2 pt-1">
               <button onClick={() => onView(c.name)} className={btnGhost}>{t.viewRates}</button>
               <button onClick={() => onQuote(c.name)} className={btnNavy}>⤓ {t.quote}</button>
+              {isAdmin && <button onClick={() => onSheet(c.name)} className={btnGold}>▦ {t.sheetEdit}</button>}
               {isAdmin && <button onClick={() => rename(c.name)} className={`${btn} text-[#8a7350] hover:underline`}>{t.rename}</button>}
             </div>
           </Card>
