@@ -7,6 +7,7 @@ import { PRICE_KEYS, PRICE_LABELS, PriceKey, Rate, RateDraft, TransportUser, emp
 import { buildPdfHtml, DEFAULT_SIGNER, DEFAULT_TERMS, exportCsv, exportExcelBranded, exportExcelData, ExportOptions, PdfStyle, whatsappText } from './exports';
 import { parseRateWorkbook } from './importExcel';
 import SheetEditor, { SheetResult } from './SheetEditor';
+import DaliChat from './DaliChat';
 
 const fmt = (n: number) => (n ? n.toLocaleString('en-US') : '—');
 const goHome = () => { window.location.hash = ''; };
@@ -196,6 +197,8 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
 
       <DaliSignature tone="light" className="pb-8 pt-4" />
       {exportFor && <ExportDialog t={t} lang={lang} rows={exportFor.rows} customer={exportFor.customer} initial={exportFor.style} onClose={() => setExportFor(null)} setToast={setToast} />}
+      {rates && <DaliChat lang={lang} user={user} rates={rates} isAdmin={isAdmin} setRates={setRates} onQuote={quoteCustomer}
+        onShow={f => { setFilters({ ...NO_FILTERS, ...f }); setTab('rates'); }} />}
       {sheetFor && <SheetEditor t={t} rows={sheetFor.rows} customer={sheetFor.customer} options={sheetOptions} onClose={() => setSheetFor(null)} onDone={sheetDone} />}
       {toast && <div role="status" className="fixed bottom-5 left-1/2 z-[60] -translate-x-1/2 rounded-full bg-[#07111f] px-5 py-3 text-xs font-bold text-white shadow-xl">{toast}</div>}
     </div>
