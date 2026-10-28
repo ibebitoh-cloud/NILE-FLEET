@@ -138,6 +138,10 @@ const App: React.FC = () => {
   const [appDataReady, setAppDataReady] = useState(false);
   const loggingInRef = useRef(false);
   const restoreRememberedScreenRef = useRef(false);
+  // Signed-in users can open the public homepage without signing out. Kept in
+  // sessionStorage so a refresh (or coming back from #transport) stays there.
+  const [viewingHome, setViewingHome] = useState(() => sessionStorage.getItem('nf_view_home') === '1');
+  const viewingHomeRef = useRef(viewingHome);
   
   const [theme, setTheme] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem('theme');
@@ -413,6 +417,8 @@ const App: React.FC = () => {
       // dashboard — this is the remembered-screen race fix.
       const screen = rawHash || (user ? localStorage.getItem('nf_last_screen') || homeScreen : homeScreen);
       if (!user) return;
+      // Homepage anchors (#quote, #operations…) are not app screens.
+      if (viewingHomeRef.current) return;
       const rememberedScreen = getRememberedScreen(user);
       const shouldRestoreRemembered = restoreRememberedScreenRef.current;
       const destination = shouldRestoreRemembered && rememberedScreen && permittedScreens.has(rememberedScreen)
@@ -687,8 +693,28 @@ const App: React.FC = () => {
     setUser(null);
     setWelcomeUserName('');
     setShowCompanyHome(true);
+    viewingHomeRef.current = false;
+    setViewingHome(false);
+    sessionStorage.removeItem('nf_view_home');
     localStorage.removeItem('user');
     window.location.hash = '';
+  }, []);
+
+  const openHomePage = useCallback(() => {
+    viewingHomeRef.current = true;
+    setViewingHome(true);
+    sessionStorage.setItem('nf_view_home', '1');
+    window.scrollTo(0, 0);
+  }, []);
+
+  const returnToApp = useCallback(() => {
+    viewingHomeRef.current = false;
+    setViewingHome(false);
+    sessionStorage.removeItem('nf_view_home');
+    // Re-run the screen sync so the URL points back at the user's screen.
+    const screen = localStorage.getItem('nf_last_screen') || '';
+    if (screen && window.location.hash !== `#${screen}`) window.location.hash = screen;
+    else window.dispatchEvent(new HashChangeEvent('hashchange'));
   }, []);
 
   const navigateTo = useCallback((screen: string, id?: string) => {
@@ -731,6 +757,25 @@ const App: React.FC = () => {
             ) : (
               <Login onLogin={handleLogin} onBackToHome={() => setShowCompanyHome(true)} welcomeName={welcomeUserName} />
             )}
+          </Suspense>
+        </ThemeContext>
+      </LanguageContext>
+    );
+  }
+
+  if (viewingHome) {
+    return (
+      <LanguageContext value={languageContextValue}>
+        <ThemeContext value={themeContextValue}>
+          <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#05070a]"><DaliLoader /></div>}>
+            <CompanyHome onGenset={returnToApp} />
+            <button
+              onClick={returnToApp}
+              className="fixed bottom-5 start-5 z-[200] flex items-center gap-2 rounded-full border border-[#C2A378]/60 bg-[#05070a]/90 px-5 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-[#e3c99f] shadow-2xl backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-[#C2A378] hover:text-[#05070a]"
+            >
+              <span>{lang === 'ar' ? '→' : '←'}</span>
+              {lang === 'ar' ? 'العودة إلى عملي' : 'Back to my work'}
+            </button>
           </Suspense>
         </ThemeContext>
       </LanguageContext>
@@ -825,6 +870,7 @@ const App: React.FC = () => {
         <Layout 
           user={user} 
           onLogout={handleLogout} 
+          onGoHome={openHomePage}
           activeScreen={activeScreen} 
           setActiveScreen={setScreenFromLayout}
           openScreens={openScreens}
