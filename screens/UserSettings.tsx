@@ -595,7 +595,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
                             onClick={() => logoInputRef.current?.click()}
                             className="flex flex-col items-center justify-center py-4 px-2 w-full h-full cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-all"
                           >
-                            <img src="/nile-fleet-logo.png" className="h-16 w-16 object-contain mb-2" alt="Nile Fleet default company logo" />
+                            <img src={isDark ? '/nile-fleet-logo-white.png' : '/nile-fleet-logo.png'} className="h-16 w-16 object-contain mb-2" alt="Nile Fleet default company logo" />
                             <span className="text-[10px] font-bold text-blue-600 tracking-tight dark:text-blue-400">{isAr ? 'الشعار الافتراضي نشط — اضغط لاستبداله' : 'Default company logo active — click to replace'}</span>
                             <span className="text-[8px] text-slate-400 mt-0.5">JPEG / PNG / WebP</span>
                           </div>
