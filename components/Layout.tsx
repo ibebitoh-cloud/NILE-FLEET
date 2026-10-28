@@ -23,6 +23,7 @@ import { buildDaliOrganizationContext, isDaliAllowedRole } from '../services/dal
 interface LayoutProps {
   user: User;
   onLogout: () => void;
+  onGoHome: () => void;
   activeScreen: string;
   setActiveScreen: (screen: string) => void;
   openScreens: string[];
@@ -30,7 +31,7 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
-const Layout: React.FC<LayoutProps> = ({ user, onLogout, activeScreen, setActiveScreen, openScreens, onCloseScreen, children }) => {
+const Layout: React.FC<LayoutProps> = ({ user, onLogout, onGoHome, activeScreen, setActiveScreen, openScreens, onCloseScreen, children }) => {
   const { lang, setLang } = useContext(LanguageContext);
   const { theme, setTheme, isMuted, setIsMuted, isDark } = useContext(ThemeContext);
   const t = translations[lang];
@@ -1907,6 +1908,7 @@ I’ll search with you. 🤖`;
             </div>
             {!isSidebarCollapsed && <div className="flex-1 min-w-0 text-start leading-tight"><p className={`text-[8px] font-black ${textSecondary} uppercase`}>{user.role}</p><p className={`text-[10px] font-bold ${textPrimary} truncate uppercase`}>{user.name}</p></div>}
           </div>
+          <button onClick={onGoHome} title={isAr ? 'الصفحة الرئيسية — بدون تسجيل خروج' : 'Home page — stay signed in'} className={`mb-2 w-full px-3 py-2 rounded-lg text-[9px] font-black transition-all border uppercase tracking-widest ${isDark ? 'bg-[#C2A378]/10 hover:bg-[#C2A378] hover:text-[#05070a] text-[#e3c99f] border-[#C2A378]/40' : 'bg-[#C2A378]/10 hover:bg-[#C2A378] hover:text-white text-[#6f5428] border-[#C2A378]/40'}`}>{isSidebarCollapsed ? '⌂' : (isAr ? 'الصفحة الرئيسية' : 'HOME PAGE')}</button>
           <button onClick={onLogout} className={`w-full px-3 py-2 rounded-lg text-[9px] font-black transition-all border uppercase tracking-widest ${isDark ? 'bg-rose-900/20 hover:bg-rose-600 text-rose-100 border-rose-900/50' : 'bg-rose-50 hover:bg-rose-600 text-rose-500 border-rose-100'}`}>{isSidebarCollapsed ? 'OUT' : t.signOut}</button>
         </div>
       </aside>
@@ -1998,6 +2000,13 @@ I’ll search with you. 🤖`;
 
           {/* Persistent Sign Out in Mobile Menu */}
           <div className="mt-4 pt-4 border-t border-white/10">
+             <button 
+              onClick={() => { setIsMobileMenuOpen(false); onGoHome(); }} 
+              className="mb-3 w-full py-5 rounded-2xl bg-[#C2A378]/15 border border-[#C2A378]/50 text-[#e3c99f] font-black uppercase text-xs tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3"
+             >
+                <span>⌂</span>
+                {isAr ? 'الصفحة الرئيسية' : 'HOME PAGE'}
+             </button>
              <button 
               onClick={onLogout} 
               className="w-full py-5 rounded-2xl bg-rose-600/20 border border-rose-600/50 text-rose-500 font-black uppercase text-xs tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3"
