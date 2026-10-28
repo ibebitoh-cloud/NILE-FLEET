@@ -85,7 +85,7 @@ const LoginView: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; 
       <main className="relative z-10 mx-auto grid w-full max-w-5xl flex-1 items-center gap-10 px-5 pb-10 sm:px-10 lg:grid-cols-2">
         <div>
           <div className="flex items-center gap-4">
-            <img src="/nile-fleet-logo.png" alt="Nile Fleet" className="h-16 w-16 object-contain" />
+            <img src="/nile-fleet-logo-white.png" alt="Nile Fleet" className="h-16 w-16 object-contain" />
             <div className="text-4xl font-black italic tracking-tight">NILE <span className="text-[#c2a378]">FLEET</span></div>
           </div>
           <div className="mt-8 text-[11px] font-black uppercase tracking-[.35em] text-[#c2a378]">{t.system}</div>
@@ -158,7 +158,7 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
       <header className="sticky top-0 z-30 border-b border-white/10 bg-[#07111f] text-white">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3 sm:px-6">
           <button onClick={goHome} className="flex items-center gap-3" title={t.backHome}>
-            <img src="/nile-fleet-logo.png" alt="Nile Fleet" className="h-9 w-9 object-contain" />
+            <img src="/nile-fleet-logo-white.png" alt="Nile Fleet" className="h-9 w-9 object-contain" />
             <div className="text-start leading-none">
               <div className="text-lg font-black italic tracking-tight">NILE <span className="text-[#c2a378]">FLEET</span></div>
               <div className="mt-1 text-[9px] font-black uppercase tracking-[.3em] text-white/50">{t.system}</div>

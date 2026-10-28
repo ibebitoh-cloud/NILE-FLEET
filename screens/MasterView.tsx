@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useContext, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useContext, useEffect, useRef, useDeferredValue } from 'react';
 import DaliSignature from '../components/DaliSignature';
 import { db } from '../services/supabaseDb';
 import { Operation, Location, GensetStatus, UserRole, User, CustomerPrice, Invoice, GensetReplacement, hasReadOnlyAccess } from '../types';
@@ -39,6 +39,7 @@ const DEFAULT_COLUMN_WIDTHS: Record<string, number> = {
   invoice: 130
 };
 
+const ROW_BATCH_SIZE = 150;
 const allPorts: string[] = ['DAM', 'ALEX', 'GOUDA', 'SOKHNA', 'SCCT', 'PSD'];
 const STATUS_CYCLE: string[] = ['UNDER OPERATE', 'IN PROGRESS', 'DONE', 'HOLD', 'CANCEL'];
 
@@ -556,6 +557,266 @@ const MultiSelectDropdown = ({ label, options, selected, onChange, isDark }: Mul
   );
 };
 
+interface MasterRowActions {
+  toggleRow: (id: string) => void;
+  updateCell: (op: Operation, field: keyof Operation, val: any) => void;
+  editStart: () => void;
+  editEnd: () => void;
+  toggleScct: (op: Operation) => void;
+  showInvoice: (inv: Invoice) => void;
+  editInvoice: (inv: Invoice) => void;
+  generateInvoice: (bookingNumber: string, customerName: string) => void;
+}
+
+interface MasterRowProps {
+  op: Operation;
+  isSelected: boolean;
+  isContainerDup: boolean;
+  isGensetDup: boolean;
+  gensetRole?: 'OLD' | 'NEW' | 'DUPLICATE';
+  mismatchPort?: Location;
+  bookingInv?: Invoice;
+  isDark: boolean;
+  isAr: boolean;
+  lang: 'en' | 'ar';
+  t: any;
+  isReadOnly: boolean;
+  cellStyles: Record<string, React.CSSProperties>;
+  suggestions: Record<string, string[]>;
+  customerNameKeys: Set<string>;
+  actions: MasterRowActions;
+}
+
+// One Master View row. Memoized so typing in a search box, ticking a checkbox
+// or a db refresh only re-renders the rows whose data actually changed.
+const shallowEqual = (a: any, b: any) => {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  const aKeys = Object.keys(a);
+  if (aKeys.length !== Object.keys(b).length) return false;
+  return aKeys.every(key => a[key] === b[key]);
+};
+
+const MasterRow = React.memo(({ op, isSelected, isContainerDup, isGensetDup, gensetRole, mismatchPort, bookingInv, isDark, isAr, lang, t, isReadOnly, cellStyles, suggestions, customerNameKeys, actions }: MasterRowProps) => {
+  const portBadgeStyle = (loc: Location) => {
+     const style = PORT_STYLING[loc];
+     if (!style) return { className: isDark ? 'bg-slate-900 text-white border-slate-700' : 'bg-white text-slate-900 border-slate-200', style: undefined };
+     if (isDark) return { className: 'border font-black text-[8px] px-2 py-0.5 rounded-md', style: getDarkPortStyle(loc) };
+     return { className: `${style.bg} ${getContrastColor(style.bg, false)} ${style.border} border px-2 py-0.5 rounded-md font-black text-[8px]`, style: undefined };
+  };
+  return (
+    <tr className={`transition-all duration-200 group ${isSelected ? 'selected-row ' + (isDark ? 'bg-blue-900/40 text-white' : 'bg-blue-600 text-white') : (isDark ? 'hover:bg-white/5' : 'hover:bg-blue-50/50')}`}>
+      <td style={cellStyles.checkbox} className={`text-center border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
+        <input type="checkbox" className="rounded bg-transparent border-slate-500" checked={isSelected} onChange={() => actions.toggleRow(op.id)} disabled={isReadOnly} />
+      </td>
+      <td style={cellStyles.bookingNumber} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
+        <EditableCell value={op.bookingNumber} onSave={(val) => actions.updateCell(op, 'bookingNumber', val)} disabled={isReadOnly} isDark={isDark} onEditStart={actions.editStart} onEditEnd={actions.editEnd} className={`font-black ${isSelected ? 'text-white' : op.reviewedByManager ? 'text-emerald-500' : (isDark ? 'text-blue-400' : 'text-blue-600')}`} />
+      </td>
+      <td style={cellStyles.customerName} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
+        <EditableCell value={op.customerName} onSave={(val) => actions.updateCell(op, 'customerName', val)} disabled={isReadOnly} suggestions={suggestions.customers} isDark={isDark} onEditStart={actions.editStart} onEditEnd={actions.editEnd} renderValue={(v) => translateEntity(v, lang)} className={`${isSelected ? 'text-white' : ((op.customerName || '').trim() && !customerNameKeys.has((op.customerName || '').trim().toLowerCase()) ? 'text-red-500 font-black' : (isDark ? 'text-slate-300' : 'text-slate-800'))} font-bold uppercase`} />
+      </td>
+      <td style={cellStyles.trucker} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
+        <EditableCell value={op.trucker} onSave={(val) => actions.updateCell(op, 'trucker', val)} disabled={isReadOnly} isDark={isDark} onEditStart={actions.editStart} onEditEnd={actions.editEnd} renderValue={(v) => translateEntity(v, lang)} className={`${isSelected ? 'text-white' : 'text-slate-500'} font-bold uppercase text-[9px]`} placeholder={t.trucker} />
+      </td>
+      <td style={cellStyles.shipper} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
+        <EditableCell value={op.beneficiaryName} onSave={(val) => actions.updateCell(op, 'beneficiaryName', val)} disabled={isReadOnly} isDark={isDark} onEditStart={actions.editStart} onEditEnd={actions.editEnd} renderValue={(v) => translateEntity(v, lang)} className={`${isSelected ? 'text-white' : 'text-slate-500'} font-bold uppercase text-[9px]`} placeholder={t.shipper} />
+      </td>
+      <td style={cellStyles.clipOnPort} className={`text-center border-r ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
+         <EditableCell 
+            value={op.clipOnPort} 
+            options={allPorts}
+            onSave={(val) => actions.updateCell(op, 'clipOnPort', val)} 
+            disabled={isReadOnly} 
+            isDark={isDark} 
+            renderValue={(v) => <span className={`${portBadgeStyle(v as Location).className} inline-block`} style={portBadgeStyle(v as Location).style}>{translateEntity(v, lang)}</span>}
+         />
+      </td>
+      <td style={cellStyles.clipOffPort} className={`text-center border-r ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
+         <div className="flex flex-col items-center gap-0.5">
+           <EditableCell 
+              value={op.clipOffPort} 
+              options={allPorts}
+              onSave={(val) => actions.updateCell(op, 'clipOffPort', val)} 
+              disabled={isReadOnly} 
+              isDark={isDark} 
+              renderValue={(v) => <span className={`${portBadgeStyle(v as Location).className} inline-block`} style={portBadgeStyle(v as Location).style}>{translateEntity(v, lang)}</span>}
+           />
+
+         </div>
+      </td>
+      <td style={cellStyles.destination} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
+        <EditableCell value={op.destination || ''} onSave={(val) => actions.updateCell(op, 'destination', val)} disabled={isReadOnly} isDark={isDark} className={`${isSelected ? 'text-white' : (isDark ? 'text-slate-300' : 'text-slate-800')} font-bold uppercase text-[9px]`} placeholder={isAr ? 'الوجهة' : 'DESTINATION'} />
+      </td>
+      <td 
+        style={cellStyles.containerNumber} 
+        className={`px-2 border-r transition-all duration-300 ${isContainerDup ? 'bg-red-500 !text-black font-black shadow-md border-2 border-red-700' : isDark ? 'border-slate-800' : 'border-slate-50'}`}
+        title={isContainerDup ? (isAr ? 'تنبيه: رقم الحاوية مكرر في السجل!' : 'WARNING: Duplicate Container Number in manifest!') : undefined}
+      >
+        <div className="flex items-center gap-1">
+          {isContainerDup && <span className="text-[10px] shrink-0">⚠️</span>}
+          <EditableCell value={op.containerNumber} onSave={(val) => actions.updateCell(op, 'containerNumber', val)} disabled={isReadOnly} isDark={isDark} onEditStart={actions.editStart} onEditEnd={actions.editEnd} className={`font-mono font-black ${isContainerDup ? '!text-black font-extrabold' : isSelected ? 'text-white' : (isDark ? 'text-slate-200' : 'text-slate-900')}`} placeholder="CONT#" />
+        </div>
+      </td>
+      <td 
+        style={{ ...cellStyles.gensetNumber, ...(mismatchPort && !isGensetDup ? { color: getDarkPortStyle(mismatchPort as Location).color } : {}) }} 
+        className={`px-2 border-r text-center transition-all duration-200 relative ${isGensetDup
+          ? 'bg-red-700 !text-white font-black shadow-[inset_0_0_0_2px_#fecaca,0_0_18px_rgba(239,68,68,.75)] animate-pulse'
+          : op.clipOffPort === Location.SCCT && op.manualScctClipOff
+            ? (isDark ? 'bg-sky-900/70' : 'bg-sky-100')
+            : isDark ? 'border-slate-800' : 'border-slate-50'}`}
+        title={Boolean(mismatchPort) ? (isAr ? `⚠️ المولد موجود في ${translateEntity(mismatchPort, lang)} بينما المتوقع ${translateEntity(op.status === 'IN PROGRESS' ? op.clipOffPort : op.clipOnPort, lang)}` : `⚠️ GENSET PORT MISMATCH — Stock: ${translateEntity(mismatchPort, lang)} | Expected: ${translateEntity(op.status === 'IN PROGRESS' ? op.clipOffPort : op.clipOnPort, lang)}`) : isGensetDup
+          ? (isAr
+            ? '⚠️ مولد مكرر — القديم هو OLD والجديد هو NEW'
+            : '⚠️ DUPLICATE GENSET — OLD = previous assignment, NEW = latest assignment')
+          : undefined}
+      >
+        {isGensetDup && <div className="absolute inset-0 pointer-events-none border-2 border-red-300 rounded-sm" />}
+        <div className="flex items-center justify-center gap-1.5 relative z-10">
+          {isGensetDup && (
+            <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-black text-white border border-white/80 text-[7px] font-black tracking-widest shadow-lg">
+              {gensetRole === 'OLD'
+                ? (isAr ? 'قديم' : 'OLD')
+                : gensetRole === 'NEW'
+                  ? (isAr ? 'جديد' : 'NEW')
+                  : (isAr ? 'مكرر' : 'DUP')}
+            </span>
+          )}
+          {isGensetDup && <span className="text-[11px] shrink-0">⚠️</span>}
+          <EditableCell value={op.gensetNumber} suggestions={suggestions.gensets} onSave={(val) => actions.updateCell(op, 'gensetNumber', val)} disabled={isReadOnly} onEditStart={actions.editStart} onEditEnd={actions.editEnd} className={`font-black ${isGensetDup ? '!text-white font-extrabold' : isSelected ? 'text-blue-100' : Boolean(mismatchPort) ? '!text-inherit font-extrabold' : 'text-[#C2A378]'}`} placeholder="UNIT" isDark={isDark} onSingleClickAction={op.clipOffPort === Location.SCCT ? () => actions.toggleScct(op) : undefined} />
+        </div>
+      </td>
+      <td style={cellStyles.rate} className={`border-r text-right px-2 font-bold ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
+         <EditableCell 
+            value={op.rate} 
+            type="number"
+            onSave={(val) => actions.updateCell(op, 'rate', val)} 
+            disabled={isReadOnly} 
+            isDark={isDark} 
+            className={`${isSelected ? 'text-white' : (isDark ? 'text-blue-300' : 'text-blue-800')}`} 
+         />
+      </td>
+      <td style={cellStyles.status} className={`border-r text-center ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
+        <select disabled={isReadOnly} className={`px-1.5 py-0.5 rounded font-black text-[7px] shadow-sm outline-none transition-all ${isDark ? 'bg-slate-800 text-[#C2A378] border-slate-700' : 'bg-white text-slate-900 border-slate-200'}`} value={op.status} onChange={(e) => actions.updateCell(op, 'status', e.target.value as any)}>
+          {STATUS_CYCLE.map(s => <option key={s} value={s} className="bg-slate-900 text-white">{translateEntity(s, lang)}</option>)}
+        </select>
+      </td>
+      <td style={cellStyles.operationDate} className={`border-r text-center font-bold px-2 ${isDark ? 'border-slate-800' : 'border-slate-50'} ${isSelected ? 'text-blue-100' : 'text-slate-500'}`}>
+        <EditableCell 
+          value={op.operationDate} 
+          type="date"
+          onSave={(val) => actions.updateCell(op, 'operationDate', val)} 
+          disabled={isReadOnly} 
+          isDark={isDark} 
+          className="font-bold text-center justify-center"
+        />
+      </td>
+      <td style={cellStyles.clipOnDate} className={`border-r text-center font-bold px-2 ${isDark ? 'border-slate-800' : 'border-slate-50'} ${isSelected ? 'bg-blue-900/50' : (isDark ? 'bg-emerald-950/20 text-emerald-400' : 'bg-emerald-600/10')}`}>
+        <EditableCell 
+          value={op.clipOnDate || ''} 
+          type="date"
+          onSave={(val) => actions.updateCell(op, 'clipOnDate', val)} 
+          disabled={isReadOnly} 
+          isDark={isDark} 
+          className="font-bold text-center justify-center"
+          placeholder="---"
+        />
+      </td>
+      <td style={cellStyles.commodity} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
+        <EditableCell 
+          value={op.commodity || ''} 
+          suggestions={suggestions.commodities} 
+          onSave={(val) => actions.updateCell(op, 'commodity', val.toUpperCase())} 
+          disabled={isReadOnly} 
+          isDark={isDark} 
+          className={`${isSelected ? 'text-white' : (isDark ? 'text-amber-300' : 'text-amber-800')} font-bold uppercase text-[9px]`} 
+          placeholder={isAr ? 'البضاعة' : 'COMMODITY'} 
+        />
+      </td>
+      <td style={cellStyles.clipperName} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
+        <EditableCell 
+          value={op.clipperName || ''} 
+          suggestions={suggestions.clippers} 
+          onSave={(val) => actions.updateCell(op, 'clipperName', val)} 
+          disabled={isReadOnly} 
+          isDark={isDark} 
+          className={`${isSelected ? 'text-white' : (isDark ? 'text-emerald-400' : 'text-emerald-700')} font-bold uppercase text-[9px]`} 
+          placeholder={isAr ? 'فني التركيب' : 'CLIPPER'} 
+        />
+      </td>
+      <td style={cellStyles.notes} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
+        <EditableCell value={op.notes || ''} onSave={(val) => actions.updateCell(op, 'notes', val)} disabled={isReadOnly} isDark={isDark} className={`${isSelected ? 'text-white/60' : 'text-slate-400'} italic`} />
+      </td>
+      <td style={cellStyles.gas} className={`px-2 border-r text-center ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
+        <EditableCell
+          value={String(op.gaz ?? '')}
+          type="number"
+          onSave={(value) => actions.updateCell(op, 'gaz', value)}
+          disabled={isReadOnly}
+          isDark={isDark}
+          onEditStart={actions.editStart}
+          onEditEnd={actions.editEnd}
+          className={`font-black ${isSelected ? 'text-white' : 'text-cyan-600 dark:text-cyan-300'}`}
+          placeholder="0"
+        />
+      </td>
+      <td style={cellStyles.invoice} className={`px-2 border-r text-center ${isDark ? 'border-slate-800 border-white/5' : 'border-slate-100'} text-xs font-bold`}>
+        {(() => {
+                                        if (bookingInv) {
+            return (
+              <div className="flex items-center justify-center gap-1.5">
+                <button 
+                  onClick={() => actions.showInvoice(bookingInv)} 
+                  title={isAr ? "عرض الفاتورة" : "Show Invoice"}
+                  className="p-1 px-1.5 rounded bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 text-[9px] transition-all"
+                >
+                  👁️ {isAr ? "عرض" : "Show"}
+                </button>
+                <button 
+                  onClick={() => actions.editInvoice(bookingInv)} 
+                  title={isAr ? "تعديل الفاتورة" : "Edit Invoice Details"}
+                  className="p-1 px-1.5 rounded bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 text-[9px] transition-all"
+                >
+                  ✏️ {isAr ? "تعديل" : "Edit"}
+                </button>
+                <button 
+                  onClick={() => {
+                    actions.showInvoice(bookingInv);
+                    setTimeout(() => {
+                      window.print();
+                    }, 300);
+                  }} 
+                  title={isAr ? "طباعة / تحميل PDF" : "Print / PDF"}
+                  className="p-1 px-1.5 rounded bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 text-[9px] transition-all"
+                >
+                  📥 {isAr ? "ملف" : "PDF"}
+                </button>
+              </div>
+            );
+          } else {
+            return (
+              <button 
+                onClick={() => actions.generateInvoice(op.bookingNumber, op.customerName)} 
+                className="px-2 py-1 text-[8px] font-black uppercase tracking-wider rounded bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition-all"
+              >
+                + {isAr ? 'إصدار فاتورة' : 'Issue Invoice'}
+              </button>
+            );
+          }
+        })()}
+      </td>
+    </tr>
+  );
+}, (prev, next) => {
+  // A db refresh hands back fresh objects for every row, so compare row data
+  // field by field instead of by identity.
+  for (const key of Object.keys(next) as (keyof MasterRowProps)[]) {
+    if (key === 'op' || key === 'bookingInv') {
+      if (!shallowEqual(prev[key], next[key])) return false;
+    } else if (prev[key] !== next[key]) return false;
+  }
+  return true;
+});
+
 const MasterView: React.FC = () => {
   const { lang } = useContext(LanguageContext);
   const { theme, isDark } = useContext(ThemeContext);
@@ -568,8 +829,8 @@ const MasterView: React.FC = () => {
   const canExport = currentUser.permissions?.canExport !== false;
 
   const [operations, setOperations] = useState<Operation[]>(db.getOperations());
-  const [searchTerm, setSearchTerm] = useState('');
-  const [columnSearches, setColumnSearches] = useState<Record<string, string>>({});
+  const [searchInput, setSearchInput] = useState('');
+  const [columnSearchInputs, setColumnSearchInputs] = useState<Record<string, string>>({});
   const [selectedPorts, setSelectedPorts] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [dateFilter, setDateFilter] = useState<DateFilterConfig>({
@@ -714,6 +975,12 @@ const MasterView: React.FC = () => {
 
   const gensetPortMismatchByOperationId = useMemo(() => {
     const mismatches = new Map<string, Location>();
+    // Index stock once instead of scanning it for every operation.
+    const stockByUnit = new Map<string, ReturnType<typeof db.getStock>[number]>();
+    db.getStock().forEach(item => {
+      const unit = item.unitNumber?.trim().toUpperCase();
+      if (unit && !stockByUnit.has(unit)) stockByUnit.set(unit, item);
+    });
     operations.forEach(op => {
       // While an operation is active, the genset is expected at the physical
       // clip-off/destination port. Before it is in progress, the clip-on port
@@ -722,19 +989,13 @@ const MasterView: React.FC = () => {
       const opPort = expectedPort?.trim().toUpperCase();
       const gen = op.gensetNumber?.trim().toUpperCase();
       if (!opPort || !gen || opPort === '---' || opPort === 'N/A' || opPort === 'NONE') return;
-      const stockGenset = db.getStock().find(item => item.unitNumber?.trim().toUpperCase() === gen);
+      const stockGenset = stockByUnit.get(gen);
       const stockPort = stockGenset?.location?.toString().trim().toUpperCase();
       if (stockPort && stockPort !== opPort && Object.values(Location).includes(stockPort as Location)) {
         mismatches.set(op.id, stockPort as Location);
       }
     });
     return mismatches;
-  }, [operations]);
-
-  const replacementsByOperationId = useMemo(() => {
-    const map = new Map<string, GensetReplacement>();
-    db.getGensetReplacements().forEach(record => map.set(record.operationId, record));
-    return map;
   }, [operations]);
 
   const duplicateActiveGensets = useMemo(() => {
@@ -909,6 +1170,12 @@ const MasterView: React.FC = () => {
   };
 
   const [invoices, setInvoices] = useState<Invoice[]>(() => db.getInvoices());
+  // First invoice per booking, same as invoices.find(...) but without a scan per row.
+  const invoiceByBooking = useMemo(() => {
+    const map = new Map<string, Invoice>();
+    invoices.forEach(inv => { if (!map.has(inv.bookingNumber)) map.set(inv.bookingNumber, inv); });
+    return map;
+  }, [invoices]);
 
   // Track whether a cell is currently being edited inline. Refreshes triggered
   // by db-change events skip the state update while an edit is in progress so
@@ -1217,7 +1484,7 @@ const MasterView: React.FC = () => {
     }
   };
 
-  const systemSuggestions = useMemo(() => {
+  const freshSuggestions = useMemo(() => {
     const customerNames = Array.from(new Set(
       db.getUsers().filter(u => u.role === UserRole.CUSTOMER).map(u => (u.companyName || u.name || '').trim()).filter(Boolean)
     )) as string[];
@@ -1232,6 +1499,16 @@ const MasterView: React.FC = () => {
     };
     return suggestions;
   }, [operations]);
+  // Keep the same object while the lists are unchanged, so a db refresh does
+  // not force every memoized row to re-render.
+  const suggestionsRef = useRef(freshSuggestions);
+  const prevSuggestions = suggestionsRef.current;
+  if (prevSuggestions !== freshSuggestions && Object.keys(freshSuggestions).some(key =>
+    (prevSuggestions[key]?.length ?? -1) !== freshSuggestions[key].length ||
+    freshSuggestions[key].some((value, index) => value !== prevSuggestions[key][index]))) {
+    suggestionsRef.current = freshSuggestions;
+  }
+  const systemSuggestions = suggestionsRef.current;
 
   // Keep this outside the suggestions useMemo so the customer validation
   // set is available to the table renderer on every render.
@@ -1262,16 +1539,23 @@ const MasterView: React.FC = () => {
         return String(op.gaz ?? '');
 
       case 'invoice': {
-        const invoice = invoices.find(inv => inv.bookingNumber === op.bookingNumber);
+        const invoice = invoiceByBooking.get(op.bookingNumber);
         return invoice ? `${invoice.id} ${invoice.status} ${invoice.etaStatus || ''} ${invoice.amount ?? ''}` : '';
       }
       default: return '';
     }
   };
 
+  // Filter on deferred copies so typing stays instant on large manifests.
+  const searchTerm = useDeferredValue(searchInput);
+  const columnSearches = useDeferredValue(columnSearchInputs);
+
   const filteredAndSortedOps = useMemo(() => {
-    let result = [...operations].filter(op => {
-      const searchStr = searchTerm.toLowerCase();
+    const searchStr = searchTerm.toLowerCase();
+    const activeColumnSearches = Object.entries(columnSearches)
+      .map(([key, query]) => [key, String(query ?? '').trim().toLowerCase()] as const)
+      .filter(([, query]) => query);
+    let result = operations.filter(op => {
       const matchesSearch = (op.bookingNumber || '').toLowerCase().includes(searchStr) || 
                             (op.customerName || '').toLowerCase().includes(searchStr) || 
                             (op.containerNumber || '').toLowerCase().includes(searchStr) ||
@@ -1279,11 +1563,8 @@ const MasterView: React.FC = () => {
                             (op.clipperName && op.clipperName.toLowerCase().includes(searchStr)) ||
                             (op.trucker && op.trucker.toLowerCase().includes(searchStr)) ||
                             (op.beneficiaryName && op.beneficiaryName.toLowerCase().includes(searchStr));
-      const matchesColumnSearches = Object.entries(columnSearches).every(([key, query]) => {
-        const normalizedQuery = String(query ?? '').trim().toLowerCase();
-        if (!normalizedQuery) return true;
-        return getColumnSearchValue(op, key).toLowerCase().includes(normalizedQuery);
-      });
+      const matchesColumnSearches = activeColumnSearches.every(([key, normalizedQuery]) =>
+        getColumnSearchValue(op, key).toLowerCase().includes(normalizedQuery));
       const matchesPorts = selectedPorts.length === 0 || selectedPorts.includes(op.clipOnPort as string);
       const matchesStatuses = selectedStatuses.length === 0 || selectedStatuses.includes(op.status as string);
       
@@ -1344,7 +1625,7 @@ const MasterView: React.FC = () => {
     }
     rowOrderRef.current = { key: viewKey, ids: result.map(op => op.id) };
     return result;
-  }, [operations, searchTerm, columnSearches, selectedPorts, selectedStatuses, dateFilter, sortConfig, invoices, lang]);
+  }, [operations, searchTerm, columnSearches, selectedPorts, selectedStatuses, dateFilter, sortConfig, invoiceByBooking, lang]);
 
   const handleToggleManualScctClipOff = async (op: Operation) => {
     if (isReadOnly || op.clipOffPort !== Location.SCCT) return;
@@ -1427,7 +1708,6 @@ const MasterView: React.FC = () => {
       isAr ? 'البضاعة' : 'COMMODITY', isAr ? 'فني التركيب' : 'CLIPPER ON',
       t.notes, isAr ? 'الوقود (لتر)' : 'GAS (L)', isAr ? 'فاتورة الحجز' : 'BOOKING INVOICE'
     ];
-    const invoiceByBooking = new Map<string, Invoice>(invoices.map(invoice => [invoice.bookingNumber, invoice]));
     const exportRows = filteredAndSortedOps.map((op, index) => {
       const invoice = invoiceByBooking.get(op.bookingNumber);
       return [
@@ -1590,7 +1870,73 @@ const MasterView: React.FC = () => {
     };
   }, [masterScrollWidth]);
 
-  const dynamicCellStyle = { paddingTop: `${viewPrefs.density}px`, paddingBottom: `${viewPrefs.density}px` };
+  const rowCellStyles = useMemo(() => {
+    const styles: Record<string, React.CSSProperties> = {};
+    Object.keys(DEFAULT_COLUMN_WIDTHS).forEach(key => {
+      styles[key] = { paddingTop: `${viewPrefs.density}px`, paddingBottom: `${viewPrefs.density}px`, ...getColStyle(key) };
+    });
+    return styles;
+  }, [colWidths, viewPrefs.density]);
+
+  // Stable callbacks for memoized rows; they always call the latest handlers.
+  const rowHandlersRef = useRef<MasterRowActions | null>(null);
+  rowHandlersRef.current = {
+    toggleRow: (id: string) => setSelectedRowIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    }),
+    updateCell: handleUpdateCell,
+    editStart: onCellEditStart,
+    editEnd: onCellEditEnd,
+    toggleScct: handleToggleManualScctClipOff,
+    showInvoice: setSelectedInvoice,
+    editInvoice: handleOpenEditInvoice,
+    generateInvoice: handleQuickGenerateInvoice
+  };
+  const rowActions = useMemo<MasterRowActions>(() => ({
+    toggleRow: id => rowHandlersRef.current!.toggleRow(id),
+    updateCell: (op, field, val) => rowHandlersRef.current!.updateCell(op, field, val),
+    editStart: () => rowHandlersRef.current!.editStart(),
+    editEnd: () => rowHandlersRef.current!.editEnd(),
+    toggleScct: op => rowHandlersRef.current!.toggleScct(op),
+    showInvoice: inv => rowHandlersRef.current!.showInvoice(inv),
+    editInvoice: inv => rowHandlersRef.current!.editInvoice(inv),
+    generateInvoice: (bookingNumber, customerName) => rowHandlersRef.current!.generateInvoice(bookingNumber, customerName)
+  }), []);
+
+  const opsByStatus = useMemo(() => {
+    const groups = new Map<string, Operation[]>();
+    filteredAndSortedOps.forEach(op => {
+      const group = groups.get(op.status);
+      if (group) group.push(op);
+      else groups.set(op.status, [op]);
+    });
+    return groups;
+  }, [filteredAndSortedOps]);
+  const expandedRowCount = STATUS_CYCLE.reduce((sum, status) =>
+    sum + (collapsedStatusGroups.has(status) ? 0 : opsByStatus.get(status)?.length || 0), 0);
+
+  // Mount rows in batches as the user scrolls toward them, so the screen
+  // opens right away on large manifests instead of building every row first.
+  // Search, filters, select-all and export still work on all rows.
+  const [rowRenderLimit, setRowRenderLimit] = useState(ROW_BATCH_SIZE);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const sentinel = loadMoreRef.current;
+    if (!sentinel || rowRenderLimit >= expandedRowCount) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setRowRenderLimit(expandedRowCount);
+      return;
+    }
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) setRowRenderLimit(limit => limit + ROW_BATCH_SIZE);
+    }, { rootMargin: '1500px 0px' });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [rowRenderLimit, expandedRowCount]);
+  let rowsLeftToRender = rowRenderLimit;
   const globalScaleStyle = { fontSize: `${(viewPrefs.scale / 100) * 10}px` };
 
   return (
@@ -1601,8 +1947,8 @@ const MasterView: React.FC = () => {
             type="text" 
             placeholder={isAr ? 'بحث في السجل التشغيلي...' : 'Operational manifest lookup...'} 
             className={`w-full ${isAr ? 'pr-9 pl-3 text-right' : 'pl-9 pr-3 text-left'} py-2 border-2 rounded-xl font-bold outline-none focus:border-blue-400 shadow-inner transition-all ${isDark ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-transparent text-black'}`} 
-            value={searchTerm} 
-            onChange={(e) => setSearchTerm(e.target.value)} 
+            value={searchInput} 
+            onChange={(e) => setSearchInput(e.target.value)} 
           />
           <svg className={`absolute ${isAr ? 'right-3' : 'left-3'} top-2.5 h-4 w-4 text-slate-400`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
         </div>
@@ -1659,7 +2005,9 @@ const MasterView: React.FC = () => {
 
       <div className={`rounded-3xl shadow-xl border overflow-hidden w-full ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'}`}>
         <div ref={masterScrollRef} className="overflow-x-auto overflow-y-visible">
-          <table className={`w-full ${isAr ? 'text-right' : 'text-left'} whitespace-nowrap border-collapse`}>
+          {/* Fixed layout: columns already have set widths, and it saves the browser
+              from re-measuring every cell whenever a row changes. */}
+          <table className={`w-full ${isAr ? 'text-right' : 'text-left'} whitespace-nowrap border-collapse`} style={{ tableLayout: 'fixed' }}>
             <thead className={`text-white font-black uppercase tracking-widest sticky top-0 z-40 text-[9px] ${isDark ? 'bg-[#001224]' : 'bg-[#3a3833]'}`}>
               <tr>
                 <th style={getColStyle('checkbox')} className="p-2 text-center border-r border-white/5 relative">
@@ -1727,14 +2075,14 @@ const MasterView: React.FC = () => {
               <tr className={isDark ? 'bg-[#001224]' : 'bg-[#3a3833]'}>
                 <th className="p-1 border-r border-white/10" />
                 {['bookingNumber','customerName','trucker','shipper','clipOnPort','clipOffPort','destination','containerNumber','gensetNumber','rate','status','operationDate','clipOnDate','commodity','clipperName','notes','gas','invoice'].map(key => {
-                  const value = columnSearches[key] || '';
+                  const value = columnSearchInputs[key] || '';
                   return (
                     <th key={key} className="p-1 border-r border-white/10">
                       <div className="relative">
                         <input
                           type="search"
                           value={value}
-                          onChange={e => setColumnSearches(prev => ({ ...prev, [key]: e.target.value }))}
+                          onChange={e => setColumnSearchInputs(prev => ({ ...prev, [key]: e.target.value }))}
                           onClick={e => e.stopPropagation()}
                           onKeyDown={e => e.stopPropagation()}
                           placeholder={isAr ? 'بحث...' : 'Search...'}
@@ -1744,7 +2092,7 @@ const MasterView: React.FC = () => {
                         {value && (
                           <button
                             type="button"
-                            onClick={() => setColumnSearches(prev => ({ ...prev, [key]: '' }))}
+                            onClick={() => setColumnSearchInputs(prev => ({ ...prev, [key]: '' }))}
                             className="absolute right-1 top-1/2 -translate-y-1/2 text-[8px] font-black text-slate-400 hover:text-red-500"
                             title={isAr ? 'مسح البحث' : 'Clear search'}
                           >✕</button>
@@ -1757,8 +2105,11 @@ const MasterView: React.FC = () => {
             </thead>
             <tbody className={`divide-y ${isDark ? 'divide-slate-800' : 'divide-slate-100'}`}>
               {STATUS_CYCLE.map(status => {
-                const group = filteredAndSortedOps.filter(o => o.status === status);
+                const group = opsByStatus.get(status) || [];
                 if (group.length === 0) return null;
+                const isCollapsed = collapsedStatusGroups.has(status);
+                const visibleRows = isCollapsed ? [] : group.slice(0, Math.max(0, rowsLeftToRender));
+                if (!isCollapsed) rowsLeftToRender -= visibleRows.length;
                 return (
                   <React.Fragment key={status}>
                     <tr className={`sticky z-30 shadow-sm ${isDark ? 'bg-slate-900' : 'bg-slate-100'}`} style={{ top: '35px' }}>
@@ -1771,228 +2122,28 @@ const MasterView: React.FC = () => {
                         </button>
                       </td>
                     </tr>
-                    {!collapsedStatusGroups.has(status) && group.map((op) => {
-                      const isSelected = selectedRowIds.has(op.id);
-                      const isContainerDup = Boolean(op.containerNumber?.trim() && duplicateContainerNumbers.has(op.containerNumber.trim().toUpperCase()));
-                      const isGensetDup = Boolean(
-                        op.status === 'IN PROGRESS' &&
-                        op.gensetNumber?.trim() &&
-                        duplicateActiveGensets.has(op.gensetNumber.trim().toUpperCase())
-                      );
-
-                      const portBadgeStyle = (loc: Location) => {
-                         const style = PORT_STYLING[loc];
-                         if (!style) return { className: isDark ? 'bg-slate-900 text-white border-slate-700' : 'bg-white text-slate-900 border-slate-200', style: undefined };
-                         if (isDark) return { className: 'border font-black text-[8px] px-2 py-0.5 rounded-md backdrop-blur-sm', style: getDarkPortStyle(loc) };
-                         return { className: `${style.bg} ${getContrastColor(style.bg, false)} ${style.border} border px-2 py-0.5 rounded-md font-black text-[8px]`, style: undefined };
-                      };
+                    {visibleRows.map((op) => {
+                      const gen = op.gensetNumber?.trim().toUpperCase();
                       return (
-                        <tr key={op.id} className={`transition-all duration-200 group ${isSelected ? 'selected-row ' + (isDark ? 'bg-blue-900/40 text-white' : 'bg-blue-600 text-white') : (isDark ? 'hover:bg-white/5' : 'hover:bg-blue-50/50')}`}>
-                          <td style={{ ...dynamicCellStyle, ...getColStyle('checkbox') }} className={`text-center border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
-                            <input type="checkbox" className="rounded bg-transparent border-slate-500" checked={isSelected} onChange={() => {
-                                const newSet = new Set(selectedRowIds);
-                                if (newSet.has(op.id)) newSet.delete(op.id);
-                                else newSet.add(op.id);
-                                setSelectedRowIds(newSet);
-                              }} disabled={isReadOnly} />
-                          </td>
-                          <td style={{ ...dynamicCellStyle, ...getColStyle('bookingNumber') }} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
-                            <EditableCell value={op.bookingNumber} onSave={(val) => handleUpdateCell(op, 'bookingNumber', val)} disabled={isReadOnly} isDark={isDark} onEditStart={onCellEditStart} onEditEnd={onCellEditEnd} className={`font-black ${isSelected ? 'text-white' : op.reviewedByManager ? 'text-emerald-500' : (isDark ? 'text-blue-400' : 'text-blue-600')}`} />
-                          </td>
-                          <td style={{ ...dynamicCellStyle, ...getColStyle('customerName') }} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
-                            <EditableCell value={op.customerName} onSave={(val) => handleUpdateCell(op, 'customerName', val)} disabled={isReadOnly} suggestions={systemSuggestions.customers} isDark={isDark} onEditStart={onCellEditStart} onEditEnd={onCellEditEnd} renderValue={(v) => translateEntity(v, lang)} className={`${isSelected ? 'text-white' : ((op.customerName || '').trim() && !customerNameKeys.has((op.customerName || '').trim().toLowerCase()) ? 'text-red-500 font-black' : (isDark ? 'text-slate-300' : 'text-slate-800'))} font-bold uppercase`} />
-                          </td>
-                          <td style={{ ...dynamicCellStyle, ...getColStyle('trucker') }} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
-                            <EditableCell value={op.trucker} onSave={(val) => handleUpdateCell(op, 'trucker', val)} disabled={isReadOnly} isDark={isDark} onEditStart={onCellEditStart} onEditEnd={onCellEditEnd} renderValue={(v) => translateEntity(v, lang)} className={`${isSelected ? 'text-white' : 'text-slate-500'} font-bold uppercase text-[9px]`} placeholder={t.trucker} />
-                          </td>
-                          <td style={{ ...dynamicCellStyle, ...getColStyle('shipper') }} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
-                            <EditableCell value={op.beneficiaryName} onSave={(val) => handleUpdateCell(op, 'beneficiaryName', val)} disabled={isReadOnly} isDark={isDark} onEditStart={onCellEditStart} onEditEnd={onCellEditEnd} renderValue={(v) => translateEntity(v, lang)} className={`${isSelected ? 'text-white' : 'text-slate-500'} font-bold uppercase text-[9px]`} placeholder={t.shipper} />
-                          </td>
-                          <td style={{ ...dynamicCellStyle, ...getColStyle('clipOnPort') }} className={`text-center border-r ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
-                             <EditableCell 
-                                value={op.clipOnPort} 
-                                options={allPorts}
-                                onSave={(val) => handleUpdateCell(op, 'clipOnPort', val)} 
-                                disabled={isReadOnly} 
-                                isDark={isDark} 
-                                renderValue={(v) => <span className={`${portBadgeStyle(v as Location).className} inline-block`} style={portBadgeStyle(v as Location).style}>{translateEntity(v, lang)}</span>}
-                             />
-                          </td>
-                          <td style={{ ...dynamicCellStyle, ...getColStyle('clipOffPort') }} className={`text-center border-r ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
-                             <div className="flex flex-col items-center gap-0.5">
-                               <EditableCell 
-                                  value={op.clipOffPort} 
-                                  options={allPorts}
-                                  onSave={(val) => handleUpdateCell(op, 'clipOffPort', val)} 
-                                  disabled={isReadOnly} 
-                                  isDark={isDark} 
-                                  renderValue={(v) => <span className={`${portBadgeStyle(v as Location).className} inline-block`} style={portBadgeStyle(v as Location).style}>{translateEntity(v, lang)}</span>}
-                               />
-
-                             </div>
-                          </td>
-                          <td style={{ ...dynamicCellStyle, ...getColStyle('destination') }} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
-                            <EditableCell value={op.destination || ''} onSave={(val) => handleUpdateCell(op, 'destination', val)} disabled={isReadOnly} isDark={isDark} className={`${isSelected ? 'text-white' : (isDark ? 'text-slate-300' : 'text-slate-800')} font-bold uppercase text-[9px]`} placeholder={isAr ? 'الوجهة' : 'DESTINATION'} />
-                          </td>
-                          <td 
-                            style={{ ...dynamicCellStyle, ...getColStyle('containerNumber') }} 
-                            className={`px-2 border-r transition-all duration-300 ${isContainerDup ? 'bg-red-500 !text-black font-black shadow-md border-2 border-red-700' : isDark ? 'border-slate-800' : 'border-slate-50'}`}
-                            title={isContainerDup ? (isAr ? 'تنبيه: رقم الحاوية مكرر في السجل!' : 'WARNING: Duplicate Container Number in manifest!') : undefined}
-                          >
-                            <div className="flex items-center gap-1">
-                              {isContainerDup && <span className="text-[10px] shrink-0">⚠️</span>}
-                              <EditableCell value={op.containerNumber} onSave={(val) => handleUpdateCell(op, 'containerNumber', val)} disabled={isReadOnly} isDark={isDark} onEditStart={onCellEditStart} onEditEnd={onCellEditEnd} className={`font-mono font-black ${isContainerDup ? '!text-black font-extrabold' : isSelected ? 'text-white' : (isDark ? 'text-slate-200' : 'text-slate-900')}`} placeholder="CONT#" />
-                            </div>
-                          </td>
-                          <td 
-                            style={{ ...dynamicCellStyle, ...getColStyle('gensetNumber'), ...(gensetPortMismatchByOperationId.get(op.id) && !isGensetDup ? { color: getDarkPortStyle(gensetPortMismatchByOperationId.get(op.id) as Location).color } : {}) }} 
-                            className={`px-2 border-r text-center transition-all duration-200 relative ${isGensetDup
-                              ? 'bg-red-700 !text-white font-black shadow-[inset_0_0_0_2px_#fecaca,0_0_18px_rgba(239,68,68,.75)] animate-pulse'
-                              : op.clipOffPort === Location.SCCT && op.manualScctClipOff
-                                ? (isDark ? 'bg-sky-900/70' : 'bg-sky-100')
-                                : isDark ? 'border-slate-800' : 'border-slate-50'}`}
-                            title={gensetPortMismatchByOperationId.has(op.id) ? (isAr ? `⚠️ المولد موجود في ${translateEntity(gensetPortMismatchByOperationId.get(op.id), lang)} بينما المتوقع ${translateEntity(op.status === 'IN PROGRESS' ? op.clipOffPort : op.clipOnPort, lang)}` : `⚠️ GENSET PORT MISMATCH — Stock: ${translateEntity(gensetPortMismatchByOperationId.get(op.id), lang)} | Expected: ${translateEntity(op.status === 'IN PROGRESS' ? op.clipOffPort : op.clipOnPort, lang)}`) : isGensetDup
-                              ? (isAr
-                                ? '⚠️ مولد مكرر — القديم هو OLD والجديد هو NEW'
-                                : '⚠️ DUPLICATE GENSET — OLD = previous assignment, NEW = latest assignment')
-                              : undefined}
-                          >
-                            {isGensetDup && <div className="absolute inset-0 pointer-events-none border-2 border-red-300 rounded-sm" />}
-                            <div className="flex items-center justify-center gap-1.5 relative z-10">
-                              {isGensetDup && (
-                                <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-black text-white border border-white/80 text-[7px] font-black tracking-widest shadow-lg">
-                                  {duplicateGensetRoleByOperationId.get(op.id) === 'OLD'
-                                    ? (isAr ? 'قديم' : 'OLD')
-                                    : duplicateGensetRoleByOperationId.get(op.id) === 'NEW'
-                                      ? (isAr ? 'جديد' : 'NEW')
-                                      : (isAr ? 'مكرر' : 'DUP')}
-                                </span>
-                              )}
-                              {isGensetDup && <span className="text-[11px] shrink-0">⚠️</span>}
-                              <EditableCell value={op.gensetNumber} suggestions={systemSuggestions.gensets} onSave={(val) => handleUpdateCell(op, 'gensetNumber', val)} disabled={isReadOnly} onEditStart={onCellEditStart} onEditEnd={onCellEditEnd} className={`font-black ${isGensetDup ? '!text-white font-extrabold' : isSelected ? 'text-blue-100' : gensetPortMismatchByOperationId.has(op.id) ? '!text-inherit font-extrabold' : 'text-[#C2A378]'}`} placeholder="UNIT" isDark={isDark} onSingleClickAction={op.clipOffPort === Location.SCCT ? () => handleToggleManualScctClipOff(op) : undefined} />
-                            </div>
-                          </td>
-                          <td style={{ ...dynamicCellStyle, ...getColStyle('rate') }} className={`border-r text-right px-2 font-bold ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
-                             <EditableCell 
-                                value={op.rate} 
-                                type="number"
-                                onSave={(val) => handleUpdateCell(op, 'rate', val)} 
-                                disabled={isReadOnly} 
-                                isDark={isDark} 
-                                className={`${isSelected ? 'text-white' : (isDark ? 'text-blue-300' : 'text-blue-800')}`} 
-                             />
-                          </td>
-                          <td style={{ ...dynamicCellStyle, ...getColStyle('status') }} className={`border-r text-center ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
-                            <select disabled={isReadOnly} className={`px-1.5 py-0.5 rounded font-black text-[7px] shadow-sm outline-none transition-all ${isDark ? 'bg-slate-800 text-[#C2A378] border-slate-700' : 'bg-white text-slate-900 border-slate-200'}`} value={op.status} onChange={(e) => handleUpdateCell(op, 'status', e.target.value as any)}>
-                              {STATUS_CYCLE.map(s => <option key={s} value={s} className="bg-slate-900 text-white">{translateEntity(s, lang)}</option>)}
-                            </select>
-                          </td>
-                          <td style={{ ...dynamicCellStyle, ...getColStyle('operationDate') }} className={`border-r text-center font-bold px-2 ${isDark ? 'border-slate-800' : 'border-slate-50'} ${isSelected ? 'text-blue-100' : 'text-slate-500'}`}>
-                            <EditableCell 
-                              value={op.operationDate} 
-                              type="date"
-                              onSave={(val) => handleUpdateCell(op, 'operationDate', val)} 
-                              disabled={isReadOnly} 
-                              isDark={isDark} 
-                              className="font-bold text-center justify-center"
-                            />
-                          </td>
-                          <td style={{ ...dynamicCellStyle, ...getColStyle('clipOnDate') }} className={`border-r text-center font-bold px-2 ${isDark ? 'border-slate-800' : 'border-slate-50'} ${isSelected ? 'bg-blue-900/50' : (isDark ? 'bg-emerald-950/20 text-emerald-400' : 'bg-emerald-600/10')}`}>
-                            <EditableCell 
-                              value={op.clipOnDate || ''} 
-                              type="date"
-                              onSave={(val) => handleUpdateCell(op, 'clipOnDate', val)} 
-                              disabled={isReadOnly} 
-                              isDark={isDark} 
-                              className="font-bold text-center justify-center"
-                              placeholder="---"
-                            />
-                          </td>
-                          <td style={{ ...dynamicCellStyle, ...getColStyle('commodity') }} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
-                            <EditableCell 
-                              value={op.commodity || ''} 
-                              suggestions={systemSuggestions.commodities} 
-                              onSave={(val) => handleUpdateCell(op, 'commodity', val.toUpperCase())} 
-                              disabled={isReadOnly} 
-                              isDark={isDark} 
-                              className={`${isSelected ? 'text-white' : (isDark ? 'text-amber-300' : 'text-amber-800')} font-bold uppercase text-[9px]`} 
-                              placeholder={isAr ? 'البضاعة' : 'COMMODITY'} 
-                            />
-                          </td>
-                          <td style={{ ...dynamicCellStyle, ...getColStyle('clipperName') }} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
-                            <EditableCell 
-                              value={op.clipperName || ''} 
-                              suggestions={systemSuggestions.clippers} 
-                              onSave={(val) => handleUpdateCell(op, 'clipperName', val)} 
-                              disabled={isReadOnly} 
-                              isDark={isDark} 
-                              className={`${isSelected ? 'text-white' : (isDark ? 'text-emerald-400' : 'text-emerald-700')} font-bold uppercase text-[9px]`} 
-                              placeholder={isAr ? 'فني التركيب' : 'CLIPPER'} 
-                            />
-                          </td>
-                          <td style={{ ...dynamicCellStyle, ...getColStyle('notes') }} className={`px-2 border-r ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
-                            <EditableCell value={op.notes || ''} onSave={(val) => handleUpdateCell(op, 'notes', val)} disabled={isReadOnly} isDark={isDark} className={`${isSelected ? 'text-white/60' : 'text-slate-400'} italic`} />
-                          </td>
-                          <td style={{ ...dynamicCellStyle, ...getColStyle('gas') }} className={`px-2 border-r text-center ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
-                            <EditableCell
-                              value={String(op.gaz ?? '')}
-                              type="number"
-                              onSave={(value) => handleUpdateCell(op, 'gaz', value)}
-                              disabled={isReadOnly}
-                              isDark={isDark}
-                              onEditStart={onCellEditStart}
-                              onEditEnd={onCellEditEnd}
-                              className={`font-black ${isSelected ? 'text-white' : 'text-cyan-600 dark:text-cyan-300'}`}
-                              placeholder="0"
-                            />
-                          </td>
-                          <td style={{ ...dynamicCellStyle, ...getColStyle('invoice') }} className={`px-2 border-r text-center ${isDark ? 'border-slate-800 border-white/5' : 'border-slate-100'} text-xs font-bold`}>
-                            {(() => {
-                              const bookingInv = invoices.find(inv => inv.bookingNumber === op.bookingNumber);
-                              if (bookingInv) {
-                                return (
-                                  <div className="flex items-center justify-center gap-1.5">
-                                    <button 
-                                      onClick={() => setSelectedInvoice(bookingInv)} 
-                                      title={isAr ? "عرض الفاتورة" : "Show Invoice"}
-                                      className="p-1 px-1.5 rounded bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 text-[9px] transition-all"
-                                    >
-                                      👁️ {isAr ? "عرض" : "Show"}
-                                    </button>
-                                    <button 
-                                      onClick={() => handleOpenEditInvoice(bookingInv)} 
-                                      title={isAr ? "تعديل الفاتورة" : "Edit Invoice Details"}
-                                      className="p-1 px-1.5 rounded bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 text-[9px] transition-all"
-                                    >
-                                      ✏️ {isAr ? "تعديل" : "Edit"}
-                                    </button>
-                                    <button 
-                                      onClick={() => {
-                                        setSelectedInvoice(bookingInv);
-                                        setTimeout(() => {
-                                          window.print();
-                                        }, 300);
-                                      }} 
-                                      title={isAr ? "طباعة / تحميل PDF" : "Print / PDF"}
-                                      className="p-1 px-1.5 rounded bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 text-[9px] transition-all"
-                                    >
-                                      📥 {isAr ? "ملف" : "PDF"}
-                                    </button>
-                                  </div>
-                                );
-                              } else {
-                                return (
-                                  <button 
-                                    onClick={() => handleQuickGenerateInvoice(op.bookingNumber, op.customerName)} 
-                                    className="px-2 py-1 text-[8px] font-black uppercase tracking-wider rounded bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition-all"
-                                  >
-                                    + {isAr ? 'إصدار فاتورة' : 'Issue Invoice'}
-                                  </button>
-                                );
-                              }
-                            })()}
-                          </td>
-                        </tr>
+                        <MasterRow
+                          key={op.id}
+                          op={op}
+                          isSelected={selectedRowIds.has(op.id)}
+                          isContainerDup={Boolean(op.containerNumber?.trim() && duplicateContainerNumbers.has(op.containerNumber.trim().toUpperCase()))}
+                          isGensetDup={Boolean(op.status === 'IN PROGRESS' && gen && duplicateActiveGensets.has(gen))}
+                          gensetRole={duplicateGensetRoleByOperationId.get(op.id)}
+                          mismatchPort={gensetPortMismatchByOperationId.get(op.id)}
+                          bookingInv={invoiceByBooking.get(op.bookingNumber)}
+                          isDark={isDark}
+                          isAr={isAr}
+                          lang={lang}
+                          t={t}
+                          isReadOnly={isReadOnly}
+                          cellStyles={rowCellStyles}
+                          suggestions={systemSuggestions}
+                          customerNameKeys={customerNameKeys}
+                          actions={rowActions}
+                        />
                       );
                     })}
                   </React.Fragment>
@@ -2000,6 +2151,11 @@ const MasterView: React.FC = () => {
               })}
             </tbody>
           </table>
+          {rowRenderLimit < expandedRowCount ? (
+            <div ref={loadMoreRef} className={`px-4 py-3 text-center text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+              {isAr ? 'جارٍ تحميل المزيد من السجلات...' : 'Loading more rows...'}
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -2324,4 +2480,6 @@ const MasterView: React.FC = () => {
   );
 };
 
-export default MasterView;
+// No props: skip re-renders from App (tab switches, data version bumps). The
+// screen listens for db changes itself.
+export default React.memo(MasterView);
