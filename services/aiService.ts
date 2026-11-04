@@ -75,6 +75,11 @@ async function buildDaliData(): Promise<DaliData> {
     maintenance: db.getMaintenanceLogs(),
     customers,
     aliases,
+    // Already scoped by RLS: staff see all prices, a customer only sees their own.
+    prices: db.getCustomerPrices().map(p => ({
+      customerName: p.customerName, portIn: p.portIn, portOut: p.portOut, price: Number(p.price) || 0,
+      includeVat: p.includeVat, destination: p.destination, commodity: p.commodity,
+    })),
     now: new Date(),
   };
 }
