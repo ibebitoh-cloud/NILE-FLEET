@@ -339,8 +339,19 @@ function cleanModelText(text) {
   if (!value) return '';
   // DeepSeek-R1 can return private reasoning in <think>...</think>.
   // Never show that reasoning to the user; keep only the final response.
-  const withoutThink = value.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-  return withoutThink || value;
+  let out = value.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+  // Workers AI often drops the opening <think> tag; keep only what follows the last </think>.
+  const closeAt = out.toLowerCase().lastIndexOf('</think>');
+  if (closeAt >= 0) out = out.slice(closeAt + '</think>'.length).trim();
+  out = out || value;
+  // The open models sometimes leak Chinese, Thai, Korean or Russian words into Arabic
+  // answers (seen in DALI logs: "م挂", "أคอย", "ب실 режим", "创造者"). Nile Fleet users only
+  // write Arabic and English, so those scripts are always noise.
+  out = out
+    .replace(/[^\s]*[\u0E00-\u0E7F\u3040-\u30FF\u3400-\u9FFF\uF900-\uFAFF\uAC00-\uD7AF\u1100-\u11FF\u0400-\u04FF][^\s]*/g, '')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/ +([،,.:;!?)])/g, '$1');
+  return out.trim();
 }
 
 async function runTextModel(env, options) {

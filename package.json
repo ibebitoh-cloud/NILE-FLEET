@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test:dali": "node tests/dali-question-benchmark.mjs",
+    "test:dali-real": "node --experimental-strip-types --no-warnings tests/dali-real-questions.mjs",
     "test:arabic": "node tests/arabic-typography.mjs"
   },
   "dependencies": {

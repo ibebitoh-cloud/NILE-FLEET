@@ -21,6 +21,8 @@ export interface DaliData {
   customers: { id: string; name: string; nameAr?: string; pastOutstanding?: number }[];
   /** Trained aliases: Arabic / nickname / typo -> real customer name. */
   aliases: { alias: string; customer: string }[];
+  /** Customer route prices (customer_prices). Only loaded for signed-in staff/customers. */
+  prices?: { customerName: string; portIn?: string; portOut?: string; price: number; includeVat?: boolean; destination?: string; commodity?: string }[];
   now?: Date;
 }
 
@@ -154,10 +156,41 @@ function resolveCustomer(nq: string, data: DaliData): string | undefined {
   const first = new Map<string, string[]>();
   for (const [n, orig] of sorted) { const w = n.split(' ')[0]; if (w.length >= 4) first.set(w, [...(first.get(w) || []), orig]); }
   for (const [w, origs] of first) if (tokens.has(w) && origs.length === 1) return origs[0];
+
+  // 4) Arabic spelling of a Latin customer name with no trained alias yet
+  //    ("الهندسية" → ELHANDASIA, "مسار" → MASAR). Compares consonant skeletons and
+  //    only answers when exactly one customer matches.
+  const skel = new Map<string, Set<string>>();
+  for (const [n, orig] of sorted) {
+    const k = latinSkeleton(n);
+    if (k.length >= 3) skel.set(k, new Set([...(skel.get(k) || []), orig]));
+  }
+  for (const t of nq.split(' ')) {
+    if (!/[\u0600-\u06FF]/.test(t) || findPorts(t)) continue;
+    const hit = skel.get(arabicSkeleton(t));
+    if (hit && hit.size === 1) return [...hit][0];
+  }
   return undefined;
 }
 
-function resolveUnit(question: string, nq: string, data: DaliData): { unit?: string; asked?: string } {
+const AR_CONSONANT: Record<string, string> = {
+  'ب': 'b', 'ت': 't', 'ث': 't', 'ج': 'g', 'ح': 'h', 'خ': 'k', 'د': 'd', 'ذ': 'z', 'ر': 'r', 'ز': 'z', 'س': 's', 'ش': 's',
+  'ص': 's', 'ض': 'd', 'ط': 't', 'ظ': 'z', 'غ': 'g', 'ف': 'f', 'ق': 'k', 'ك': 'k', 'ل': 'l', 'م': 'm', 'ن': 'n', 'ه': 'h',
+};
+const collapse = (x: string) => x.replace(/(.)\1+/g, '$1');
+const dropFinalH = (x: string) => (x.length > 3 && x.endsWith('h') ? x.slice(0, -1) : x);
+export function arabicSkeleton(token: string): string {
+  const t = norm(token).replace(/^(ال|وال|بال|لل)(?=.{3,})/, '');
+  return dropFinalH(collapse([...t].map(c => AR_CONSONANT[c] || '').join('')));
+}
+export function latinSkeleton(name: string): string {
+  const t = norm(name).replace(/[^a-z ]/g, '').replace(/\b(el|al)\s*(?=[a-z]{3,})/g, '').replace(/\s+/g, '')
+    .replace(/sh/g, 's').replace(/kh/g, 'k').replace(/th/g, 't').replace(/gh/g, 'g').replace(/ph/g, 'f')
+    .replace(/[qc]/g, 'k').replace(/j/g, 'g').replace(/x/g, 'ks').replace(/v/g, 'f').replace(/p/g, 'b').replace(/[aeiouwy]/g, '');
+  return dropFinalH(collapse(t));
+}
+
+function resolveUnit(question: string, nq: string, data: DaliData): { unit?: string; asked?: string; candidates?: string[] } {
   const known = new Map(data.gensets.map(g => [upperId(g.unitNumber), g.unitNumber]));
   const toks = nq.split(' ');
   for (let i = 0; i < toks.length; i++) {
@@ -165,8 +198,27 @@ function resolveUnit(question: string, nq: string, data: DaliData): { unit?: str
       if (cand && known.has(upperId(cand)) && (/\d/.test(cand))) return { unit: known.get(upperId(cand)) };
     }
   }
+  // Staff usually say the short number painted on the unit ("422", "4764"), which is
+  // the end of one part of the full serial (100540-108-422, HRSG594764-513).
+  const bySuffix = (num: string) => {
+    if (num.length < 3) return [];
+    const parts = (g: Genset) => String(g.unitNumber || '').toUpperCase().split(/[^A-Z0-9]+/);
+    const exact = data.gensets.filter(g => parts(g).includes(num));
+    return exact.length ? exact : data.gensets.filter(g => parts(g).some(part => part.endsWith(num) && /\d/.test(part)));
+  };
   const m = norm(question).match(/(?:genset|generator|unit|gensets|مولد|المولد|وحده|الوحده)\s+([a-z]{0,4}[ -]?\d{1,6})/i);
-  if (m) { const id = upperId(m[1]); if (known.has(id)) return { unit: known.get(id) }; return { asked: m[1].toUpperCase() }; }
+  const bare = !m && /^(?:where is|where s|whereis|فين|اين|مكان)\s+(\d{3,6})$|^(\d{3,6})\s+(?:فين|where)$/.exec(nq);
+  const asked = m ? m[1] : bare ? (bare[1] || bare[2]) : '';
+  if (asked) {
+    const id = upperId(asked);
+    if (known.has(id)) return { unit: known.get(id) };
+    if (/^\d+$/.test(id)) {
+      const hits = bySuffix(id);
+      if (hits.length === 1) return { unit: hits[0].unitNumber };
+      if (hits.length > 1) return { asked: asked.toUpperCase(), candidates: hits.map(g => g.unitNumber) };
+    }
+    return { asked: asked.toUpperCase() };
+  }
   return {};
 }
 
@@ -245,10 +297,12 @@ export function answerDali(question: string, data: DaliData, contextKey: string 
   };
 
   // deterministic data audit / consistency checks
-  if (has(nq, ['audit', 'data audit', 'contradiction', 'contradictions', 'conflict', 'conflicts', 'inconsistency', 'inconsistencies', 'راجع السيستم', 'راجع البيانات', 'تعارض', 'تعارضات', 'تناقض', 'تناقضات', 'مشاكل البيانات', 'مراجعه البيانات'])) {
-    const findings = auditDaliData(data);
+  if (has(nq, ['audit', 'data audit', 'contradiction', 'contradictions', 'conflict', 'conflicts', 'inconsistency', 'inconsistencies', 'راجع السيستم', 'راجع البيانات', 'تعارض', 'تعارضات', 'تناقض', 'تناقضات', 'مشاكل البيانات', 'مراجعه البيانات', 'mismatch', 'mismatched', 'not matching', 'does not match', 'not in same stock', 'master view', 'مش مطابق', 'مش متطابق', 'مختلف عن الاستوك'])) {
+    const auditPorts = findPorts(nq);
+    const findings = auditDaliData(data).filter(f => !auditPorts || auditPorts.some(p => new RegExp(`\\b${p}\\b`).test(f.details)));
     remember('audit');
-    if (!findings.length) return L('Data audit: no contradictions were detected in the live data.', 'مراجعة البيانات: مفيش تعارضات اتكشفت في البيانات الحالية.');
+    const at = auditPorts ? ' (' + auditPorts.map(p => portLabel(p, ar)).join(', ') + ')' : '';
+    if (!findings.length) return L(`Data audit${at}: no contradictions were detected in the live data.`, `مراجعة البيانات${at}: مفيش تعارضات اتكشفت في البيانات الحالية.`);
     const critical = findings.filter(f => f.severity === 'CRITICAL').length;
     const warning = findings.filter(f => f.severity === 'WARNING').length;
     const lines = findings.slice(0, 30).map((f, i) => (i + 1) + '. [' + f.severity + '] ' + f.title + ': ' + f.details);
@@ -300,7 +354,7 @@ Suggested questions:
 • Who does DALI belong to?`,
 `أنا دالي 🤖
 
-أنا طبقة الذكاء داخل نظام Nile Fleet، أنشأني بيبيتو عشان أساعد المستخدمين في فهم والتعامل مع بيانات النظام، وخصوصًا بيانات قسم المولدات.
+أنا طبقة الذكاء داخل نظام Nile Fleet، أنشأني Dali Studio عشان أساعد المستخدمين في فهم والتعامل مع بيانات النظام، وخصوصًا بيانات قسم المولدات.
 
 عندي ${daliAgeAr}، ولسه بتعلم. بدأت كفكرة، وكبرت مع شغل النظام والبيانات الفعلية الموجودة فيه.
 
@@ -635,12 +689,15 @@ searching, connecting, analyzing, checking, and explaining data so the authorize
   unit = unitHit.unit;
 
   // ---- subject words ----
-  let wOps = has(nq, ['operation', 'operations', 'job', 'jobs', 'work', 'شغل', 'عمليات', 'عمليه', 'العمليات', 'العمليه']);
+  let wOps = has(nq, ['operation', 'operations', 'job', 'jobs', 'work', 'booking', 'bookings', 'شغل', 'عمليات', 'عمليه', 'العمليات', 'العمليه']);
   let wGen = has(nq, ['genset', 'gensets', 'generator', 'generators', 'unit', 'units', 'مولد', 'مولدات', 'المولد', 'المولدات', 'وحده', 'وحدات']);
   let wInv = has(nq, ['invoice', 'invoices', 'invoiced', 'billing', 'bill', 'فاتوره', 'فواتير', 'الفواتير', 'فاتورة']);
   let wPay = has(nq, ['payment', 'payments', 'paid', 'pay', 'outstanding', 'owe', 'owes', 'balance', 'debt', 'receivable', 'collected', 'مدفوعات', 'دفع', 'دفعت', 'مدفوع', 'المتبقي', 'متبقي', 'مستحق', 'مديونيه', 'باقي', 'عليه كام', 'عليهم كام']);
   let wMaint = has(nq, ['maintenance', 'maintain', 'service', 'repair', 'صيانه', 'الصيانه', 'بالصيانه', 'في الصيانه']);
   let wReq = has(nq, ['need', 'needs', 'needed', 'required', 'require', 'requested', 'request', 'requests', 'reservation', 'reservations', 'asking', 'مطلوب', 'مطلوبه', 'محتاج', 'محتاجه', 'محتاجين', 'احتياج', 'طلب', 'طلبات', 'حجوزات']);
+  const wPrice = has(nq, ['price', 'prices', 'pricing', 'rate', 'rates', 'tariff', 'how much is', 'سعر', 'السعر', 'اسعار', 'الاسعار', 'بكام', 'بكم', 'تسعير', 'تسعيره', 'تعريفه', 'se3r', 'b kam', 'bkam']);
+  const wSoa = has(nq, ['soa', 'statement', 'statement of account', 'account statement', 'كشف حساب', 'كسف حساب', 'كشف الحساب', 'حساب']);
+  if (wSoa) { wPay = true; wInv = true; }
   let wFuel = has(nq, ['fuel', 'gas', 'diesel', 'وقود', 'سولار', 'غاز', 'بنزين']);
   let wRev = has(nq, ['revenue', 'income', 'earned', 'sales', 'ايراد', 'ايرادات', 'دخل', 'مبيعات']);
   let wWhere = has(nq, ['where', 'location', 'located', 'فين', 'موقع', 'موجود', 'موجوده', 'موجودين']);
@@ -651,7 +708,7 @@ searching, connecting, analyzing, checking, and explaining data so the authorize
   // ---- follow-ups inherit the previous subject ----
   const followMarker = has(nq, ['and', 'what about', 'how about', 'them', 'those', 'it', 'its', 'same', 'طب', 'طيب', 'و', 'ده', 'دي', 'دول', 'نفس', 'نفسه', 'عنه', 'بتاعه']);
   const hasEntity = !!(customer || ports || unit || containerM || bookingM || unitHit.asked);
-  const hasSubject = wOps || wGen || wInv || wPay || wMaint || wReq || wFuel || wRev || wWhere || wCount;
+  const hasSubject = wOps || wGen || wInv || wPay || wMaint || wReq || wFuel || wRev || wWhere || wCount || wPrice;
   const shortQ = nq.split(' ').length <= 7;
   if (shortQ && lastCtx.intent && (followMarker || !hasSubject)) {
     if (!hasEntity) {
@@ -696,6 +753,11 @@ searching, connecting, analyzing, checking, and explaining data so the authorize
 
   // ───────── 2. single genset lookup ─────────
   if (unit || unitHit.asked) {
+    if (!unit && unitHit.candidates?.length) {
+      remember('genset');
+      const list = unitHit.candidates.slice(0, 10).map(u => { const g = data.gensets.find(x => x.unitNumber === u)!; return `• ${u} · ${g.status} · ${g.location}`; });
+      return [L(`${unitHit.candidates.length} gensets end in ${unitHit.asked}. Which one?`, `في ${unitHit.candidates.length} مولد رقمهم بينتهي بـ ${unitHit.asked}. تقصد أنهي واحد؟`), ...list].join('\n');
+    }
     if (!unit) return L(`I couldn't find a genset numbered ${unitHit.asked} in the fleet.`, `مفيش مولد رقم ${unitHit.asked} في الأسطول.`);
     const g = data.gensets.find(x => x.unitNumber === unit)!;
     const id = upperId(unit);
@@ -713,6 +775,32 @@ searching, connecting, analyzing, checking, and explaining data so the authorize
     if (g.nextMaintenanceDue) out.push(L(`Next maintenance due: ${toISO(g.nextMaintenanceDue)}.`, `موعد الصيانة القادمة: ${toISO(g.nextMaintenanceDue)}.`));
     if (fuel > 0) out.push(L(`Fuel logged on its operations: ${Math.round(fuel).toLocaleString()} L.`, `الوقود المسجل على عملياته: ${Math.round(fuel).toLocaleString()} لتر.`));
     return out.join('\n');
+  }
+
+  // ───────── 2b. customer prices ─────────
+  // A price question must never fall through to fleet counts (it used to answer
+  // "سعر مولد الهندسية دمياط" with Damietta stock).
+  if (wPrice && !wInv && !wPay && !wRev) {
+    remember('price');
+    const prices = data.prices || [];
+    if (!prices.length) return L('I don\'t have any customer prices loaded for your account.', 'مفيش أسعار عملاء متاحة لحسابك.');
+    if (!customer) {
+      const withPort = portSet ? prices.filter(p => portSet.has(String(p.portIn)) || portSet.has(String(p.portOut))) : [];
+      return L(`Which customer? Prices are set per customer${portText ? ` (${new Set(withPort.map(p => p.customerName)).size} customers have a price at ${portText})` : ''}.`,
+        `لأنهي عميل؟ الأسعار متسجلة لكل عميل لوحده${portText ? ` (${new Set(withPort.map(p => p.customerName)).size} عميل ليهم سعر في ${portText})` : ''}.`);
+    }
+    let rows = prices.filter(p => norm(p.customerName) === norm(customer));
+    if (!rows.length) return L(`No price is saved for ${customer}.`, `مفيش سعر متسجل لـ ${customer}.`);
+    const scoped = portSet ? rows.filter(p => portSet.has(String(p.portIn)) || portSet.has(String(p.portOut))) : rows;
+    const exact = portSet ? scoped.filter(p => portSet.has(String(p.portIn)) && portSet.has(String(p.portOut))) : [];
+    const show = (exact.length ? exact : scoped.length ? scoped : rows)
+      .sort((a, b) => Number(!!a.destination || !!a.commodity) - Number(!!b.destination || !!b.commodity));
+    const line = (p: NonNullable<DaliData['prices']>[number]) => {
+      const extra = [p.destination, p.commodity].filter(Boolean).join(' · ');
+      return `• ${p.portIn || '-'}→${p.portOut || '-'}${extra ? ` (${extra})` : ''}: ${money(Number(p.price) || 0)} ${p.includeVat ? L('incl. VAT', 'شامل الضريبة') : L('excl. VAT', 'بدون الضريبة')}`;
+    };
+    const note = portSet && !scoped.length ? L(`No price at ${portText}; saved routes:`, `مفيش سعر في ${portText}؛ الأسعار المتسجلة:`) : '';
+    return [L(`${customer} genset price${portText && scoped.length ? ' – ' + portText : ''}:`, `سعر المولد لـ ${customer}${portText && scoped.length ? ' – ' + portText : ''}:`), note, ...show.slice(0, 12).map(line)].filter(Boolean).join('\n');
   }
 
   // ───────── 3. requested gensets (reservations not yet loaded into operations) ─────────
@@ -808,7 +896,7 @@ searching, connecting, analyzing, checking, and explaining data so the authorize
   }
 
   // ───────── 9. operations ─────────
-  if (wOps || (customer && !wGen)) {
+  if (wOps || customer) {
     const statusMap: [string, string[]][] = [
       ['DONE', ['done', 'completed', 'complete', 'finished', 'مكتمل', 'مكتمله', 'خلصان', 'خلصت', 'منتهي']],
       ['UNDER OPERATE', ['under operate', 'تحت التشغيل']],
@@ -833,7 +921,7 @@ searching, connecting, analyzing, checking, and explaining data so the authorize
   if (wGen || wWhere || wCount || ports || has(nq, ['stock', 'inventory', 'fleet', 'استوك', 'مخزون', 'المخزون', 'الاستوك', 'الاسطول', 'اسطول'])) {
     const statusWords: [string, string[]][] = [
       ['IN_STOCK', ['in stock', 'instock', 'available', 'free', 'مخزون', 'بالمخزون', 'في المخزون', 'متاح', 'متاحه', 'استوك', 'ستوك']],
-      ['CLIPPED_ON', ['clipped on', 'clipped', 'clip on', 'deployed', 'under operate', 'in use', 'مركب', 'مركبه', 'تحت التشغيل', 'شغال', 'شغاله', 'مستخدم']],
+      ['CLIPPED_ON', ['clipped on', 'clipped', 'clip on', 'deployed', 'under operate', 'in use', 'working', 'operating', 'running', 'مركب', 'مركبه', 'تحت التشغيل', 'شغال', 'شغاله', 'شغالين', 'يعمل', 'تعمل', 'مستخدم']],
       ['MAINTENANCE', ['maintenance', 'repair', 'صيانه', 'بالصيانه']],
       ['RETIRED', ['retired', 'scrapped', 'decommissioned', 'متقاعد', 'متقاعده', 'تكهين', 'مكهن', 'خرده']],
     ];

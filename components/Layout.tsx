@@ -1346,8 +1346,10 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, onGoHome, activeScreen,
       const context = {
         question,
         totals: { operations: operations.length, invoices: invoices.length, gensets: gensets.length, maintenance: maintenance.length },
-        statusCounts,
-        portCounts,
+        operationStatusCounts: statusCounts,
+        // Operation records per clip-on port (historical jobs). NOT where gensets are now:
+        // for current genset locations use stockByPort.
+        operationsByClipOnPort: portCounts,
         stockByPort,
         relevantOperations: (matchedOperations.length ? matchedOperations : operations.slice(0, 20)).map(o => ({ bookingNumber:o.bookingNumber, containerNumber:o.containerNumber, gensetNumber:o.gensetNumber, customerName:o.customerName, status:o.status, clipOnPort:o.clipOnPort, clipOffPort:o.clipOffPort, operationDate:o.operationDate, rate:o.rate, vat:o.vat })),
         relevantGensets: (matchedGensets.length ? matchedGensets : gensets.slice(0, 30)).map(g => ({ unitNumber:g.unitNumber, gensetNumber:g.gensetNumber, location:g.location, status:g.status, model:g.model })),
@@ -1481,7 +1483,7 @@ DATA BEHAVIOR:
           answer = responseIsAr
             ? `أنا دالي 🤖
 
-أنا نموذج ذكاء اصطناعي أنشأني بيبيتو عشان أكون جزء من أسطول النيل، وتحديداً أساعد في قسم المولدات.
+أنا نموذج ذكاء اصطناعي أنشأني Dali Studio عشان أكون جزء من أسطول النيل، وتحديداً أساعد في قسم المولدات.
 
 عندي ${daliAgeAr} دلوقتي، ولسه بتعلم. البداية كانت مجرد فكرة، وخلال الفترة اللي فاتت اتعلمت عن المولدات والمخزون، التشغيل والعمليات، الحجوزات والحاويات، الموانئ والمواقع، الصيانة والورشة، الوقود والغاز، الأسعار والفواتير، العملاء والتقارير.
 
