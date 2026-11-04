@@ -4,7 +4,6 @@ import BeamWordmarkFooter from '@/components/ui/beam-wordmark-footer';
 import DaliSignature from '@/components/DaliSignature';
 import TubesCursor from '@/components/ui/tubes-cursor';
 import DrawText from '@/components/ui/draw-text';
-import WelcomeIntro from '@/components/WelcomeIntro';
 import DaliPublicChat from '@/components/DaliPublicChat';
 
 interface Props { onGenset: () => void; }
@@ -979,7 +978,6 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
 
   return (
     <div ref={wrapRef} data-no-translate dir={ar ? "rtl" : "ltr"} className={`nf-home nf4 ${isDark ? 'nf4-dark' : 'nf4-light'} min-h-screen overflow-x-hidden selection:bg-[#c2a378] selection:text-black ${K.root}`}>
-      <WelcomeIntro />
       <style>{`
         @keyframes nf4Reveal { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
         @keyframes nf4Pulse { 0%,100%{box-shadow:0 0 0 rgba(194,163,120,0)} 50%{box-shadow:0 0 42px rgba(194,163,120,.28)} }
@@ -1234,7 +1232,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
             <button onClick={toggleFullscreen} data-desktop-only aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'} className={`nf4-hdr-btn rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isFullscreen ? tx.exit : tx.full}</button>
             <button onClick={toggleSound} data-desktop-only aria-pressed={soundOn} className={`nf4-hdr-btn rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{soundOn ? tx.soundOn : tx.soundOff}</button>
-            <button onClick={() => setTheme(isDark ? 'white' : 'phantom')} className={`nf4-hdr-btn rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isDark ? tx.white : tx.dark}</button>
+            <button onClick={() => setTheme(isDark ? 'day' : 'night')} className={`nf4-hdr-btn rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isDark ? tx.white : tx.dark}</button>
             <button onClick={() => setLang(ar ? 'en' : 'ar')} className={`nf4-hdr-btn rounded-full border px-4 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{ar ? 'EN' : 'العربية'}</button>
             <button onClick={() => setMenuOpen(o => !o)} aria-expanded={menuOpen} aria-controls="nf4-mobile-menu" aria-label={ar ? 'القائمة' : 'Menu'} className={`nf4-menu-btn grid h-9 w-9 place-items-center rounded-full border text-base font-black transition hover:border-[#c2a378]/70 md:hidden ${K.line} ${gold}`}>{menuOpen ? '✕' : '☰'}</button>
           </div>
