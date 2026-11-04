@@ -17,6 +17,7 @@ const ACTION_ROLES = {
   daliAction: ['ADMIN', 'MANAGER'],
   scanImageForContainer: ['ADMIN', 'MANAGER', 'GATE_OPERATOR'],
   mapSpreadsheetToSchema: ['ADMIN', 'MANAGER'],
+  parseInvoiceDocument: ['ADMIN', 'MANAGER'],
 };
 
 // Actions for the Transport system, checked against the caller's Transport role
@@ -272,6 +273,47 @@ Respond with ONLY the raw JSON array — no markdown, no code fences, no comment
           temperature: 0.2,
         });
         return json(parseJsonLoose(extractText(result)));
+      }
+
+      case 'parseInvoiceDocument': {
+        // Invoice Maker: turn an uploaded invoice into editable rows. Nothing is saved here.
+        const { extractedText, fileBase64, mimeType } = payload || {};
+        const instructions = `You read logistics invoices for Nile Fleet (genset rental for reefer containers in Egypt). Respond with ONLY a raw JSON object, no markdown:
+{"customer":"","bookingNo":"","date":"YYYY-MM-DD","items":[{"UnitNumber":"","PortGo":"","PortGi":"","Trucker":"","Shipper":"","Date":"YYYY-MM-DD","Rate":0}]}
+customer = billed customer. bookingNo = booking or invoice reference. One item per container row: UnitNumber = container number (4 letters + 7 digits), PortGo = clip-on / pick-up port, PortGi = clip-off / delivery port, Rate = the row amount as a number. Use "" or 0 when a field is missing. Never invent rows.`;
+        if (String(extractedText || '').trim()) {
+          const result = await runTextModel(env, {
+            messages: [
+              { role: 'system', content: instructions },
+              { role: 'user', content: `INVOICE TEXT:\n${String(extractedText).slice(0, 20000)}` },
+            ],
+            max_tokens: 4000,
+            temperature: 0,
+          });
+          return json(parseJsonLoose(extractText(result)));
+        }
+        if (!fileBase64) return json({ error: 'No document supplied' }, 400);
+        if (mimeType && !String(mimeType).startsWith('image/')) {
+          return json({ error: 'This PDF has no readable text. Upload a photo or screenshot of the invoice instead.' }, 400);
+        }
+        const dataUri = String(fileBase64).startsWith('data:') ? fileBase64 : `data:${mimeType || 'image/jpeg'};base64,${fileBase64}`;
+        const visionInput = {
+          messages: [
+            { role: 'system', content: instructions },
+            { role: 'user', content: 'Extract the invoice from this image.' },
+          ],
+          image: dataUri,
+          max_tokens: 3000,
+          temperature: 0,
+        };
+        let result;
+        try {
+          result = await env.AI.run(VISION_MODEL, visionInput);
+        } catch (primaryError) {
+          console.error('Primary invoice vision model failed:', primaryError);
+          result = await env.AI.run(VISION_FALLBACK_MODEL, visionInput);
+        }
+        return json(parseJsonLoose(String(result?.response || extractText(result) || '')));
       }
 
       default:
