@@ -144,6 +144,12 @@ export const mapSpreadsheetToSchema = async (csvData: string): Promise<any[]> =>
   }
 };
 
+/** Invoice Maker: reads an uploaded invoice (PDF text or image) into customer, booking and container rows. */
+export const parseInvoiceDocument = async (payload: { extractedText?: string; fileBase64?: string; fileName?: string; mimeType?: string }): Promise<{ success: boolean; data?: any }> => {
+  const data = await callAi('parseInvoiceDocument', payload);
+  return { success: !!data && typeof data === 'object', data };
+};
+
 /** Reads a staff request ("log maintenance for NFG-12") into structured action fields. Never writes data. */
 export const extractDaliAction = async (question: string): Promise<Record<string, any>> => {
   const now = new Date();

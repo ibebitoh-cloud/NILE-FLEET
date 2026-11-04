@@ -1,0 +1,110 @@
+/* Invoice Maker screen. Ported from the stand-alone INVOICE-CREATE app.
+   Print rules only apply while body has .nfi-printing, so the rest of the
+   Nile Fleet app keeps its own print behaviour. */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Special+Elite&display=swap');
+
+.nfi-app {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* A4 page used by the invoice renderer */
+.invoice-container {
+  background: white;
+  width: 210mm;
+  min-height: 297mm;
+  padding: 0;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  position: relative;
+  overflow: visible;
+}
+
+.no-break {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+  -webkit-column-break-inside: avoid !important;
+  display: block !important;
+  position: static !important;
+}
+tr.no-break { display: table-row !important; }
+
+@media screen {
+  .invoice-preview-scale {
+    transform: scale(0.85);
+    transform-origin: top center;
+  }
+}
+
+/* Native print source, rendered into <body> by the invoice preview */
+.nfi-print-only { display: none !important; }
+
+@media print {
+  body.nfi-printing { margin: 0 !important; padding: 0 !important; background: white !important; }
+  body.nfi-printing > *:not(.nfi-print-only) { display: none !important; }
+  body.nfi-printing > .nfi-print-only {
+    display: block !important;
+    visibility: visible !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    overflow: visible !important;
+  }
+  body.nfi-printing .nfi-print-only * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  body.nfi-printing .invoice-container {
+    width: 100% !important;
+    max-width: 180mm !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    display: block !important;
+    overflow: visible !important;
+    position: relative !important;
+  }
+  body.nfi-printing .nfi-print-only .render-header,
+  body.nfi-printing .nfi-print-only .render-bill-to,
+  body.nfi-printing .nfi-print-only .render-statement-summary,
+  body.nfi-printing .nfi-print-only header {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+  }
+  body.nfi-printing .nfi-print-only table {
+    display: table !important;
+    page-break-inside: auto !important;
+    border-collapse: collapse !important;
+    width: 100% !important;
+    table-layout: auto !important;
+    border: none !important;
+    margin-bottom: 0 !important;
+  }
+  body.nfi-printing .nfi-print-only thead { display: table-header-group !important; }
+  body.nfi-printing .nfi-print-only tbody { display: table-row-group !important; page-break-inside: auto !important; }
+  body.nfi-printing .nfi-print-only tr { display: table-row !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+  body.nfi-printing .nfi-print-only td,
+  body.nfi-printing .nfi-print-only th {
+    display: table-cell !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    overflow: visible !important;
+    vertical-align: top !important;
+    position: static !important;
+  }
+  body.nfi-printing .nfi-print-only p,
+  body.nfi-printing .nfi-print-only h1,
+  body.nfi-printing .nfi-print-only h2,
+  body.nfi-printing .nfi-print-only h3 { orphans: 3; widows: 3; page-break-after: avoid; }
+}

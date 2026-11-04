@@ -1683,6 +1683,7 @@ I’ll search with you. 🤖`;
     { id: 'operations', label: t.operations, icon: '🚛' },
     { id: 'notifications', label: isAr ? 'التنبيهات' : 'NOTIFICATIONS', icon: '🔔' },
     { id: 'booking-invoices', label: lang === 'ar' ? 'فواتير الحجوزات' : 'BOOKING INVOICES', icon: '🧾' },
+    { id: 'invoice-maker', label: isAr ? 'إنشاء الفواتير' : 'INVOICE MAKER', icon: '🖨️' },
     { id: 'analytics', label: t.analytics, icon: '📈' },
     { id: 'intelligence', label: t.intelligence, icon: '🧠' },
     { id: 'reports', label: t.reports, icon: '📝' },
@@ -1709,6 +1710,7 @@ I’ll search with you. 🤖`;
     { id: 'operations', label: t.operations, icon: '🚛' },
     { id: 'notifications', label: isAr ? 'التنبيهات' : 'NOTIFICATIONS', icon: '🔔' },
     { id: 'booking-invoices', label: lang === 'ar' ? 'فواتير الحجوزات' : 'BOOKING INVOICES', icon: '🧾' },
+    { id: 'invoice-maker', label: isAr ? 'إنشاء الفواتير' : 'INVOICE MAKER', icon: '🖨️' },
     { id: 'analytics', label: t.analytics, icon: '📈' },
     { id: 'intelligence', label: t.intelligence, icon: '🧠' },
     { id: 'reports', label: t.reports, icon: '📝' },
@@ -1734,7 +1736,7 @@ I’ll search with you. 🤖`;
   ]);
 
   const roleDefaultScreenIds = user.role === UserRole.MANAGER
-    ? ['dashboard', 'master-view', 'operations', 'stock', 'reservations', 'daily-dispatch', 'customers', 'customer-prices', 'booking-invoices', 'financials', 'intelligence', 'reports', 'notifications', 'system-log']
+    ? ['dashboard', 'master-view', 'operations', 'stock', 'reservations', 'daily-dispatch', 'customers', 'customer-prices', 'booking-invoices', 'invoice-maker', 'financials', 'intelligence', 'reports', 'notifications', 'system-log']
     : user.role === UserRole.VIEWER
       ? ['dashboard', 'master-view', 'reports', 'intelligence', 'notifications', 'support', 'system-log']
       : null;
@@ -1743,7 +1745,7 @@ I’ll search with you. 🤖`;
     : Array.isArray(user.allowedScreens)
       ? allPossibleMenuItems.filter(item =>
           user.allowedScreens?.includes(item.id) ||
-          ((user.role === UserRole.ADMIN || user.role === UserRole.MANAGER) && (item.id === 'daily-dispatch' || item.id === 'financials'))
+          ((user.role === UserRole.ADMIN || user.role === UserRole.MANAGER) && (item.id === 'daily-dispatch' || item.id === 'financials' || item.id === 'invoice-maker'))
         )
     : roleDefaultScreenIds
       ? allPossibleMenuItems.filter(item => roleDefaultScreenIds.includes(item.id))

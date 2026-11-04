@@ -7,6 +7,7 @@ export default {
     './components/**/*.{ts,tsx}',
     './services/**/*.{ts,tsx}',
     './transport/**/*.{ts,tsx}',
+    './invoice-maker/**/*.{ts,tsx}',
   ],
   theme: { extend: {} },
   plugins: [],

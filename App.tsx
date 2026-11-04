@@ -50,13 +50,14 @@ const PortGateControl = lazyWithChunkRecovery(() => import('./screens/PortGateCo
 const UserMgmt = lazyWithChunkRecovery(() => import('./screens/UserMgmt'));
 const CustomerService = lazyWithChunkRecovery(() => import('./screens/CustomerService'));
 const BookingInvoices = lazyWithChunkRecovery(() => import('./screens/BookingInvoices'));
+const InvoiceMaker = lazyWithChunkRecovery(() => import('./invoice-maker/InvoiceMakerApp'));
 const DaliKnowledgeCenter = lazyWithChunkRecovery(() => import('./screens/DaliKnowledgeCenter'));
 const Organization = lazyWithChunkRecovery(() => import('./screens/Organization'));
 const Notifications = lazyWithChunkRecovery(() => import('./screens/Notifications'));
 type Language = 'en' | 'ar';
 const getDefaultAllowedScreens = (role: UserRole): string[] => {
-  if (role === UserRole.ADMIN) return ['dali-knowledge', 'dashboard', 'analytics', 'master-view', 'port-gate', 'operations', 'booking-invoices', 'financials', 'intelligence', 'reports', 'stock', 'reservations', 'daily-dispatch', 'customers', 'user-mgmt', 'organization', 'customer-prices', 'financials', 'support', 'notifications', 'system-log', 'user-settings'];
-  if (role === UserRole.MANAGER) return ['dali-knowledge', 'dashboard', 'master-view', 'operations', 'stock', 'reservations', 'daily-dispatch', 'customers', 'customer-prices', 'booking-invoices', 'financials', 'intelligence', 'reports', 'notifications', 'system-log', 'support', 'user-settings', 'organization'];
+  if (role === UserRole.ADMIN) return ['dali-knowledge', 'dashboard', 'analytics', 'master-view', 'port-gate', 'operations', 'booking-invoices', 'invoice-maker', 'financials', 'intelligence', 'reports', 'stock', 'reservations', 'daily-dispatch', 'customers', 'user-mgmt', 'organization', 'customer-prices', 'financials', 'support', 'notifications', 'system-log', 'user-settings'];
+  if (role === UserRole.MANAGER) return ['dali-knowledge', 'dashboard', 'master-view', 'operations', 'stock', 'reservations', 'daily-dispatch', 'customers', 'customer-prices', 'booking-invoices', 'invoice-maker', 'financials', 'intelligence', 'reports', 'notifications', 'system-log', 'support', 'user-settings', 'organization'];
   if (role === UserRole.VIEWER) return ['dali-knowledge', 'dashboard', 'master-view', 'reports', 'intelligence', 'notifications', 'support', 'system-log'];
   if (role === UserRole.GATE_OPERATOR) return ['port-gate', 'notifications', 'support', 'user-settings'];
   return ['cust-reservations', 'cust-invoices', 'notifications', 'support', 'user-settings'];
@@ -391,7 +392,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const allScreens = new Set([
       'dali-knowledge', 'dashboard', 'analytics', 'master-view', 'operations', 'port-gate',
-      'booking-invoices', 'intelligence', 'reports', 'stock', 'reservations', 'daily-dispatch',
+      'booking-invoices', 'invoice-maker', 'intelligence', 'reports', 'stock', 'reservations', 'daily-dispatch',
       'customers', 'user-mgmt', 'organization', 'customer-prices', 'support',
       'notifications', 'system-log', 'user-settings', 'cust-reservations',
       'cust-invoices'
@@ -406,7 +407,7 @@ const App: React.FC = () => {
             .filter(screen => allScreens.has(screen))
             .concat(
               user?.role === UserRole.ADMIN || user?.role === UserRole.MANAGER
-                ? ['financials', 'daily-dispatch']
+                ? ['financials', 'daily-dispatch', 'invoice-maker']
                 : []
             )
         );
@@ -813,6 +814,7 @@ const App: React.FC = () => {
       case 'port-gate': return <PortGateControl />;
       case 'operations': return <Operations highlightId={highlightId} clearHighlight={() => setHighlightId(null)} />;
       case 'booking-invoices': return <BookingInvoices />;
+      case 'invoice-maker': return <InvoiceMaker />;
       case 'financials': return <Financials />;
       case 'intelligence': return <Intelligence />;
       case 'reports': return <Reports />;
