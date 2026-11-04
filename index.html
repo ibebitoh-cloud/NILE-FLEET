@@ -1120,6 +1120,31 @@
         body.theme-day [class~="bg-amber-600"] [class*="text-white"]:not(#nf),
         body.theme-day [class~="bg-indigo-600"][class*="text-white"]:not(#nf),
         body.theme-day [class~="bg-indigo-600"] [class*="text-white"]:not(#nf) { color: #ffffff !important; }
+
+        /* DALI chat panel in white mode: white panel, navy text, grey hairlines.
+           The panel markup is written for a dark glass look (white/xx text,
+           white/xx borders), so it is remapped here instead of per element. */
+        body.theme-day .nf-dali-chat {
+            background-color: #ffffff !important;
+            border-color: #e3e8ee !important;
+            box-shadow: 0 24px 60px rgba(16, 38, 59, 0.18) !important;
+            color: #17212b;
+        }
+        body.theme-day .nf-dali-chat [class*="text-white"] { color: #17212b !important; }
+        body.theme-day .nf-dali-chat [class*="text-white/"] { color: #5b6775 !important; }
+        body.theme-day .nf-dali-chat [class*="text-white/9"],
+        body.theme-day .nf-dali-chat [class*="text-white/8"],
+        body.theme-day .nf-dali-chat [class*="text-white/7"] { color: #17212b !important; }
+        body.theme-day .nf-dali-chat [class*="placeholder:text-white"]::placeholder { color: #8a95a2 !important; }
+        body.theme-day .nf-dali-chat [class*="border-white"] { border-color: #e3e8ee !important; }
+        body.theme-day .nf-dali-chat [class*="bg-white/"] { background-color: #f4f6f9 !important; }
+        body.theme-day .nf-dali-chat span[class*="h-px"][class*="bg-white/"] { background-color: #e3e8ee !important; }
+        body.theme-day .nf-dali-chat [class*="bg-black/"],
+        body.theme-day .nf-dali-chat [class*="bg-[#07131f]"] { background-color: #ffffff !important; }
+        body.theme-day .nf-dali-chat textarea { background-color: transparent !important; border: 0 !important; box-shadow: none !important; }
+        body.theme-day .nf-dali-chat [class*="text-red-200"],
+        body.theme-day .nf-dali-chat [class*="text-red-300"] { color: #b91c1c !important; }
+        body.theme-day .nf-dali-chat [class*="text-[#C2A378]"] { color: #8a611f !important; }
     </style>
 <script type="importmap">
 {

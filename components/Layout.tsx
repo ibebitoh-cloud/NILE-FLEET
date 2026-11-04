@@ -2079,7 +2079,7 @@ I’ll search with you. 🤖`;
         }}
       >
         {canUseDali && isAiChatOpen && (
-          <section aria-label={isAr ? 'دالي' : 'DALI'} className="absolute bottom-[68px] right-0 z-50 w-[calc(100vw-28px)] max-w-[360px] sm:w-[400px] sm:max-w-none h-[min(560px,calc(100dvh-132px))] max-h-[calc(100dvh-132px)] flex flex-col overflow-hidden rounded-[24px] border border-white/12 bg-[#071522]/94 shadow-[0_24px_70px_rgba(0,0,0,.48)] backdrop-blur-2xl" style={window.innerWidth < 640 ? {height:`${Math.min(560,Math.max(340,daliViewport.height-132))}px`,maxHeight:`${Math.max(340,daliViewport.height-132)}px`} : undefined}>
+          <section aria-label={isAr ? 'دالي' : 'DALI'} className="absolute bottom-[68px] right-0 z-50 w-[calc(100vw-28px)] max-w-[360px] sm:w-[400px] sm:max-w-none h-[min(560px,calc(100dvh-132px))] max-h-[calc(100dvh-132px)] flex flex-col overflow-hidden nf-dali-chat rounded-[24px] border border-white/10 bg-[#071522]/95 shadow-[0_24px_70px_rgba(0,0,0,.48)] backdrop-blur-2xl" style={window.innerWidth < 640 ? {height:`${Math.min(560,Math.max(340,daliViewport.height-132))}px`,maxHeight:`${Math.max(340,daliViewport.height-132)}px`} : undefined}>
             <header className="relative shrink-0 px-4 pt-4 pb-3 sm:px-5 sm:pt-5 sm:pb-4">
               <div className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-[#C2A378]/70 to-transparent"></div>
               <div className="flex items-center justify-between">
@@ -2096,7 +2096,7 @@ I’ll search with you. 🤖`;
               </div>
             </header>
             <div className="relative flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 pb-5">
-              {daliArchiveOpen && <div className="absolute inset-0 z-30 overflow-y-auto rounded-b-[28px] bg-[#07131f]/96 p-5 backdrop-blur-3xl">
+              {daliArchiveOpen && <div className="absolute inset-0 z-30 overflow-y-auto rounded-b-[28px] bg-[#07131f]/95 p-5 backdrop-blur-3xl">
                 <div className="mb-5 flex items-center justify-between"><div><p className="text-[10px] font-black tracking-[0.18em] text-[#C2A378]">{isAr?'المحادثات السابقة':'PREVIOUS CHATS'}</p><p className="mt-1 text-[9px] text-white/40">{isAr?'اختار محادثة للرجوع إلى سياقها.':'Choose a conversation to restore its context.'}</p></div><button type="button" onClick={()=>setDaliArchiveOpen(false)} className="h-9 w-9 rounded-xl border border-white/10 bg-white/[0.05] text-white/70">×</button></div>
                 {daliArchivedChats.length===0?<div className="rounded-2xl border border-white/10 bg-white/[0.035] p-6 text-center text-[10px] text-white/40">{isAr?'لا توجد محادثات سابقة.':'No previous chats.'}</div>:<div className="space-y-2.5">{daliArchivedChats.map((chat:any)=><button key={chat.session_id} type="button" onClick={()=>restoreDaliArchivedChat(chat.session_id)} className="w-full rounded-2xl border border-white/10 bg-white/[0.035] p-3.5 text-left transition hover:bg-white/[0.07]"><div className="flex items-start justify-between gap-3"><span className="line-clamp-2 text-[11px] font-bold leading-5 text-white/90">{chat.title}</span><span className="shrink-0 text-[8px] font-black text-[#C2A378]">{chat.message_count}</span></div><p className="mt-1 line-clamp-2 text-[9px] leading-4 text-white/40">{chat.preview}</p></button>)}</div>}
               </div>}
