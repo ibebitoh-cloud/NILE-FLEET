@@ -386,7 +386,10 @@ export function buildPdfHtml(rows: Rate[], style: PdfStyle, o: ExportOptions, or
   .foot .co { color: #fff; font-weight: 800; }
   .foot .dali { display: flex; flex-direction: column; align-items: center; gap: 2px; }
   .foot .dali b { font-size: 7.5px; letter-spacing: 5px; color: #fff; }
-  .foot .dali img { height: 36px; }
+  .foot .dali i { font-style: normal; font-size: 6px; font-weight: 700; letter-spacing: 2.4px; color: rgba(255,255,255,.6); }
+  .foot .dali .ds { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 900; letter-spacing: 2.2px; color: #fff; }
+  .foot .dali .ds img { height: 11px; }
+  .foot .dali .ds em { font-style: normal; color: #c2a378; }
 </style></head><body>
   <div class="wm"><img src="${origin}/nf-mark-navy.png" alt=""></div>
   <div class="page">
@@ -398,7 +401,7 @@ export function buildPdfHtml(rows: Rate[], style: PdfStyle, o: ExportOptions, or
   ${content}
   <div class="foot">
     <div><div class="co">${rtl ? COMPANY.nameAr : COMPANY.nameEn}</div><div dir="ltr">${COMPANY.site} · ${COMPANY.email} · ☎ ${COMPANY.phones}</div></div>
-    <div class="dali"><b>NILE FLEET</b><img src="${origin}/dali/dali-studio-on-dark.png" alt="Dali Studio"></div>
+    <div class="dali"><b>NILE FLEET</b><i>POWERED BY</i><span class="ds"><img src="${origin}/dali/dali-mark.png" alt=""><em>DALI</em> STUDIO</span><i>IDEAS INTO DIGITAL</i><i>MOHAMED ALAA · +20 114 647 5759</i></div>
   </div>
   </div>
 </body></html>`;
