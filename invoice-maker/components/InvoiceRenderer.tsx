@@ -1339,7 +1339,7 @@ const InvoiceRenderer: React.FC<Props> = ({ invoice, theme, company }) => {
                         </div>
                       </td>
                       <td className={tdClass}>
-                         <div className="flex items-center gap-1 min-w-0 flex-wrap print:block">
+                         <div className="flex items-center gap-1 min-w-0 flex-wrap">
                             <span className="font-bold opacity-50">{item.PortGo}</span>
                             <span className="text-blue-500 font-black shrink-0 print:hidden mx-1">→</span>
                             <span className="font-bold text-slate-900">{item.PortGi}</span>
@@ -1392,7 +1392,7 @@ const InvoiceRenderer: React.FC<Props> = ({ invoice, theme, company }) => {
                     </div>
                   </td>
                   <td className={tdClass}>
-                     <div className="flex items-center gap-1 min-w-0 flex-wrap print:block">
+                     <div className="flex items-center gap-1 min-w-0 flex-wrap">
                         <span className="font-bold opacity-50">{item.PortGo}</span>
                         <span className="text-blue-500 font-black shrink-0 text-[9px] print:hidden mx-1">→</span>
                         <span className="font-bold text-slate-900">{item.PortGi}</span>
@@ -2180,7 +2180,7 @@ const InvoiceRenderer: React.FC<Props> = ({ invoice, theme, company }) => {
 
   return (
     <div 
-      className={`invoice-container relative shadow-2xl print:shadow-none print:mb-0 print:py-12 transition-all duration-700 ${getThemeBaseStyles()}`}
+      className={`invoice-container relative shadow-2xl print:shadow-none print:mb-0 transition-all duration-700 ${getThemeBaseStyles()}`}
     >
       {/* Background Watermark */}
       {company.watermark && (
@@ -2201,7 +2201,7 @@ const InvoiceRenderer: React.FC<Props> = ({ invoice, theme, company }) => {
       <div className="min-h-0 print:block">
         {renderTable()}
       </div>
-      <div className="mt-auto shrink-0 print:mt-12 print:block">
+      <div className="mt-auto shrink-0">
         {renderFooter()}
       </div>
 

@@ -4,8 +4,7 @@ import { X, Printer, Download, Loader2, Edit3, Check, Plus, Trash2 } from 'lucid
 import { Invoice, InvoiceTheme, CompanyInfo, BookingRow } from '../types';
 import InvoiceRenderer from './InvoiceRenderer';
 import DaliSignature from '../../components/DaliSignature';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
+import { buildInvoicePdf, fitForPrint, PRINT_PAGE_CSS } from '../pageFit';
 
 interface Props {
   invoice: Invoice;
@@ -21,6 +20,7 @@ const InvoiceModal: React.FC<Props> = ({ invoice, theme, company, onUpdateSerial
   const [isEditingSerial, setIsEditingSerial] = useState(false);
   const [tempSerial, setTempSerial] = useState(invoice.serialNumber);
   const printRef = useRef<HTMLDivElement>(null);
+  const printOnlyRef = useRef<HTMLDivElement>(null);
 
   // Invoice Edit Mode States
   const [isEditingInvoice, setIsEditingInvoice] = useState(false);
@@ -137,10 +137,12 @@ const InvoiceModal: React.FC<Props> = ({ invoice, theme, company, onUpdateSerial
     
     // Only the invoice prints: the rest of the app is hidden while body has .nfi-printing.
     const pageStyle = document.createElement('style');
-    pageStyle.textContent = '@page { margin: 20mm 15mm; size: portrait; }';
+    pageStyle.textContent = PRINT_PAGE_CSS;
     document.head.appendChild(pageStyle);
     document.body.classList.add('nfi-printing');
+    const restoreFit = printOnlyRef.current && printRef.current ? fitForPrint(printOnlyRef.current, printRef.current) : () => {};
     const cleanup = () => {
+      restoreFit();
       document.body.classList.remove('nfi-printing');
       pageStyle.remove();
       document.title = originalTitle;
@@ -163,61 +165,10 @@ const InvoiceModal: React.FC<Props> = ({ invoice, theme, company, onUpdateSerial
       const element = printRef.current;
       if (!element) throw new Error("Print source not found");
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Give images (logo, signature, watermark) a moment to finish loading.
+      await new Promise(resolve => setTimeout(resolve, 600));
+      const pdf = await buildInvoicePdf(element);
 
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        height: element.offsetHeight,
-        width: element.offsetWidth,
-        windowHeight: element.offsetHeight,
-        windowWidth: element.offsetWidth,
-      });
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      
-      const imgProps = pdf.getImageProperties(imgData);
-      
-      const marginX = 15;
-      const marginY = 20;
-      const innerWidth = pdfWidth - (marginX * 2);
-      const innerHeight = pdfHeight - (marginY * 2);
-      
-      const finalImgHeight = (imgProps.height * innerWidth) / imgProps.width;
-      
-      let heightLeft = finalImgHeight;
-      let position = marginY;
-
-      pdf.addImage(imgData, 'JPEG', marginX, position, innerWidth, finalImgHeight, undefined, 'FAST');
-      
-      pdf.setFillColor(255, 255, 255);
-      pdf.rect(0, 0, pdfWidth, marginY, 'F');
-      pdf.rect(0, pdfHeight - marginY, pdfWidth, marginY, 'F');
-      pdf.rect(0, 0, marginX, pdfHeight, 'F');
-      pdf.rect(pdfWidth - marginX, 0, marginX, pdfHeight, 'F');
-      
-      heightLeft -= innerHeight;
-
-      while (heightLeft > 0) {
-        pdf.addPage();
-        position = marginY - (finalImgHeight - heightLeft);
-        pdf.addImage(imgData, 'JPEG', marginX, position, innerWidth, finalImgHeight, undefined, 'FAST');
-        
-        pdf.setFillColor(255, 255, 255);
-        pdf.rect(0, 0, pdfWidth, marginY, 'F');
-        pdf.rect(0, pdfHeight - marginY, pdfWidth, marginY, 'F');
-        pdf.rect(0, 0, marginX, pdfHeight, 'F');
-        pdf.rect(pdfWidth - marginX, 0, marginX, pdfHeight, 'F');
-        
-        heightLeft -= innerHeight;
-      }
-      
       const safeCustomer = localInvoice.customer.replace(/[^a-z0-9]/gi, '_');
       pdf.save(`${localInvoice.serialNumber}_${safeCustomer}.pdf`);
     } catch (error) {
@@ -551,7 +502,7 @@ const InvoiceModal: React.FC<Props> = ({ invoice, theme, company, onUpdateSerial
         NATIVE PRINT SOURCE - Renders the edited reactive invoice outside the portal
       */}
       {createPortal(
-        <div className="nfi-print-only">
+        <div ref={printOnlyRef} className="nfi-print-only nfi-app">
           <InvoiceRenderer invoice={localInvoice} theme={theme} company={company} />
         </div>,
         document.body
@@ -562,7 +513,7 @@ const InvoiceModal: React.FC<Props> = ({ invoice, theme, company, onUpdateSerial
       */}
       <div 
         ref={printRef} 
-        className="bg-white no-print"
+        className="nfi-app bg-white no-print"
         style={{ 
           width: '210mm', 
           minHeight: '0', 

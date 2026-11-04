@@ -1,6 +1,7 @@
 /* Invoice Maker screen. Ported from the stand-alone INVOICE-CREATE app.
    Print rules only apply while body has .nfi-printing, so the rest of the
    Nile Fleet app keeps its own print behaviour. */
+@import url('./theme-reset.css');
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Special+Elite&display=swap');
 
 .nfi-app {
@@ -13,7 +14,6 @@
   background: white;
   width: 210mm;
   min-height: 297mm;
-  padding: 0;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -59,18 +59,13 @@ tr.no-break { display: table-row !important; }
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-  body.nfi-printing .invoice-container {
-    width: 100% !important;
-    max-width: 180mm !important;
-    min-height: 0 !important;
-    height: auto !important;
-    margin: 0 auto !important;
-    padding: 0 !important;
+  /* Full A4 sheet, edge to edge. Width/zoom are set by pageFit.ts just before printing. */
+  body.nfi-printing .nfi-print-only .invoice-container {
+    max-width: none !important;
+    margin: 0 !important;
     box-shadow: none !important;
-    border: none !important;
-    display: block !important;
+    border-radius: 0 !important;
     overflow: visible !important;
-    position: relative !important;
   }
   body.nfi-printing .nfi-print-only .render-header,
   body.nfi-printing .nfi-print-only .render-bill-to,
