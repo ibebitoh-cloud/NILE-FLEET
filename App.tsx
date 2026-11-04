@@ -51,13 +51,14 @@ const UserMgmt = lazyWithChunkRecovery(() => import('./screens/UserMgmt'));
 const CustomerService = lazyWithChunkRecovery(() => import('./screens/CustomerService'));
 const BookingInvoices = lazyWithChunkRecovery(() => import('./screens/BookingInvoices'));
 const InvoiceMaker = lazyWithChunkRecovery(() => import('./invoice-maker/InvoiceMakerApp'));
+import { canUseInvoiceMaker } from './invoice-maker/access';
 const DaliKnowledgeCenter = lazyWithChunkRecovery(() => import('./screens/DaliKnowledgeCenter'));
 const Organization = lazyWithChunkRecovery(() => import('./screens/Organization'));
 const Notifications = lazyWithChunkRecovery(() => import('./screens/Notifications'));
 type Language = 'en' | 'ar';
 const getDefaultAllowedScreens = (role: UserRole): string[] => {
-  if (role === UserRole.ADMIN) return ['dali-knowledge', 'dashboard', 'analytics', 'master-view', 'port-gate', 'operations', 'booking-invoices', 'invoice-maker', 'financials', 'intelligence', 'reports', 'stock', 'reservations', 'daily-dispatch', 'customers', 'user-mgmt', 'organization', 'customer-prices', 'financials', 'support', 'notifications', 'system-log', 'user-settings'];
-  if (role === UserRole.MANAGER) return ['dali-knowledge', 'dashboard', 'master-view', 'operations', 'stock', 'reservations', 'daily-dispatch', 'customers', 'customer-prices', 'booking-invoices', 'invoice-maker', 'financials', 'intelligence', 'reports', 'notifications', 'system-log', 'support', 'user-settings', 'organization'];
+  if (role === UserRole.ADMIN) return ['dali-knowledge', 'dashboard', 'analytics', 'master-view', 'port-gate', 'operations', 'booking-invoices', 'financials', 'intelligence', 'reports', 'stock', 'reservations', 'daily-dispatch', 'customers', 'user-mgmt', 'organization', 'customer-prices', 'financials', 'support', 'notifications', 'system-log', 'user-settings'];
+  if (role === UserRole.MANAGER) return ['dali-knowledge', 'dashboard', 'master-view', 'operations', 'stock', 'reservations', 'daily-dispatch', 'customers', 'customer-prices', 'booking-invoices', 'financials', 'intelligence', 'reports', 'notifications', 'system-log', 'support', 'user-settings', 'organization'];
   if (role === UserRole.VIEWER) return ['dali-knowledge', 'dashboard', 'master-view', 'reports', 'intelligence', 'notifications', 'support', 'system-log'];
   if (role === UserRole.GATE_OPERATOR) return ['port-gate', 'notifications', 'support', 'user-settings'];
   return ['cust-reservations', 'cust-invoices', 'notifications', 'support', 'user-settings'];
@@ -407,10 +408,13 @@ const App: React.FC = () => {
             .filter(screen => allScreens.has(screen))
             .concat(
               user?.role === UserRole.ADMIN || user?.role === UserRole.MANAGER
-                ? ['financials', 'daily-dispatch', 'invoice-maker']
+                ? ['financials', 'daily-dispatch']
                 : []
             )
         );
+    // Invoice Maker is limited to named accounts, whatever their role or screen list.
+    if (canUseInvoiceMaker(user?.email)) permittedScreens.add('invoice-maker');
+    else permittedScreens.delete('invoice-maker');
     const syncFromUrl = () => {
       const rawHash = window.location.hash.slice(1).split('?')[0];
       // When the hash is empty (cleared during logout / login redirect), try
