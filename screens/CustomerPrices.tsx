@@ -121,7 +121,7 @@ const CustomerPrices: React.FC = () => {
       <div className="space-y-8 animate-in fade-in duration-500 text-start pb-24">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
-             <h3 className="text-3xl font-black text-[#3a3833] uppercase tracking-tighter italic">Rate Master Console</h3>
+             <h3 className="text-3xl font-black text-[#17324d] uppercase tracking-tighter italic">Rate Master Console</h3>
              <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Strategic Pricing Management per Partner</p>
           </div>
           <div className="relative w-full md:w-96">
@@ -147,11 +147,11 @@ const CustomerPrices: React.FC = () => {
               <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 group-hover:bg-amber-50 rounded-full -mr-16 -mt-16 transition-colors duration-500"></div>
               
               <div className="flex items-center gap-4 mb-8 relative z-10">
-                <div className="w-14 h-14 bg-[#3a3833] text-[#C2A378] rounded-2xl flex items-center justify-center text-xl font-black shadow-lg">
+                <div className="w-14 h-14 bg-[#17324d] text-[#C2A378] rounded-2xl flex items-center justify-center text-xl font-black shadow-lg">
                   {(cust.companyName?.[0] || cust.name[0])}
                 </div>
                 <div>
-                  <h4 className="text-xl font-black text-[#3a3833] uppercase tracking-tight group-hover:text-[#C2A378] transition-colors">{cust.companyName || cust.name}</h4>
+                  <h4 className="text-xl font-black text-[#17324d] uppercase tracking-tight group-hover:text-[#C2A378] transition-colors">{cust.companyName || cust.name}</h4>
                   <span className="px-3 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[8px] font-black uppercase tracking-widest">Active Partner</span>
                 </div>
               </div>
@@ -239,13 +239,13 @@ const CustomerPrices: React.FC = () => {
         <div className="flex items-center gap-6">
           <button 
             onClick={() => setSelectedCustomer(null)}
-            className="p-4 bg-slate-50 text-slate-400 rounded-full hover:bg-[#3a3833] hover:text-white transition-all shadow-sm"
+            className="p-4 bg-slate-50 text-slate-400 rounded-full hover:bg-[#17324d] hover:text-white transition-all shadow-sm"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
           </button>
           <div>
             <span className="text-[10px] font-black text-[#C2A378] uppercase tracking-[0.3em] mb-1 block">Full Matrix Editor</span>
-            <h3 className="text-3xl font-black text-[#3a3833] uppercase tracking-tighter italic">{selectedCustomer.companyName || selectedCustomer.name}</h3>
+            <h3 className="text-3xl font-black text-[#17324d] uppercase tracking-tighter italic">{selectedCustomer.companyName || selectedCustomer.name}</h3>
           </div>
         </div>
         <div className="flex items-center gap-4 bg-slate-900 px-8 py-4 rounded-[2rem] text-white">
@@ -260,7 +260,7 @@ const CustomerPrices: React.FC = () => {
       <div className="bg-white rounded-[3rem] shadow-2xl border-2 border-slate-200 overflow-hidden relative group">
         <div className="overflow-x-auto">
           <table className="w-full text-left whitespace-nowrap border-collapse">
-            <thead className="bg-[#3a3833] text-white font-black uppercase tracking-wider text-[10px]">
+            <thead className="bg-[#17324d] text-white font-black uppercase tracking-wider text-[10px]">
               <tr>
                 <th className="p-6 border-r border-white/5 bg-slate-900 sticky left-0 z-20">Route (In ↓ Out →)</th>
                 {ports.map(p => (
@@ -314,14 +314,14 @@ const CustomerPrices: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 no-print">
         <div className="p-8 bg-white border-2 border-slate-200 rounded-[2.5rem] shadow-sm md:col-span-2">
           <div className="flex items-center justify-between gap-4 mb-6">
-            <div><h4 className="text-lg font-black text-[#3a3833] uppercase">Special Rate Rules</h4><p className="text-xs text-slate-500 font-medium mt-1">Independent conditions: destination and commodity are separate rules.</p></div>
-            <span className="text-[9px] font-black uppercase tracking-widest text-[#9b7438]">Rate Matrix</span>
+            <div><h4 className="text-lg font-black text-[#17324d] uppercase">Special Rate Rules</h4><p className="text-xs text-slate-500 font-medium mt-1">Independent conditions: destination and commodity are separate rules.</p></div>
+            <span className="text-[9px] font-black uppercase tracking-widest text-[#17324d]">Rate Matrix</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {(['destination','commodity'] as const).map(kind => {
               const rule = getSpecialPrice(selectedCustomer, kind);
-              return <div key={kind} className="p-5 bg-[#f3f1ec] rounded-2xl border border-[#d8d2c8]">
-                <div className="flex items-center justify-between mb-3"><div><p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{kind === 'destination' ? 'Destination' : 'Commodity'}</p><p className="text-sm font-black text-[#3a3833]">{kind === 'destination' ? 'MINYA' : 'GRAPES'}</p></div><span className="text-[8px] font-black text-[#9b7438] uppercase">Independent</span></div>
+              return <div key={kind} className="p-5 bg-white rounded-2xl border border-[#e3e8ee]">
+                <div className="flex items-center justify-between mb-3"><div><p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{kind === 'destination' ? 'Destination' : 'Commodity'}</p><p className="text-sm font-black text-[#17324d]">{kind === 'destination' ? 'MINYA' : 'GRAPES'}</p></div><span className="text-[8px] font-black text-[#9b7438] uppercase">Independent</span></div>
                 <div className="flex items-center gap-2"><span className="text-[8px] font-black text-slate-500">EGP</span><input type="number" defaultValue={rule?.price || ''} onBlur={e => saveSpecialPrice(selectedCustomer, kind, e.target.value)} className="w-full bg-white border border-[#d8d2c8] rounded-xl px-4 py-3 text-sm font-black text-[#26231f] outline-none focus:border-[#9b7438]" placeholder="Rate" /></div>
               </div>;
             })}
@@ -329,7 +329,7 @@ const CustomerPrices: React.FC = () => {
         </div>
 
 
-        <div className="p-10 bg-[#3a3833] rounded-[3rem] text-white space-y-6 shadow-xl relative overflow-hidden">
+        <div className="p-10 bg-[#17324d] rounded-[3rem] text-white space-y-6 shadow-xl relative overflow-hidden">
            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
            <h4 className="text-lg font-black uppercase italic text-[#C2A378]">VAT Logic Control</h4>
            <p className="text-xs text-slate-300 font-medium leading-relaxed">You can now enable 14% VAT individually per customer and per route. By default, all operations have 0 VAT. Use the "VAT ON" toggle in the grid above to activate tax calculations for specific contracts.</p>
@@ -348,7 +348,7 @@ const CustomerPrices: React.FC = () => {
         <div className="p-10 bg-white border-2 border-dashed border-slate-200 rounded-[3rem] flex items-center gap-8 shadow-sm">
            <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-[1.5rem] flex items-center justify-center text-3xl shadow-sm">💡</div>
            <div>
-              <h4 className="text-lg font-black text-[#3a3833] uppercase tracking-tight">Financial Accuracy Tip</h4>
+              <h4 className="text-lg font-black text-[#17324d] uppercase tracking-tight">Financial Accuracy Tip</h4>
               <p className="text-xs text-slate-600 font-medium mt-1 leading-relaxed">Updating a rate here **will not** retroactively change already issued invoices or in-progress bookings. Changes only apply to newly created operations.</p>
            </div>
         </div>

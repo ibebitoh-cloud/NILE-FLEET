@@ -157,7 +157,7 @@ const Reports: React.FC = () => {
       {/* Header & Filters */}
       <div className="bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col xl:flex-row justify-between items-center gap-6">
         <div>
-           <h2 className="text-2xl font-black text-[#3a3833] dark:text-white uppercase tracking-tight">{lang === 'ar' ? 'التقارير المالية والتدقيق' : 'Financial Audit Reports'}</h2>
+           <h2 className="text-2xl font-black text-[#17324d] dark:text-white uppercase tracking-tight">{lang === 'ar' ? 'التقارير المالية والتدقيق' : 'Financial Audit Reports'}</h2>
            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Daily operational report — UNDER OPERATE only</p>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full xl:w-auto">
@@ -198,7 +198,7 @@ const Reports: React.FC = () => {
       <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
         <div className="p-6 md:p-7 border-b border-slate-100 dark:border-slate-700 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
           <div>
-            <h3 className="text-xl font-black text-[#3a3833] dark:text-white uppercase tracking-tight">
+            <h3 className="text-xl font-black text-[#17324d] dark:text-white uppercase tracking-tight">
               {lang === 'ar' ? 'خطة المولدات اليومية' : 'Daily Genset Dispatch Plan'}
             </h3>
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
@@ -209,7 +209,7 @@ const Reports: React.FC = () => {
             <span className="px-3 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300">{lang === 'ar' ? 'حجوزات' : 'Bookings'}: {dailyGensetTotals.bookings}</span>
             <span className="px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300">{lang === 'ar' ? 'مولدات' : 'Gensets'}: {dailyGensetTotals.gensets}</span>
             <span className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300">{lang === 'ar' ? 'حاويات' : 'Containers'}: {dailyGensetTotals.containers}</span>
-            <button onClick={() => window.print()} className="px-3 py-2 rounded-xl bg-[#3a3833] text-white hover:opacity-90">{lang === 'ar' ? 'طباعة الخطة' : 'Print Plan'}</button>
+            <button onClick={() => window.print()} className="px-3 py-2 rounded-xl bg-[#17324d] text-white hover:opacity-90">{lang === 'ar' ? 'طباعة الخطة' : 'Print Plan'}</button>
           </div>
         </div>
 
@@ -297,7 +297,7 @@ const Reports: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-700">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{lang === 'ar' ? 'الحجوزات' : 'Bookings'}</p>
-          <p className="text-xl md:text-2xl font-black text-[#3a3833] dark:text-white">{summary.count}</p>
+          <p className="text-xl md:text-2xl font-black text-[#17324d] dark:text-white">{summary.count}</p>
         </div>
         <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-700">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{lang === 'ar' ? 'الإيراد الأساسي' : 'Base Rate'}</p>
@@ -307,7 +307,7 @@ const Reports: React.FC = () => {
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{lang === 'ar' ? 'الضريبة' : 'VAT'}</p>
           <p className="text-xl md:text-2xl font-black text-[#C2A378]">EGP {summary.vat.toLocaleString()}</p>
         </div>
-        <div className="bg-[#3a3833] p-6 rounded-3xl shadow-xl col-span-2 md:col-span-1">
+        <div className="bg-[#17324d] p-6 rounded-3xl shadow-xl col-span-2 md:col-span-1">
           <p className="text-[10px] font-black text-[#C2A378] uppercase tracking-widest">{lang === 'ar' ? 'الإجمالي' : 'Total'}</p>
           <p className="text-xl md:text-2xl font-black text-white italic">EGP {summary.grandTotal.toLocaleString()}</p>
         </div>
@@ -378,9 +378,9 @@ const Reports: React.FC = () => {
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] shadow-2xl border-4 border-slate-50 dark:border-slate-700 flex flex-col h-full">
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 bg-[#3a3833] text-[#C2A378] rounded-2xl flex items-center justify-center text-xl shadow-lg">🛡️</div>
+              <div className="w-12 h-12 bg-[#17324d] text-[#C2A378] rounded-2xl flex items-center justify-center text-xl shadow-lg">🛡️</div>
               <div>
-                <h3 className="text-lg font-black text-[#3a3833] dark:text-white uppercase italic leading-none">DALI 1.0</h3>
+                <h3 className="text-lg font-black text-[#17324d] dark:text-white uppercase italic leading-none">DALI 1.0</h3>
                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">Financial Integrity AI</p>
               </div>
             </div>
@@ -409,7 +409,7 @@ const Reports: React.FC = () => {
             <button 
               onClick={runDaliAuditor}
               disabled={isThinking}
-              className="w-full bg-[#3a3833] text-white py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl hover:bg-[#002b57] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+              className="w-full bg-[#17324d] text-white py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl hover:bg-[#002b57] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
             >
               {isThinking ? 'Analyzing Ledger...' : 'Verify Dataset Accuracy'}
             </button>

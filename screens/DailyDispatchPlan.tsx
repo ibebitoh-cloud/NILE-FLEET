@@ -174,7 +174,7 @@ const DailyDispatchPlan: React.FC = () => {
             <button onClick={() => setActiveOnly(v => !v)} className={`h-9 px-3 rounded-lg border text-[9px] font-black uppercase ${activeOnly ? 'border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300' : 'border-slate-200 bg-white text-slate-500 dark:bg-slate-900 dark:border-slate-700'}`}>
               {activeOnly ? (isAr ? 'العمل الحالي' : 'ACTIVE WORK') : (isAr ? 'كل الحالات' : 'ALL STATUS')}
             </button>
-            <button onClick={() => window.print()} className="h-9 px-3 rounded-lg bg-[#3a3833] text-[#C2A378] text-[9px] font-black uppercase">
+            <button onClick={() => window.print()} className="h-9 px-3 rounded-lg bg-[#17324d] text-[#C2A378] text-[9px] font-black uppercase">
               {isAr ? 'طباعة / PDF' : 'PRINT / PDF'}
             </button>
           </div>
@@ -238,7 +238,7 @@ const DailyDispatchPlan: React.FC = () => {
                     <col style={{ width: '125px' }} />
                     <col style={{ width: '100px' }} />
                   </colgroup>
-                  <thead className="bg-[#3a3833] text-[8px] font-black uppercase tracking-wider text-white">
+                  <thead className="bg-[#17324d] text-[8px] font-black uppercase tracking-wider text-white">
                     <tr>
                       <th className="px-2 py-2 text-center">#</th>
                       <th className="px-2 py-2">{isAr ? 'الحجز' : 'BOOKING'}</th>
