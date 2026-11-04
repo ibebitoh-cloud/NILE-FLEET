@@ -27,8 +27,7 @@ import {
 import * as XLSX from 'xlsx';
 import { Invoice, BookingRow, CompanyInfo, InvoiceTheme } from '../types';
 import { INITIAL_CSV_DATA } from '../constants';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
+import { buildInvoicePdf } from '../pageFit';
 import InvoiceRenderer from './InvoiceRenderer';
 import { UploadPdfModal } from './UploadPdfModal';
 
@@ -280,57 +279,8 @@ const BookingScreen: React.FC<Props> = ({ invoices, onPreview, onImport, onClear
         const element = batchRenderRef.current;
         if (!element) continue;
 
-        const canvas = await html2canvas(element, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff',
-          windowWidth: element.scrollWidth,
-          windowHeight: element.scrollHeight,
-        });
+        const pdf = await buildInvoicePdf(element);
 
-        const imgData = canvas.toDataURL('image/jpeg', 0.8);
-        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
-        
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        const imgProps = pdf.getImageProperties(imgData);
-        
-        // Match InvoiceModal margin logic
-        const marginX = 15;
-        const marginY = 20;
-        const innerWidth = pdfWidth - (marginX * 2);
-        const innerHeight = pdfHeight - (marginY * 2);
-        const finalImgHeight = (imgProps.height * innerWidth) / imgProps.width;
-        
-        let heightLeft = finalImgHeight;
-        let position = marginY;
-
-        pdf.addImage(imgData, 'JPEG', marginX, position, innerWidth, finalImgHeight, undefined, 'FAST');
-        
-        // Cover margins
-        pdf.setFillColor(255, 255, 255);
-        pdf.rect(0, 0, pdfWidth, marginY, 'F');
-        pdf.rect(0, pdfHeight - marginY, pdfWidth, marginY, 'F');
-        pdf.rect(0, 0, marginX, pdfHeight, 'F');
-        pdf.rect(pdfWidth - marginX, 0, marginX, pdfHeight, 'F');
-        
-        heightLeft -= innerHeight;
-
-        while (heightLeft > 0) {
-          pdf.addPage();
-          position = marginY - (finalImgHeight - heightLeft);
-          pdf.addImage(imgData, 'JPEG', marginX, position, innerWidth, finalImgHeight, undefined, 'FAST');
-          
-          pdf.setFillColor(255, 255, 255);
-          pdf.rect(0, 0, pdfWidth, marginY, 'F');
-          pdf.rect(0, pdfHeight - marginY, pdfWidth, marginY, 'F');
-          pdf.rect(0, 0, marginX, pdfHeight, 'F');
-          pdf.rect(pdfWidth - marginX, 0, marginX, pdfHeight, 'F');
-          
-          heightLeft -= innerHeight;
-        }
-        
         const safeCustomer = inv.customer.replace(/[^a-z0-9]/gi, '_');
         pdf.save(`${inv.serialNumber}_${safeCustomer}.pdf`);
         
