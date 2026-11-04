@@ -7,6 +7,8 @@ const VISION_MODEL = '@cf/qwen/qwen3.8-27b';
 const VISION_FALLBACK_MODEL = '@cf/meta/llama-3.2-11b-vision-instruct';
 const TEXT_FALLBACK_MODEL = '@cf/qwen/qwen3-30b-a3b-fp8';
 const CREATOR_EMAIL = 'bebito@nilefleet.com';
+// Invoice Maker accounts. Keep in step with invoice-maker/access.ts.
+const INVOICE_MAKER_EMAILS = ['bebito@nilefleet.com', 'doniasoltan@nilefleet.com'];
 
 // Which profile roles may call each AI action. Checked here on the server so a
 // customer or gate account cannot reach DALI's operations prompts by calling
@@ -17,7 +19,7 @@ const ACTION_ROLES = {
   daliAction: ['ADMIN', 'MANAGER'],
   scanImageForContainer: ['ADMIN', 'MANAGER', 'GATE_OPERATOR'],
   mapSpreadsheetToSchema: ['ADMIN', 'MANAGER'],
-  parseInvoiceDocument: ['ADMIN', 'MANAGER'],
+  parseInvoiceDocument: ['ADMIN', 'MANAGER', 'VIEWER', 'GATE_OPERATOR'],
 };
 
 // Actions for the Transport system, checked against the caller's Transport role
@@ -111,6 +113,9 @@ export async function onRequestPost(context) {
   const { action, payload } = body;
 
   const isCreator = String(authenticatedUser.email || '').trim().toLowerCase() === CREATOR_EMAIL;
+  if (action === 'parseInvoiceDocument' && !INVOICE_MAKER_EMAILS.includes(String(authenticatedUser.email || '').trim().toLowerCase())) {
+    return json({ error: 'Invoice Maker is not available for this account' }, 403);
+  }
   if (TRANSPORT_ACTIONS[action]) {
     const role = await loadTransportRole(supabaseUrl, supabaseAnonKey, accessToken);
     if (!isCreator && !TRANSPORT_ACTIONS[action].includes(role)) {

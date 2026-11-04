@@ -18,7 +18,6 @@ const ALL_SYSTEM_SCREENS = [
   { id: 'customers', label: 'Partners Directory', icon: '🤝', category: 'Commercial' },
   { id: 'customer-prices', label: 'Customer Price Matrix', icon: '💰', category: 'Commercial' },
   { id: 'booking-invoices', label: 'Booking Invoices', icon: '🧾', category: 'Commercial' },
-  { id: 'invoice-maker', label: 'Invoice Maker', icon: '🖨️', category: 'Commercial' },
   { id: 'financials', label: 'Financials & Payments', icon: '🏦', category: 'Financials' },
   { id: 'analytics', label: 'Analytics Dashboard', icon: '📈', category: 'Analytics' },
   { id: 'intelligence', label: 'AI Intelligence Hub', icon: '🧠', category: 'Analytics' },
@@ -48,7 +47,7 @@ const ALL_ACTION_PERMISSIONS: { key: keyof UserPermissions; label: string; icon:
 const getRoleDefaultScreenIds = (role: UserRole): string[] => {
   if (role === UserRole.ADMIN) return ALL_SYSTEM_SCREENS.map(screen => screen.id);
   if (role === UserRole.GATE_OPERATOR) return ['port-gate', 'notifications', 'support', 'user-settings'];
-  if (role === UserRole.MANAGER) return ['dashboard', 'master-view', 'operations', 'stock', 'reservations', 'customers', 'customer-prices', 'booking-invoices', 'invoice-maker', 'financials', 'intelligence', 'reports', 'notifications', 'system-log', 'support', 'user-settings'];
+  if (role === UserRole.MANAGER) return ['dashboard', 'master-view', 'operations', 'stock', 'reservations', 'customers', 'customer-prices', 'booking-invoices', 'financials', 'intelligence', 'reports', 'notifications', 'system-log', 'support', 'user-settings'];
   if (role === UserRole.CUSTOMER) return ['cust-reservations', 'cust-invoices', 'notifications', 'support'];
   return ['dashboard', 'master-view', 'reports', 'intelligence', 'notifications', 'support', 'system-log'];
 };

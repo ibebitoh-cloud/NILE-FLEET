@@ -19,6 +19,7 @@ import { getTerminology } from '../services/daliTerminology';
 import { getDaliCustomerAliases } from '../services/daliCustomerAliases';
 import type { DaliCustomerAlias } from '../services/daliCustomerAliases';
 import { buildDaliOrganizationContext, isDaliAllowedRole } from '../services/daliOrganization';
+import { canUseInvoiceMaker } from '../invoice-maker/access';
 
 interface LayoutProps {
   user: User;
@@ -1738,7 +1739,7 @@ I’ll search with you. 🤖`;
   ]);
 
   const roleDefaultScreenIds = user.role === UserRole.MANAGER
-    ? ['dashboard', 'master-view', 'operations', 'stock', 'reservations', 'daily-dispatch', 'customers', 'customer-prices', 'booking-invoices', 'invoice-maker', 'financials', 'intelligence', 'reports', 'notifications', 'system-log']
+    ? ['dashboard', 'master-view', 'operations', 'stock', 'reservations', 'daily-dispatch', 'customers', 'customer-prices', 'booking-invoices', 'financials', 'intelligence', 'reports', 'notifications', 'system-log']
     : user.role === UserRole.VIEWER
       ? ['dashboard', 'master-view', 'reports', 'intelligence', 'notifications', 'support', 'system-log']
       : null;
@@ -1747,15 +1748,20 @@ I’ll search with you. 🤖`;
     : Array.isArray(user.allowedScreens)
       ? allPossibleMenuItems.filter(item =>
           user.allowedScreens?.includes(item.id) ||
-          ((user.role === UserRole.ADMIN || user.role === UserRole.MANAGER) && (item.id === 'daily-dispatch' || item.id === 'financials' || item.id === 'invoice-maker'))
+          ((user.role === UserRole.ADMIN || user.role === UserRole.MANAGER) && (item.id === 'daily-dispatch' || item.id === 'financials'))
         )
     : roleDefaultScreenIds
       ? allPossibleMenuItems.filter(item => roleDefaultScreenIds.includes(item.id))
       : defaultMenu;
   // DALI users get the Knowledge Center in the menu (documents, rules, aliases).
-  const menu = canUseDali && !baseMenu.some(item => item.id === 'dali-knowledge')
+  const daliMenu = canUseDali && !baseMenu.some(item => item.id === 'dali-knowledge')
     ? [...baseMenu, allPossibleMenuItems.find(item => item.id === 'dali-knowledge')!]
     : baseMenu;
+  // Invoice Maker shows only for the named accounts in invoice-maker/access.ts.
+  const invoiceMakerItem = allPossibleMenuItems.find(item => item.id === 'invoice-maker')!;
+  const menu = canUseInvoiceMaker(user.email)
+    ? (daliMenu.some(item => item.id === 'invoice-maker') ? daliMenu : [...daliMenu, invoiceMakerItem])
+    : daliMenu.filter(item => item.id !== 'invoice-maker');
 
     const sidebarBg = isDark ? 'bg-[#001224]' : 'bg-[#e9e5de] shadow-xl';
   const mainBg = isDark ? 'bg-[#000b14]' : 'bg-[#f3f1ec]';
