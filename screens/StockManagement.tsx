@@ -883,7 +883,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
       {/* Top Header & View Tabs */}
       <div className="bg-white dark:bg-slate-800 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-xl font-black uppercase tracking-tight text-[#3a3833] dark:text-white flex items-center gap-2">
+          <h1 className="text-xl font-black uppercase tracking-tight text-[#17324d] dark:text-white flex items-center gap-2">
             <span>⚡</span>
             <span>{isAr ? 'إدارة أسطول المولدات والصيانة' : 'Genset Fleet & Maintenance Command'}</span>
           </h1>
@@ -897,7 +897,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
           <div className="bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl flex border border-slate-200 dark:border-slate-700">
             <button
               onClick={() => setActiveTab('visual')}
-              className={`px-4 py-2 rounded-xl font-black uppercase text-[9px] tracking-wider transition-all flex items-center gap-1.5 ${activeTab === 'visual' ? 'bg-[#3a3833] text-white shadow-md' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'}`}
+              className={`px-4 py-2 rounded-xl font-black uppercase text-[9px] tracking-wider transition-all flex items-center gap-1.5 ${activeTab === 'visual' ? 'bg-[#17324d] text-white shadow-md' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'}`}
             >
               <span>🛰️</span>
               <span>{isAr ? 'خريطة الأسطول' : 'Fleet View'}</span>
@@ -907,13 +907,13 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
               onClick={() => setActiveTab('inventory')}
               className={`px-4 py-2 rounded-xl font-black uppercase text-[9px] tracking-wider transition-all flex items-center gap-1.5 ${
                 activeTab === 'inventory'
-                  ? 'bg-[#3a3833] text-white shadow-md'
+                  ? 'bg-[#17324d] text-white shadow-md'
                   : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'
               }`}
             >
               <span>⚡</span>
               <span>{isAr ? 'المخزون والأسطول' : 'Fleet Inventory'}</span>
-              <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-black ${activeTab === 'inventory' ? 'bg-[#C2A378] text-[#3a3833]' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+              <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-black ${activeTab === 'inventory' ? 'bg-[#C2A378] text-[#17324d]' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
                 {stock.length}
               </span>
             </button>
@@ -922,13 +922,13 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
               onClick={() => setActiveTab('maintenance')}
               className={`px-4 py-2 rounded-xl font-black uppercase text-[9px] tracking-wider transition-all flex items-center gap-1.5 ${
                 activeTab === 'maintenance'
-                  ? 'bg-[#3a3833] text-[#C2A378] shadow-md border border-[#C2A378]/30'
+                  ? 'bg-[#17324d] text-[#C2A378] shadow-md border border-[#C2A378]/30'
                   : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'
               }`}
             >
               <span>🛠️</span>
               <span>{isAr ? 'سجلات الصيانة' : 'Maintenance Logs'}</span>
-              <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-black ${activeTab === 'maintenance' ? 'bg-[#C2A378] text-[#3a3833]' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+              <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-black ${activeTab === 'maintenance' ? 'bg-[#C2A378] text-[#17324d]' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
                 {maintenanceLogs.length}
               </span>
             </button>
@@ -947,7 +947,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
           {!isReadOnly && activeTab === 'inventory' && (
             <button 
               onClick={() => setShowAddModal(true)}
-              className="bg-[#3a3833] hover:bg-slate-900 text-[#C2A378] border border-[#C2A378]/40 px-4 py-2.5 rounded-xl font-black uppercase text-[9px] tracking-widest shadow-md whitespace-nowrap transition-all"
+              className="bg-[#17324d] hover:bg-slate-900 text-[#C2A378] border border-[#C2A378]/40 px-4 py-2.5 rounded-xl font-black uppercase text-[9px] tracking-widest shadow-md whitespace-nowrap transition-all"
             >
               + {isAr ? 'تسجيل مولد جديد' : 'Register Asset'}
             </button>
@@ -960,7 +960,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
         <div className="bg-white dark:bg-slate-800 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
           <p className="text-[8px] font-black uppercase tracking-wider text-slate-400">{isAr ? 'إجمالي الأسطول' : 'Total Fleet'}</p>
           <div className="flex items-baseline justify-between mt-1">
-            <span className="text-xl font-black text-[#3a3833] dark:text-white font-mono">{metrics.total}</span>
+            <span className="text-xl font-black text-[#17324d] dark:text-white font-mono">{metrics.total}</span>
             <span className="text-[8px] font-bold text-slate-400 uppercase">Units</span>
           </div>
         </div>
@@ -1007,7 +1007,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
       {/* ================= VISUAL FLEET BOARD ================= */}
       {activeTab === 'visual' && (
         <div className="space-y-4 animate-in fade-in duration-300">
-          <div className="bg-[#3a3833] text-white rounded-3xl p-5 shadow-xl border border-[#C2A378]/30">
+          <div className="bg-[#17324d] text-white rounded-3xl p-5 shadow-xl border border-[#C2A378]/30">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2">
@@ -1052,7 +1052,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
           </div>
 
           {!isReadOnly && selectedIds.size > 0 && (
-            <div className="sticky top-2 z-30 rounded-2xl border border-[#C2A378]/40 bg-[#3a3833] text-white p-2.5 shadow-2xl">
+            <div className="sticky top-2 z-30 rounded-2xl border border-[#C2A378]/40 bg-[#17324d] text-white p-2.5 shadow-2xl">
               <div className="flex flex-wrap items-center gap-2">
                 <div className="flex min-w-0 max-w-full items-center gap-1.5">
                   <span className="shrink-0 px-2.5 py-1 rounded-lg bg-white/10 border border-white/10 text-[9px] font-black uppercase tracking-widest">
@@ -1137,7 +1137,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
               ];
               return (
                 <div key={port} className="min-w-0 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
-                  <div className="bg-[#3a3833] text-white px-2.5 py-2.5 flex items-center justify-between border-b border-[#C2A378]/30">
+                  <div className="bg-[#17324d] text-white px-2.5 py-2.5 flex items-center justify-between border-b border-[#C2A378]/30">
                     <div>
                       <div className="font-black text-[10px] truncate">{port}</div>
                       <div className="text-[7px] font-bold text-slate-300">{units.length} {isAr ? 'مولد إجمالي' : 'TOTAL GENSETS'}</div>
@@ -1234,7 +1234,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
           <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left whitespace-nowrap border-collapse">
-                <thead className="bg-[#3a3833] text-white font-black uppercase text-[9px]">
+                <thead className="bg-[#17324d] text-white font-black uppercase text-[9px]">
                   <tr>
                     <th className="p-4 w-10 text-center border-r border-white/5">
                       <input type="checkbox" className="rounded" checked={selectedIds.size === filteredStock.length && filteredStock.length > 0} onChange={toggleSelectAll} />
@@ -1358,10 +1358,10 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
       )}
 
       {showFleetImportModal && (
-        <div className="fixed inset-0 bg-[#3a3833]/85 backdrop-blur-md z-[250] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-[#17324d]/85 backdrop-blur-md z-[250] flex items-center justify-center p-4">
           <DaliSignature variant="popup" />
           <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-3xl w-full border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <div className="p-4 bg-[#3a3833] text-white flex items-center justify-between">
+            <div className="p-4 bg-[#17324d] text-white flex items-center justify-between">
               <div>
                 <h3 className="font-black uppercase text-sm">{isAr ? 'مراجعة مزامنة Excel' : 'REVIEW EXCEL SYNC'}</h3>
                 <p className="text-[8px] text-[#C2A378] font-bold mt-0.5">{fleetImportFileName} • {fleetImportRows.length} {isAr ? 'تعديل' : 'CHANGE(S)'}</p>
@@ -1424,7 +1424,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
                 <button
                   type="button"
                   onClick={handleApplyFleetBoardImport}
-                  className="w-2/3 py-2.5 rounded-xl bg-[#3a3833] hover:bg-slate-900 text-[#C2A378] font-black text-[9px] uppercase"
+                  className="w-2/3 py-2.5 rounded-xl bg-[#17324d] hover:bg-slate-900 text-[#C2A378] font-black text-[9px] uppercase"
                 >
                   ✓ {isAr ? 'تأكيد المزامنة' : 'CONFIRM SYNC'}
                 </button>
@@ -1435,10 +1435,10 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
       )}
 
       {showBulkMaintenanceModal && (
-        <div className="fixed inset-0 bg-[#3a3833]/80 backdrop-blur-md z-[200] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-[#17324d]/80 backdrop-blur-md z-[200] flex items-center justify-center p-4">
           <DaliSignature variant="popup" />
           <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-lg w-full border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <div className="p-4 bg-[#3a3833] text-white flex items-center justify-between">
+            <div className="p-4 bg-[#17324d] text-white flex items-center justify-between">
               <div><h3 className="font-black uppercase text-sm">{isAr ? 'إضافة سجلات صيانة جماعية' : 'BULK MAINTENANCE RECORDS'}</h3><p className="text-[8px] text-[#C2A378] font-bold">{selectedIds.size} {isAr ? 'مولد محدد' : 'GENSET(S) SELECTED'}</p></div>
               <button type="button" onClick={() => setShowBulkMaintenanceModal(false)} className="text-white">✕</button>
             </div>
@@ -1568,7 +1568,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
           <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left whitespace-nowrap border-collapse">
-                <thead className="bg-[#3a3833] text-white font-black uppercase text-[9px]">
+                <thead className="bg-[#17324d] text-white font-black uppercase text-[9px]">
                   <tr>
                     <th className="p-4 w-10 text-center">#</th>
                     <th className="p-4">{isAr ? 'بدء الصيانة' : 'Start Date'}</th>
@@ -1686,9 +1686,9 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
       {/* ================= BULK RELOCATION BAR ================= */}
       {selectedIds.size > 0 && activeTab === 'inventory' && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-10">
-          <div className="bg-[#3a3833] text-white px-8 py-5 rounded-[2.5rem] shadow-2xl border-2 border-[#C2A378] flex items-center gap-10 backdrop-blur-xl">
+          <div className="bg-[#17324d] text-white px-8 py-5 rounded-[2.5rem] shadow-2xl border-2 border-[#C2A378] flex items-center gap-10 backdrop-blur-xl">
             <div className="flex items-center gap-3">
-              <span className="w-10 h-10 bg-[#C2A378] text-[#3a3833] rounded-full flex items-center justify-center font-black text-sm">{selectedIds.size}</span>
+              <span className="w-10 h-10 bg-[#C2A378] text-[#17324d] rounded-full flex items-center justify-center font-black text-sm">{selectedIds.size}</span>
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-[#C2A378]">{isAr ? 'إعادة توجيه مجمعة' : 'Bulk Relocation'}</p>
                 <p className="text-[9px] font-bold text-slate-400">{selectedIds.size} {isAr ? 'مولدات محددة' : 'Assets Selected'}</p>
@@ -1702,7 +1702,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
                   <button 
                     key={loc}
                     onClick={() => handleBulkTransfer(loc)}
-                    className="bg-white/10 hover:bg-[#C2A378] hover:text-[#3a3833] border border-white/20 rounded-xl px-4 py-2 text-[9px] font-black uppercase transition-all"
+                    className="bg-white/10 hover:bg-[#C2A378] hover:text-[#17324d] border border-white/20 rounded-xl px-4 py-2 text-[9px] font-black uppercase transition-all"
                   >
                     {loc}
                   </button>
@@ -1718,11 +1718,11 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
 
       {/* ================= MODAL: UNIT MAINTENANCE HISTORY TIMELINE ================= */}
       {selectedUnitForMaint && (
-        <div className="fixed inset-0 bg-[#3a3833]/80 backdrop-blur-md z-[200] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-[#17324d]/80 backdrop-blur-md z-[200] flex items-center justify-center p-4">
           <DaliSignature variant="popup" />
           <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col animate-in zoom-in-95">
             {/* Header */}
-            <div className="p-6 bg-[#3a3833] text-white flex justify-between items-center border-b border-white/10">
+            <div className="p-6 bg-[#17324d] text-white flex justify-between items-center border-b border-white/10">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-2xl">
                   🛠️
@@ -1749,7 +1749,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
                     onClick={() => {
                       openNewMaintenanceModal(selectedUnitForMaint);
                     }}
-                    className="bg-[#C2A378] text-[#3a3833] hover:bg-amber-400 px-4 py-2 rounded-xl font-black uppercase text-[9px] tracking-wider transition-all flex items-center gap-1"
+                    className="bg-[#C2A378] text-[#17324d] hover:bg-amber-400 px-4 py-2 rounded-xl font-black uppercase text-[9px] tracking-wider transition-all flex items-center gap-1"
                   >
                     <span>+</span>
                     <span>{isAr ? 'إضافة سجل صيانة' : 'Add Record'}</span>
@@ -1841,7 +1841,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
                         </div>
 
                         <div className="text-right">
-                          <span className="text-sm font-black font-mono text-[#3a3833] dark:text-[#C2A378]">
+                          <span className="text-sm font-black font-mono text-[#17324d] dark:text-[#C2A378]">
                             
                           </span>
                           {log.runningHours && (
@@ -1905,12 +1905,12 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
 
       {/* ================= MODAL: LOG / EDIT MAINTENANCE RECORD ================= */}
       {maintModalState.isOpen && (
-        <div className="fixed inset-0 bg-[#3a3833]/85 backdrop-blur-md z-[250] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-[#17324d]/85 backdrop-blur-md z-[250] flex items-center justify-center p-4">
           <DaliSignature variant="popup" />
           <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl max-w-xl w-full overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 flex flex-col max-h-[92vh]">
             
             {/* Modal Header */}
-            <div className="p-6 bg-[#3a3833] text-white flex justify-between items-center border-b border-white/10">
+            <div className="p-6 bg-[#17324d] text-white flex justify-between items-center border-b border-white/10">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">🛠️</span>
                 <div>
@@ -2196,7 +2196,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
 
       {/* ================= MODAL: REGISTER NEW ASSET ================= */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-[#3a3833]/90 backdrop-blur-xl z-[200] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-[#17324d]/90 backdrop-blur-xl z-[200] flex items-center justify-center p-4">
           <DaliSignature variant="popup" />
           <div className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl max-w-md w-full overflow-hidden border-[10px] border-slate-900 animate-in zoom-in-95">
             <div className="p-6 bg-slate-900 text-white flex justify-between items-center">
@@ -2222,7 +2222,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
 
       {/* ================= MODAL: MODIFY ASSET ================= */}
       {editingGenset && (
-        <div className="fixed inset-0 bg-[#3a3833]/90 backdrop-blur-xl z-[200] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-[#17324d]/90 backdrop-blur-xl z-[200] flex items-center justify-center p-4">
           <DaliSignature variant="popup" />
           <div className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl max-w-md w-full overflow-hidden border-[10px] border-slate-900 animate-in zoom-in-95">
             <div className="p-6 bg-slate-900 text-white flex justify-between items-center">
@@ -2274,7 +2274,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
                 </button>
               </div>
 
-              <button type="submit" className="w-full py-4 bg-[#3a3833] text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl">Apply Changes</button>
+              <button type="submit" className="w-full py-4 bg-[#17324d] text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl">Apply Changes</button>
             </form>
           </div>
         </div>

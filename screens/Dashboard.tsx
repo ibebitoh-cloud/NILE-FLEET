@@ -219,7 +219,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       <section>
         <div className="flex items-end justify-between mb-3 px-1">
           <div>
-            <h2 className="text-xl md:text-2xl font-black text-[#3a3833] dark:text-white uppercase italic tracking-tight">
+            <h2 className="text-xl md:text-2xl font-black text-[#17324d] dark:text-white uppercase italic tracking-tight">
               {translateEntity('Port Control', lang)}
             </h2>
             <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.25em]">
@@ -241,7 +241,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                 className="w-full text-start bg-white dark:bg-slate-800 rounded-[1.6rem] p-4 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all"
               >
                 <div className="flex items-center justify-between mb-3">
-                  <span className="bg-[#3a3833] dark:bg-slate-700 text-[#C2A378] px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">
+                  <span className="bg-[#17324d] dark:bg-slate-700 text-[#C2A378] px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">
                     {translateEntity(port.port, lang)}
                   </span>
                   <span className={`text-[8px] font-black uppercase ${isDeficit ? 'text-rose-500' : 'text-emerald-500'}`}>
@@ -283,7 +283,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           })}
         </div>
 
-        <div className="mt-3 bg-[#3a3833] dark:bg-slate-900 rounded-[1.6rem] p-4 border border-slate-700 shadow-sm">
+        <div className="mt-3 bg-[#17324d] dark:bg-slate-900 rounded-[1.6rem] p-4 border border-slate-700 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <span className="text-[#C2A378] text-[9px] font-black uppercase tracking-widest">
               {isAr ? 'الإجمالي' : 'TOTAL'}
@@ -327,13 +327,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       <section className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
           <div>
-            <h2 className="font-black text-[#3a3833] dark:text-white uppercase italic">Live Operations</h2>
+            <h2 className="font-black text-[#17324d] dark:text-white uppercase italic">Live Operations</h2>
             <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Real operation records from the system</p>
           </div>
           <button onClick={() => onNavigate('operations')} className="text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Operations</button>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-4">
-          <div><span className="block text-[8px] text-slate-400 uppercase font-black">Total Operations</span><b className="text-2xl text-[#3a3833] dark:text-white">{operationStats.total}</b></div>
+          <div><span className="block text-[8px] text-slate-400 uppercase font-black">Total Operations</span><b className="text-2xl text-[#17324d] dark:text-white">{operationStats.total}</b></div>
           <div><span className="block text-[8px] text-slate-400 uppercase font-black">In Progress</span><b className="text-2xl text-emerald-500">{operationStats.active}</b></div>
           <div><span className="block text-[8px] text-slate-400 uppercase font-black">Under Operate</span><b className="text-2xl text-amber-500">{operationStats.underOperate}</b></div>
           <div><span className="block text-[8px] text-slate-400 uppercase font-black">Genset Linked</span><b className="text-2xl text-blue-500">{operationStats.linkedActive}</b></div>
@@ -345,7 +345,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       <section className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
           <div>
-            <h2 className="font-black text-[#3a3833] dark:text-white uppercase italic">{translateEntity('Smart Operations Watch', lang)}</h2>
+            <h2 className="font-black text-[#17324d] dark:text-white uppercase italic">{translateEntity('Smart Operations Watch', lang)}</h2>
             <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">{translateEntity('Automatic exception detection', lang)}</p>
           </div>
           <span className="text-[9px] font-black uppercase px-2.5 py-1 rounded-full bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400">{smartAlerts.length} Signals</span>
@@ -368,7 +368,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         <section className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
           <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between gap-3">
             <div>
-              <h2 className="font-black text-[#3a3833] dark:text-white uppercase italic">{translateEntity('Customer Financial Reports', lang)}</h2>
+              <h2 className="font-black text-[#17324d] dark:text-white uppercase italic">{translateEntity('Customer Financial Reports', lang)}</h2>
               <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Billed • Paid • Outstanding</p>
             </div>
             <button onClick={() => onNavigate('financials')} className="text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">{isReadOnly ? 'Ledger' : 'Financials'}</button>
@@ -381,7 +381,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           <div className="divide-y divide-slate-100 dark:divide-slate-700">
             {customerFinancials.slice(0, 5).map(c => (
               <button key={c.id} onClick={() => onNavigate('customers')} className="w-full px-5 py-3 flex items-center justify-between gap-3 text-start hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
-                <div className="min-w-0"><p className="font-black text-xs text-[#3a3833] dark:text-slate-200 uppercase truncate">{c.name}</p><span className="text-[8px] text-slate-400 font-bold">{c.operations} operations</span></div>
+                <div className="min-w-0"><p className="font-black text-xs text-[#17324d] dark:text-slate-200 uppercase truncate">{c.name}</p><span className="text-[8px] text-slate-400 font-bold">{c.operations} operations</span></div>
                 <div className="text-right shrink-0"><span className="block text-[8px] text-slate-400 uppercase">{translateEntity('Outstanding', lang)}</span><b className={`text-xs ${c.outstanding > 0 ? 'text-rose-500' : 'text-slate-400'}`}>{money(Math.max(c.outstanding, 0))}</b></div>
               </button>
             ))}
@@ -393,7 +393,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         <section className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
           <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between gap-3">
             <div>
-              <h2 className="font-black text-[#3a3833] dark:text-white uppercase italic">{translateEntity('Maintenance Performance & Log', lang)}</h2>
+              <h2 className="font-black text-[#17324d] dark:text-white uppercase italic">{translateEntity('Maintenance Performance & Log', lang)}</h2>
               <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">{translateEntity('Service execution and latest records', lang)}</p>
             </div>
             <button onClick={() => onNavigate('stock', 'maintenance')} className="text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Maintenance</button>
@@ -407,7 +407,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           <div className="divide-y divide-slate-100 dark:divide-slate-700">
             {maintenanceLogs.slice(0, 5).map(log => (
               <button key={log.id} onClick={() => onNavigate('stock', `maintenance:${log.gensetNumber}`)} className="w-full px-5 py-3 flex items-center justify-between gap-3 text-start hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
-                <div className="min-w-0"><p className="font-black text-xs text-[#3a3833] dark:text-slate-200 uppercase">GENSET {log.gensetNumber}</p><span className="text-[8px] text-slate-400 font-bold">{log.serviceDate} • {log.serviceType.replace(/_/g, ' ')}</span></div>
+                <div className="min-w-0"><p className="font-black text-xs text-[#17324d] dark:text-slate-200 uppercase">GENSET {log.gensetNumber}</p><span className="text-[8px] text-slate-400 font-bold">{log.serviceDate} • {log.serviceType.replace(/_/g, ' ')}</span></div>
                 <span className={`text-[8px] font-black uppercase px-2 py-1 rounded-lg ${log.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600' : log.status === 'IN_PROGRESS' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>{log.status.replace(/_/g, ' ')}</span>
               </button>
             ))}
@@ -426,7 +426,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         ].map(item => (
           <button key={item.label} onClick={() => onNavigate(item.action, item.focus)} className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm text-start hover:shadow-lg transition-all">
             <span className="block text-[8px] text-slate-400 font-black uppercase tracking-widest">{item.label}</span>
-            <b className="text-2xl text-[#3a3833] dark:text-white">{item.value}</b>
+            <b className="text-2xl text-[#17324d] dark:text-white">{item.value}</b>
           </button>
         ))}
       </div>

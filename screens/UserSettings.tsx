@@ -27,7 +27,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
   const [profileData, setProfileData] = useState<Partial<User>>({
     ...user,
     invoiceSettings: user.invoiceSettings || {
-      primaryColor: '#3a3833',
+      primaryColor: '#17324d',
       accentColor: '#C2A378',
       headerAlignment: 'left',
       layoutStyle: 'MODERN',
@@ -275,7 +275,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
   return (
     <div className="max-w-[1500px] mx-auto space-y-6 animate-in fade-in duration-500 pb-32 text-start">
       {/* Redesigned Settings Command Header */}
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#3a3833] via-[#4b4841] to-[#26231f] p-6 lg:p-8 text-white shadow-2xl border border-white/10">
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#17324d] via-[#36566f] to-[#26231f] p-6 lg:p-8 text-white shadow-2xl border border-white/10">
         <div className="absolute -top-32 -right-20 h-80 w-80 rounded-full bg-blue-500/10 blur-3xl"></div>
         <div className="absolute -bottom-40 left-1/3 h-80 w-80 rounded-full bg-[#C2A378]/10 blur-3xl"></div>
         <div className="relative z-10 flex flex-col xl:flex-row gap-7 items-stretch xl:items-center">
@@ -287,7 +287,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
                   <span className="text-white text-[8px] font-black uppercase">{isAr ? 'تغيير الصورة' : 'Change'}</span>
                 </div>
               </div>
-              <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white w-7 h-7 rounded-xl flex items-center justify-center text-sm shadow-xl ring-4 ring-[#4b4841]">✓</div>
+              <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white w-7 h-7 rounded-xl flex items-center justify-center text-sm shadow-xl ring-4 ring-[#36566f]">✓</div>
             </div>
             <div className="min-w-0">
               <p className="text-[8px] font-black tracking-[0.35em] uppercase text-[#C2A378] mb-2">{isAr ? 'إعدادات الحساب' : 'ACCOUNT SETTINGS'}</p>
@@ -336,7 +336,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
               <button 
                 key={tab.id} 
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center justify-center gap-2 px-3 py-3 rounded-2xl text-[8px] font-black uppercase transition-all border ${activeTab === tab.id ? 'bg-[#3a3833] text-white border-[#3a3833] shadow-lg' : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border-primary)] hover:border-[var(--accent)] hover:text-[var(--accent)]'}`}
+                className={`flex items-center justify-center gap-2 px-3 py-3 rounded-2xl text-[8px] font-black uppercase transition-all border ${activeTab === tab.id ? 'bg-[#17324d] text-white border-[#17324d] shadow-lg' : 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border-primary)] hover:border-[var(--accent)] hover:text-[var(--accent)]'}`}
               >
                 <span>{tab.icon}</span>
                 {tab.label}
@@ -371,7 +371,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
                 <div className="lg:col-span-5 space-y-8">
                    <div>
-                      <h3 className="text-xl font-black uppercase italic tracking-tighter text-[#3a3833] dark:text-white leading-none">Manual Training Node</h3>
+                      <h3 className="text-xl font-black uppercase italic tracking-tighter text-[#17324d] dark:text-white leading-none">Manual Training Node</h3>
                       <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-2">Force-teach the system new logistics terms</p>
                    </div>
 
@@ -387,7 +387,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
                       <button 
                         onClick={handleManualLearn}
                         disabled={!manualEn || !manualAr}
-                        className="w-full py-5 bg-[#3a3833] text-[#C2A378] rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 disabled:opacity-30 transition-all"
+                        className="w-full py-5 bg-[#17324d] text-[#C2A378] rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 disabled:opacity-30 transition-all"
                       >
                         Authorize & Teach System
                       </button>
@@ -441,7 +441,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
                    <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-600 italic px-2">Learned Intelligence Registry</h4>
                    <div className={`rounded-[2.5rem] border-2 overflow-hidden ${isDark ? 'bg-slate-900 border-white/5' : 'bg-white border-slate-100'}`}>
                       <table className="w-full text-left border-collapse">
-                         <thead className="bg-[#3a3833] text-white text-[9px] font-black uppercase">
+                         <thead className="bg-[#17324d] text-white text-[9px] font-black uppercase">
                             <tr>
                                <th className="p-5">English Entity</th>
                                <th className="p-5">Arabic Logic</th>
@@ -451,7 +451,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
                          <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                             {Object.entries(dynamicTranslations).map(([en, ar]) => (
                               <tr key={en} className="group hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                                 <td className="p-5 font-black text-[10px] text-[#3a3833] dark:text-blue-400 uppercase tracking-tighter">{en}</td>
+                                 <td className="p-5 font-black text-[10px] text-[#17324d] dark:text-blue-400 uppercase tracking-tighter">{en}</td>
                                  <td className="p-5 font-bold font-cairo text-sm text-slate-600 dark:text-slate-300">{ar}</td>
                                  <td className="p-5 text-right">
                                     <button 
@@ -485,7 +485,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
                <div><label className={labelClass}>Department</label><input className={inputClass} value={profileData.department || ''} onChange={e => setProfileData({...profileData, department: e.target.value})} /></div>
                <div><label className={labelClass}>Joined Date</label><input type="date" className={inputClass} value={profileData.joinedDate || ''} onChange={e => setProfileData({...profileData, joinedDate: e.target.value})} /></div>
             </div>
-            <button type="submit" className="w-full py-5 rounded-2xl bg-[#3a3833] text-white font-black uppercase text-[10px] tracking-widest">Update Logistics Info</button>
+            <button type="submit" className="w-full py-5 rounded-2xl bg-[#17324d] text-white font-black uppercase text-[10px] tracking-widest">Update Logistics Info</button>
           </form>
         )}
 
@@ -505,7 +505,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {[
-                { id: 'day' as const, name: isAr ? '☀️ نهاري' : '☀️ DAY', desc: isAr ? 'كلاسيكي فاتح وذهبي.' : 'Classic light Nile Fleet.', preview: ['#f3f1ec','#faf9f6','#9b7438'] },
+                { id: 'day' as const, name: isAr ? '☀️ أبيض' : '☀️ WHITE', desc: isAr ? 'أبيض نظيف مع الكحلي.' : 'Clean white Nile Fleet.', preview: ['#ffffff','#f4f6f9','#17324d'] },
                 { id: 'night' as const, name: isAr ? '🌙 ليلي' : '🌙 NIGHT', desc: isAr ? 'كحلي عميق ولمسة ذهبية.' : 'Deep navy and gold.', preview: ['#050b14','#0d1928','#d0ae78'] },
                 { id: 'steel' as const, name: isAr ? '⚙️ ستيل صناعي' : '⚙️ INDUSTRIAL STEEL', desc: isAr ? 'رمادي معدني عالي الوضوح.' : 'High-contrast industrial steel.', preview: ['#0f1720','#1b2935','#62b6cb'] },
                 { id: 'ocean' as const, name: isAr ? '🌊 أزرق بحري' : '🌊 OCEAN COMMAND', desc: isAr ? 'أزرق بحري واضح وهادئ.' : 'Clean maritime blue command.', preview: ['#071a2b','#102d46','#38bdf8'] },
@@ -783,10 +783,10 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
                       </div>
                    </div>
 
-                   <div className="p-8 bg-[#C2A378] rounded-[3rem] shadow-xl text-[#3a3833] space-y-4">
+                   <div className="p-8 bg-[#C2A378] rounded-[3rem] shadow-xl text-[#17324d] space-y-4">
                       <h5 className="text-xs font-black uppercase tracking-widest italic">Root Access Authenticated</h5>
                       <p className="text-[10px] font-bold leading-relaxed opacity-80 uppercase">Strategic Ownership verification complete. Bebito Nile Fleet Owner has full administrative reach over the Nile Fleet data lifecycle.</p>
-                      <div className="h-1 w-20 bg-[#3a3833] opacity-20"></div>
+                      <div className="h-1 w-20 bg-[#17324d] opacity-20"></div>
                    </div>
                 </div>
 
@@ -809,7 +809,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onUpdate }) => {
         <div className="fixed inset-0 bg-black/90 backdrop-blur-2xl z-[500] flex items-center justify-center p-6" onClick={() => setShowAvatarStudio(false)}>
           <DaliSignature variant="popup" />
           <div className="bg-white dark:bg-slate-900 rounded-[3rem] max-w-4xl w-full h-[80vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
-             <div className="p-8 bg-[#3a3833] text-white flex justify-between items-center text-start">
+             <div className="p-8 bg-[#17324d] text-white flex justify-between items-center text-start">
                 <h3 className="text-xl font-black italic uppercase tracking-widest text-[#C2A378]">Identity Hub</h3>
                 <button onClick={() => setShowAvatarStudio(false)} className="text-white hover:text-rose-500">✕</button>
              </div>

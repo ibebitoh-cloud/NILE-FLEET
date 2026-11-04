@@ -47,7 +47,7 @@ const getContrastColor = (bgClass: string, isDarkTerminal: boolean) => {
   if (isDarkTerminal) {
     if (bgClass.includes('slate-900') || bgClass.includes('slate-950') || bgClass.includes('blue-900')) return 'text-white';
     if (bgClass.includes('emerald-900')) return 'text-emerald-400';
-    if (bgClass.includes('bg-[#3a3833]')) return 'text-[#C2A378]';
+    if (bgClass.includes('bg-[#17324d]')) return 'text-[#C2A378]';
     return 'text-slate-100';
   }
   const lightColors = ['bg-white', 'bg-slate-50', 'bg-blue-50', 'bg-[#98FFD9]', 'bg-[#FFEB3B]', 'bg-amber-50', 'bg-emerald-50'];
@@ -1983,7 +1983,7 @@ const MasterView: React.FC = () => {
 
 
           {!isReadOnly && (
-            <button onClick={() => setShowAddModal(true)} className="bg-[#3a3833] text-[#C2A378] px-6 py-2 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg hover:scale-105 transition-all whitespace-nowrap">
+            <button onClick={() => setShowAddModal(true)} className="bg-[#17324d] text-[#C2A378] px-6 py-2 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg hover:scale-105 transition-all whitespace-nowrap">
               + {isAr ? 'إدخال جديد' : 'New Entry'}
             </button>
           )}
@@ -2008,7 +2008,7 @@ const MasterView: React.FC = () => {
           {/* Fixed layout: columns already have set widths, and it saves the browser
               from re-measuring every cell whenever a row changes. */}
           <table className={`w-full ${isAr ? 'text-right' : 'text-left'} whitespace-nowrap border-collapse`} style={{ tableLayout: 'fixed' }}>
-            <thead className={`text-white font-black uppercase tracking-widest sticky top-0 z-40 text-[9px] ${isDark ? 'bg-[#001224]' : 'bg-[#3a3833]'}`}>
+            <thead className={`text-white font-black uppercase tracking-widest sticky top-0 z-40 text-[9px] ${isDark ? 'bg-[#001224]' : 'bg-[#17324d]'}`}>
               <tr>
                 <th style={getColStyle('checkbox')} className="p-2 text-center border-r border-white/5 relative">
                   <input type="checkbox" className="rounded bg-transparent border-slate-500" checked={selectedRowIds.size === filteredAndSortedOps.length && filteredAndSortedOps.length > 0} onChange={() => {
@@ -2072,7 +2072,7 @@ const MasterView: React.FC = () => {
                   </th>
                 ))}
               </tr>
-              <tr className={isDark ? 'bg-[#001224]' : 'bg-[#3a3833]'}>
+              <tr className={isDark ? 'bg-[#001224]' : 'bg-[#17324d]'}>
                 <th className="p-1 border-r border-white/10" />
                 {['bookingNumber','customerName','trucker','shipper','clipOnPort','clipOffPort','destination','containerNumber','gensetNumber','rate','status','operationDate','clipOnDate','commodity','clipperName','notes','gas','invoice'].map(key => {
                   const value = columnSearchInputs[key] || '';
@@ -2116,8 +2116,8 @@ const MasterView: React.FC = () => {
                       <td colSpan={18} className={`px-4 py-1.5 border-b ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
                         <button type="button" onClick={() => setCollapsedStatusGroups(prev => { const next = new Set(prev); if (next.has(status)) next.delete(status); else next.add(status); return next; })} className="w-full flex items-center gap-3 text-start hover:bg-white/5 rounded-lg px-2 py-1 transition-all" aria-expanded={!collapsedStatusGroups.has(status)}>
                            <div className={`w-1.5 h-1.5 rounded-full ${status === 'DONE' ? 'bg-emerald-500' : status === 'IN PROGRESS' ? 'bg-blue-500' : status === 'UNDER OPERATE' ? 'bg-amber-500' : 'bg-slate-400'}`}></div>
-                           <span className={`font-black uppercase tracking-[0.2em] text-[9px] ${isDark ? 'text-[#C2A378]' : 'text-[#3a3833]'}`}>{translateEntity(status, lang)}</span>
-                           <span className={`px-1.5 py-0.5 rounded text-[7px] font-black ${isDark ? 'bg-slate-800 text-slate-400' : 'bg-[#3a3833] text-white'}`}>{group.length} {isAr ? 'وحدة' : 'UNITS'}</span>
+                           <span className={`font-black uppercase tracking-[0.2em] text-[9px] ${isDark ? 'text-[#C2A378]' : 'text-[#17324d]'}`}>{translateEntity(status, lang)}</span>
+                           <span className={`px-1.5 py-0.5 rounded text-[7px] font-black ${isDark ? 'bg-slate-800 text-slate-400' : 'bg-[#17324d] text-white'}`}>{group.length} {isAr ? 'وحدة' : 'UNITS'}</span>
                         <span className={`ml-auto text-[8px] font-bold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{collapsedStatusGroups.has(status) ? (isAr ? 'فتح' : 'Expand') : (isAr ? 'طي' : 'Collapse')}</span>
                         </button>
                       </td>
@@ -2169,9 +2169,9 @@ const MasterView: React.FC = () => {
 
       {selectedRowIds.size > 0 && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-10 duration-500">
-           <div className="bg-[#3a3833] text-white px-8 py-4 rounded-[2.5rem] shadow-2xl border-2 border-[#C2A378] flex items-center gap-10 backdrop-blur-xl">
+           <div className="bg-[#17324d] text-white px-8 py-4 rounded-[2.5rem] shadow-2xl border-2 border-[#C2A378] flex items-center gap-10 backdrop-blur-xl">
               <div className="flex items-center gap-3">
-                 <span className="w-10 h-10 bg-[#C2A378] text-[#3a3833] rounded-full flex items-center justify-center font-black text-sm">{selectedRowIds.size}</span>
+                 <span className="w-10 h-10 bg-[#C2A378] text-[#17324d] rounded-full flex items-center justify-center font-black text-sm">{selectedRowIds.size}</span>
                  <div>
                     <p className="text-[10px] font-black uppercase tracking-tight text-[#C2A378]">{isAr ? 'إجراء مجمع' : 'BULK ACTION'}</p>
                     <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">{isAr ? 'محدد' : 'SELECTED'}</p>
@@ -2181,7 +2181,7 @@ const MasterView: React.FC = () => {
               {!isReadOnly && (
                 <button
                   onClick={handleCloneSelectedOperations}
-                  className="bg-[#C2A378] text-[#3a3833] px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#d8bd91] transition-all shadow-lg"
+                  className="bg-[#C2A378] text-[#17324d] px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#d8bd91] transition-all shadow-lg"
                   title={isAr ? 'إضافة نسخة جديدة من العمليات المحددة' : 'Add a new copy of the selected operations'}
                 >
                   + {isAr ? 'نسخ السطر' : 'Clone Line'}
@@ -2191,7 +2191,7 @@ const MasterView: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleBulkReplaceGenset}
-                  className={`bg-[#C2A378] text-[#3a3833] px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#d8bd91] transition-all shadow-lg ${isDark ? 'border border-[#C2A378]/40' : 'border border-[#a88d61]/40'}`}
+                  className={`bg-[#C2A378] text-[#17324d] px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#d8bd91] transition-all shadow-lg ${isDark ? 'border border-[#C2A378]/40' : 'border border-[#a88d61]/40'}`}
                 >
                   {isAr ? 'استبدال المولد' : 'REPLACE GENSET'}
                 </button>
@@ -2232,14 +2232,14 @@ const MasterView: React.FC = () => {
                  </div>
                )}
               <div><label className="block text-[8px] font-black uppercase text-slate-400 mb-1">{isAr ? 'ملاحظات' : 'Notes'}</label><textarea value={replacementNotes} onChange={e => setReplacementNotes(e.target.value)} rows={2} className={`w-full p-3 rounded-xl border text-xs ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`} placeholder={isAr ? 'اختياري' : 'Optional'} /></div>
-              <div className="flex gap-3 pt-2"><button onClick={() => setReplacementOperation(null)} className="flex-1 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 font-black text-xs">{isAr ? 'إلغاء' : 'CANCEL'}</button><button disabled={!replacementGensetNumber || isReadOnly} onClick={handleReplaceGenset} className="flex-1 py-3 rounded-xl bg-[#C2A378] text-[#3a3833] font-black text-xs disabled:opacity-40 hover:bg-[#d8bd91] transition-colors">{isAr ? 'تأكيد الاستبدال' : 'CONFIRM REPLACEMENT'}</button></div>
+              <div className="flex gap-3 pt-2"><button onClick={() => setReplacementOperation(null)} className="flex-1 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 font-black text-xs">{isAr ? 'إلغاء' : 'CANCEL'}</button><button disabled={!replacementGensetNumber || isReadOnly} onClick={handleReplaceGenset} className="flex-1 py-3 rounded-xl bg-[#C2A378] text-[#17324d] font-black text-xs disabled:opacity-40 hover:bg-[#d8bd91] transition-colors">{isAr ? 'تأكيد الاستبدال' : 'CONFIRM REPLACEMENT'}</button></div>
             </div>
           </div>
         </div>
       )}
 
       {showAddModal && (
-        <div className="fixed inset-0 bg-[#3a3833]/95 backdrop-blur-2xl z-[500] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-[#17324d]/95 backdrop-blur-2xl z-[500] flex items-center justify-center p-4">
           <DaliSignature variant="popup" />
           <div className={`rounded-[3.5rem] shadow-2xl max-w-[98vw] w-full h-[85vh] overflow-hidden border-[10px] border-slate-900 flex flex-col animate-in zoom-in-95 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-900'}`}>
              <div className={`p-8 flex justify-between items-center shrink-0 ${isDark ? 'bg-slate-950 text-white' : 'bg-slate-900 text-white'}`}>
@@ -2261,7 +2261,7 @@ const MasterView: React.FC = () => {
              <div className="flex-1 overflow-auto p-4 relative" style={{ backgroundColor: isDark ? '#0b1220' : '#f1f5f9' }}>
                 <table className="manifest-staging-table w-max min-w-full text-start whitespace-nowrap border-collapse" style={{ tableLayout: 'fixed' }}>
                    <colgroup>{stagingColumnHeaders.map(column => <col key={column.key} style={{ width: stagingColWidths[column.key] ?? stagingColumnDefaults[column.key] }} />)}</colgroup>
-                   <thead className="bg-[#3a3833] text-white text-[9px] font-black uppercase tracking-widest sticky top-0 z-10">
+                   <thead className="bg-[#17324d] text-white text-[9px] font-black uppercase tracking-widest sticky top-0 z-10">
                       <tr>{stagingColumnHeaders.map(column => <th key={column.key} className="p-3 relative text-start" style={{ width: stagingColWidths[column.key] ?? stagingColumnDefaults[column.key], minWidth: stagingColWidths[column.key] ?? stagingColumnDefaults[column.key] }}>
                         <span>{column.label}</span>
                         {column.key !== 'row' && <span onMouseDown={event => startStagingColumnResize(event, column.key)} className="absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-[#C2A378]" title={isAr ? 'اسحب لتغيير العرض بحرية' : 'Drag to resize this column'} />}
@@ -2316,7 +2316,7 @@ const MasterView: React.FC = () => {
              </div>
              <div className={`p-8 shrink-0 flex gap-4 border-t ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
                 <button type="button" onClick={() => setShowAddModal(false)} className="px-10 py-5 text-[11px] font-black uppercase text-slate-400 tracking-widest hover:text-rose-500 transition-colors">{t.cancel}</button>
-                <button onClick={handleFinalInject} className="flex-1 bg-[#C2A378] text-[#3a3833] py-5 rounded-[2rem] font-black uppercase text-xs tracking-[0.4em] shadow-2xl active:scale-95 transition-all">
+                <button onClick={handleFinalInject} className="flex-1 bg-[#C2A378] text-[#17324d] py-5 rounded-[2rem] font-black uppercase text-xs tracking-[0.4em] shadow-2xl active:scale-95 transition-all">
                   {isAr ? 'اعتماد حقن البيانات' : 'AUTHORIZE BATCH INJECTION'} ({stagedOps.reduce((sum, o) => sum + (o.bookingNumber && o.customerName ? (o.quantity || 1) : 0), 0)} {isAr ? 'وحدة' : 'UNITS'})
                 </button>
              </div>
@@ -2462,7 +2462,7 @@ const MasterView: React.FC = () => {
               </button>
               <button 
                 onClick={handleSaveEditInvoice} 
-                className="flex-1 bg-[#3a3833] text-white dark:bg-[#C2A378] dark:text-[#3a3833] py-3 rounded-xl font-black uppercase text-xs tracking-widest hover:opacity-95 active:scale-95 transition-all"
+                className="flex-1 bg-[#17324d] text-white dark:bg-[#C2A378] dark:text-[#17324d] py-3 rounded-xl font-black uppercase text-xs tracking-widest hover:opacity-95 active:scale-95 transition-all"
               >
                 {isAr ? 'حفظ التعديلات' : 'SAVE CHANGES'}
               </button>

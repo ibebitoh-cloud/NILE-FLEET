@@ -982,6 +982,144 @@
         body.theme-graphite table tbody tr:nth-child(even):not(.selected-row) td { background: #151515 !important; }
         body.theme-steel, body.theme-ocean, body.theme-graphite { --status-info-bg: #163d59; --status-info-fg: #bae6fd; --status-success-bg: #14532d; --status-success-fg: #bbf7d0; --status-warning-bg: #78350f; --status-warning-fg: #fde68a; --status-danger-bg: #7f1d1d; --status-danger-fg: #fecaca; }
         body.theme-light { --status-info-bg: #dbeafe; --status-info-fg: #1e40af; --status-success-bg: #dcfce7; --status-success-fg: #166534; --status-warning-bg: #fef3c7; --status-warning-fg: #92400e; --status-danger-bg: #fee2e2; --status-danger-fg: #991b1b; }
+
+        /* NILE FLEET WHITE THEME (Nov 2026)
+           Light mode is a clean white system: white pages, white cards, white
+           sidebar and header, light grey hairlines, navy text and navy actions.
+           This block is last on purpose so it wins over the older day palettes above.
+           Semantic status colors (green / amber / red / blue) are untouched. */
+        body.theme-day {
+            --nf-navy: #17324d;
+            --nf-navy-deep: #10263b;
+            --nf-steel: #36566f;
+            --nf-surface: #ffffff;
+            --nf-surface-2: #f7f9fb;
+            --nf-surface-3: #eef2f6;
+            --nf-text: #17212b;
+            --nf-muted: #526170;
+            --nf-border: #e3e8ee;
+            --bg-primary: #ffffff;
+            --text-primary: #17212b;
+            --text-secondary: #526170;
+            --border-primary: #e3e8ee;
+            --card-bg: #ffffff;
+            --input-bg: #ffffff;
+            --rail-bg: #ffffff;
+            --row-bg: #ffffff;
+            --surface-0: #ffffff;
+            --surface-1: #ffffff;
+            --surface-2: #f7f9fb;
+            --surface-3: #eef2f6;
+            background: #ffffff;
+            color-scheme: light;
+        }
+        body.theme-day .bg-white,
+        body.theme-day .bg-slate-50,
+        body.theme-day .bg-slate-100,
+        body.theme-day .bg-gray-50,
+        body.theme-day .bg-gray-100,
+        body.theme-day .bg-neutral-50,
+        body.theme-day .bg-neutral-100 {
+            background-color: #ffffff !important;
+            color: var(--nf-text) !important;
+        }
+        /* Soft grey only where a component asks for a tinted panel. */
+        body.theme-day .bg-slate-200,
+        body.theme-day .bg-gray-200 { background-color: #eef2f6 !important; }
+        body.theme-day .text-slate-400,
+        body.theme-day .text-gray-400 { color: #6b7785 !important; }
+
+        /* Sidebar and top bar: white with a hairline. */
+        body.theme-day .nile-command-layout > aside,
+        body.theme-day .nile-command-layout > main > header,
+        body.theme-day .nile-command-layout > nav {
+            background-color: #ffffff !important;
+            border-color: var(--nf-border) !important;
+        }
+        body.theme-day .nile-command-layout > main > header { box-shadow: 0 1px 0 rgba(23, 50, 77, 0.04); }
+
+        /* Cards keep their shape on white through a hairline and a faint shadow. */
+        body.theme-day .shadow-sm,
+        body.theme-day .shadow { box-shadow: 0 1px 2px rgba(16, 38, 59, 0.06), 0 1px 3px rgba(16, 38, 59, 0.04) !important; }
+
+        /* Tables: white rows, very light zebra, light header with navy text. */
+        body.theme-day thead th {
+            background-color: #f4f6f9 !important;
+            color: var(--nf-navy) !important;
+            border-color: var(--nf-border) !important;
+        }
+        body.theme-day thead th [class*="text-white"] { color: var(--nf-navy) !important; }
+        body.theme-day table tbody tr:nth-child(odd):not(.selected-row) td { background: #ffffff !important; }
+        body.theme-day table tbody tr:nth-child(even):not(.selected-row) td { background: #f9fafc !important; }
+        body.theme-day table tbody tr:hover:not(.selected-row) td { background: #eef4fa !important; }
+
+        /* Forms */
+        body.theme-day input,
+        body.theme-day select,
+        body.theme-day textarea {
+            background-color: #ffffff !important;
+            color: var(--nf-text) !important;
+            border-color: #d5dce4 !important;
+        }
+        body.theme-day input::placeholder,
+        body.theme-day textarea::placeholder { color: #8a95a2 !important; }
+        body.theme-day button:disabled,
+        body.theme-day input:disabled,
+        body.theme-day select:disabled,
+        body.theme-day textarea:disabled {
+            color: #8a95a2 !important;
+            background-color: #f4f6f9 !important;
+            border-color: var(--nf-border) !important;
+        }
+
+        /* Dark panels in light mode become brand navy (never brown or black). */
+        body.theme-day .bg-slate-800,
+        body.theme-day .bg-slate-900,
+        body.theme-day .bg-gray-900,
+        body.theme-day .bg-black { background-color: var(--nf-navy) !important; color: #ffffff !important; }
+
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+
+        /* White text stays white on dark or colored fills, even inside white cards
+           (the older contrast guard above turned it dark and made it unreadable). */
+        body.theme-day [class~="bg-[#17324d]"][class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-[#17324d]"] [class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-[#10263b]"][class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-[#10263b]"] [class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-[#36566f]"][class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-[#36566f]"] [class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-slate-700"][class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-slate-700"] [class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-slate-800"][class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-slate-800"] [class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-slate-900"][class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-slate-900"] [class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-black"][class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-black"] [class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-blue-500"][class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-blue-500"] [class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-blue-600"][class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-blue-600"] [class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-blue-700"][class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-blue-700"] [class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-emerald-500"][class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-emerald-500"] [class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-emerald-600"][class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-emerald-600"] [class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-green-600"][class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-green-600"] [class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-rose-500"][class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-rose-500"] [class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-rose-600"][class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-rose-600"] [class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-red-500"][class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-red-500"] [class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-red-600"][class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-red-600"] [class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-amber-600"][class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-amber-600"] [class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-indigo-600"][class*="text-white"]:not(#nf),
+        body.theme-day [class~="bg-indigo-600"] [class*="text-white"]:not(#nf) { color: #ffffff !important; }
     </style>
 <script type="importmap">
 {

@@ -147,7 +147,13 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem('theme');
     const allowed: ThemeMode[] = ['day', 'night', 'steel', 'ocean', 'graphite', 'light'];
-    return allowed.includes(saved as ThemeMode) ? saved as ThemeMode : 'night';
+    // White is the house theme (2026-11). Everyone moves to it once; after that
+    // a person can still switch to dark with the moon button and it sticks.
+    if (localStorage.getItem('nf_white_theme_v1') !== '1') {
+      localStorage.setItem('nf_white_theme_v1', '1');
+      return 'day';
+    }
+    return allowed.includes(saved as ThemeMode) ? saved as ThemeMode : 'day';
   });
 
   const [scale, setScale] = useState<number>(() => {
@@ -732,15 +738,15 @@ const App: React.FC = () => {
 
   if (!authChecked || (user && !appDataReady)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#05070a] text-white overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center bg-white text-[#17212b] overflow-hidden">
         <div className="relative text-center">
-          <div className="absolute -inset-16 rounded-full bg-[#C2A378]/5 blur-3xl pointer-events-none" />
+          <div className="absolute -inset-16 rounded-full bg-[#C2A378]/10 blur-3xl pointer-events-none" />
           <DaliLoader size={72} className="relative mb-7" />
           <p className="text-[11px] font-black uppercase tracking-[0.35em] text-[#C2A378]">NILE FLEET</p>
-          <p className="mt-2 text-[9px] font-bold uppercase tracking-[0.28em] text-white/55">
+          <p className="mt-2 text-[9px] font-bold uppercase tracking-[0.28em] text-[#526170]">
             {lang === 'ar' ? (user ? 'جاري تحميل بيانات النظام' : 'جاري التحقق من الجلسة') : (user ? 'LOADING SYSTEM DATA' : 'VERIFYING SESSION')}
           </p>
-          <div className="mx-auto mt-4 h-px w-20 overflow-hidden bg-white/10">
+          <div className="mx-auto mt-4 h-px w-20 overflow-hidden bg-[#17324d]/10">
             <div className="h-full w-1/2 bg-[#C2A378] animate-pulse" />
           </div>
         </div>
