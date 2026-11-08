@@ -1,0 +1,607 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import DaliLoader from '../../components/DaliLoader';
+import * as api from '../api';
+import type { Lang } from '../i18n';
+import { FUEL_STRINGS, FuelStrings } from './i18n';
+import { cardTotals, computeFuel, DEFAULT_SETTINGS, Fill, FuelResult, FuelSettings, FuelTx, Segment, SegmentStatus, Summary, summarize, TxView } from './math';
+import { parseFuelWorkbook } from './parse';
+import { exportFuelExcel, printFuelReport, Sheet } from './exports';
+
+/* ------------------------------ helpers ------------------------------ */
+
+const nf = (d: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: d, minimumFractionDigits: 0 });
+const N0 = nf(0), N1 = nf(1), N2 = nf(2);
+const n0 = (v: number | null | undefined) => (v == null || !Number.isFinite(v) ? '—' : N0.format(v));
+const n1 = (v: number | null | undefined) => (v == null || !Number.isFinite(v) ? '—' : N1.format(v));
+const n2 = (v: number | null | undefined) => (v == null || !Number.isFinite(v) || v === 0 ? '—' : N2.format(v));
+const pct = (v: number) => (v ? `${v > 0 ? '+' : ''}${N1.format(v)}%` : '—');
+const signed = (v: number, f = n0) => { const out = f(Math.abs(v)); return !v || /^[0.]+$/.test(out) ? '—' : `${v > 0 ? '+' : '−'}${out}`; };
+const day = (at: string) => at.slice(0, 10);
+const when = (at: string) => `${at.slice(0, 10)} ${at.slice(11, 16)}`;
+function sum<T>(xs: readonly T[], f: (x: T) => number): number { return xs.reduce((s, x) => s + (f(x) || 0), 0); }
+const uniq = (xs: string[]) => [...new Set(xs.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar'));
+
+const inputCls = 'rounded-xl border border-[#d9d0c0] bg-white px-3 py-2 text-sm outline-none focus:border-[#c2a378]';
+const btn = 'inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-black transition disabled:opacity-40';
+const btnGold = `${btn} bg-[#c2a378] text-[#07111f] hover:brightness-105`;
+const btnNavy = `${btn} bg-[#07111f] text-white hover:bg-[#13263d]`;
+const btnGhost = `${btn} border border-[#d9d0c0] bg-white text-[#07111f] hover:border-[#c2a378]`;
+
+const Card: React.FC<{ className?: string; children: React.ReactNode }> = ({ className = '', children }) => (
+  <div className={`rounded-2xl border border-[#e3dccf] bg-white p-4 shadow-[0_1px_0_rgba(7,17,31,.04)] sm:p-5 ${className}`}>{children}</div>
+);
+
+type StatusFilter = '' | SegmentStatus | 'badKm' | 'split' | 'partial' | 'reversed';
+interface Filters { q: string; from: string; to: string; plate: string; driver: string; station: string; type: string; status: StatusFilter }
+const NO_FILTERS: Filters = { q: '', from: '', to: '', plate: '', driver: '', station: '', type: '', status: '' };
+type View = 'trucks' | 'drivers' | 'fills' | 'tx' | 'months' | 'stations' | 'settings';
+
+const STATUS_CLS: Record<SegmentStatus, string> = {
+  ok: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  high: 'bg-red-50 text-red-700 border-red-200',
+  low: 'bg-amber-50 text-amber-800 border-amber-200',
+  pending: 'bg-slate-50 text-slate-600 border-slate-200',
+};
+const statusLabel = (t: FuelStrings, s: SegmentStatus) => t[`st_${s}` as const];
+const Badge: React.FC<{ t: FuelStrings; s: SegmentStatus }> = ({ t, s }) => (
+  <span className={`inline-block whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-black ${STATUS_CLS[s]}`}>{statusLabel(t, s)}</span>
+);
+const Chip: React.FC<{ children: React.ReactNode; tone?: 'amber' | 'slate' | 'red' | 'blue' }> = ({ children, tone = 'slate' }) => {
+  const c = { amber: 'bg-amber-50 text-amber-800', slate: 'bg-slate-100 text-slate-600', red: 'bg-red-50 text-red-700', blue: 'bg-sky-50 text-sky-700' }[tone];
+  return <span className={`inline-block whitespace-nowrap rounded-md px-1.5 py-0.5 text-[10px] font-bold ${c}`}>{children}</span>;
+};
+
+/* ------------------------------ sortable table ------------------------------ */
+
+interface Col<T> {
+  key: string; label: string; get: (r: T) => string | number | null;
+  render?: (r: T) => React.ReactNode; num?: boolean; className?: string;
+}
+
+function DataTable<T>({ rows, cols, rowKey, initial, onRow, empty, pageSize = 150, highlight }: {
+  rows: T[]; cols: Col<T>[]; rowKey: (r: T) => string; initial?: { key: string; dir: 1 | -1 };
+  onRow?: (r: T) => void; empty: string; pageSize?: number; highlight?: (r: T) => string;
+}) {
+  const [sort, setSort] = useState(initial || { key: cols[0].key, dir: 1 as 1 | -1 });
+  const [limit, setLimit] = useState(pageSize);
+  useEffect(() => setLimit(pageSize), [rows, pageSize]);
+  const sorted = useMemo(() => {
+    const col = cols.find(c => c.key === sort.key) || cols[0];
+    return [...rows].sort((a, b) => {
+      const av = col.get(a), bv = col.get(b);
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      const c = typeof av === 'number' && typeof bv === 'number' ? av - bv : String(av).localeCompare(String(bv), 'ar');
+      return c * sort.dir;
+    });
+  }, [rows, cols, sort]);
+  if (!rows.length) return <div className="rounded-xl border border-dashed border-[#d9d0c0] p-8 text-center text-sm font-bold text-slate-500">{empty}</div>;
+  return (
+    <div className="overflow-x-auto rounded-xl border border-[#eee7da]">
+      <table className="w-full whitespace-nowrap text-xs">
+        <thead className="sticky top-0 bg-[#07111f] text-white">
+          <tr>
+            {cols.map(c => (
+              <th key={c.key} className={`px-2.5 py-2.5 text-[10px] font-black uppercase tracking-wider ${c.num ? 'text-end' : 'text-start'}`}>
+                <button className="inline-flex items-center gap-1 hover:text-[#c2a378]" onClick={() => setSort(s => ({ key: c.key, dir: s.key === c.key ? (s.dir === 1 ? -1 : 1) : (c.num ? -1 : 1) }))}>
+                  {c.label}<span className="text-[#c2a378]">{sort.key === c.key ? (sort.dir === 1 ? '▲' : '▼') : ''}</span>
+                </button>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.slice(0, limit).map(r => (
+            <tr key={rowKey(r)} onClick={onRow ? () => onRow(r) : undefined}
+              className={`border-t border-[#f1ebe0] ${onRow ? 'cursor-pointer hover:bg-[#fbf8f2]' : ''} ${highlight?.(r) || ''}`}>
+              {cols.map(c => (
+                <td key={c.key} className={`px-2.5 py-2 ${c.num ? 'text-end tabular-nums' : ''} ${c.className || ''}`}>{c.render ? c.render(r) : (c.get(r) ?? '—')}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {sorted.length > limit && (
+        <div className="border-t border-[#eee7da] p-2 text-center">
+          <button className={btnGhost} onClick={() => setLimit(l => l + pageSize)}>+ {Math.min(pageSize, sorted.length - limit)} ({limit} / {sorted.length})</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const toSheet = <T,>(name: string, cols: Col<T>[], rows: T[]): Sheet => ({
+  name, head: cols.map(c => c.label), rows: rows.map(r => cols.map(c => c.get(r))),
+});
+
+/* ------------------------------ screen ------------------------------ */
+
+const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string) => void }> = ({ lang, isAdmin, setToast }) => {
+  const t = FUEL_STRINGS[lang];
+  const [txs, setTxs] = useState<FuelTx[] | null>(null);
+  const [local, setLocal] = useState(false);
+  const [error, setError] = useState('');
+  const [settings, setSettings] = useState<FuelSettings>(DEFAULT_SETTINGS);
+  const [f, setF] = useState<Filters>(NO_FILTERS);
+  const [view, setView] = useState<View>(() => { try { return (localStorage.getItem('nf_transport_fuel_view') as View) || 'trucks'; } catch { return 'trucks'; } });
+  const [busy, setBusy] = useState('');
+  const [preview, setPreview] = useState<{ txs: FuelTx[]; fresh: number } | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const set = (p: Partial<Filters>) => setF(x => ({ ...x, ...p }));
+
+  useEffect(() => { try { localStorage.setItem('nf_transport_fuel_view', view); } catch { /* ignore */ } }, [view]);
+  useEffect(() => {
+    api.loadFuel().then(r => { setTxs(r.txs); setLocal(r.local); }).catch(e => { setError(String(e.message || e)); setTxs([]); });
+    api.loadFuelSettings().then(s => setSettings({ ...DEFAULT_SETTINGS, ...s })).catch(() => {});
+  }, []);
+
+  const result: FuelResult = useMemo(() => computeFuel(txs || [], settings), [txs, settings]);
+  const segByKey: Map<string, Segment> = useMemo(() => new Map(result.segments.map(s => [s.key, s])), [result]);
+
+  const options: { plates: string[]; drivers: string[]; stations: string[]; types: string[] } = useMemo(() => {
+    const list = txs || [];
+    return { plates: uniq(list.map(x => x.plate)), drivers: uniq(list.map(x => x.driver)), stations: uniq(list.map(x => x.station)), types: uniq(list.map(x => x.vehicleType)) };
+  }, [txs]);
+
+  /* ---- filtering (math always runs on everything; filters only choose what to show) ---- */
+  const inRange = (at: string) => (!f.from || day(at) >= f.from) && (!f.to || day(at) <= f.to);
+  const q = f.q.trim().toLowerCase();
+  const filtered: { segs: Segment[]; views: TxView[]; txs: FuelTx[]; fills: Fill[] } = useMemo(() => {
+    const segOk = (s: Segment) => {
+      if (!inRange(s.at)) return false;
+      if (f.plate && s.plate !== f.plate) return false;
+      if (f.driver && s.driver !== f.driver) return false;
+      if (f.type && s.vehicleType !== f.type) return false;
+      if (f.station && !s.fills.some(x => x.station === f.station)) return false;
+      if (f.status) {
+        if (f.status === 'badKm' || f.status === 'split' || f.status === 'partial') { if (!s.notes.includes(f.status)) return false; }
+        else if (f.status === 'reversed') return false;
+        else if (s.status !== f.status) return false;
+      }
+      if (q && !`${s.plate} ${s.driver} ${s.fills.map(x => `${x.station} ${x.txs.map(y => y.id).join(' ')}`).join(' ')}`.toLowerCase().includes(q)) return false;
+      return true;
+    };
+    const txOk = (v: TxView) => {
+      const x = v.tx;
+      if (!inRange(x.at)) return false;
+      if (f.plate && x.plate !== f.plate) return false;
+      if (f.driver && x.driver !== f.driver) return false;
+      if (f.type && x.vehicleType !== f.type) return false;
+      if (f.station && x.station !== f.station) return false;
+      if (f.status) {
+        const sg = v.segmentKey ? segByKey.get(v.segmentKey) : undefined;
+        if (f.status === 'reversed') { if (!v.flags.includes('reversed') && !v.flags.includes('reversal')) return false; }
+        else if (f.status === 'badKm' || f.status === 'split') { if (!v.flags.includes(f.status)) return false; }
+        else if (f.status === 'partial') { if (!sg?.notes.includes('partial')) return false; }
+        else if (sg?.status !== f.status) return false;
+      }
+      if (q && !`${x.id} ${x.plate} ${x.driver} ${x.station}`.toLowerCase().includes(q)) return false;
+      return true;
+    };
+    const fillOk = (x: Fill) => inRange(x.at) && (!f.plate || x.plate === f.plate) && (!f.driver || x.driver === f.driver)
+      && (!f.type || x.vehicleType === f.type) && (!f.station || x.station === f.station);
+    const segs = result.segments.filter(segOk);
+    const views = result.txViews.filter(txOk);
+    return { segs, views, txs: views.map(v => v.tx), fills: result.fills.filter(fillOk) };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result, segByKey, f]);
+
+  /* ---- summaries ---- */
+  const weightedTarget = (segs: Segment[]) => {
+    const done = segs.filter(s => s.status !== 'pending' && s.distance > 0);
+    const exp = sum(done, s => s.distance / s.target);
+    return exp ? Math.round((sum(done, s => s.distance) / exp) * 100) / 100 : result.fleetKmL || 2.3;
+  };
+  const group = (key: (x: { plate: string; driver: string; at: string; station?: string }) => string, label: (k: string) => string, useTruckTarget: boolean): Summary[] => {
+    const keys = uniq([...filtered.segs.map(key), ...filtered.txs.map(key)]);
+    return keys.map(k => {
+      const segs = filtered.segs.filter(s => key(s) === k);
+      const tx = filtered.txs.filter(x => key(x) === k);
+      const fills = filtered.fills.filter(x => key(x) === k);
+      const target = useTruckTarget ? (result.targets[k] || weightedTarget(segs)) : weightedTarget(segs);
+      return summarize(k, label(k), segs, tx, fills, target, settings.marginPct, result.price);
+    });
+  };
+  const trucks: Summary[] = useMemo(() => group(x => x.plate, k => k, true), [filtered, result, settings]); // eslint-disable-line react-hooks/exhaustive-deps
+  const drivers: Summary[] = useMemo(() => group(x => x.driver || '—', k => k, false), [filtered, result, settings]); // eslint-disable-line react-hooks/exhaustive-deps
+  const months: Summary[] = useMemo(() => group(x => x.at.slice(0, 7), k => k, false), [filtered, result, settings]); // eslint-disable-line react-hooks/exhaustive-deps
+  type StationRow = { station: string; count: number; liters: number; cost: number; charged: number; share: number; trucks: number };
+  const stations: StationRow[] = useMemo(() => {
+    const total = sum(filtered.txs, x => x.liters) || 1;
+    return uniq(filtered.txs.map(x => x.station || '—')).map(st => {
+      const l = filtered.txs.filter(x => (x.station || '—') === st);
+      const liters = sum(l, x => x.liters);
+      return { station: st, count: l.filter(x => x.amount > 0).length, liters, cost: liters * result.price, charged: sum(l, x => x.totalAmount), share: (liters / total) * 100, trucks: uniq(l.map(x => x.plate)).length };
+    });
+  }, [filtered, result]);
+
+  const kpi = useMemo(() => {
+    const done = filtered.segs.filter(s => s.status !== 'pending');
+    const liters = sum(filtered.txs, x => x.liters);
+    const trackedKm = sum(done, s => s.distance), trackedL = sum(done, s => s.liters);
+    const card = cardTotals(filtered.txs);
+    return {
+      liters, cost: liters * result.price, charged: sum(filtered.txs, x => x.totalAmount), fees: sum(filtered.txs, x => x.totalAmount - x.amount),
+      trackedKm, trackedL, kmL: trackedL ? trackedKm / trackedL : 0, target: weightedTarget(filtered.segs),
+      overL: sum(trucks, s => s.overMarginL), loss: sum(trucks, s => s.lossEgp),
+      outside: done.filter(s => s.status === 'high' || s.status === 'low').length,
+      bad: filtered.fills.filter(x => x.badKm.some(b => b.km != null)).length,
+      cardKm: card.cardKm, cardKmL: card.cardKmL,
+      cardWrong: filtered.txs.filter(x => /wrong/i.test(x.cardValidity)).length,
+      from: filtered.txs.length ? filtered.txs.reduce((m, x) => (x.at < m ? x.at : m), filtered.txs[0].at) : '',
+      to: filtered.txs.length ? filtered.txs.reduce((m, x) => (x.at > m ? x.at : m), filtered.txs[0].at) : '',
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtered, trucks, result]);
+
+  /* ---- columns ---- */
+  const summaryCols = (first: Col<Summary>): Col<Summary>[] => [
+    first,
+    { key: 'fills', label: t.count, num: true, get: r => r.fillCount },
+    { key: 'liters', label: t.liters, num: true, get: r => Math.round(r.liters), render: r => n0(r.liters) },
+    { key: 'cost', label: `${t.cost} EGP`, num: true, get: r => Math.round(r.cost), render: r => n0(r.cost) },
+    { key: 'km', label: t.trackedKm, num: true, get: r => Math.round(r.trackedKm), render: r => n0(r.trackedKm) },
+    { key: 'kml', label: t.kmL, num: true, get: r => r.kmL, render: r => <b>{n2(r.kmL)}</b> },
+    { key: 'l100', label: t.l100, num: true, get: r => r.l100, render: r => n1(r.l100) },
+    { key: 'target', label: t.target, num: true, get: r => r.target, render: r => n2(r.target) },
+    { key: 'vs', label: t.vsTarget, num: true, get: r => r.vsTargetPct, render: r => <span className={r.vsTargetPct < -settings.marginPct ? 'font-black text-red-600' : r.vsTargetPct > settings.marginPct ? 'font-black text-amber-700' : ''}>{pct(r.vsTargetPct)}</span> },
+    { key: 'diffL', label: t.diffL, num: true, get: r => Math.round(r.diffL), render: r => <span className={r.diffL > 0 ? 'text-red-600' : 'text-emerald-700'}>{signed(r.diffL)}</span> },
+    { key: 'diffE', label: t.diffEgp, num: true, get: r => Math.round(r.diffEgp), render: r => <span className={r.diffEgp > 0 ? 'text-red-600' : 'text-emerald-700'}>{signed(r.diffEgp)}</span> },
+    { key: 'over', label: t.overL, num: true, get: r => Math.round(r.overMarginL), render: r => r.overMarginL ? <b className="text-red-600">{n0(r.overMarginL)}</b> : '—' },
+    { key: 'loss', label: t.loss, num: true, get: r => Math.round(r.lossEgp), render: r => r.lossEgp ? <b className="text-red-600">{n0(r.lossEgp)}</b> : '—' },
+    { key: 'cardKm', label: t.cardKm, num: true, get: r => Math.round(r.cardKm), render: r => n0(r.cardKm) },
+    { key: 'kmDiff', label: t.kmDiff, num: true, get: r => Math.round(r.cardKm - r.trackedKm), render: r => <span className={Math.abs(r.cardKm - r.trackedKm) > 50 ? 'font-black text-amber-700' : ''}>{signed(r.cardKm - r.trackedKm)}</span> },
+    { key: 'cardKml', label: t.cardKmL, num: true, get: r => r.cardKmL, render: r => n2(r.cardKmL) },
+    { key: 'kmlDiff', label: `Δ ${t.kmL}`, num: true, get: r => (r.cardKmL && r.kmL ? Math.round((r.cardKmL - r.kmL) * 100) / 100 : null), render: r => r.cardKmL && r.kmL && Math.abs(r.cardKmL - r.kmL) > 0.02 ? <span className="font-black text-amber-700">{signed(r.cardKmL - r.kmL, n2)}</span> : <span className="text-slate-400">—</span> },
+    { key: 'split', label: t.splits, num: true, get: r => r.splits, render: r => r.splits || '—' },
+    { key: 'partial', label: t.partials, num: true, get: r => r.partials, render: r => r.partials || '—' },
+    { key: 'bad', label: t.bad, num: true, get: r => r.badKm, render: r => r.badKm ? <b className="text-amber-700">{r.badKm}</b> : '—' },
+    { key: 'status', label: t.status, get: r => r.status, render: r => <Badge t={t} s={r.status} /> },
+  ];
+  const truckCols = summaryCols({ key: 'truck', label: t.truck, get: r => r.label, render: r => <div><b className="text-[#07111f]">{r.label}</b><div className="text-[10px] text-slate-500">{r.vehicleType} · {r.drivers.join('، ')}</div></div> });
+  const driverCols = summaryCols({ key: 'driver', label: t.driver, get: r => r.label, render: r => <div><b>{r.label}</b><div className="text-[10px] text-slate-500">{r.plates.join(' · ')}</div></div> });
+  const monthCols = summaryCols({ key: 'month', label: t.month, get: r => r.label, render: r => <b dir="ltr">{r.label}</b> }).filter(c => c.key !== 'status');
+
+  const noteText = (s: Segment) => s.notes.map(n => t[`n_${n}` as const]).join(' · ');
+  const fillCols: Col<Segment>[] = [
+    { key: 'at', label: t.date, get: r => r.at, render: r => <span dir="ltr">{when(r.at)}</span> },
+    { key: 'truck', label: t.truck, get: r => r.plate, render: r => <b>{r.plate}</b> },
+    { key: 'driver', label: t.driver, get: r => r.driver },
+    { key: 'fromKm', label: t.fromKm, num: true, get: r => r.fromKm, render: r => n0(r.fromKm) },
+    { key: 'toKm', label: t.toKm, num: true, get: r => r.toKm, render: r => n0(r.toKm) },
+    { key: 'dist', label: t.actualKm, num: true, get: r => (r.status === 'pending' ? null : r.distance), render: r => r.status === 'pending' ? <span className="text-slate-400">—</span> : <b>{n0(r.distance)}</b> },
+    { key: 'cardDist', label: t.cardDistance, num: true, get: r => r.card.distance, render: r => n0(r.card.distance) },
+    { key: 'dDist', label: t.kmDiff, num: true, get: r => (r.status === 'pending' ? null : Math.round(r.card.distance - r.distance)), render: r => r.status === 'pending' ? <span className="text-slate-400">—</span> : <span className={Math.abs(r.card.distance - r.distance) > 5 ? 'font-black text-amber-700' : 'text-slate-400'}>{signed(r.card.distance - r.distance)}</span> },
+    { key: 'liters', label: t.liters, num: true, get: r => r.liters, render: r => n1(r.liters) },
+    { key: 'kml', label: t.actualKmL, num: true, get: r => r.kmL, render: r => <b>{n2(r.kmL)}</b> },
+    { key: 'cardKml', label: t.cardKmL, num: true, get: r => r.card.kmL, render: r => n2(r.card.kmL) },
+    { key: 'dKml', label: `Δ ${t.kmL}`, num: true, get: r => (r.card.kmL != null && r.kmL ? Math.round((r.card.kmL - r.kmL) * 100) / 100 : null), render: r => r.card.kmL != null && r.kmL && Math.abs(r.card.kmL - r.kmL) > 0.05 ? <span className="font-black text-amber-700">{signed(r.card.kmL - r.kmL, n2)}</span> : <span className="text-slate-400">—</span> },
+    { key: 'l100', label: t.l100, num: true, get: r => r.l100, render: r => n1(r.l100) },
+    { key: 'target', label: t.target, num: true, get: r => r.target, render: r => n2(r.target) },
+    { key: 'exp', label: t.expected, num: true, get: r => r.expectedL, render: r => r.status === 'pending' ? '—' : n0(r.expectedL) },
+    { key: 'diffL', label: t.diffL, num: true, get: r => r.diffL, render: r => <span className={r.diffL > 0 ? 'text-red-600' : 'text-emerald-700'}>{signed(r.diffL)}</span> },
+    { key: 'diffE', label: t.diffEgp, num: true, get: r => r.diffEgp, render: r => <span className={r.diffEgp > 0 ? 'text-red-600' : 'text-emerald-700'}>{signed(r.diffEgp)}</span> },
+    { key: 'loss', label: t.loss, num: true, get: r => r.lossEgp, render: r => r.lossEgp ? <b className="text-red-600">{n0(r.lossEgp)}</b> : '—' },
+    { key: 'status', label: t.status, get: r => statusLabel(t, r.status), render: r => <Badge t={t} s={r.status} /> },
+    { key: 'notes', label: t.notes, get: r => noteText(r), render: r => (
+      <div className="flex flex-wrap gap-1">
+        {r.notes.map(n => <Chip key={n} tone={n === 'badKm' ? 'amber' : n === 'fixedKm' ? 'slate' : 'blue'}>{t[`n_${n}` as const]}</Chip>)}
+        {r.fills.length > 1 && <Chip>{r.fills.length} {t.count.toLowerCase()} · {r.fills.reduce((a, x) => a + x.txs.length, 0)} {t.txs.toLowerCase()}</Chip>}
+      </div>
+    ) },
+  ];
+
+  const flagTone = (fl: string) => (fl === 'badKm' ? 'amber' : fl === 'reversal' || fl === 'reversed' ? 'red' : fl === 'split' ? 'blue' : 'slate');
+  const txCols: Col<TxView>[] = [
+    { key: 'at', label: t.date, get: r => r.tx.at, render: r => <span dir="ltr">{when(r.tx.at)}</span> },
+    { key: 'id', label: '#', get: r => r.tx.id, render: r => <span dir="ltr" className="text-slate-500">{r.tx.id}</span> },
+    { key: 'truck', label: t.truck, get: r => r.tx.plate, render: r => <b>{r.tx.plate}</b> },
+    { key: 'driver', label: t.driver, get: r => r.tx.driver },
+    { key: 'station', label: t.station, get: r => r.tx.station, className: 'max-w-[180px] truncate' },
+    { key: 'liters', label: t.liters, num: true, get: r => r.tx.liters, render: r => n1(r.tx.liters) },
+    { key: 'amount', label: t.amount, num: true, get: r => r.tx.amount, render: r => n2(r.tx.amount) },
+    { key: 'total', label: t.total, num: true, get: r => r.tx.totalAmount, render: r => n2(r.tx.totalAmount) },
+    { key: 'fee', label: t.fee, num: true, get: r => Math.round((r.tx.totalAmount - r.tx.amount) * 100) / 100, render: r => n2(r.tx.totalAmount - r.tx.amount) },
+    { key: 'pumpVar', label: t.pumpVar, num: true, get: r => r.tx.variance, render: r => Math.abs(r.tx.variance) > 1 ? <b className="text-red-600">{n2(r.tx.variance)}</b> : <span className="text-slate-400">—</span> },
+    { key: 'odo', label: t.odometer, num: true, get: r => r.tx.km, render: r => n0(r.tx.km) },
+    { key: 'cardKm', label: `${t.cardSays} ${t.km}`, num: true, get: r => r.tx.cardDistance, render: r => n0(r.tx.cardDistance) },
+    { key: 'ourKm', label: t.ourKm, num: true, get: r => r.actualDistance, render: r => r.actualDistance == null ? <span className="text-slate-400">—</span> : <b>{n0(r.actualDistance)}</b> },
+    { key: 'cardKml', label: `${t.cardSays} ${t.kmL}`, num: true, get: r => r.tx.cardKmL, render: r => n2(r.tx.cardKmL) },
+    { key: 'ourKml', label: t.actualKmL, num: true, get: r => r.actualKmL, render: r => r.actualKmL == null ? <span className="text-slate-400">—</span> : <b>{n2(r.actualKmL)}</b> },
+    { key: 'valid', label: t.cardSays, get: r => `${r.tx.cardValidity} ${r.tx.cardReason}`.trim(), render: r => r.tx.cardValidity
+      ? <span className={/wrong/i.test(r.tx.cardValidity) ? 'font-bold text-red-600' : 'text-slate-500'}>{r.tx.cardValidity}{r.tx.cardReason ? ` · ${r.tx.cardReason}` : ''}</span> : '—' },
+    { key: 'flags', label: t.flags, get: r => r.flags.join(', '), render: r => <div className="flex flex-wrap gap-1">{r.flags.map(fl => <Chip key={fl} tone={flagTone(fl)}>{t[`f_${fl}` as const]}</Chip>)}</div> },
+  ];
+  const stationCols: Col<StationRow>[] = [
+    { key: 'station', label: t.station, get: r => r.station, render: r => <b>{r.station}</b> },
+    { key: 'count', label: t.txs, num: true, get: r => r.count },
+    { key: 'trucks', label: t.trucks, num: true, get: r => r.trucks },
+    { key: 'liters', label: t.liters, num: true, get: r => Math.round(r.liters), render: r => n0(r.liters) },
+    { key: 'cost', label: `${t.cost} EGP`, num: true, get: r => Math.round(r.cost), render: r => n0(r.cost) },
+    { key: 'charged', label: `${t.charged} EGP`, num: true, get: r => Math.round(r.charged), render: r => n0(r.charged) },
+    { key: 'share', label: t.share, num: true, get: r => Math.round(r.share * 10) / 10, render: r => (
+      <div className="flex items-center justify-end gap-2"><div className="h-1.5 w-20 rounded-full bg-[#f1ebe0]"><div className="h-1.5 rounded-full bg-[#c2a378]" style={{ width: `${r.share}%` }} /></div>{n1(r.share)}%</div>
+    ) },
+  ];
+
+  /* ---- actions ---- */
+  const onFile = async (file: File) => {
+    setBusy(t.uploading);
+    try {
+      const rows = await parseFuelWorkbook(file);
+      if (!rows.length) { setToast(t.foundNone); return; }
+      const have = new Set((txs || []).map(x => x.id));
+      setPreview({ txs: rows, fresh: rows.filter(x => !have.has(x.id)).length });
+    } catch (e: any) { setToast(String(e?.message || e)); }
+    finally { setBusy(''); if (fileRef.current) fileRef.current.value = ''; }
+  };
+  const saveUpload = async () => {
+    if (!preview) return;
+    setBusy(t.uploading);
+    try {
+      await api.saveFuel(preview.txs, local);
+      const m = new Map((txs || []).map(x => [x.id, x]));
+      preview.txs.forEach(x => m.set(x.id, x));
+      setTxs([...m.values()]);
+      setToast(t.saved(preview.txs.length));
+      setPreview(null);
+    } catch (e: any) { setToast(String(e?.message || e)); }
+    finally { setBusy(''); }
+  };
+  const clearAll = async () => {
+    if (window.prompt(t.clearConfirm) !== 'DELETE') return;
+    setBusy('…');
+    try { await api.deleteFuel((txs || []).map(x => x.id), local); setTxs([]); }
+    catch (e: any) { setToast(String(e?.message || e)); }
+    finally { setBusy(''); }
+  };
+
+  const filterText = [f.plate, f.driver, f.station, f.type, f.status && (f.status in STATUS_CLS ? statusLabel(t, f.status as SegmentStatus) : t[`st_${f.status}` as const]), f.q].filter(Boolean).join(' · ');
+  const period = kpi.from ? `${day(kpi.from)} → ${day(kpi.to)}` : '—';
+  const doExcel = () => exportFuelExcel([
+    toSheet(t.trucks, truckCols, trucks), toSheet(t.drivers, driverCols, drivers), toSheet(t.fills, fillCols, filtered.segs),
+    toSheet(t.transactions, txCols, filtered.views), toSheet(t.months, monthCols, months), toSheet(t.stations, stationCols, stations),
+  ], lang, t.reportTitle);
+  const pick = <T,>(cols: Col<T>[], keys: string[]) => keys.map(k => cols.find(c => c.key === k)!).filter(Boolean);
+  const doPrint = () => printFuelReport({
+    lang, t, period, filters: filterText,
+    kpis: [
+      { label: t.liters, value: n0(kpi.liters) },
+      { label: t.cost, value: `${n0(kpi.cost)} EGP`, sub: `${n2(result.price)} ${t.perLiter}` },
+      { label: t.trackedKm, value: n0(kpi.trackedKm) },
+      { label: t.fleetKmL, value: n2(kpi.kmL), sub: `${t.target} ${n2(kpi.target)} · ${n1(kpi.kmL ? 100 / kpi.kmL : 0)} ${t.l100}` },
+      { label: t.overMargin, value: `${n0(kpi.overL)} L`, sub: `${n0(kpi.loss)} EGP` },
+      { label: t.checks, value: String(kpi.outside + kpi.bad), sub: `${kpi.outside} ${t.fillsOutside} · ${kpi.bad} ${t.badReadings}` },
+    ],
+    tables: [
+      toSheet(t.trucks, pick(truckCols, ['truck', 'fills', 'liters', 'cost', 'km', 'kml', 'l100', 'target', 'vs', 'diffL', 'over', 'loss', 'cardKm', 'kmDiff', 'cardKml', 'bad']).map(c => c.key === 'truck' ? { ...c, get: (r: Summary) => `${r.label} (${r.vehicleType})` } : c), trucks),
+      toSheet(t.drivers, pick(driverCols, ['driver', 'fills', 'liters', 'km', 'kml', 'target', 'vs', 'diffL', 'loss']), drivers),
+      toSheet(t.flagged, pick(fillCols, ['at', 'truck', 'driver', 'dist', 'cardDist', 'liters', 'kml', 'cardKml', 'target', 'diffL', 'diffE', 'status', 'notes']),
+        filtered.segs.filter(s => s.status === 'high' || s.status === 'low' || s.notes.length)),
+    ],
+  });
+
+  /* ---- render ---- */
+  if (txs === null) return <DaliLoader fullScreen label={<span className="text-xs font-bold text-slate-500">{t.title}</span>} />;
+  const hasData = txs.length > 0;
+  const views: [View, string, number | null][] = [
+    ['trucks', t.trucks, trucks.length], ['drivers', t.drivers, drivers.length], ['fills', t.fills, filtered.segs.length],
+    ['tx', t.transactions, filtered.views.length], ['months', t.months, months.length], ['stations', t.stations, stations.length], ['settings', t.settings, null],
+  ];
+  const statusOptions: [StatusFilter, string][] = [
+    ['ok', t.st_ok], ['high', t.st_high], ['low', t.st_low], ['pending', t.st_pending],
+    ['badKm', t.st_badKm], ['split', t.st_split], ['partial', t.st_partial], ['reversed', t.st_reversed],
+  ];
+  const anyFilter = JSON.stringify(f) !== JSON.stringify(NO_FILTERS);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-black uppercase italic tracking-tight text-[#07111f] sm:text-2xl">{t.title}</h1>
+          <p className="mt-1 max-w-2xl text-xs text-slate-500">{t.sub}</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {isAdmin && <button className={btnGold} disabled={!!busy} onClick={() => fileRef.current?.click()}>⬆ {t.upload}</button>}
+          {hasData && <button className={btnGhost} onClick={doExcel}>⬇ {t.exportXls}</button>}
+          {hasData && <button className={btnNavy} onClick={doPrint}>🖨 {t.print}</button>}
+          <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={e => { const file = e.target.files?.[0]; if (file) onFile(file); }} />
+        </div>
+      </div>
+
+      {error && <div role="alert" className="rounded-xl border border-red-300 bg-red-50 p-3 text-sm font-bold text-red-800">{error}</div>}
+      {local && isAdmin && <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs font-bold text-amber-900">{t.localNote}</div>}
+      {busy && <div className="flex items-center gap-2 text-xs font-bold text-slate-500"><DaliLoader size={18} />{busy}</div>}
+
+      {!hasData ? (
+        <Card className="py-14 text-center">
+          <div className="text-4xl">⛽</div>
+          <p className="mx-auto mt-3 max-w-md text-sm font-bold text-slate-600">{isAdmin ? t.empty : t.emptyViewer}</p>
+          {isAdmin && <button className={`${btnGold} mt-5`} onClick={() => fileRef.current?.click()}>⬆ {t.upload}</button>}
+        </Card>
+      ) : (
+        <>
+          {/* Filters */}
+          <Card className="!p-3">
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-9">
+              <input className={`${inputCls} col-span-2`} placeholder={t.search} value={f.q} onChange={e => set({ q: e.target.value })} />
+              <label className="flex items-center gap-1 text-[10px] font-black text-slate-500">{t.from}<input type="date" className={`${inputCls} w-full min-w-0`} value={f.from} onChange={e => set({ from: e.target.value })} /></label>
+              <label className="flex items-center gap-1 text-[10px] font-black text-slate-500">{t.to}<input type="date" className={`${inputCls} w-full min-w-0`} value={f.to} onChange={e => set({ to: e.target.value })} /></label>
+              <select className={inputCls} value={f.plate} onChange={e => set({ plate: e.target.value })}><option value="">{t.allTrucks}</option>{options.plates.map(x => <option key={x}>{x}</option>)}</select>
+              <select className={inputCls} value={f.driver} onChange={e => set({ driver: e.target.value })}><option value="">{t.allDrivers}</option>{options.drivers.map(x => <option key={x}>{x}</option>)}</select>
+              <select className={inputCls} value={f.station} onChange={e => set({ station: e.target.value })}><option value="">{t.allStations}</option>{options.stations.map(x => <option key={x}>{x}</option>)}</select>
+              <select className={inputCls} value={f.type} onChange={e => set({ type: e.target.value })}><option value="">{t.allTypes}</option>{options.types.map(x => <option key={x}>{x}</option>)}</select>
+              <select className={inputCls} value={f.status} onChange={e => set({ status: e.target.value as StatusFilter })}><option value="">{t.anyStatus}</option>{statusOptions.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+              {anyFilter && <button className={`${btnGhost} justify-center`} onClick={() => setF(NO_FILTERS)}>✕ {t.clear}</button>}
+            </div>
+          </Card>
+
+          {/* KPIs */}
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+            <Kpi label={t.liters} value={n0(kpi.liters)} sub={<span dir="ltr">{period}</span>} />
+            <Kpi label={t.cost} value={`${n0(kpi.cost)}`} unit="EGP" sub={`${n2(result.price)} ${t.perLiter}${settings.price ? '' : ` (${t.auto})`}`} />
+            <Kpi label={t.charged} value={n0(kpi.charged)} unit="EGP" sub={`+${n0(kpi.fees)} ${t.fees}`} />
+            <Kpi label={t.fleetKmL} value={n2(kpi.kmL)} tone={kpi.kmL && kpi.kmL < kpi.target * (1 - settings.marginPct / 100) ? 'red' : 'navy'}
+              sub={`${t.target} ${n2(kpi.target)} ± ${settings.marginPct}% · ${n1(kpi.kmL ? 100 / kpi.kmL : 0)} ${t.l100}`} />
+            <Kpi label={t.overMargin} value={n0(kpi.overL)} unit="L" tone={kpi.overL ? 'red' : 'navy'} sub={`${n0(kpi.loss)} EGP`} />
+            <Kpi label={t.checks} value={String(kpi.outside + kpi.bad)} tone={kpi.outside + kpi.bad ? 'amber' : 'navy'} sub={`${kpi.outside} ${t.fillsOutside} · ${kpi.bad} ${t.badReadings}`} />
+          </div>
+
+          {/* Card vs actual */}
+          <Card>
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <div className="text-xs font-black uppercase tracking-[.2em] text-[#07111f]">{t.cardVsActual}</div>
+              <div className="text-[11px] text-slate-500">{t.cardVsActualHint}</div>
+            </div>
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <Compare label={t.km} card={n0(kpi.cardKm)} actual={n0(kpi.trackedKm)} diff={signed(kpi.cardKm - kpi.trackedKm)} bad={Math.abs(kpi.cardKm - kpi.trackedKm) > 100} t={t} />
+              <Compare label={t.kmL} card={n2(kpi.cardKmL)} actual={n2(kpi.kmL)} diff={signed(kpi.cardKmL - kpi.kmL, n2)} bad={Math.abs(kpi.cardKmL - kpi.kmL) > 0.1} t={t} />
+              <Compare label={t.l100} card={n1(kpi.cardKmL ? 100 / kpi.cardKmL : 0)} actual={n1(kpi.kmL ? 100 / kpi.kmL : 0)} diff={signed((kpi.cardKmL ? 100 / kpi.cardKmL : 0) - (kpi.kmL ? 100 / kpi.kmL : 0), n1)} bad={false} t={t} />
+              <div className="rounded-xl bg-[#f8f5ef] p-3">
+                <div className="text-[10px] font-black uppercase tracking-widest text-[#8a7350]">{t.cardWrong}</div>
+                <div className="mt-1 text-2xl font-black tabular-nums text-[#07111f]">{kpi.cardWrong}</div>
+                <div className="text-[10px] text-slate-500">{filtered.fills.filter(x => x.txs.length > 1).length} {t.st_split.toLowerCase()} · {filtered.segs.filter(s => s.notes.includes('partial')).length} {t.st_partial.toLowerCase()}</div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Views */}
+          <nav className="flex gap-1 overflow-x-auto rounded-2xl border border-[#e3dccf] bg-white p-1">
+            {views.map(([k, label, count]) => (
+              <button key={k} onClick={() => setView(k)} className={`whitespace-nowrap rounded-xl px-3.5 py-2 text-[11px] font-black uppercase tracking-wider transition ${view === k ? 'bg-[#07111f] text-white' : 'text-[#07111f]/70 hover:bg-[#f8f5ef]'}`}>
+                {label}{count != null && <span className={`ms-1.5 rounded-full px-1.5 text-[10px] ${view === k ? 'bg-[#c2a378] text-[#07111f]' : 'bg-[#f1ebe0]'}`}>{count}</span>}
+              </button>
+            ))}
+          </nav>
+
+          {view === 'trucks' && <DataTable rows={trucks} cols={truckCols} rowKey={r => r.key} initial={{ key: 'vs', dir: 1 }} empty={t.noMatch}
+            onRow={r => { set({ plate: r.key }); setView('fills'); }} highlight={r => r.status === 'high' ? 'bg-red-50/40' : ''} />}
+          {view === 'drivers' && <DataTable rows={drivers} cols={driverCols} rowKey={r => r.key} initial={{ key: 'vs', dir: 1 }} empty={t.noMatch}
+            onRow={r => { set({ driver: r.key === '—' ? '' : r.key }); setView('fills'); }} />}
+          {view === 'fills' && <DataTable rows={filtered.segs} cols={fillCols} rowKey={r => r.key} initial={{ key: 'at', dir: -1 }} empty={t.noMatch}
+            highlight={r => r.status === 'high' ? 'bg-red-50/40' : r.status === 'low' ? 'bg-amber-50/40' : ''} />}
+          {view === 'tx' && <DataTable rows={filtered.views} cols={txCols} rowKey={r => r.tx.id} initial={{ key: 'at', dir: -1 }} empty={t.noMatch}
+            highlight={r => r.flags.includes('reversal') || r.flags.includes('reversed') ? 'opacity-60 line-through decoration-red-300' : ''} />}
+          {view === 'months' && <DataTable rows={months} cols={monthCols} rowKey={r => r.key} initial={{ key: 'month', dir: -1 }} empty={t.noMatch} />}
+          {view === 'stations' && <DataTable rows={stations} cols={stationCols} rowKey={r => r.station} initial={{ key: 'liters', dir: -1 }} empty={t.noMatch}
+            onRow={r => { set({ station: r.station === '—' ? '' : r.station }); setView('tx'); }} />}
+          {view === 'settings' && <SettingsPanel t={t} isAdmin={isAdmin} settings={settings} result={result} plates={options.plates} types={options.types}
+            onSave={async s => { try { await api.saveFuelSettings(s); setSettings(s); setToast('✓'); } catch (e: any) { setToast(String(e?.message || e)); } }} />}
+
+          {isAdmin && <div className="pt-2 text-end"><button className="text-[11px] font-bold text-red-600 hover:underline" onClick={clearAll}>{t.clearAll}</button></div>}
+        </>
+      )}
+
+      {preview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07111f]/60 p-4" role="dialog" aria-modal="true">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="text-lg font-black text-[#07111f]">⛽ {t.upload}</div>
+            <p className="mt-3 text-sm text-slate-600">{(() => {
+              const ats = preview.txs.map(x => x.at).sort();
+              return t.found(preview.txs.length, preview.fresh, day(ats[0]), day(ats[ats.length - 1]));
+            })()}</p>
+            <div className="mt-6 flex justify-end gap-2">
+              <button className={btnGhost} onClick={() => setPreview(null)}>✕</button>
+              <button className={btnGold} disabled={!!busy} onClick={saveUpload}>{busy ? <DaliLoader size={16} /> : '✓'} {t.saveUpload}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default FuelScreen;
+
+/* ------------------------------ small parts ------------------------------ */
+
+const Kpi: React.FC<{ label: string; value: string; unit?: string; sub?: React.ReactNode; tone?: 'navy' | 'red' | 'amber' }> = ({ label, value, unit, sub, tone = 'navy' }) => (
+  <Card className="!p-4">
+    <div className="text-[10px] font-black uppercase tracking-[.2em] text-slate-500">{label}</div>
+    <div className={`mt-1.5 text-2xl font-black tabular-nums ${tone === 'red' ? 'text-red-600' : tone === 'amber' ? 'text-amber-700' : 'text-[#07111f]'}`}>
+      {value}{unit && <span className="ms-1 text-xs font-bold text-slate-400">{unit}</span>}
+    </div>
+    {sub && <div className="mt-1 text-[10px] leading-4 text-slate-500">{sub}</div>}
+  </Card>
+);
+
+const Compare: React.FC<{ label: string; card: string; actual: string; diff: string; bad: boolean; t: FuelStrings }> = ({ label, card, actual, diff, bad, t }) => (
+  <div className="rounded-xl bg-[#f8f5ef] p-3">
+    <div className="text-[10px] font-black uppercase tracking-widest text-[#8a7350]">{label}</div>
+    <div className="mt-1 grid grid-cols-3 gap-1 text-center">
+      <div><div className="text-[9px] font-bold text-slate-500">{t.cardSays}</div><div className="text-sm font-black tabular-nums">{card}</div></div>
+      <div><div className="text-[9px] font-bold text-slate-500">{t.actual}</div><div className="text-sm font-black tabular-nums text-[#07111f]">{actual}</div></div>
+      <div><div className="text-[9px] font-bold text-slate-500">{t.diff}</div><div className={`text-sm font-black tabular-nums ${bad ? 'text-amber-700' : 'text-slate-500'}`}>{diff}</div></div>
+    </div>
+  </div>
+);
+
+const SettingsPanel: React.FC<{
+  t: FuelStrings; isAdmin: boolean; settings: FuelSettings; result: FuelResult; plates: string[]; types: string[];
+  onSave: (s: FuelSettings) => void;
+}> = ({ t, isAdmin, settings, result, plates, types, onSave }) => {
+  const [d, setD] = useState(settings);
+  useEffect(() => setD(settings), [settings]);
+  const num = (v: string) => (v === '' ? 0 : Number(v));
+  const typeAvg = (type: string) => {
+    const segs: Segment[] = result.segments.filter((s: Segment) => s.vehicleType === type && s.status !== 'pending' && !s.notes.includes('partial'));
+    const L = sum(segs, s => s.liters);
+    return L ? sum(segs, s => s.distance) / L : 0;
+  };
+  const field = (label: string, key: 'price' | 'marginPct' | 'fillMarginPct' | 'splitHours' | 'minKm' | 'maxKmPerFill', hint?: string, step = '1') => (
+    <label className="block text-xs font-bold text-slate-700">{label}
+      <input type="number" step={step} min="0" disabled={!isAdmin} className={`${inputCls} mt-1 w-full`} value={d[key] || ''} placeholder={key === 'price' ? `${result.price}` : '0'}
+        onChange={e => setD({ ...d, [key]: num(e.target.value) })} />
+      {hint && <span className="mt-1 block text-[10px] font-normal text-slate-500">{hint}</span>}
+    </label>
+  );
+  return (
+    <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+      <Card>
+        <p className="text-xs text-slate-500">{t.setHint}</p>
+        {!isAdmin && <p className="mt-2 text-xs font-bold text-amber-700">{t.readOnly}</p>}
+        <div className="mt-4 grid grid-cols-2 gap-4">
+          {field(t.price, 'price', t.priceHint, '0.01')}
+          {field(t.truckMargin, 'marginPct', t.truckMarginHint)}
+          {field(t.fillMargin, 'fillMarginPct', t.fillMarginHint)}
+          {field(t.splitHours, 'splitHours', t.splitHoursHint, '0.5')}
+          {field(t.minKm, 'minKm')}
+          {field(t.maxKm, 'maxKmPerFill', t.maxKmHint)}
+        </div>
+        <div className="mt-5 text-xs font-black uppercase tracking-[.2em] text-[#07111f]">{t.typeTargets}</div>
+        <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {types.map(type => (
+            <label key={type} className="block text-xs font-bold text-slate-700">{type}
+              <input type="number" step="0.01" min="0" disabled={!isAdmin} className={`${inputCls} mt-1 w-full`} placeholder={`${t.fleetAvg} ${n2(typeAvg(type))}`}
+                value={d.typeTargets[type] || ''} onChange={e => setD({ ...d, typeTargets: { ...d.typeTargets, [type]: num(e.target.value) } })} />
+            </label>
+          ))}
+        </div>
+        {isAdmin && (
+          <div className="mt-5 flex gap-2">
+            <button className={btnGold} onClick={() => onSave(d)}>✓ {t.saveSettings}</button>
+            <button className={btnGhost} onClick={() => setD(DEFAULT_SETTINGS)}>{t.reset}</button>
+          </div>
+        )}
+      </Card>
+      <div className="space-y-4">
+        <Card>
+          <div className="text-xs font-black uppercase tracking-[.2em] text-[#07111f]">{t.truckTargets}</div>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {plates.map(p => (
+              <label key={p} className="block text-xs font-bold text-slate-700">{p}
+                <input type="number" step="0.01" min="0" disabled={!isAdmin} className={`${inputCls} mt-1 w-full`} placeholder={n2(result.targets[p])}
+                  value={d.truckTargets[p] || ''} onChange={e => setD({ ...d, truckTargets: { ...d.truckTargets, [p]: num(e.target.value) } })} />
+              </label>
+            ))}
+          </div>
+        </Card>
+        <Card>
+          <div className="text-xs font-black uppercase tracking-[.2em] text-[#07111f]">{t.how}</div>
+          <ol className="mt-3 list-decimal space-y-2 ps-5 text-xs leading-5 text-slate-600">{t.howLines.map(l => <li key={l}>{l}</li>)}</ol>
+        </Card>
+      </div>
+    </div>
+  );
+};
