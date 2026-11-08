@@ -34,7 +34,16 @@ const Card: React.FC<{ className?: string; children: React.ReactNode }> = ({ cla
 type StatusFilter = '' | SegmentStatus | 'badKm' | 'split' | 'partial' | 'reversed';
 interface Filters { q: string; from: string; to: string; plate: string; driver: string; station: string; type: string; status: StatusFilter }
 const NO_FILTERS: Filters = { q: '', from: '', to: '', plate: '', driver: '', station: '', type: '', status: '' };
-type View = 'trucks' | 'drivers' | 'fills' | 'tx' | 'months' | 'stations' | 'settings';
+type View = 'trucks' | 'drivers' | 'fills' | 'tx' | 'weeks' | 'months' | 'stations' | 'settings';
+
+/** Week key = the Saturday the work week starts on ("YYYY-MM-DD"). */
+const weekOf = (at: string) => {
+  const d = new Date(`${at.slice(0, 10)}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 1) % 7));
+  return d.toISOString().slice(0, 10);
+};
+const weekEnd = (start: string) => { const d = new Date(`${start}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + 6); return d.toISOString().slice(0, 10); };
+type WeekRow = Summary & { prevLiters: number | null; prevKmL: number | null };
 
 const STATUS_CLS: Record<SegmentStatus, string> = {
   ok: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -206,6 +215,11 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const trucks: Summary[] = useMemo(() => group(x => x.plate, k => k, true), [filtered, result, settings]); // eslint-disable-line react-hooks/exhaustive-deps
   const drivers: Summary[] = useMemo(() => group(x => x.driver || '—', k => k, false), [filtered, result, settings]); // eslint-disable-line react-hooks/exhaustive-deps
   const months: Summary[] = useMemo(() => group(x => x.at.slice(0, 7), k => k, false), [filtered, result, settings]); // eslint-disable-line react-hooks/exhaustive-deps
+  const weeks: WeekRow[] = useMemo(() => {
+    const list: Summary[] = group(x => weekOf(x.at), k => `${k} → ${weekEnd(k)}`, false).sort((a: Summary, b: Summary) => a.key.localeCompare(b.key));
+    const last = (txs || []).reduce((m, x) => (x.at > m ? x.at : m), '').slice(0, 10);
+    return list.map((w, i) => ({ ...w, label: weekEnd(w.key) > last ? `${w.label} · ${t.soFar}` : w.label, prevLiters: i ? list[i - 1].liters : null, prevKmL: i ? list[i - 1].kmL || null : null }));
+  }, [filtered, result, settings]); // eslint-disable-line react-hooks/exhaustive-deps
   type StationRow = { station: string; count: number; liters: number; cost: number; charged: number; share: number; trucks: number };
   const stations: StationRow[] = useMemo(() => {
     const total = sum(filtered.txs, x => x.liters) || 1;
@@ -263,6 +277,15 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const driverCols = summaryCols({ key: 'driver', label: t.driver, get: r => r.label, render: r => <div><b>{r.label}</b><div className="text-[10px] text-slate-500">{r.plates.join(' · ')}</div></div> });
   const monthCols = summaryCols({ key: 'month', label: t.month, get: r => r.label, render: r => <b dir="ltr">{r.label}</b> }).filter(c => c.key !== 'status');
 
+  const change = (now: number, prev: number | null) => (prev ? ((now - prev) / prev) * 100 : null);
+  const weekCols: Col<WeekRow>[] = [
+    { key: 'week', label: t.week, get: r => r.label, render: r => <b dir="ltr">{r.label}</b> },
+    ...(summaryCols({ key: 'x', label: '', get: () => null }).slice(1, 4) as unknown as Col<WeekRow>[]),
+    { key: 'dL', label: t.vsLastWeek, num: true, get: r => change(r.liters, r.prevLiters), render: r => { const c = change(r.liters, r.prevLiters); return c == null ? '—' : <span className={c > 0 ? 'text-red-600' : 'text-emerald-700'}>{pct(c)}</span>; } },
+    ...(summaryCols({ key: 'x', label: '', get: () => null }).slice(4, 6) as unknown as Col<WeekRow>[]),
+    { key: 'dKml', label: `${t.kmL} ${t.vsLastWeek}`, num: true, get: r => (r.kmL && r.prevKmL ? Math.round((r.kmL - r.prevKmL) * 100) / 100 : null), render: r => r.kmL && r.prevKmL ? <span className={r.kmL < r.prevKmL ? 'text-red-600' : 'text-emerald-700'}>{signed(r.kmL - r.prevKmL, n2)}</span> : '—' },
+    ...(summaryCols({ key: 'x', label: '', get: () => null }).slice(6).filter(c => !['split', 'partial', 'bad'].includes(c.key)) as unknown as Col<WeekRow>[]),
+  ];
   const noteText = (s: Segment) => s.notes.map(n => t[`n_${n}` as const]).join(' · ');
   const fillCols: Col<Segment>[] = [
     { key: 'at', label: t.date, get: r => r.at, render: r => <span dir="ltr">{when(r.at)}</span> },
@@ -361,7 +384,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const period = kpi.from ? `${day(kpi.from)} → ${day(kpi.to)}` : '—';
   const doExcel = () => exportFuelExcel([
     toSheet(t.trucks, truckCols, trucks), toSheet(t.drivers, driverCols, drivers), toSheet(t.fills, fillCols, filtered.segs),
-    toSheet(t.transactions, txCols, filtered.views), toSheet(t.months, monthCols, months), toSheet(t.stations, stationCols, stations),
+    toSheet(t.transactions, txCols, filtered.views), toSheet(t.weeks, weekCols, weeks), toSheet(t.months, monthCols, months), toSheet(t.stations, stationCols, stations),
   ], lang, t.reportTitle);
   const pick = <T,>(cols: Col<T>[], keys: string[]) => keys.map(k => cols.find(c => c.key === k)!).filter(Boolean);
   const doPrint = () => printFuelReport({
@@ -377,6 +400,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     tables: [
       toSheet(t.trucks, pick(truckCols, ['truck', 'fills', 'liters', 'cost', 'km', 'kml', 'l100', 'target', 'vs', 'diffL', 'over', 'loss', 'cardKm', 'kmDiff', 'cardKml', 'bad']).map(c => c.key === 'truck' ? { ...c, get: (r: Summary) => `${r.label} (${r.vehicleType})` } : c), trucks),
       toSheet(t.drivers, pick(driverCols, ['driver', 'fills', 'liters', 'km', 'kml', 'target', 'vs', 'diffL', 'loss']), drivers),
+      toSheet(t.weeks, pick(weekCols, ['week', 'fills', 'liters', 'cost', 'dL', 'km', 'kml', 'dKml', 'l100', 'vs', 'loss']), [...weeks].reverse()),
       toSheet(t.flagged, pick(fillCols, ['at', 'truck', 'driver', 'dist', 'cardDist', 'liters', 'kml', 'cardKml', 'target', 'diffL', 'diffE', 'status', 'notes']),
         filtered.segs.filter(s => s.status === 'high' || s.status === 'low' || s.notes.length)),
     ],
@@ -387,7 +411,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const hasData = txs.length > 0;
   const views: [View, string, number | null][] = [
     ['trucks', t.trucks, trucks.length], ['drivers', t.drivers, drivers.length], ['fills', t.fills, filtered.segs.length],
-    ['tx', t.transactions, filtered.views.length], ['months', t.months, months.length], ['stations', t.stations, stations.length], ['settings', t.settings, null],
+    ['tx', t.transactions, filtered.views.length], ['weeks', t.weeks, weeks.length], ['months', t.months, months.length], ['stations', t.stations, stations.length], ['settings', t.settings, null],
   ];
   const statusOptions: [StatusFilter, string][] = [
     ['ok', t.st_ok], ['high', t.st_high], ['low', t.st_low], ['pending', t.st_pending],
@@ -483,6 +507,8 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
             highlight={r => r.status === 'high' ? 'bg-red-50/40' : r.status === 'low' ? 'bg-amber-50/40' : ''} />}
           {view === 'tx' && <DataTable rows={filtered.views} cols={txCols} rowKey={r => r.tx.id} initial={{ key: 'at', dir: -1 }} empty={t.noMatch}
             highlight={r => r.flags.includes('reversal') || r.flags.includes('reversed') ? 'opacity-60 line-through decoration-red-300' : ''} />}
+          {view === 'weeks' && <DataTable rows={weeks} cols={weekCols} rowKey={r => r.key} initial={{ key: 'week', dir: -1 }} empty={t.noMatch}
+            onRow={r => { set({ from: r.key, to: weekEnd(r.key) }); setView('fills'); }} highlight={r => r.status === 'high' ? 'bg-red-50/40' : ''} />}
           {view === 'months' && <DataTable rows={months} cols={monthCols} rowKey={r => r.key} initial={{ key: 'month', dir: -1 }} empty={t.noMatch} />}
           {view === 'stations' && <DataTable rows={stations} cols={stationCols} rowKey={r => r.station} initial={{ key: 'liters', dir: -1 }} empty={t.noMatch}
             onRow={r => { set({ station: r.station === '—' ? '' : r.station }); setView('tx'); }} />}
