@@ -504,11 +504,11 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
 
   const change = (now: number, prev: number | null) => (prev ? ((now - prev) / prev) * 100 : null);
   const vehiclePeriodCols: Col<VehiclePeriodRow>[] = [
-    { key: 'period', label: t.period, get: r => r.period },
+    { key: 'period', label: lang === 'ar' ? 'الفترة' : 'Period', get: r => r.period },
     { key: 'plate', label: t.truck, get: r => r.plate, render: r => <b>{r.plate}</b> },
     { key: 'kml', label: t.kmL, num: true, get: r => r.kmL || null, render: r => r.kmL ? <b>{n2(r.kmL)}</b> : '—' },
-    { key: 'prevKmL', label: t.previousPeriod, num: true, get: r => r.prevKmL, render: r => n2(r.prevKmL) },
-    { key: 'deltaKmL', label: t.kmLChange, num: true, get: r => r.kmL && r.prevKmL ? round1(r.kmL - r.prevKmL) : null,
+    { key: 'prevKmL', label: lang === 'ar' ? 'الفترة السابقة' : 'Previous period', num: true, get: r => r.prevKmL, render: r => n2(r.prevKmL) },
+    { key: 'deltaKmL', label: lang === 'ar' ? 'التغير كم/لتر' : 'km/L change', num: true, get: r => r.kmL && r.prevKmL ? round1(r.kmL - r.prevKmL) : null,
       render: r => r.kmL && r.prevKmL ? <span className={r.kmL < r.prevKmL ? 'font-black text-red-600' : 'font-black text-emerald-700'}>{signed(r.kmL - r.prevKmL, n2)}</span> : '—' },
     { key: 'target', label: t.target, num: true, get: r => r.target, render: r => n2(r.target) },
     { key: 'vsTargetPct', label: t.vsTarget, num: true, get: r => r.kmL ? r.vsTargetPct : null, render: r => r.kmL ? pct(r.vsTargetPct) : '—' },
@@ -625,8 +625,10 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     const wkAlerts = alerts.filter(x => !isChecked(x, checked) && (weekOf(x.at) === wk || x.kind === 'idle'));
     const ch = (x: number, y: number) => (y ? `${ltr(`${x >= y ? '+' : ''}${N1.format(((x - y) / y) * 100)}%`)} ${t.vsLastWeek}` : '');
     type WRow = Summary & { prevKmL: number | null; alerts: number };
-    const wrows: WRow[] = rowsNow.map(r => ({ ...r, prevKmL: rowsPrev.get(r.key)?.kmL || null, alerts: wkAlerts.filter(x => x.plate === r.key).length }))
-      .sort((x, y) => x.vsTargetPct - y.vsTargetPct);
+    const wrows: WRow[] = knownFuelPlates.map(plate => {
+      const current = rowsNow.find(r => r.key === plate) || summarize(plate, plate, [], [], [], result.targets[plate] || result.fleetKmL || 2.3, settings.marginPct, result.price);
+      return { ...current, prevKmL: rowsPrev.get(plate)?.kmL || null, alerts: wkAlerts.filter(x => x.plate === plate).length };
+    }).sort((x, y) => (x.kmL || 0) - (y.kmL || 0));
     const wcols: Col<WRow>[] = [
       { key: 'truck', label: t.truck, get: r => `${r.label} (${r.vehicleType})` },
       { key: 'driver', label: t.driver, get: r => r.drivers.join('، ') },
