@@ -127,6 +127,14 @@ assert.equal(sp.cost, 2050 + 2200);
   assert.equal(al.filter(a => a.plate === 'L' && (a.kind === 'overUse' || a.kind === 'tooFewLiters')).length, 0, 'not-full fill paired with next: no alert');
   assert.equal(of('idle', 'Q').length, 1, 'idle truck');
   assert.equal(al[0].level, 'high', 'urgent first');
+
+  // Raw pump reading is checked even when the imported variance column says zero.
+  const rawMismatch = tx('R', '2026-11-05T08:00', 220, 40000, { amount: 4566.99, pumpReading: 66.907, variance: 0 });
+  const mismatchAlerts = fuelAlerts(computeFuel([rawMismatch], S), [rawMismatch], S);
+  const pumpAlert = mismatchAlerts.find(a => a.kind === 'pumpVar' && a.plate === 'R');
+  assert.ok(pumpAlert, 'raw pump/paid mismatch is flagged even with variance=0');
+  assert.equal(pumpAlert.info.rawMismatch, 1);
+  assert.equal(pumpAlert.egp, 0, 'unverified source mismatch is not reported as a financial loss');
 }
 // Every merge / correction raises an alert (truck A has a split fill, B a partial fill, C a km typo).
 {
