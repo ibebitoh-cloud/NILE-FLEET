@@ -198,6 +198,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const [error, setError] = useState('');
   const [settings, setSettings] = useState<FuelSettings>(DEFAULT_SETTINGS);
   const [f, setF] = useState<Filters>(NO_FILTERS);
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
   const isMobile = useIsMobile();
   const [view, setView] = useState<View>(() => {
     const phone = typeof window !== 'undefined' && window.matchMedia(MOBILE_QUERY).matches;
@@ -787,7 +788,20 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     ['badKm', t.st_badKm], ['split', t.st_split], ['partial', t.st_partial], ['reversed', t.st_reversed],
   ];
   const anyFilter = JSON.stringify(f) !== JSON.stringify(NO_FILTERS);
-  const activeFilters = (Object.keys(NO_FILTERS) as (keyof Filters)[]).filter(k => k !== 'q' && f[k] !== NO_FILTERS[k]).length;
+  const activeFilterKeys = (Object.keys(NO_FILTERS) as (keyof Filters)[]).filter(k => f[k] !== NO_FILTERS[k]);
+  const activeFilters = activeFilterKeys.filter(k => k !== 'q').length;
+  const filterNames: Partial<Record<keyof Filters, string>> = {
+    from: lang === 'ar' ? 'من' : 'From', to: lang === 'ar' ? 'إلى' : 'To',
+    plate: t.truck, driver: t.driver, station: lang === 'ar' ? 'المحطة' : 'Station',
+    type: lang === 'ar' ? 'نوع السيارة' : 'Vehicle type', status: t.status, q: t.search,
+  };
+  const filterValue = (key: keyof Filters) => {
+    const value = f[key];
+    if (!value) return '';
+    if (key === 'status') return statusOptions.find(([k]) => k === value)?.[1] || String(value);
+    return String(value);
+  };
+  const clearFilter = (key: keyof Filters) => set({ [key]: NO_FILTERS[key] } as Partial<Filters>);
   const filterFields = (
     <>
               <label className="flex items-center gap-1 text-[10px] font-black text-slate-500">{t.from}<input type="date" className={`${inputCls} w-full min-w-0`} value={f.from} onChange={e => set({ from: e.target.value })} /></label>
@@ -898,21 +912,28 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
         </Card>
       ) : (
         <>
-          {/* Filters */}
-          {isMobile ? (
+          {/* Compact filters: keep search visible, expand advanced fields only when needed. */}
+          <div className="space-y-2">
             <div className="flex items-center gap-2">
               <input className={`${inputCls} min-w-0 flex-1 !py-2.5`} type="search" placeholder={t.search} value={f.q} onChange={e => set({ q: e.target.value })} />
-              <button className={`${activeFilters ? btnNavy : btnGhost} !px-3 !py-2.5 whitespace-nowrap`} onClick={() => setSheet('filters')} data-tab="filters">⚙ {t.filters}{activeFilters ? ` (${activeFilters})` : ''}</button>
+              {!isMobile && <button className={`${activeFilters ? btnNavy : btnGhost} !px-3 !py-2.5 whitespace-nowrap`} onClick={() => setFiltersExpanded(v => !v)} aria-expanded={filtersExpanded}>⚙ {t.filters}{activeFilters ? ` (${activeFilters})` : ''} <span className="ms-1">{filtersExpanded ? '▴' : '▾'}</span></button>}
+              {isMobile && <button className={`${activeFilters ? btnNavy : btnGhost} !px-3 !py-2.5 whitespace-nowrap`} onClick={() => setSheet('filters')} data-tab="filters">⚙ {t.filters}{activeFilters ? ` (${activeFilters})` : ''}</button>}
+              {anyFilter && !isMobile && <button className={`${btnGhost} !px-3 !py-2.5 whitespace-nowrap`} onClick={() => setF(NO_FILTERS)}>✕ {t.clear}</button>}
             </div>
-          ) : (
-          <Card className="!p-3">
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-9">
-              <input className={`${inputCls} col-span-2`} placeholder={t.search} value={f.q} onChange={e => set({ q: e.target.value })} />
-              {filterFields}
-              {anyFilter && <button className={`${btnGhost} justify-center`} onClick={() => setF(NO_FILTERS)}>✕ {t.clear}</button>}
-            </div>
-          </Card>
-          )}
+            {activeFilterKeys.length > 0 && <div className="flex flex-wrap items-center gap-1.5">
+              {activeFilterKeys.map(key => <button key={key} onClick={() => clearFilter(key)} title={lang === 'ar' ? 'إزالة هذا الفلتر' : 'Remove this filter'}
+                className="inline-flex items-center gap-1 rounded-full border border-[#d9d0c0] bg-white px-2.5 py-1 text-[10px] font-bold text-[#07111f] hover:border-[#c2a378]">
+                <span className="text-slate-400">{filterNames[key]}:</span> <span className="max-w-[150px] truncate">{filterValue(key)}</span> <span aria-hidden="true" className="text-slate-400">×</span>
+              </button>)}
+              {isMobile && <button className="px-2 py-1 text-[10px] font-black text-red-600" onClick={() => setF(NO_FILTERS)}>{t.clear}</button>}
+            </div>}
+            {!isMobile && filtersExpanded && <Card className="!p-3">
+              <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-7">
+                {filterFields}
+                {anyFilter && <button className={`${btnGhost} justify-center`} onClick={() => setF(NO_FILTERS)}>✕ {t.clear}</button>}
+              </div>
+            </Card>}
+          </div>}
 
           {urgent > 0 && view !== 'alerts' && (
             <button onClick={() => setView('alerts')} className="flex w-full items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-start">
