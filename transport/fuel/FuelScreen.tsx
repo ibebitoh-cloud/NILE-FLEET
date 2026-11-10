@@ -630,27 +630,24 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
       return { ...current, prevKmL: rowsPrev.get(plate)?.kmL || null, alerts: wkAlerts.filter(x => x.plate === plate).length };
     }).sort((x, y) => (x.kmL || 0) - (y.kmL || 0));
     const wcols: Col<WRow>[] = [
-      { key: 'truck', label: t.truck, get: r => `${r.label} (${r.vehicleType})` },
-      { key: 'driver', label: t.driver, get: r => r.drivers.join('، ') },
-      { key: 'liters', label: t.liters, num: true, get: r => Math.round(r.liters) },
-      { key: 'cost', label: `${t.cost} (${t.egp})`, num: true, get: r => Math.round(r.cost) },
-      { key: 'km', label: t.trackedKm, num: true, get: r => Math.round(r.trackedKm) },
+      { key: 'truck', label: t.truck, get: r => `${r.label} (${r.vehicleType || '—'})` },
+      { key: 'driver', label: t.driver, get: r => r.drivers.join('، ') || '—' },
       { key: 'kml', label: `${t.kmL} · ${t.thisWeek}`, num: true, get: r => r.kmL || null },
       { key: 'prev', label: `${t.kmL} · ${t.lastWeek}`, num: true, get: r => r.prevKmL },
       { key: 'target', label: t.target, num: true, get: r => r.target },
-      { key: 'vs', label: t.vsTarget, get: r => pct(r.vsTargetPct) },
-      { key: 'over', label: t.overL, num: true, get: r => (r.overMarginL ? Math.round(r.overMarginL) : null) },
-      { key: 'loss', label: t.loss, num: true, get: r => (r.lossEgp ? Math.round(r.lossEgp) : null) },
+      { key: 'vs', label: t.vsTarget, get: r => r.kmL ? pct(r.vsTargetPct) : '—' },
+      { key: 'km', label: t.trackedKm, num: true, get: r => r.trackedKm || null },
+      { key: 'liters', label: t.liters, num: true, get: r => r.trackedL || null },
       { key: 'alerts', label: t.alerts, num: true, get: r => r.alerts || null },
     ];
     printFuelReport({
       lang, t: { ...t, reportTitle: t.weeklyTitle }, method: methodText(lang), period: ltr(`${wk} → ${weekEnd(wk)}`), filters: weekEnd(wk) > lastDay ? t.soFar : '',
       kpis: [
-        { label: t.liters, value: n0(a.liters), sub: ch(a.liters, b.liters) },
-        { label: t.cost, value: `${n0(a.cost)} ${t.egp}`, sub: ch(a.cost, b.cost) },
-        { label: t.trackedKm, value: n0(a.km), sub: ch(a.km, b.km) },
         { label: t.fleetKmL, value: n2(a.kmL), sub: `${t.lastWeek} ${n2(b.kmL)}` },
-        { label: t.overMargin, value: `${n0(sum(rowsNow, r => r.overMarginL))} ${t.L}`, sub: `${n0(sum(rowsNow, r => r.lossEgp))} ${t.egp}` },
+        { label: lang === 'ar' ? 'السيارات ببيانات استهلاك' : 'Vehicles with valid km/L', value: String(wrows.filter(r => r.kmL > 0).length), sub: `${lang === 'ar' ? 'من إجمالي' : 'of'} ${knownFuelPlates.length} ${t.trucks}` },
+        { label: t.trackedKm, value: n0(a.km), sub: ch(a.km, b.km) },
+        { label: t.liters, value: n0(sum(wrows, r => r.trackedL)), sub: lang === 'ar' ? 'لترات محسوبة ضمن المسافات المغلقة' : 'Litres used in completed distance calculations' },
+        { label: lang === 'ar' ? 'سيارات بدون نتيجة' : 'Vehicles without a valid result', value: String(wrows.filter(r => !r.kmL).length) },
         { label: t.alerts, value: String(wkAlerts.length), sub: `${wkAlerts.filter(x => x.level === 'high').length} ${t.lvl.high}` },
       ],
       tables: [
