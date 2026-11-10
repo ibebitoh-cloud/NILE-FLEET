@@ -8,7 +8,7 @@ import { cardTotals, computeFuel, DEFAULT_SETTINGS, Fill, FuelResult, FuelSettin
 import { parseFuelWorkbook, splitUpload } from './parse';
 import { exportFuelExcel, printFuelReport, Sheet } from './exports';
 import { explainHealth, explainSegment, healthSimple, methodText } from './explain';
-import { AlertKind, AlertLevel, FuelAlert, fuelAlerts, HEALTH_KM, HealthStatus, TruckHealth, truckHealth, weekEnd, weekOf } from './alerts';
+import { AlertKind, AlertLevel, checkIds, FuelAlert, fuelAlerts, HEALTH_KM, isChecked, staleChecked, storedIds, HealthStatus, TruckHealth, truckHealth, weekEnd, weekOf } from './alerts';
 
 /* ------------------------------ helpers ------------------------------ */
 
@@ -337,8 +337,8 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
 
   const alertOk = (a: FuelAlert) => inRange(a.at) && (!f.plate || a.plate === f.plate) && (!f.driver || a.driver === f.driver)
     && (!q || `${a.plate} ${a.driver} ${t.kind[a.kind]}`.toLowerCase().includes(q));
-  const openAlerts: FuelAlert[] = useMemo(() => alerts.filter(a => !checked.has(a.id) && alertOk(a)), [alerts, checked, f]); // eslint-disable-line react-hooks/exhaustive-deps
-  const shownAlerts: FuelAlert[] = useMemo(() => alerts.filter(a => alertOk(a) && (af.showChecked || !checked.has(a.id))
+  const openAlerts: FuelAlert[] = useMemo(() => alerts.filter(a => !isChecked(a, checked) && alertOk(a)), [alerts, checked, f]); // eslint-disable-line react-hooks/exhaustive-deps
+  const shownAlerts: FuelAlert[] = useMemo(() => alerts.filter(a => alertOk(a) && (af.showChecked || !isChecked(a, checked))
     && (!af.kind || a.kind === af.kind) && (!af.level || a.level === af.level)), [alerts, checked, f, af]); // eslint-disable-line react-hooks/exhaustive-deps
   const urgent = openAlerts.filter(a => a.level !== 'low').length;
 
@@ -530,7 +530,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     const rowsNow = group(x => x.plate, k => k, true, now), rowsPrev = new Map(group(x => x.plate, k => k, true, prev).map(r => [r.key, r]));
     const total = (d: Data) => { const done = d.segs.filter(s => s.status !== 'pending'); const km = sum(done, s => s.distance), L = sum(done, s => s.liters); return { liters: sum(d.txs, x => x.liters), cost: sum(d.txs, x => x.amount), km, kmL: L ? km / L : 0 }; };
     const a = total(now), b = total(prev);
-    const wkAlerts = alerts.filter(x => !checked.has(x.id) && (weekOf(x.at) === wk || x.kind === 'idle'));
+    const wkAlerts = alerts.filter(x => !isChecked(x, checked) && (weekOf(x.at) === wk || x.kind === 'idle'));
     const ch = (x: number, y: number) => (y ? `${ltr(`${x >= y ? '+' : ''}${N1.format(((x - y) / y) * 100)}%`)} ${t.vsLastWeek}` : '');
     type WRow = Summary & { prevKmL: number | null; alerts: number };
     const wrows: WRow[] = rowsNow.map(r => ({ ...r, prevKmL: rowsPrev.get(r.key)?.kmL || null, alerts: wkAlerts.filter(x => x.plate === r.key).length }))
@@ -590,7 +590,15 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     try {
       // Only the new rows: nothing already saved is written again.
       if (preview.fresh.length) await api.saveFuel(preview.fresh, local);
-      setTxs([...(txs || []), ...preview.fresh]);
+      const all = [...(txs || []), ...preview.fresh];
+      setTxs(all);
+      // What was checked stays checked. Only a truck-health check is forgotten once the truck is back
+      // at its target, so a new drop later shows again instead of hiding behind the old check.
+      const stale = staleChecked(truckHealth(computeFuel(all, settings), settings), settings.checkedAlerts || []);
+      if (stale.length) {
+        const s = { ...settings, checkedAlerts: (settings.checkedAlerts || []).filter(id => !stale.includes(id)) };
+        try { await api.saveFuelSettings(s); setSettings(s); } catch { /* the check list is kept as it was */ }
+      }
       setToast(t.saved(preview.fresh.length));
       setPreview(null);
     } catch (e: any) { setToast(String(e?.message || e)); }
@@ -830,14 +838,14 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
                   <option value="">{t.allLevels}</option>{(['high', 'medium', 'low'] as AlertLevel[]).map(l => <option key={l} value={l}>{t.lvl[l]}</option>)}
                 </select>
                 <select className={inputCls} value={af.kind} onChange={e => setAf({ ...af, kind: e.target.value as '' | AlertKind })}>
-                  <option value="">{t.allKinds}</option>{(Object.keys(t.kind) as AlertKind[]).map(k => <option key={k} value={k}>{t.kind[k]} ({alerts.filter(a => a.kind === k && alertOk(a) && (af.showChecked || !checked.has(a.id))).length})</option>)}
+                  <option value="">{t.allKinds}</option>{(Object.keys(t.kind) as AlertKind[]).map(k => <option key={k} value={k}>{t.kind[k]} ({alerts.filter(a => a.kind === k && alertOk(a) && (af.showChecked || !isChecked(a, checked))).length})</option>)}
                 </select>
                 <label className="flex items-center gap-2 text-xs font-bold text-slate-600"><input type="checkbox" checked={af.showChecked} onChange={e => setAf({ ...af, showChecked: e.target.checked })} />{t.showChecked}</label>
               </div>
               {!shownAlerts.length ? (
                 <div className="rounded-xl border border-dashed border-[#d9d0c0] p-8 text-center text-sm font-bold text-slate-500">✓ {t.noAlerts}</div>
               ) : shownAlerts.slice(0, 300).map(a => {
-                const done = checked.has(a.id);
+                const done = isChecked(a, checked);
                 return (
                   <Card key={a.id} className={`!p-3.5 ${done ? 'opacity-50' : ''}`}>
                     <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
@@ -855,7 +863,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
                       <div className="flex shrink-0 items-center gap-2 border-t border-[#f1ebe0] pt-2.5 sm:border-0 sm:pt-0">
                         {a.egp > 0 && <span className="me-auto text-sm font-black tabular-nums text-red-600 sm:me-0">{n0(a.egp)} <span className="text-[10px] text-slate-400">{t.egp}</span></span>}
                         {a.kind !== 'idle' && <button className={btnGhost} onClick={() => openAlert(a)}>↗</button>}
-                        {isAdmin && <button className={btnGhost} onClick={() => toggleChecked([a.id], !done)}>{done ? t.undoChecked : `✓ ${t.markChecked}`}</button>}
+                        {isAdmin && <button className={btnGhost} onClick={() => toggleChecked(done ? storedIds(a, checked) : checkIds(a), !done)}>{done ? t.undoChecked : `✓ ${t.markChecked}`}</button>}
                       </div>
                     </div>
                   </Card>

@@ -37,6 +37,50 @@ export interface FuelAlert {
   /** Extra numbers for the message. */
   info: Record<string, number | string>;
   segmentKey?: string;
+  /** Older ids of the same alert: a check made under any of them still counts. */
+  alsoIds?: string[];
+}
+
+/**
+ * Ids are made so that a new upload does not bring back an alert someone already checked:
+ * a stretch is named by where it starts (that never moves), and a truck-health alert by the
+ * truck, not by the sliding last-1,500-km window.
+ */
+export const alertIds = (a: FuelAlert) => [a.id, ...(a.alsoIds || [])];
+const isHealth = (a: FuelAlert) => a.kind === 'maintenance' || a.kind === 'dropping';
+/** How much worse (km/L) a checked truck must get before its health alert shows again. */
+export const RECHECK_KML = 0.05;
+
+/**
+ * What to store when someone marks an alert checked. A health check also keeps the km/L it was
+ * checked at ("dropping|PLATE@2.04"), so the alert comes back only if the truck gets worse than that.
+ */
+export const checkIds = (a: FuelAlert) => (isHealth(a) ? [`${a.id}@${a.info.recentKmL}`] : [a.id]);
+
+export function isChecked(a: FuelAlert, checked: Set<string>): boolean {
+  if (alertIds(a).some(id => checked.has(id))) return true;
+  if (!isHealth(a)) return false;
+  const now = Number(a.info.recentKmL) || 0;
+  for (const id of checked) {
+    if (id.startsWith(`${a.id}@`)) { if (now >= Number(id.slice(a.id.length + 1)) - RECHECK_KML) return true; }
+    // Health checks made before ids were stable carried the window start: "maintenance|PLATE|date".
+    else if (id.startsWith(`${a.id}|`)) return true;
+  }
+  return false;
+}
+
+/** Every stored id that belongs to this alert (for undo). */
+export const storedIds = (a: FuelAlert, checked: Iterable<string>) =>
+  [...checked].filter(id => alertIds(a).includes(id) || (isHealth(a) && (id.startsWith(`${a.id}@`) || id.startsWith(`${a.id}|`))));
+
+/**
+ * Health checks to forget: the truck is back at or above its target, so the next time it slips it
+ * is a new problem and must show again. A truck that only wobbles around the line keeps its check.
+ * Everything else stays checked for good.
+ */
+export function staleChecked(health: TruckHealth[], checked: string[]): string[] {
+  const recovered = new Set(health.filter(h => h.status === 'good' && h.recentKmL >= h.target).map(h => h.plate));
+  return checked.filter(id => { const m = /^(?:maintenance|dropping)\|([^@|]+)/.exec(id); return !!m && recovered.has(m[1]); });
 }
 
 export const LEVEL_ORDER: Record<AlertLevel, number> = { high: 0, medium: 1, low: 2 };
@@ -100,7 +144,7 @@ export function fuelAlerts(result: FuelResult, txs: FuelTx[], settings: FuelSett
       // truck but the card charge was cancelled (paid another way). Say so instead of leaving it a mystery.
       const rev = txs.filter(t => t.plate === s.plate && t.amount < 0 && t.at > s.fromAt && t.at <= s.at);
       const revL = round(sum(rev, t => Math.abs(t.liters)), 0);
-      if (missing >= MIN_LITERS) add({ id: `tooFewLiters|${s.key}`, kind: 'tooFewLiters', plate: s.plate, driver: s.driver, at: s.at, liters: missing,
+      if (missing >= MIN_LITERS) add({ id: `tooFewLiters|${s.plate}|from|${s.fromAt}`, alsoIds: [`tooFewLiters|${s.key}`], kind: 'tooFewLiters', plate: s.plate, driver: s.driver, at: s.at, liters: missing,
         egp: round(missing * price, 0), segmentKey: s.key,
         info: { km: s.distance, liters: s.liters, kmL: round(s.distance / s.liters), target: s.target, fromAt: s.fromAt.slice(0, 10), open: open ? 1 : 0,
           revL, revAt: rev[0]?.at.slice(0, 10) || '', revIds: rev.map(t => t.id).join(', ') } });
@@ -119,7 +163,7 @@ export function fuelAlerts(result: FuelResult, txs: FuelTx[], settings: FuelSett
     if (!s.notes.includes('partial') && !s.notes.includes('paired')) continue;
     // One open fill waiting for the next is not a join yet ("1 fills joined" read wrong); tooFewLiters covers it.
     if (s.fills.length < 2) continue;
-    add({ id: `partialJoined|${s.key}`, kind: 'partialJoined', plate: s.plate, driver: s.driver, at: s.at, liters: s.liters, egp: 0, segmentKey: s.key,
+    add({ id: `partialJoined|${s.plate}|from|${s.fromAt}`, alsoIds: [`partialJoined|${s.key}`], kind: 'partialJoined', plate: s.plate, driver: s.driver, at: s.at, liters: s.liters, egp: 0, segmentKey: s.key,
       info: { ids: ids(s.fills.flatMap(f => f.txs)), fills: s.fills.length, fromAt: s.fromAt.slice(0, 10), km: s.distance, kmL: s.kmL, open: s.status === 'pending' ? 1 : 0 } });
   }
 
@@ -177,7 +221,7 @@ export function fuelAlerts(result: FuelResult, txs: FuelTx[], settings: FuelSett
 
   for (const h of truckHealth(result, settings)) {
     if (h.status !== 'service' && h.status !== 'watch') continue;
-    add({ id: `${h.status === 'service' ? 'maintenance' : 'dropping'}|${h.plate}|${h.recentFrom}`, kind: h.status === 'service' ? 'maintenance' : 'dropping',
+    add({ id: `${h.status === 'service' ? 'maintenance' : 'dropping'}|${h.plate}`, alsoIds: [`${h.status === 'service' ? 'maintenance' : 'dropping'}|${h.plate}|${h.recentFrom}`], kind: h.status === 'service' ? 'maintenance' : 'dropping',
       plate: h.plate, driver: h.driver, at: last || h.recentFrom, liters: 0, egp: 0,
       info: { recentKmL: h.recentKmL, baseKmL: h.baseKmL, trendPct: h.trendPct, target: h.target, vsTargetPct: h.vsTargetPct, recentKm: h.recentKm, recentFrom: h.recentFrom } });
   }

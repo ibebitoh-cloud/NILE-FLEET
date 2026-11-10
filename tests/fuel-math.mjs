@@ -266,3 +266,33 @@ console.log('fuel math: all checks passed');
   assert.ok(ra.segments.some(s => s.notes.includes('paired')), 'the over fill is paired with its neighbour');
 }
 console.log('fuel math: alternating fills check passed');
+
+// A new upload must not bring back alerts that were already checked (ids stay the same),
+// a checked truck comes back only if it gets worse, and the check is let go once it is fixed.
+{
+  const { isChecked, checkIds, staleChecked } = await import('../transport/fuel/alerts.ts');
+  let k = 0, km = 50000, day = 1;
+  const fill = (kmL) => { km += 690; const at = `2026-10-${String(day++).padStart(2, '0')}T08:00`;
+    return { id: 'h' + (++k), at, vehicleId: '', plate: 'H', vehicleType: 'Trailer', driverCode: '', driver: 'D', station: 'S', fuelType: 'diesel',
+      amount: 690 / kmL * 20.5, liters: Math.round(690 / kmL * 100) / 100, pumpReading: null, variance: 0, totalAmount: 0, km, cardDistance: null, cardKmL: null,
+      cardValidity: 'Correct', cardReason: '', txType: 'Normal' }; };
+  const st = { ...DEFAULT_SETTINGS, truckTargets: { H: 2.3 } };
+  const run = xs => fuelAlerts(computeFuel(xs, st), xs, st);
+  const first = [fill(2.3), ...Array.from({ length: 5 }, () => fill(2.3)), ...Array.from({ length: 3 }, () => fill(1.8))];
+  const a1 = run(first);
+  assert.ok(a1.some(a => a.kind === 'maintenance'), 'the truck needs a check');
+  const checked = new Set(a1.flatMap(checkIds));
+  const second = [...first, fill(1.8)]; // next upload: same problem, the 1,500 km window has moved
+  const back = run(second).filter(a => a.at <= first[first.length - 1].at || a.kind === 'maintenance').filter(a => !isChecked(a, checked));
+  assert.deepEqual(back.map(a => a.id), [], 'nothing already checked comes back after an upload');
+  // Old-style ids (made before this change) still count as checked.
+  assert.ok(isChecked(run(second).find(a => a.kind === 'maintenance'), new Set(['maintenance|H|2026-10-01'])));
+  const fixed = [...second, ...Array.from({ length: 4 }, () => fill(2.35))]; // back at target
+  assert.ok(!run(fixed).some(a => a.kind === 'maintenance' || a.kind === 'dropping'));
+  assert.deepEqual(staleChecked(truckHealth(computeFuel(fixed, st), st), [...checked]).filter(id => id.startsWith('maintenance')).length, 1,
+    'the old health check is dropped so a new drop shows again');
+  km = second[second.length - 1].km; day = 11;
+  const worse = [...second, fill(1.5), fill(1.5)];
+  assert.ok(run(worse).some(a => a.kind === 'maintenance' && !isChecked(a, checked)), 'worse than when it was checked: shows again');
+}
+console.log('fuel math: checked alerts survive new uploads')
