@@ -66,6 +66,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, onGoHome, activeScreen,
   const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [navSearch, setNavSearch] = useState('');
   const [notifications, setNotifications] = useState<SystemNotification[]>(db.getActiveNotifications(user));
   const mainContentRef = useRef<HTMLElement>(null);
   const screenScrollPositions = useRef(new Map<string, number>());
@@ -1756,6 +1757,7 @@ I’ll search with you. 🤖`;
   const menu = canUseDali && !baseMenu.some(item => item.id === 'dali-knowledge')
     ? [...baseMenu, allPossibleMenuItems.find(item => item.id === 'dali-knowledge')!]
     : baseMenu;
+  const filteredMenu = menu.filter(item => `${item.label} ${item.id}`.toLocaleLowerCase().includes(navSearch.trim().toLocaleLowerCase()));
 
     const sidebarBg = isDark ? 'bg-[#001224]' : 'bg-white';
   const mainBg = isDark ? 'bg-[#000b14]' : 'bg-white';
@@ -1798,8 +1800,15 @@ I’ll search with you. 🤖`;
             {!isSidebarCollapsed && <h1 className={`text-lg font-black ${textPrimary} tracking-widest uppercase italic`}>NILE <span className="text-[#C2A378]">FLEET</span></h1>}
           </div>
         </div>
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto custom-scrollbar text-start">
-          {menu.map(item => (
+        <div className="px-3 pt-3 pb-1">
+          <label className="sr-only" htmlFor="nf-desktop-nav-search">{isAr ? 'بحث في القائمة' : 'Search navigation'}</label>
+          <div className="relative">
+            <input id="nf-desktop-nav-search" value={navSearch} onChange={e => setNavSearch(e.target.value)} placeholder={isAr ? 'ابحث عن شاشة...' : 'Find a screen...'} className="w-full h-10 rounded-xl border px-3 pe-9 text-xs font-semibold outline-none focus:ring-2 focus:ring-[#C2A378]/35" style={{ background: 'var(--input-bg)', color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }} />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm opacity-45" aria-hidden="true">⌕</span>
+          </div>
+        </div>
+        <nav className="flex-1 p-3 pt-2 space-y-1 overflow-y-auto custom-scrollbar text-start">
+          {filteredMenu.map(item => (
             <React.Fragment key={item.id}>
               <button 
                 title={item.label} 
@@ -1937,8 +1946,12 @@ I’ll search with you. 🤖`;
              </div>
           </div>
 
+          <div className="mb-3">
+            <label className="sr-only" htmlFor="nf-mobile-nav-search">{isAr ? 'بحث في القائمة' : 'Search navigation'}</label>
+            <input id="nf-mobile-nav-search" value={navSearch} onChange={e => setNavSearch(e.target.value)} placeholder={isAr ? 'ابحث عن شاشة...' : 'Find a screen...'} className="w-full h-12 rounded-xl border border-white/10 bg-black/10 px-4 text-base font-semibold text-[var(--text-primary)] outline-none focus:border-[#C2A378]" />
+          </div>
           <div className="flex-1 overflow-y-auto space-y-1">
-            {menu.map(item => (
+            {filteredMenu.map(item => (
               <React.Fragment key={item.id}>
                 <button 
                   onClick={() => {
@@ -2213,34 +2226,29 @@ I’ll search with you. 🤖`;
         </div>
       </main>
 
-      {/* MOBILE NAV: primary Genset screens */}
+      {/* MOBILE NAV: four primary screens plus the permission-filtered More menu */}
       <nav className={`lg:hidden fixed bottom-0 left-0 right-0 border-t px-1.5 pt-1.5 z-40 grid grid-cols-5 gap-1 items-center transition-all ${isDark ? 'bg-[#001224] border-white/5' : 'bg-[var(--rail-bg)] border-[var(--border-primary)]'} backdrop-blur-xl pb-[calc(0.4rem+env(safe-area-inset-bottom))] no-print`}>
-        {[
+        {(isInternal ? [
           { id: dashboardId, label: isAr ? 'الرئيسية' : 'DASHBOARD', icon: '📊' },
           { id: 'port-gate', label: isAr ? 'البوابة' : 'GATE', icon: '🚧' },
-          { id: 'master-view', label: isAr ? 'الرئيسية الموحدة' : 'MASTER', icon: '📑' },
           { id: 'financials', label: isAr ? 'المالية' : 'FINANCE', icon: '💰' },
-        ].map(item => {
-          const available = item.id === dashboardId || menu.some(m => m.id === item.id);
+          { id: 'master-view', label: isAr ? 'الرئيسية الموحدة' : 'MASTER VIEW', icon: '📑' },
+        ] : menu.slice(0, 4)).map(item => {
+          const available = menu.some(m => m.id === item.id);
           const active = activeScreen === item.id;
           return (
-            <button
-              key={item.id}
-              disabled={!available}
-              onClick={() => {
-                if (item.id === 'port-gate') handlePortGateTabClick(activePortGateTab);
-                else setActiveScreen(item.id);
-              }}
-              className={`min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all ${active ? 'bg-[#C2A378] text-[#001F3F]' : available ? (isDark ? 'text-[#C2A378cc] hover:bg-white/5' : 'text-slate-600 hover:bg-slate-100') : 'opacity-25 cursor-not-allowed'}`}
-            >
+            <button key={item.id} disabled={!available} onClick={() => {
+              if (item.id === 'port-gate') handlePortGateTabClick(activePortGateTab);
+              else setActiveScreen(item.id);
+            }} className={`min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all ${active ? 'bg-[#C2A378] text-[#001F3F]' : available ? (isDark ? 'text-[#C2A378cc] hover:bg-white/5' : 'text-slate-600 hover:bg-slate-100') : 'opacity-25 cursor-not-allowed'}`}>
               <span className="text-base leading-none">{item.icon}</span>
               <span className="max-w-full truncate text-[7.5px] font-black uppercase tracking-[.06em]">{item.label}</span>
             </button>
           );
         })}
-        <button onClick={() => setActiveScreen('customer-prices')} className={`min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all ${activeScreen === 'customer-prices' ? 'bg-[#C2A378] text-[#26231f]' : isDark ? 'text-[#C2A378cc] hover:bg-white/5' : 'text-[#526170] hover:bg-[#f1f4f7]'}`}>
-          <span className="text-base leading-none">💰</span>
-          <span className="text-[6.5px] font-black uppercase tracking-[.08em]">{isAr ? 'الأسعار' : 'RATE MATRIX'}</span>
+        <button onClick={() => { setNavSearch(''); setIsMobileMenuOpen(true); }} className={`min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all ${isMobileMenuOpen ? 'bg-[#C2A378] text-[#001F3F]' : isDark ? 'text-[#C2A378cc] hover:bg-white/5' : 'text-slate-600 hover:bg-slate-100'}`}>
+          <span className="text-base leading-none">☰</span>
+          <span className="text-[7.5px] font-black uppercase tracking-[.06em]">{isAr ? 'المزيد' : 'MORE'}</span>
         </button>
       </nav>
     </div>
