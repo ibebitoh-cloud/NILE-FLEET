@@ -11,7 +11,7 @@
     "test:dali": "node tests/dali-question-benchmark.mjs",
     "test:dali-real": "node --experimental-strip-types --no-warnings tests/dali-real-questions.mjs",
     "test:arabic": "node tests/arabic-typography.mjs",
-    "test:fuel": "node --experimental-strip-types --no-warnings tests/fuel-math.mjs"
+    "test:fuel": "node --experimental-strip-types --no-warnings tests/fuel-math.mjs && node --experimental-strip-types --no-warnings tests/fuel-dali-context.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",

@@ -8,14 +8,19 @@ import { buildPdfHtml, DEFAULT_SIGNER, DEFAULT_TERMS, exportCsv, exportExcelBran
 import { parseRateWorkbook } from './importExcel';
 import SheetEditor, { SheetResult } from './SheetEditor';
 import DaliChat from './DaliChat';
-import { FUEL_STRINGS } from './fuel/i18n';
+import FuelDali from './fuel/FuelDali';
 
 const FuelScreen = React.lazy(() => import('./fuel/FuelScreen'));
 
 const fmt = (n: number) => (n ? n.toLocaleString('en-US') : '—');
 const goHome = () => { window.location.hash = ''; };
 
-type Tab = 'overview' | 'rates' | 'customers' | 'fuel';
+/** Two separate sections: Fuel and Customer Rates. They share only the sign-in. */
+type Section = 'home' | 'fuel' | 'rates';
+/** Pages inside Customer Rates. */
+type Tab = 'overview' | 'rates' | 'customers';
+const readSection = (): Section => { const m = window.location.hash.match(/^#\/?transport\/(fuel|rates)\b/); return m ? (m[1] as Section) : 'home'; };
+const goSection = (s: Section) => { window.location.hash = s === 'home' ? 'transport' : `transport/${s}`; };
 type SortKey = 'customer' | 'load_port' | 'destination' | 'transit_port' | PriceKey | 'updated_at';
 
 interface Filters {
@@ -120,7 +125,7 @@ const LoginView: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; 
 
 const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user: TransportUser; onLogout: () => void }> = ({ t, lang, setLang, user, onLogout }) => {
   const [tab, setTab] = useState<Tab>(() => {
-    try { const v = localStorage.getItem('nf_transport_tab'); return (v === 'overview' || v === 'customers' || v === 'fuel') ? v : 'rates'; } catch { return 'rates'; }
+    try { const v = localStorage.getItem('nf_transport_tab'); return (v === 'overview' || v === 'customers') ? v : 'rates'; } catch { return 'rates'; }
   });
   const [rates, setRates] = useState<Rate[] | null>(null);
   const [loadError, setLoadError] = useState('');
@@ -129,18 +134,26 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
   const [exportFor, setExportFor] = useState<{ rows: Rate[]; customer?: string; style?: Fmt } | null>(null);
   const [sheetFor, setSheetFor] = useState<{ rows: Rate[]; customer?: string } | null>(null);
   const isAdmin = user.role === 'ADMIN';
-  // Fuel editors only get the Fuel tab: no prices are loaded or shown.
+  // Fuel editors only get the Fuel section: no prices are loaded or shown.
   const fuelOnly = user.role === 'FUEL';
-  const tabs: Tab[] = fuelOnly ? ['fuel'] : ['overview', 'rates', 'customers', 'fuel'];
-  useEffect(() => { if (fuelOnly && tab !== 'fuel') setTab('fuel'); }, [fuelOnly, tab]);
+  const [sectionRaw, setSectionRaw] = useState<Section>(readSection);
+  useEffect(() => {
+    const on = () => setSectionRaw(readSection());
+    window.addEventListener('hashchange', on);
+    return () => window.removeEventListener('hashchange', on);
+  }, []);
+  const section: Section = fuelOnly ? 'fuel' : sectionRaw;
+  useEffect(() => { window.scrollTo({ top: 0 }); }, [section]);
 
   useEffect(() => { try { localStorage.setItem('nf_transport_tab', tab); } catch {} }, [tab]);
+  // Prices load only when Customer Rates is opened; the Fuel section never touches them.
   const reload = useCallback(() => {
     if (fuelOnly) return;
     setLoadError('');
     api.loadRates().then(setRates).catch(e => { setLoadError(String(e.message || e)); setRates([]); });
   }, [fuelOnly]);
-  useEffect(reload, [reload]);
+  const ratesAsked = useRef(false);
+  useEffect(() => { if (section === 'rates' && !ratesAsked.current) { ratesAsked.current = true; reload(); } }, [section, reload]);
   useEffect(() => { if (!toast) return; const id = setTimeout(() => setToast(''), 3500); return () => clearTimeout(id); }, [toast]);
 
   const openCustomer = (customer: string) => { setFilters({ ...NO_FILTERS, customer }); setTab('rates'); };
@@ -169,14 +182,14 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
             <img src="/nile-fleet-logo-white.png" alt="Nile Fleet" className="h-9 w-9 object-contain" />
             <div className="text-start leading-none">
               <div className="text-lg font-black italic tracking-tight">NILE <span className="text-[#c2a378]">FLEET</span></div>
-              <div className="mt-1 text-[9px] font-black uppercase tracking-[.3em] text-white/50">{t.system}</div>
+              <div className="mt-1 text-[9px] font-black uppercase tracking-[.3em] text-white/50">{section === 'fuel' ? t.secFuel : section === 'rates' ? t.secRates : t.system}</div>
             </div>
           </button>
-          <nav className="order-3 flex w-full gap-1 overflow-x-auto sm:order-none sm:w-auto">
-            {tabs.map(k => (
-              <button key={k} onClick={() => setTab(k)}
-                className={`whitespace-nowrap rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-[.08em] transition sm:px-4 sm:tracking-[.18em] ${tab === k ? 'bg-[#c2a378] text-[#07111f]' : 'text-white/70 hover:bg-white/10'}`}>
-                {k === 'fuel' ? `⛽ ${FUEL_STRINGS[lang].tab}` : t[k]}
+          <nav aria-label={t.sections} className="order-3 flex w-full gap-1 overflow-x-auto sm:order-none sm:w-auto">
+            {(fuelOnly ? ['fuel'] as const : ['fuel', 'rates'] as const).map(k => (
+              <button key={k} onClick={() => goSection(k)} aria-current={section === k ? 'page' : undefined}
+                className={`flex-1 whitespace-nowrap rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-[.08em] transition sm:flex-none sm:px-4 sm:tracking-[.18em] ${section === k ? 'bg-[#c2a378] text-[#07111f]' : 'border border-white/15 text-white/75 hover:bg-white/10'}`}>
+                {k === 'fuel' ? `⛽ ${t.secFuel}` : `💲 ${t.secRates}`}
               </button>
             ))}
           </nav>
@@ -195,24 +208,60 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
       </header>
 
       <main className="mx-auto w-full max-w-[1500px] flex-1 px-4 py-6 sm:px-6">
-        {loadError && <div role="alert" className="mb-4 rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-bold text-red-800">{t.failed}: {loadError}</div>}
-        {tab === 'fuel' || fuelOnly ? <React.Suspense fallback={<DaliLoader fullScreen />}><FuelScreen lang={lang} isAdmin={isAdmin || fuelOnly} setToast={setToast} /></React.Suspense>
-          : rates === null ? <DaliLoader fullScreen label={<span className="text-xs font-bold text-slate-500">{t.loading}</span>} />
-          : tab === 'overview' ? <Overview t={t} rates={rates} onCustomer={openCustomer} />
-          : tab === 'customers' ? <Customers t={t} rates={rates} isAdmin={isAdmin} onView={openCustomer} onQuote={quoteCustomer} onSheet={c => openSheet((rates || []).filter(r => r.customer === c), c)} setRates={setRates} setToast={setToast} />
-          : <RatesScreen t={t} lang={lang} rates={rates} setRates={setRates} isAdmin={isAdmin} filters={filters} setFilters={setFilters} setToast={setToast}
-              onExport={(rows, customer) => setExportFor({ rows, customer })} onSheet={openSheet} />}
+        {section === 'rates' && loadError && <div role="alert" className="mb-4 rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-bold text-red-800">{t.failed}: {loadError}</div>}
+        {section === 'home' ? <SectionHome t={t} lang={lang} />
+          : section === 'fuel' ? <React.Suspense fallback={<DaliLoader fullScreen />}><FuelScreen lang={lang} isAdmin={isAdmin || fuelOnly} setToast={setToast} /></React.Suspense>
+          : <>
+            <div role="tablist" aria-label={t.secRates} className="mb-5 flex gap-1 overflow-x-auto rounded-2xl border border-[#e3dccf] bg-white p-1 sm:inline-flex">
+              {(['overview', 'rates', 'customers'] as Tab[]).map(k => (
+                <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
+                  className={`flex-1 whitespace-nowrap rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-[.12em] transition sm:flex-none ${tab === k ? 'bg-[#07111f] text-white' : 'text-slate-600 hover:bg-[#f4f1ea]'}`}>{t[k]}</button>
+              ))}
+            </div>
+            {rates === null ? <DaliLoader fullScreen label={<span className="text-xs font-bold text-slate-500">{t.loading}</span>} />
+              : tab === 'overview' ? <Overview t={t} rates={rates} onCustomer={openCustomer} />
+              : tab === 'customers' ? <Customers t={t} rates={rates} isAdmin={isAdmin} onView={openCustomer} onQuote={quoteCustomer} onSheet={c => openSheet((rates || []).filter(r => r.customer === c), c)} setRates={setRates} setToast={setToast} />
+              : <RatesScreen t={t} lang={lang} rates={rates} setRates={setRates} isAdmin={isAdmin} filters={filters} setFilters={setFilters} setToast={setToast}
+                  onExport={(rows, customer) => setExportFor({ rows, customer })} onSheet={openSheet} />}
+          </>}
       </main>
 
       <DaliSignature tone="light" className="pb-8 pt-4" />
       {exportFor && <ExportDialog t={t} lang={lang} rows={exportFor.rows} customer={exportFor.customer} initial={exportFor.style} onClose={() => setExportFor(null)} setToast={setToast} />}
-      {rates && !fuelOnly && <DaliChat lang={lang} user={user} rates={rates} isAdmin={isAdmin} setRates={setRates} onQuote={quoteCustomer}
+      {/* Each section has its own DALI; they share nothing (data, chat session or memory). */}
+      {section === 'fuel' && <FuelDali lang={lang} user={user} />}
+      {section === 'rates' && rates && !fuelOnly && <DaliChat lang={lang} user={user} rates={rates} isAdmin={isAdmin} setRates={setRates} onQuote={quoteCustomer}
         onShow={f => { setFilters({ ...NO_FILTERS, ...f }); setTab('rates'); }} />}
       {sheetFor && <SheetEditor t={t} rows={sheetFor.rows} customer={sheetFor.customer} options={sheetOptions} onClose={() => setSheetFor(null)} onDone={sheetDone} />}
       {toast && <div role="status" className="fixed bottom-[var(--nf-fab-bottom,1.25rem)] left-1/2 z-[60] -translate-x-1/2 rounded-full bg-[#07111f] px-5 py-3 text-xs font-bold text-white shadow-xl">{toast}</div>}
     </div>
   );
 };
+
+/* ============================ Section home ============================ */
+
+const SectionHome: React.FC<{ t: Strings; lang: Lang }> = ({ t, lang }) => (
+  <div className="mx-auto max-w-5xl py-4 sm:py-10">
+    <div className="text-[11px] font-black uppercase tracking-[.3em] text-[#8a7350]">{t.sections}</div>
+    <h1 className="mt-2 text-3xl font-black uppercase italic leading-none text-[#07111f] sm:text-4xl">{t.chooseTitle}</h1>
+    <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">{t.chooseSub}</p>
+    <div className="mt-8 grid gap-5 md:grid-cols-2">
+      {([['fuel', '⛽', t.secFuel, t.fuelDesc, t.fuelDali], ['rates', '💲', t.secRates, t.ratesDesc, t.ratesDali]] as const).map(([k, icon, title, desc, daliNote]) => (
+        <button key={k} onClick={() => goSection(k)}
+          className="group relative flex min-h-[220px] flex-col overflow-hidden rounded-[1.75rem] bg-[#07111f] p-6 text-start text-white shadow-[0_18px_40px_rgba(7,17,31,.18)] ring-1 ring-[#c2a378]/30 transition hover:-translate-y-1 hover:ring-[#c2a378] sm:p-8">
+          <div className="pointer-events-none absolute -end-16 -top-16 h-48 w-48 rounded-full bg-[#c2a378]/10 blur-2xl" />
+          <span className="grid h-14 w-14 place-items-center rounded-2xl bg-[#c2a378]/15 text-3xl">{icon}</span>
+          <div className="mt-5 text-2xl font-black uppercase italic tracking-tight">{title}</div>
+          <p className="mt-2 text-sm leading-6 text-white/65">{desc}</p>
+          <div className="mt-auto flex items-center justify-between pt-6">
+            <span className="flex items-center gap-2 text-[11px] font-bold text-[#c2a378]"><img src="/dali/dali-mark.png" alt="" className="h-4 w-4 object-contain" />{daliNote}</span>
+            <span className="rounded-full bg-[#c2a378] px-4 py-2 text-[11px] font-black uppercase tracking-[.2em] text-[#07111f] transition group-hover:brightness-110">{t.open} {lang === 'ar' ? '←' : '→'}</span>
+          </div>
+        </button>
+      ))}
+    </div>
+  </div>
+);
 
 /* ============================== Overview ============================== */
 
