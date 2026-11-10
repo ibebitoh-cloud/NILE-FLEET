@@ -6,7 +6,7 @@ import { FUEL_STRINGS, FuelStrings } from './i18n';
 import { cardTotals, computeFuel, DEFAULT_SETTINGS, Fill, FuelResult, FuelSettings, FuelTx, Segment, SegmentStatus, Summary, summarize, TxView } from './math';
 import { parseFuelWorkbook, splitUpload } from './parse';
 import { exportFuelExcel, printFuelReport, Sheet } from './exports';
-import { explainHealth, explainSegment, methodText } from './explain';
+import { explainHealth, explainSegment, healthSimple, methodText } from './explain';
 import { AlertKind, AlertLevel, FuelAlert, fuelAlerts, HEALTH_KM, HealthStatus, TruckHealth, truckHealth, weekEnd, weekOf } from './alerts';
 
 /* ------------------------------ helpers ------------------------------ */
@@ -200,6 +200,8 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const [sheet, setSheet] = useState<'' | 'more' | 'filters'>('');
   /** The fill (segment key) or truck (health) whose calculation is open in the explain dialog. */
   const [explain, setExplain] = useState<{ seg?: string; plate?: string } | null>(null);
+  const [fullRead, setFullRead] = useState(false);
+  useEffect(() => setFullRead(false), [explain]);
   const [busy, setBusy] = useState('');
   const [preview, setPreview] = useState<{ total: number; fresh: FuelTx[]; inSystem: number; repeated: number; from: string; to: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -548,7 +550,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
 
   const filterText = [f.plate, f.driver, f.station, f.type, f.status && (f.status in STATUS_CLS ? statusLabel(t, f.status as SegmentStatus) : t[`st_${f.status}` as const]), f.q].filter(Boolean).join(' · ');
   const period = kpi.from ? ltr(`${day(kpi.from)} → ${day(kpi.to)}`) : '—';
-  const whyCol: Col<Segment> = { key: 'why', label: t.why, get: r => explainSegment(r, settings, result.price, lang).short };
+  const whyCol: Col<Segment> = { key: 'why', label: t.why, get: r => explainSegment(r, settings, result.price, lang).simple.join(' ') };
   const healthCols: Col<TruckHealth>[] = [
     { key: 'truck', label: t.truck, get: r => `${r.plate} (${r.vehicleType})` },
     { key: 'health', label: t.status, get: r => t[`h_${r.status}` as const] },
@@ -558,7 +560,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     { key: 'vs', label: t.vsTarget, get: r => pct(r.vsTargetPct) },
     { key: 'normal', label: `${t.normal} ${t.kmL}`, num: true, get: r => r.baseKmL || null },
     { key: 'trend', label: t.trend, get: r => pct(r.trendPct) },
-    { key: 'why', label: t.whyHealth, get: r => explainHealth(r, lang, HEALTH_KM) },
+    { key: 'why', label: t.whyHealth, get: r => healthSimple(r, lang).join(' ') },
   ];
   const doExcel = () => exportFuelExcel([
     toSheet(t.health, healthCols, health),
@@ -688,7 +690,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
                     <div><div className="flex items-center gap-1.5 text-[9px] font-bold uppercase text-slate-500">{t.recent}
                       <span role="button" tabIndex={0} aria-label={t.whyHealth} title={t.whyHealth} onClick={e => { e.stopPropagation(); setExplain({ plate: h.plate }); }}
                         onKeyDown={e => { if (e.key === 'Enter') { e.stopPropagation(); setExplain({ plate: h.plate }); } }}
-                        className="grid h-4 w-4 place-items-center rounded-full bg-white text-[10px] font-black normal-case text-[#07111f] ring-1 ring-[#d9d0c0]">?</span></div><div className="text-xl font-black tabular-nums text-[#07111f]">{n2(h.recentKmL)}</div></div>
+                        style={{ minHeight: 0 }} className="grid h-5 w-5 place-items-center rounded-full bg-white text-[11px] font-black normal-case text-[#07111f] ring-1 ring-[#d9d0c0]">?</span></div><div className="text-xl font-black tabular-nums text-[#07111f]">{n2(h.recentKmL)}</div></div>
                     <div className="text-[10px] leading-4 text-slate-500 sm:text-end">
                       <div>{t.target} {n2(h.target)} <b className={h.vsTargetPct < -settings.marginPct ? 'text-red-600' : ''}>{pct(h.vsTargetPct)}</b></div>
                       <div>{t.normal} {n2(h.baseKmL)} <b className={h.trendPct <= -settings.marginPct ? 'text-red-600' : h.trendPct < 0 ? 'text-amber-700' : 'text-emerald-700'}>{h.trendPct < 0 ? '▼' : h.trendPct > 0 ? '▲' : ''} {pct(h.trendPct)}</b></div>
@@ -884,20 +886,31 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
                   <button className={`${btnGhost} !px-3`} onClick={() => setExplain(null)} aria-label={t.close}>✕</button>
                 </div>
               </div>
-              {ex && (
-                <ol className="mt-4 space-y-2">
-                  {ex.steps.map((st, i) => (
-                    <li key={i} className="flex gap-2.5 text-[13px] leading-6 text-slate-700">
-                      <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#07111f] text-[10px] font-black text-white">{i + 1}</span>
-                      <span>{st}</span>
-                    </li>
-                  ))}
-                </ol>
-              )}
-              <div className={`mt-4 rounded-xl border p-3 text-[13px] font-bold leading-6 ${tone}`}>
-                <div className="text-[10px] font-black uppercase tracking-[.2em] opacity-70">{t.result}</div>
-                {ex ? ex.verdict : explainHealth(h!, lang, HEALTH_KM)}
+              {/* Simple version first: a few short lines anyone can read. */}
+              <div className={`mt-4 space-y-1.5 rounded-2xl border p-4 text-[15px] font-bold leading-7 ${tone}`}>
+                {(ex ? ex.simple : healthSimple(h!, lang)).map((line, i) => <p key={i}>{line}</p>)}
               </div>
+              <button className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#07111f] px-4 py-3 text-sm font-black text-white" onClick={() => setFullRead(v => !v)} aria-expanded={fullRead}>
+                📖 {fullRead ? t.hideFull : t.readFull} <span className={`transition ${fullRead ? 'rotate-180' : ''}`}>▾</span>
+              </button>
+              {fullRead && (
+                <div className="mt-3">
+                  {ex && (
+                    <ol className="space-y-2">
+                      {ex.steps.map((st, i) => (
+                        <li key={i} className="flex gap-2.5 text-[13px] leading-6 text-slate-700">
+                          <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#07111f] text-[10px] font-black text-white">{i + 1}</span>
+                          <span>{st}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                  <div className="mt-3 rounded-xl border border-[#e3dccf] bg-[#fbf8f2] p-3 text-[13px] leading-6 text-slate-700">
+                    <div className="text-[10px] font-black uppercase tracking-[.2em] text-[#8a7350]">{t.result}</div>
+                    {ex ? ex.verdict : explainHealth(h!, lang, HEALTH_KM)}
+                  </div>
+                </div>
+              )}
               {seg && (
                 <button className={`${btnGhost} mt-3 w-full justify-center`} onClick={() => { set({ plate: seg.plate }); setView('fills'); setExplain(null); }}>↗ {t.fills} · {seg.plate}</button>
               )}

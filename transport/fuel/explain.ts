@@ -26,6 +26,8 @@ export interface Explanation {
   verdict: string;
   /** One line for report tables. */
   short: string;
+  /** The simple version: 2–4 short lines anyone can read at a glance. */
+  simple: string[];
 }
 
 const W = {
@@ -47,6 +49,15 @@ const W = {
     low: (v: number) => `Too good (${pc(v)} vs target): a truck can't really do this, so usually the tank was not filled to full or a km reading is wrong. Check the next fill.`,
     card: (d: number, k: number | null) => `The card report says ${f0(d)} km${k != null ? ` and ${f2(k)} km/L` : ''}: it counts each transaction alone, so split fills, part fills and bad readings make its number wrong.`,
     shortSplit: 'split joined', shortPartial: 'part fill joined', shortFixed: 'km fixed', shortBad: 'bad km skipped',
+    s1: (d: number, L: number, k: number) => `Drove ${f0(d)} km on ${f0(L)} L = ${f2(k)} km per liter.`,
+    s2: (t: number, e: number) => `Target is ${f2(t)} km/L, so it should use about ${f0(e)} L.`,
+    sGood: (L: number, e: number) => `✓ Normal: used ${f0(L)} L, close to the ${f0(e)} L expected.`,
+    sBad: (x: number, loss: number) => `✗ Used ${f0(x)} L more than it should${loss ? `, about ${f0(loss)} EGP lost` : ''}.`,
+    sToo: '⚠ Too good to be true: the tank was probably not filled to full, or a km reading is wrong.',
+    sWait: (L: number) => `⏳ ${f0(L)} L filled. We need the next full fill to know how many km it drove.`,
+    sFix: (x: string) => `Fixed automatically: ${x}.`,
+    hShort: { good: '✓ Good: doing its normal km/L.', watch: '⚠ Watch: a bit below target or getting worse. Keep an eye on it.', service: '✗ Check maintenance: it is burning clearly more than it should.', noData: '⏳ Not enough km yet to judge.' } as Record<string, string>,
+    hs: (h: TruckHealth) => `Last ${f0(h.recentKm)} km: ${f2(h.recentKmL)} km/L. Target ${f2(h.target)}, its usual ${f2(h.baseKmL)}.`,
     sOk: 'normal', sHigh: (l: number) => `over by ${f0(l)} EGP`, sLow: 'too good, check fill/km', sPending: 'waiting next fill',
     h: {
       good: 'Good: the last stretch is within target and close to its own normal.',
@@ -82,6 +93,15 @@ const W = {
     low: (v: number) => `أحسن من الطبيعي (${pc(v)} عن المستهدف): العربية مش بتعمل كده فعلًا، فغالبًا التانك ما اتملاش للآخر أو قراءة العداد غلط. راجع التفويلة الجاية.`,
     card: (d: number, k: number | null) => `تقرير الكارت بيقول ${f0(d)} كم${k != null ? ` و ${f2(k)} كم/لتر` : ''}: بيحسب كل معاملة لوحدها، فالتفويل المقسوم والناقص والقراءات الغلط بتخلي رقمه غلط.`,
     shortSplit: 'دمج تفويل مقسوم', shortPartial: 'دمج تفويل ناقص', shortFixed: 'تصحيح عداد', shortBad: 'تجاهل عداد خاطئ',
+    s1: (d: number, L: number, k: number) => `مشيت ${f0(d)} كم بـ ${f0(L)} لتر = ${f2(k)} كم لكل لتر.`,
+    s2: (t: number, e: number) => `المستهدف ${f2(t)} كم/لتر، يعني المفروض تصرف حوالي ${f0(e)} لتر.`,
+    sGood: (L: number, e: number) => `✓ طبيعي: صرفت ${f0(L)} لتر، قريب من الـ ${f0(e)} لتر المتوقعين.`,
+    sBad: (x: number, loss: number) => `✗ صرفت ${f0(x)} لتر زيادة عن المفروض${loss ? `، خسارة حوالي ${f0(loss)} جنيه` : ''}.`,
+    sToo: '⚠ أحسن من الطبيعي بزيادة: غالبًا التانك ما اتملاش للآخر، أو قراءة العداد غلط.',
+    sWait: (L: number) => `⏳ اتحط ${f0(L)} لتر. محتاجين التفويلة الكاملة الجاية علشان نعرف مشيت كام كم.`,
+    sFix: (x: string) => `اتصلح تلقائيًا: ${x}.`,
+    hShort: { good: '✓ جيدة: ماشية بمعدلها الطبيعي.', watch: '⚠ تحت المتابعة: أقل شوية من المستهدف أو بتسوء. خلي عينك عليها.', service: '✗ محتاجة كشف صيانة: بتصرف أكتر من المفروض بوضوح.', noData: '⏳ لسه الكيلومترات مش كفاية للحكم.' } as Record<string, string>,
+    hs: (h: TruckHealth) => `آخر ${f0(h.recentKm)} كم: ${f2(h.recentKmL)} كم/لتر. المستهدف ${f2(h.target)}، والمعتاد بتاعها ${f2(h.baseKmL)}.`,
     sOk: 'طبيعي', sHigh: (l: number) => `زيادة ${f0(l)} جنيه`, sLow: 'أحسن من الطبيعي، راجع التفويل/العداد', sPending: 'ينتظر التفويلة الجاية',
     h: {
       good: 'جيدة: آخر مسافة داخل المستهدف وقريبة من معدلها المعتاد.',
@@ -121,7 +141,8 @@ export function explainSegment(s: Segment, settings: FuelSettings, price: number
 
   if (s.status === 'pending') {
     steps.push(w.pending);
-    return { steps, verdict: w.pending, short: `${f1(s.liters)} L · ${w.sPending}${tagText}` };
+    const simple = [w.sWait(s.liters), ...(tags.length ? [w.sFix(tags.join('، '))] : [])];
+    return { steps, verdict: w.pending, short: `${f1(s.liters)} L · ${w.sPending}${tagText}`, simple };
   }
   steps.push(w.dist(s.toKm, s.fromKm, s.distance), w.liters(s.liters), w.kml(s.distance, s.liters, s.kmL, s.l100));
   steps.push(w.target(s.target, targetSource(s, settings), s.vehicleType));
@@ -132,8 +153,17 @@ export function explainSegment(s: Segment, settings: FuelSettings, price: number
   if ((s.card.distance || s.card.kmL != null) && (cardOff || Math.abs(s.card.distance - s.distance) > 5)) steps.push(w.card(s.card.distance, s.card.kmL));
   const sv = s.status === 'high' ? w.sHigh(s.lossEgp) : s.status === 'low' ? w.sLow : w.sOk;
   const short = `${f0(s.distance)} ÷ ${f1(s.liters)} = ${f2(s.kmL)} (${f2(s.target)}) → ${sv}${tagText}`;
-  return { steps, verdict, short };
+  const simple = [
+    w.s1(s.distance, s.liters, s.kmL),
+    w.s2(s.target, s.expectedL),
+    s.status === 'high' ? w.sBad(s.diffL, s.lossEgp) : s.status === 'low' ? w.sToo : w.sGood(s.liters, s.expectedL),
+    ...(tags.length ? [w.sFix(tags.join(lang === 'ar' ? '، ' : ', '))] : []),
+  ];
+  return { steps, verdict, short, simple };
 }
+
+/** Truck health in one short line (the numbers only). */
+export const healthSimple = (h: TruckHealth, lang: Lang): string[] => (h.status === 'noData' ? [W[lang].hShort.noData] : [W[lang].hs(h), W[lang].hShort[h.status]]);
 
 /** Why a truck got its health status, in one or two sentences. */
 export function explainHealth(h: TruckHealth, lang: Lang, healthKm: number): string {
