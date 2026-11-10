@@ -44,7 +44,7 @@ async function resolveUser(): Promise<TransportUser | null> {
   const u = auth.user;
   if (!u) return null;
   const { data: role, error } = await transportDb.rpc('my_transport_role');
-  if (error || (role !== 'ADMIN' && role !== 'VIEWER')) return null;
+  if (error || (role !== 'ADMIN' && role !== 'VIEWER' && role !== 'FUEL')) return null;
   const { data: row } = await transportDb.from('transport_users').select('name').eq('user_id', u.id).maybeSingle();
   return {
     id: u.id,

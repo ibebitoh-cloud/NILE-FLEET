@@ -129,12 +129,17 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
   const [exportFor, setExportFor] = useState<{ rows: Rate[]; customer?: string; style?: Fmt } | null>(null);
   const [sheetFor, setSheetFor] = useState<{ rows: Rate[]; customer?: string } | null>(null);
   const isAdmin = user.role === 'ADMIN';
+  // Fuel editors only get the Fuel tab: no prices are loaded or shown.
+  const fuelOnly = user.role === 'FUEL';
+  const tabs: Tab[] = fuelOnly ? ['fuel'] : ['overview', 'rates', 'customers', 'fuel'];
+  useEffect(() => { if (fuelOnly && tab !== 'fuel') setTab('fuel'); }, [fuelOnly, tab]);
 
   useEffect(() => { try { localStorage.setItem('nf_transport_tab', tab); } catch {} }, [tab]);
   const reload = useCallback(() => {
+    if (fuelOnly) return;
     setLoadError('');
     api.loadRates().then(setRates).catch(e => { setLoadError(String(e.message || e)); setRates([]); });
-  }, []);
+  }, [fuelOnly]);
   useEffect(reload, [reload]);
   useEffect(() => { if (!toast) return; const id = setTimeout(() => setToast(''), 3500); return () => clearTimeout(id); }, [toast]);
 
@@ -168,7 +173,7 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
             </div>
           </button>
           <nav className="order-3 flex w-full gap-1 overflow-x-auto sm:order-none sm:w-auto">
-            {(['overview', 'rates', 'customers', 'fuel'] as Tab[]).map(k => (
+            {tabs.map(k => (
               <button key={k} onClick={() => setTab(k)}
                 className={`whitespace-nowrap rounded-full px-4 py-2 text-[11px] font-black uppercase tracking-[.18em] transition ${tab === k ? 'bg-[#c2a378] text-[#07111f]' : 'text-white/70 hover:bg-white/10'}`}>
                 {k === 'fuel' ? `⛽ ${FUEL_STRINGS[lang].tab}` : t[k]}
@@ -180,8 +185,8 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
               <div className="text-xs font-bold">{user.name}</div>
               <div className="text-[10px] text-white/50" dir="ltr">{user.email}</div>
             </div>
-            <span className={`rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[.2em] ${isAdmin ? 'bg-[#c2a378] text-[#07111f]' : 'border border-white/25 text-white/80'}`}>
-              {isAdmin ? t.admin : `${t.viewer} · ${t.readOnly}`}
+            <span className={`rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[.2em] ${isAdmin || fuelOnly ? 'bg-[#c2a378] text-[#07111f]' : 'border border-white/25 text-white/80'}`}>
+              {isAdmin ? t.admin : fuelOnly ? t.fuelEditor : `${t.viewer} · ${t.readOnly}`}
             </span>
             <LangToggle lang={lang} setLang={setLang} dark />
             <button onClick={onLogout} className="rounded-full border border-white/20 px-3 py-1.5 text-[11px] font-black text-white/80 hover:border-red-300 hover:text-red-200">{t.logout}</button>
@@ -191,7 +196,7 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
 
       <main className="mx-auto w-full max-w-[1500px] flex-1 px-4 py-6 sm:px-6">
         {loadError && <div role="alert" className="mb-4 rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-bold text-red-800">{t.failed}: {loadError}</div>}
-        {tab === 'fuel' ? <React.Suspense fallback={<DaliLoader fullScreen />}><FuelScreen lang={lang} isAdmin={isAdmin} setToast={setToast} /></React.Suspense>
+        {tab === 'fuel' || fuelOnly ? <React.Suspense fallback={<DaliLoader fullScreen />}><FuelScreen lang={lang} isAdmin={isAdmin || fuelOnly} setToast={setToast} /></React.Suspense>
           : rates === null ? <DaliLoader fullScreen label={<span className="text-xs font-bold text-slate-500">{t.loading}</span>} />
           : tab === 'overview' ? <Overview t={t} rates={rates} onCustomer={openCustomer} />
           : tab === 'customers' ? <Customers t={t} rates={rates} isAdmin={isAdmin} onView={openCustomer} onQuote={quoteCustomer} onSheet={c => openSheet((rates || []).filter(r => r.customer === c), c)} setRates={setRates} setToast={setToast} />
@@ -201,7 +206,7 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
 
       <DaliSignature tone="light" className="pb-8 pt-4" />
       {exportFor && <ExportDialog t={t} lang={lang} rows={exportFor.rows} customer={exportFor.customer} initial={exportFor.style} onClose={() => setExportFor(null)} setToast={setToast} />}
-      {rates && <DaliChat lang={lang} user={user} rates={rates} isAdmin={isAdmin} setRates={setRates} onQuote={quoteCustomer}
+      {rates && !fuelOnly && <DaliChat lang={lang} user={user} rates={rates} isAdmin={isAdmin} setRates={setRates} onQuote={quoteCustomer}
         onShow={f => { setFilters({ ...NO_FILTERS, ...f }); setTab('rates'); }} />}
       {sheetFor && <SheetEditor t={t} rows={sheetFor.rows} customer={sheetFor.customer} options={sheetOptions} onClose={() => setSheetFor(null)} onDone={sheetDone} />}
       {toast && <div role="status" className="fixed bottom-5 left-1/2 z-[60] -translate-x-1/2 rounded-full bg-[#07111f] px-5 py-3 text-xs font-bold text-white shadow-xl">{toast}</div>}
