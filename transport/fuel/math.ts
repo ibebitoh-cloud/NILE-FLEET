@@ -48,6 +48,10 @@ export interface FuelTx {
   cardValidity: string;
   cardReason: string;
   txType: string;
+  /** Free note added by an admin. */
+  note?: string;
+  /** Set when an admin edited the row by hand: when, and the card's original values of the fields changed. */
+  edited?: { at: string; orig: Partial<FuelTx> };
 }
 
 export interface FuelSettings {
@@ -145,9 +149,11 @@ export interface Segment {
   notes: SegmentNote[];
   /** What the card report says for the same fills. */
   card: { distance: number; kmL: number | null; validity: string; reason: string };
+  /** 'paired' only: km/L of the too-good fill and of the over fill before they were counted together. */
+  pair?: [number, number];
 }
 
-export type SegmentNote = 'split' | 'partial' | 'badKm' | 'fixedKm' | 'reversal';
+export type SegmentNote = 'split' | 'partial' | 'paired' | 'badKm' | 'fixedKm' | 'reversal';
 
 export interface TxView {
   tx: FuelTx;
@@ -354,7 +360,34 @@ export function computeFuel(allTxs: FuelTx[], settings: FuelSettings = DEFAULT_S
     }
     // A partial fill at the end waits for the next upload.
     if (carry) joined.push({ ...carry, pending: true });
-    for (const r of joined) segments.push(score(r, target, s.fillMarginPct, price, !!r.pending));
+    // A "too good" fill straight after by an "over" fill, normal when counted together: the first tank
+    // was not filled to full and the next fill topped up the rest. Count them as one fill.
+    const m = s.fillMarginPct / 100;
+    const kmlOfRaw = (r: Raw) => (r.liters > 0 && r.distance > 0 ? r.distance / r.liters : 0);
+    // Up to one normal fill may sit between them (a second small top-up before the big one).
+    const paired: Raw[] = [];
+    const usable = (r?: Raw) => !!r && !r.pending && r.distance > 0 && r.liters > 0;
+    for (let i = 0; i < joined.length; i++) {
+      const a = joined[i];
+      let done = false;
+      if (usable(a) && kmlOfRaw(a) > target * (1 + m)) {
+        for (let j = i + 1; j <= i + 2 && j < joined.length && usable(joined[j]); j++) {
+          const b = joined[j], kb = kmlOfRaw(b);
+          if (kb > target * (1 + m)) break;                 // another too-good fill: not this pattern
+          if (kb >= target * (1 - m)) continue;            // normal fill in between
+          const run = joined.slice(i, j + 1);
+          const kc = sum(run, r => r.distance) / sum(run, r => r.liters);
+          if (kc >= target * (1 - m) && kc <= target * (1 + m)) {
+            const mr = run.slice(1).reduce((acc, r) => mergeRaw(acc, r), run[0]);
+            paired.push({ ...mr, notes: [...new Set([...mr.notes, 'paired' as SegmentNote])], pair: [round(kmlOfRaw(a), 2), round(kb, 2)] });
+            i = j; done = true;
+          }
+          break;
+        }
+      }
+      if (!done) paired.push(a);
+    }
+    for (const r of paired) segments.push(score(r, target, s.fillMarginPct, price, !!r.pending));
   }
   segments.sort((a, b) => b.at.localeCompare(a.at));
 
@@ -414,8 +447,12 @@ function score(r: any, target: number, marginPct: number, price: number, pending
   const overMarginL = pending ? 0 : Math.max(0, r.liters - allowedL);
   let status: SegmentStatus = 'ok';
   if (pending) status = 'pending';
-  else if (kmL < target * (1 - m)) status = 'high';
-  else if (kmL > target * (1 + m)) status = 'low';
+  else if (r.liters > 0 && r.distance > 0) {
+    // Compare the unrounded km/L with a tiny tolerance, so 1.65 vs 2.2 × 0.75 is not called over use.
+    const raw = r.distance / r.liters;
+    if (raw < target * (1 - m) - 1e-9) status = 'high';
+    else if (raw > target * (1 + m) + 1e-9) status = 'low';
+  }
   const { pending: _pending, ...rest } = r;
   return {
     ...rest,
@@ -460,7 +497,7 @@ export function summarize(
     overMarginL: round(Math.max(0, trackedL - allowedL)), lossEgp: round(Math.max(0, trackedL - allowedL) * price),
     ...cardTotals(txs),
     splits: fills.filter(f => f.txs.length > 1).length,
-    partials: done.filter(x => x.notes.includes('partial')).length,
+    partials: done.filter(x => x.notes.includes('partial') || x.notes.includes('paired')).length,
     badKm: fills.filter(f => f.badKm.some(b => b.km != null)).length,
     status,
     outside: done.filter(x => x.status === 'high' || x.status === 'low').length,
