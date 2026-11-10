@@ -56,7 +56,7 @@ export function parseDate(v: unknown): string | null {
   let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
   if (m) return `${m[1]}-${pad(+m[2])}-${pad(+m[3])}`;
   m = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})/);
-  if (m) return `${m[3]}-${pad(+m[2])}-${pad(+m[1])}`;
+  if (m) return +m[2] >= 1 && +m[2] <= 12 && +m[1] >= 1 && +m[1] <= 31 ? `${m[3]}-${pad(+m[2])}-${pad(+m[1])}` : null;
   m = s.match(/^(\d{1,2})\s+([^\s\d]+)\s+(\d{4})/);
   if (m) {
     const mon = MONTHS[m[2]] || MONTHS[m[2].slice(0, 3).toLowerCase()];
@@ -80,12 +80,25 @@ export function parseTime(v: unknown): string {
 
 const clean = (v: unknown) => { const s = String(v ?? '').replace(/\s+/g, ' ').trim(); return s === '-' ? '' : s; };
 
-export function rowsToTxs(rows: unknown[][]): FuelTx[] {
+/** Why rows of a sheet were not read, so the upload can say what is wrong instead of a generic error. */
+export interface FileProblems {
+  /** No header row with both a plate and a liters column: the headers seen on the first rows. */
+  noHeader?: string[];
+  /** Rows under the header that were skipped, by reason, with one example value each. */
+  skipped: { date: number; liters: number; plate: number; dateExample?: string; litersExample?: string };
+}
+export const emptyProblems = (): FileProblems => ({ skipped: { date: 0, liters: 0, plate: 0 } });
+
+export function rowsToTxs(rows: unknown[][], problems: FileProblems = emptyProblems()): FuelTx[] {
   const headerIndex = rows.findIndex(r => {
     const keys = r.map(headOf);
     return keys.includes('liters') && keys.includes('plate');
   });
-  if (headerIndex < 0) return [];
+  if (headerIndex < 0) {
+    const seen = rows.slice(0, 5).flat().map(v => String(v ?? '').trim()).filter(v => v && v.length < 40);
+    if (!problems.noHeader) problems.noHeader = [...new Set(seen)].slice(0, 12);
+    return [];
+  }
   const map = rows[headerIndex].map(headOf);
   const out: FuelTx[] = [];
   for (const r of rows.slice(headerIndex + 1)) {
@@ -94,7 +107,10 @@ export function rowsToTxs(rows: unknown[][]): FuelTx[] {
     const date = parseDate(raw.date);
     const liters = numOrNull(raw.liters);
     const plate = clean(raw.plate);
-    if (!date || liters == null || !plate) continue;
+    if (r.every(v => String(v ?? '').trim() === '')) continue;
+    if (!date) { problems.skipped.date++; problems.skipped.dateExample ??= String(raw.date ?? '').slice(0, 30); continue; }
+    if (liters == null) { problems.skipped.liters++; problems.skipped.litersExample ??= String(raw.liters ?? '').slice(0, 30); continue; }
+    if (!plate) { problems.skipped.plate++; continue; }
     const at = `${date}T${parseTime(raw.time)}`;
     const amount = numOrNull(raw.amount) ?? 0;
     out.push({
@@ -123,7 +139,7 @@ export function rowsToTxs(rows: unknown[][]): FuelTx[] {
   return out;
 }
 
-export async function parseFuelWorkbook(file: File): Promise<FuelTx[]> {
+export async function parseFuelWorkbook(file: File, problems: FileProblems = emptyProblems()): Promise<FuelTx[]> {
   const XLSX = await import('xlsx-js-style');
   // CSV exports are UTF-8 text (Arabic headers): decode them as text so the Arabic is read right.
   const wb = /\.csv$/i.test(file.name)
@@ -132,7 +148,9 @@ export async function parseFuelWorkbook(file: File): Promise<FuelTx[]> {
   const out: FuelTx[] = [];
   for (const name of wb.SheetNames) {
     const rows: unknown[][] = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: '', raw: true });
-    out.push(...rowsToTxs(rows));
+    const got = rowsToTxs(rows, problems);
+    if (got.length) delete problems.noHeader;
+    out.push(...got);
   }
   return out;
 }

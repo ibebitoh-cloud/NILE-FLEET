@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import { computeFuel, summarize, DEFAULT_SETTINGS } from '../transport/fuel/math.ts';
 import { fuelAlerts, truckHealth } from '../transport/fuel/alerts.ts';
 import { explainSegment, explainHealth } from '../transport/fuel/explain.ts';
-import { parseDate, parseTime, rowsToTxs, splitUpload } from '../transport/fuel/parse.ts';
+import { parseDate, parseTime, rowsToTxs, splitUpload, emptyProblems } from '../transport/fuel/parse.ts';
+import { cardIssueKind, summarizeCardIssues } from '../transport/fuel/cardnote.ts';
 
 let n = 0;
 const tx = (plate, at, liters, km, extra = {}) => ({
@@ -249,6 +250,25 @@ assert.equal(sp.cost, 2050 + 2200);
   assert.equal(ar[0].txType, 'Normal');
   assert.equal(ar[1].liters, -347.32);
   assert.equal(ar[1].km, null);
+}
+
+// Card complaints are explained, not repeated.
+{
+  assert.equal(cardIssueKind({ cardValidity: 'Wrong', cardReason: 'بداية محاسبه جديدة' }), 'newStart');
+  assert.equal(cardIssueKind({ cardValidity: 'Wrong', cardReason: 'نفس المسافه' }), 'sameKm');
+  assert.equal(cardIssueKind({ cardValidity: 'Wrong', cardReason: 'المسافة أقل من  الحد الأدنى' }), 'belowMin');
+  assert.equal(cardIssueKind({ cardValidity: 'Correct', cardReason: '' }), null);
+  const sum = summarizeCardIssues([{ cardValidity: 'Wrong', cardReason: 'نفس المسافه' }, { cardValidity: 'Wrong', cardReason: 'نفس المسافه' }, { cardValidity: 'Correct', cardReason: '' }], 'en');
+  assert.equal(sum.items[0].count, 2);
+  assert.ok(sum.items[0].meaning.includes('second part of one fill'));
+  // A file that is not the card report says why.
+  const p = emptyProblems();
+  assert.equal(rowsToTxs([['Name', 'Phone'], ['Ali', '0100']], p).length, 0);
+  assert.deepEqual(p.noHeader, ['Name', 'Phone', 'Ali', '0100']);
+  const q = emptyProblems();
+  rowsToTxs([['Date', 'Plate Number', 'Liters'], ['31/31/2026', 'A', '10'], ['Total', '', '']], q);
+  assert.equal(q.skipped.date, 2);
+  assert.equal(q.skipped.dateExample, '31/31/2026');
 }
 
 console.log('fuel math: all checks passed');
