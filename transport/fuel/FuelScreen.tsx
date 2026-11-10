@@ -1474,8 +1474,8 @@ const SettingsPanel: React.FC<{
   };
   const field = (label: string, key: 'price' | 'marginPct' | 'fillMarginPct' | 'splitHours' | 'minKm' | 'maxKmPerFill' | 'tankLiters' | 'idleDays', hint?: string, step = '1') => (
     <label className="block text-xs font-bold text-slate-700">{label}
-      <input type="number" step={step} min="0" disabled={!isAdmin} className={`${inputCls} mt-1 w-full`} value={d[key] || ''} placeholder={key === 'price' ? `${result.price}` : '0'}
-        onChange={e => setD({ ...d, [key]: num(e.target.value) })} />
+      <input type="number" step={step} min="0" max={key === 'minKm' ? 50 : undefined} disabled={!isAdmin} className={`${inputCls} mt-1 w-full`} value={d[key] || ''} placeholder={key === 'price' ? `${result.price}` : '0'}
+        onChange={e => setD({ ...d, [key]: key === 'minKm' ? Math.min(50, num(e.target.value)) : num(e.target.value) })} />
       {hint && <span className="mt-1 block text-[10px] font-normal text-slate-500">{hint}</span>}
     </label>
   );
