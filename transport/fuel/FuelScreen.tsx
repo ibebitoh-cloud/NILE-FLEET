@@ -1044,7 +1044,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
           {view === 'months' && <DataTable sortLabel={t.sort} mobile={{ title: 'month', stats: ['liters', 'cost', 'km', 'kml', 'vs', 'loss'] }} rows={months} cols={monthCols} rowKey={r => r.key} initial={{ key: 'month', dir: -1 }} empty={t.noMatch} />}
           {view === 'stations' && <DataTable sortLabel={t.sort} mobile={{ title: 'station', stats: ['count', 'trucks', 'liters', 'cost', 'share'] }} rows={stations} cols={stationCols} rowKey={r => r.station} initial={{ key: 'liters', dir: -1 }} empty={t.noMatch}
             onRow={r => { set({ station: r.station === '—' ? '' : r.station }); setView('tx'); }} />}
-          {view === 'settings' && <SettingsPanel t={t} isAdmin={isAdmin} settings={settings} result={result} plates={options.plates} types={options.types}
+          {view === 'settings' && <SettingsPanel t={t} lang={lang} isAdmin={isAdmin} settings={settings} result={result} plates={options.plates} types={options.types}
             onSave={async s => { try { await api.saveFuelSettings(s); setSettings(s); setToast('✓'); } catch (e: any) { setToast(String(e?.message || e)); } }} />}
 
           {isAdmin && !isMobile && <div className="pt-2 text-end"><button className="text-[11px] font-bold text-red-600 hover:underline" onClick={clearAll}>{t.clearAll}</button></div>}
@@ -1466,9 +1466,9 @@ const uniqNos = (plates: string[], vehicles: Record<string, VehicleInfo> | undef
   [...new Set([...plates.map(plateNo), ...Object.keys(vehicles || {})])].filter(Boolean).sort();
 
 const SettingsPanel: React.FC<{
-  t: FuelStrings; isAdmin: boolean; settings: FuelSettings; result: FuelResult; plates: string[]; types: string[];
+  t: FuelStrings; lang: Lang; isAdmin: boolean; settings: FuelSettings; result: FuelResult; plates: string[]; types: string[];
   onSave: (s: FuelSettings) => void;
-}> = ({ t, isAdmin, settings, result, plates, types, onSave }) => {
+}> = ({ t, lang, isAdmin, settings, result, plates, types, onSave }) => {
   const [d, setD] = useState({ ...settings, vehicles: settings.vehicles || DEFAULT_VEHICLES });
   useEffect(() => setD({ ...settings, vehicles: settings.vehicles || DEFAULT_VEHICLES }), [settings]);
   const num = (v: string) => (v === '' ? 0 : Number(v));
