@@ -189,6 +189,49 @@ assert.equal(sp.cost, 2050 + 2200);
   assert.ok(explainHealth(h, 'en', 1500).includes('maintenance'));
 }
 
+// Not-full tank caught by the pair rule (like 4323 on 26–27 Sep): 3.03 then 1.27 km/L, 1.92 together, target 2.2.
+{
+  const P = [
+    tx('P', '2026-09-21T08:00', 400, 498529),
+    tx('P', '2026-09-26T19:18', 234.15, 499239),   // 710 km → 3.03 (too good, below the 1.5× partial rule)
+    tx('P', '2026-09-27T21:15', 400, 499747),      // 508 km → 1.27 (over)
+    tx('P', '2026-10-01T08:00', 400, 500627),      // 880 km → 2.2 (normal)
+  ];
+  const r = computeFuel(P, { ...DEFAULT_SETTINGS, truckTargets: { P: 2.2 } });
+  const segs = r.segments.filter(x => x.plate === 'P' && x.status !== 'pending');
+  assert.equal(segs.length, 2, 'too-good + over joined into one fill');
+  const joined = segs.find(x => x.notes.includes('paired'));
+  assert.ok(joined, 'paired note');
+  assert.equal(joined.distance, 1218);
+  assert.equal(joined.kmL, 1.92);
+  assert.equal(joined.status, 'ok');
+  assert.deepEqual(joined.pair, [3.03, 1.27]);
+  assert.ok(explainSegment(joined, DEFAULT_SETTINGS, r.price, 'en').steps.join(' ').includes('not filled to full'));
+  // A real over-use after a too-good fill (together still over the margin) is NOT hidden.
+  const Q = [
+    tx('Q', '2026-09-21T08:00', 400, 1000),
+    tx('Q', '2026-09-26T08:00', 250, 1750),       // 3.0
+    tx('Q', '2026-09-27T08:00', 500, 2050),       // 0.6
+    tx('Q', '2026-10-01T08:00', 400, 2930),
+  ];
+  const q = computeFuel(Q, { ...DEFAULT_SETTINGS, truckTargets: { Q: 2.2 } }).segments.filter(x => x.plate === 'Q');
+  assert.ok(!q.some(x => x.notes.includes('paired')), 'over-use stays visible');
+  // Too good, a small normal top-up, then a big over fill (like 2521 on 3–25 Oct): counted together.
+  const R = [
+    tx('R', '2026-10-01T08:00', 300, 10000),
+    tx('R', '2026-10-05T15:00', 140.35, 10443),   // 3.16
+    tx('R', '2026-10-07T15:57', 90.3, 10634),     // 2.12
+    tx('R', '2026-10-25T03:15', 360.44, 11170.6), // 1.49
+  ];
+  const rr = computeFuel(R, { ...DEFAULT_SETTINGS, truckTargets: { R: 2.28 } }).segments.filter(x => x.plate === 'R' && x.status !== 'pending');
+  assert.equal(rr.length, 1);
+  assert.ok(rr[0].notes.includes('paired'));
+  assert.equal(rr[0].status, 'ok');
+  // Exactly on the margin edge (1.65 vs 2.2 × 0.75) is not over use.
+  const E = [tx('E', '2026-10-01T08:00', 300, 1000), tx('E', '2026-10-05T08:00', 400, 1660)];
+  assert.equal(computeFuel(E, { ...DEFAULT_SETTINGS, truckTargets: { E: 2.2 } }).segments.find(x => x.plate === 'E').status, 'ok');
+}
+
 // The Arabic export (CSV) of the same report.
 {
   const rows = [

@@ -110,7 +110,7 @@ export function fuelAlerts(result: FuelResult, txs: FuelTx[], settings: FuelSett
       info: { from: x.from, to: x.to, ids: ids(f.txs.filter(t => t.km === x.from)) } });
   }
   for (const s of result.segments) {
-    if (!s.notes.includes('partial')) continue;
+    if (!s.notes.includes('partial') && !s.notes.includes('paired')) continue;
     add({ id: `partialJoined|${s.key}`, kind: 'partialJoined', plate: s.plate, driver: s.driver, at: s.at, liters: s.liters, egp: 0, segmentKey: s.key,
       info: { ids: ids(s.fills.flatMap(f => f.txs)), fills: s.fills.length, fromAt: s.fromAt.slice(0, 10), km: s.distance, kmL: s.kmL, open: s.status === 'pending' ? 1 : 0 } });
   }
@@ -133,8 +133,12 @@ export function fuelAlerts(result: FuelResult, txs: FuelTx[], settings: FuelSett
     const t = v.tx;
     if (v.flags.includes('reversal')) add({ id: `reversal|${t.id}`, kind: 'reversal', plate: t.plate, driver: t.driver, at: t.at,
       liters: Math.abs(t.liters), egp: Math.abs(t.amount), info: { id: t.id } });
-    if (Math.abs(t.variance) > 1 && t.amount > 0) add({ id: `pumpVar|${t.id}`, kind: 'pumpVar', plate: t.plate, driver: t.driver, at: t.at,
-      liters: t.liters, egp: round(Math.abs(t.variance)), info: { id: t.id, variance: t.variance, pump: t.pumpReading ?? 0 } });
+    if (Math.abs(t.variance) > 1 && t.amount > 0) {
+      // A pump photo read as a tiny number (66.9 for 4,566.99) is a reading mistake, not missing money.
+      const misread = t.pumpReading != null && Math.abs(t.variance) > t.amount * 0.5 ? 1 : 0;
+      add({ id: `pumpVar|${t.id}`, kind: 'pumpVar', plate: t.plate, driver: t.driver, at: t.at,
+        liters: t.liters, egp: misread ? 0 : round(Math.abs(t.variance)), info: { id: t.id, variance: t.variance, pump: t.pumpReading ?? 0, paid: t.amount, misread } });
+    }
   }
 
   /* per truck: this week vs target, and idle trucks */
