@@ -97,4 +97,10 @@ assert.equal(parsed[0].pumpReading, null);
 assert.equal(parsed[0].cardDistance, 4867);
 assert.equal(parsed[0].cardKmL, 10000);
 
+// Fuel cost uses what was paid, so a price change mid-period stays right.
+const P = [tx('P', '2026-10-01T08:00', 100, 1000), tx('P', '2026-10-02T08:00', 100, 1230, { amount: 2200 })];
+const rp = computeFuel(P, DEFAULT_SETTINGS);
+const sp = summarize('P', 'P', rp.segments, P, rp.fills, 2.3, 10, rp.price);
+assert.equal(sp.cost, 2050 + 2200);
+
 console.log('fuel math: all checks passed');

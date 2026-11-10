@@ -38,7 +38,7 @@ const en = {
   f_reversed: 'Reversed', f_reversal: 'Reversal', f_split: 'Split', f_badKm: 'Bad km', f_fixedKm: 'km fixed', f_opening: 'First reading',
   // settings
   setHint: 'Targets and margins decide what is normal. Leave a target empty to use the fleet average for that type.',
-  price: 'Diesel price (EGP/L)', priceHint: '0 = take it from the report', truckMargin: 'Truck margin ± %', truckMarginHint: 'For a truck over the whole period',
+  price: 'Diesel price (EGP/L)', priceHint: 'Values liters over the margin. 0 = take it from the report. Fuel cost always uses what was paid.', truckMargin: 'Truck margin ± %', truckMarginHint: 'For a truck over the whole period',
   fillMargin: 'Single fill margin ± %', fillMarginHint: 'One fill swings more, so it gets a wider margin',
   splitHours: 'Join fills within (hours)', splitHoursHint: 'Pump stopped at 9,999 EGP and the truck refilled',
   minKm: 'Join fills closer than (km)', maxKm: 'Max km on one tank', maxKmHint: 'Longer jumps are bad readings',
@@ -88,7 +88,7 @@ const ar: typeof en = {
   n_split: 'تم دمج تفويل مقسوم (الطلمبة توقفت عند 9,999)', n_partial: 'تفويل ناقص دُمج مع التالي', n_badKm: 'تم تجاهل قراءة عداد خاطئة', n_reversal: 'مرتجع', n_fixedKm: 'قراءة عداد بخانة زائدة وتم تصحيحها',
   f_reversed: 'مُلغى', f_reversal: 'مرتجع', f_split: 'مقسوم', f_badKm: 'عداد خاطئ', f_fixedKm: 'عداد مُصحح', f_opening: 'أول قراءة',
   setHint: 'المستهدف والهوامش تحدد ما هو طبيعي. اترك المستهدف فارغًا لاستخدام متوسط الأسطول لهذا النوع.',
-  price: 'سعر السولار (جنيه/لتر)', priceHint: '0 = من التقرير', truckMargin: 'هامش السيارة ± %', truckMarginHint: 'للسيارة خلال الفترة كلها',
+  price: 'سعر السولار (جنيه/لتر)', priceHint: 'لتقييم اللترات فوق الهامش. 0 = من التقرير. تكلفة السولار تستخدم المدفوع فعلاً.', truckMargin: 'هامش السيارة ± %', truckMarginHint: 'للسيارة خلال الفترة كلها',
   fillMargin: 'هامش التفويلة الواحدة ± %', fillMarginHint: 'التفويلة الواحدة تتغير أكثر فلها هامش أوسع',
   splitHours: 'دمج التفويلات خلال (ساعات)', splitHoursHint: 'الطلمبة توقفت عند 9,999 جنيه وتم التفويل مرة أخرى',
   minKm: 'دمج التفويلات الأقرب من (كم)', maxKm: 'أقصى كم على تانك واحد', maxKmHint: 'القفزات الأطول قراءات خاطئة',

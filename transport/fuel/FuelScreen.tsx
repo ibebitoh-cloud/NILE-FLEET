@@ -226,7 +226,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     return uniq(filtered.txs.map(x => x.station || '—')).map(st => {
       const l = filtered.txs.filter(x => (x.station || '—') === st);
       const liters = sum(l, x => x.liters);
-      return { station: st, count: l.filter(x => x.amount > 0).length, liters, cost: liters * result.price, charged: sum(l, x => x.totalAmount), share: (liters / total) * 100, trucks: uniq(l.map(x => x.plate)).length };
+      return { station: st, count: l.filter(x => x.amount > 0).length, liters, cost: sum(l, x => x.amount), charged: sum(l, x => x.totalAmount), share: (liters / total) * 100, trucks: uniq(l.map(x => x.plate)).length };
     });
   }, [filtered, result]);
 
@@ -236,7 +236,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     const trackedKm = sum(done, s => s.distance), trackedL = sum(done, s => s.liters);
     const card = cardTotals(filtered.txs);
     return {
-      liters, cost: liters * result.price, charged: sum(filtered.txs, x => x.totalAmount), fees: sum(filtered.txs, x => x.totalAmount - x.amount),
+      liters, cost: sum(filtered.txs, x => x.amount), charged: sum(filtered.txs, x => x.totalAmount), fees: sum(filtered.txs, x => x.totalAmount - x.amount),
       trackedKm, trackedL, kmL: trackedL ? trackedKm / trackedL : 0, target: weightedTarget(filtered.segs),
       overL: sum(trucks, s => s.overMarginL), loss: sum(trucks, s => s.lossEgp),
       outside: done.filter(s => s.status === 'high' || s.status === 'low').length,
