@@ -803,7 +803,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
               <div className="mt-0.5 text-sm font-black text-[#07111f]">{t.lvl[a.level]}</div>
             </div>
             <div className="rounded-xl bg-white/85 px-3 py-2 ring-1 ring-black/5">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{t.loss}</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{lang === 'ar' ? 'التأثير التقديري' : 'Estimated impact'}</div>
               <div className={`mt-0.5 text-sm font-black tabular-nums ${a.egp > 0 ? 'text-red-700' : 'text-slate-400'}`}>{a.egp > 0 ? n0(a.egp) : '—'} <span className="text-[10px] font-bold text-slate-400">{a.egp > 0 ? t.egp : ''}</span></div>
             </div>
           </div>
