@@ -96,6 +96,7 @@ export function buildFuelContext(d: FuelData, user: TransportUser, question: str
     `HOW WE CALCULATE:\n${methodText('en').join('\n')}`,
     `TRUCK HEALTH (last ${'1,500'} km vs target and vs own normal; SERVICE = check maintenance):\n${d.health.map(healthLine).join('\n')}`,
     `TRUCKS (whole period, worst vs target first):\n${trucks.map(x => sumLine(x)).join('\n')}`,
+    `TRUCK DETAILS (assigned driver as recorded by the company, branch, model and year; fuel-card driver names remain separate):\\n${Object.entries(d.settings.vehicles || {}).map(([no, v]) => `${no} | assigned ${v.driver || '-'} | ${v.branch || '-'} | ${v.model || '-'} ${v.year || ''}`).join('\\n') || 'none'},
     `WEEKS (Saturday to Friday, fleet):\n${weeks.map(w => `${w.key} → ${weekEnd(w.key)}${weekEnd(w.key) > last ? ' (so far)' : ''}: ${sumLine(w, false)}`).join('\n')}`,
     `MONTHS (fleet):\n${months.map(x => sumLine(x)).join('\n')}`,
     `DRIVERS:\n${drv.slice(0, 40).map(x => sumLine(x)).join('\n')}`,
