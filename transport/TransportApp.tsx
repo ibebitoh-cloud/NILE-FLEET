@@ -158,8 +158,8 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-[#07111f] text-white">
-        <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3 sm:px-6">
+      <header className="relative z-30 sm:sticky sm:top-0 border-b border-white/10 bg-[#07111f] text-white">
+        <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5 sm:gap-x-6 sm:gap-y-3 sm:px-6 sm:py-3">
           <button onClick={goHome} className="flex items-center gap-3" title={t.backHome}>
             <img src="/nile-fleet-logo-white.png" alt="Nile Fleet" className="h-9 w-9 object-contain" />
             <div className="text-start leading-none">
@@ -170,7 +170,7 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
           <nav className="order-3 flex w-full gap-1 overflow-x-auto sm:order-none sm:w-auto">
             {(['overview', 'rates', 'customers', 'fuel'] as Tab[]).map(k => (
               <button key={k} onClick={() => setTab(k)}
-                className={`whitespace-nowrap rounded-full px-4 py-2 text-[11px] font-black uppercase tracking-[.18em] transition ${tab === k ? 'bg-[#c2a378] text-[#07111f]' : 'text-white/70 hover:bg-white/10'}`}>
+                className={`whitespace-nowrap rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-[.08em] transition sm:px-4 sm:tracking-[.18em] ${tab === k ? 'bg-[#c2a378] text-[#07111f]' : 'text-white/70 hover:bg-white/10'}`}>
                 {k === 'fuel' ? `⛽ ${FUEL_STRINGS[lang].tab}` : t[k]}
               </button>
             ))}
@@ -204,7 +204,7 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
       {rates && <DaliChat lang={lang} user={user} rates={rates} isAdmin={isAdmin} setRates={setRates} onQuote={quoteCustomer}
         onShow={f => { setFilters({ ...NO_FILTERS, ...f }); setTab('rates'); }} />}
       {sheetFor && <SheetEditor t={t} rows={sheetFor.rows} customer={sheetFor.customer} options={sheetOptions} onClose={() => setSheetFor(null)} onDone={sheetDone} />}
-      {toast && <div role="status" className="fixed bottom-5 left-1/2 z-[60] -translate-x-1/2 rounded-full bg-[#07111f] px-5 py-3 text-xs font-bold text-white shadow-xl">{toast}</div>}
+      {toast && <div role="status" className="fixed bottom-[var(--nf-fab-bottom,1.25rem)] left-1/2 z-[60] -translate-x-1/2 rounded-full bg-[#07111f] px-5 py-3 text-xs font-bold text-white shadow-xl">{toast}</div>}
     </div>
   );
 };

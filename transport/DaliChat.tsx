@@ -215,9 +215,9 @@ const DaliChat: React.FC<{
     <>
       {!open && (
         <button onClick={() => setOpen(true)} aria-label={tx.title}
-          className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-[#07111f] py-2 pe-4 ps-2 text-white shadow-[0_10px_30px_rgba(7,17,31,.35)] ring-1 ring-[#c2a378]/50 transition hover:-translate-y-0.5">
+          className="fixed bottom-[var(--nf-fab-bottom,1.25rem)] right-4 z-40 flex items-center gap-2 rounded-full bg-[#07111f] p-2 sm:right-5 sm:pe-4 text-white shadow-[0_10px_30px_rgba(7,17,31,.35)] ring-1 ring-[#c2a378]/50 transition hover:-translate-y-0.5">
           <span className="grid h-9 w-9 place-items-center rounded-full bg-[#c2a378]/15"><img src={DALI_MARK} alt="" className="h-6 w-6 object-contain" /></span>
-          <span className="text-start leading-none"><span className="block text-sm font-black tracking-wider">{tx.title}</span><span className="text-[10px] font-bold text-[#c2a378]">{tx.sub}</span></span>
+          <span className="hidden text-start leading-none sm:inline"><span className="block text-sm font-black tracking-wider">{tx.title}</span><span className="text-[10px] font-bold text-[#c2a378]">{tx.sub}</span></span>
         </button>
       )}
       {open && (

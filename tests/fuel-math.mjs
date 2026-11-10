@@ -2,7 +2,9 @@
 // Run: npm run test:fuel
 import assert from 'node:assert/strict';
 import { computeFuel, summarize, DEFAULT_SETTINGS } from '../transport/fuel/math.ts';
-import { parseDate, parseTime, rowsToTxs } from '../transport/fuel/parse.ts';
+import { fuelAlerts, truckHealth } from '../transport/fuel/alerts.ts';
+import { explainSegment, explainHealth } from '../transport/fuel/explain.ts';
+import { parseDate, parseTime, rowsToTxs, splitUpload } from '../transport/fuel/parse.ts';
 
 let n = 0;
 const tx = (plate, at, liters, km, extra = {}) => ({
@@ -102,5 +104,108 @@ const P = [tx('P', '2026-10-01T08:00', 100, 1000), tx('P', '2026-10-02T08:00', 1
 const rp = computeFuel(P, DEFAULT_SETTINGS);
 const sp = summarize('P', 'P', rp.segments, P, rp.fills, 2.3, 10, rp.price);
 assert.equal(sp.cost, 2050 + 2200);
+
+// Alerts.
+{
+  const S = { ...DEFAULT_SETTINGS, truckTargets: { H: 2.3, L: 2.3, Q: 2.3 }, tankLiters: 400, idleDays: 5 };
+  const H = [ // one bad fill: 460 km on 300 L = 1.53 km/L
+    tx('H', '2026-11-01T08:00', 300, 10000), tx('H', '2026-11-02T08:00', 300, 10690), tx('H', '2026-11-03T08:00', 300, 11150),
+    tx('H', '2026-11-04T08:00', 450, 12185), // 1035 km / 450 L = 2.3, but 450 L > 400 L tank
+  ];
+  const L = [ // not filled to full, then the next one makes up for it: no alert
+    tx('L', '2026-11-01T08:00', 300, 20000), tx('L', '2026-11-02T08:00', 220, 20690), tx('L', '2026-11-03T08:00', 380, 21380),
+  ];
+  const Q = [tx('Q', '2026-10-20T08:00', 300, 30000), tx('Q', '2026-10-21T08:00', 300, 30690)]; // stopped fuelling 2 weeks ago
+  const all = [...H, ...L, ...Q];
+  const ra = computeFuel(all, S);
+  const al = fuelAlerts(ra, all, S);
+  const of = (kind, plate) => al.filter(a => a.kind === kind && a.plate === plate);
+  assert.equal(of('overUse', 'H').length, 1, 'bad fill raises overUse');
+  assert.ok(of('overUse', 'H')[0].liters > 30, 'overUse liters');
+  assert.equal(of('overTank', 'H').length, 1, 'fill bigger than tank');
+  assert.equal(al.filter(a => a.plate === 'L' && (a.kind === 'overUse' || a.kind === 'tooFewLiters')).length, 0, 'not-full fill paired with next: no alert');
+  assert.equal(of('idle', 'Q').length, 1, 'idle truck');
+  assert.equal(al[0].level, 'high', 'urgent first');
+}
+// Every merge / correction raises an alert (truck A has a split fill, B a partial fill, C a km typo).
+{
+  const all = [...A, ...B, ...C];
+  const al = fuelAlerts(computeFuel(all, DEFAULT_SETTINGS), all, DEFAULT_SETTINGS);
+  assert.ok(al.some(a => a.kind === 'splitJoined' && a.plate === 'A' && a.info.count === 2), 'split fill alerted');
+  assert.ok(al.some(a => a.kind === 'partialJoined' && a.plate === 'B' && a.info.fills === 2), 'partial fill alerted');
+  assert.ok(al.some(a => a.kind === 'kmFixed' && a.plate === 'C' && a.info.to === 300690), 'km typo alerted');
+}
+
+// Truck health: steady 2.3 km/L for 2,760 km, then 1.8 km/L for the last 1,620 km → check maintenance.
+{
+  const M = [tx('M', '2026-10-01T08:00', 300, 50000)];
+  let km = 50000, d = 2;
+  for (let i = 0; i < 4; i++) { km += 690; M.push(tx('M', `2026-10-0${d++}T08:00`, 300, km)); }       // 2.3
+  for (let i = 0; i < 3; i++) { km += 540; M.push(tx('M', `2026-10-${10 + i}T08:00`, 300, km)); }      // 1.8
+  const S = { ...DEFAULT_SETTINGS, truckTargets: { M: 2.3 } };
+  const rm = computeFuel(M, S);
+  const h = truckHealth(rm, S).find(x => x.plate === 'M');
+  assert.equal(h.status, 'service', `health ${JSON.stringify(h)}`);
+  assert.ok(h.trendPct < -10);
+  assert.ok(fuelAlerts(rm, M, S).some(a => a.kind === 'maintenance' && a.plate === 'M'));
+}
+
+// Upload: only new rows are added.
+{
+  const saved = [tx('U', '2026-11-01T08:00', 300, 1000), tx('U', '2026-11-02T08:00', 300, 1690)];
+  const file = [
+    { ...saved[0] },                                          // same # → already saved
+    { ...saved[1], id: 'other-number' },                      // same truck/time/liters/amount, new # → already saved
+    tx('U', '2026-11-03T08:00', 300, 2380),                   // new
+  ];
+  file.push({ ...file[2] });                                  // the new one twice in the file
+  const up = splitUpload(file, saved);
+  assert.equal(up.fresh.length, 1);
+  assert.equal(up.inSystem, 2);
+  assert.equal(up.repeated, 1);
+}
+
+// Explanation: a split fill is explained step by step and the numbers match the segment.
+{
+  const strip = x => x.replace(/[\u2066-\u2069]/g, '');
+  const r = computeFuel([
+    tx('E1', '2026-10-01T08:00:00Z', 400, 100000),
+    tx('E1', '2026-10-03T08:00:00Z', 487, 101000),            // pump stopped at 9,999 EGP
+    tx('E1', '2026-10-03T08:20:00Z', 13, 101000),
+  ], { ...DEFAULT_SETTINGS, truckTargets: { E1: 3 } });
+  const seg = r.segments.find(x => x.plate === 'E1' && x.status !== 'pending');
+  for (const lang of ['en', 'ar']) {
+    const ex = explainSegment(seg, { ...DEFAULT_SETTINGS, truckTargets: { E1: 3 } }, r.price, lang);
+    const all = strip(ex.steps.join(' ') + ' ' + ex.verdict);
+    assert.ok(all.includes('1,000'), lang + ' distance');
+    assert.ok(all.includes('500'), lang + ' liters');
+    assert.ok(all.includes('2.00'), lang + ' km/L');
+    assert.ok(all.includes('3.00'), lang + ' target');
+    assert.ok(strip(ex.short).includes('2.00'), lang + ' short');
+    assert.equal(seg.status, 'high');
+  }
+  assert.ok(strip(explainSegment(seg, DEFAULT_SETTINGS, r.price, 'en').steps.join(' ')).includes('joined into one fill'));
+  const h = { plate: 'X', vehicleType: 'T', driver: '', target: 2.3, recentKmL: 1.8, recentKm: 1600, recentFrom: '', baseKmL: 2.3, baseKm: 3000, trendPct: -21.7, vsTargetPct: -21.7, status: 'service' };
+  assert.ok(explainHealth(h, 'en', 1500).includes('maintenance'));
+}
+
+// The Arabic export (CSV) of the same report.
+{
+  const rows = [
+    ['#', 'التاريخ', 'الوقت', 'الرقم التعريفي للمركبة', 'رقم اللوحة', 'نوع المركبة', 'إسم السائق', 'المحطة', 'المبلغ', 'الكمية', 'المبلغ الكلي', 'عداد الكيلومترات', 'المسافه', 'معدل الإستهلاك', 'صلاحية المسافه', 'سبب عدم صلاحية المسافه', 'نوع المعاملة'],
+    ['17288386', '10 نوفمبر 2026', '4:15 م', '117352', '4363 ر ا ق', 'Default', 'محمد صلاح', 'موبيل-  27 صحراوى', '6080.1', '296.59', '6167.88', '757106.6', '798.6', '2.69', 'غير صحيحة', 'بداية محاسبه جديدة', 'عادي'],
+    ['17124639', '04 نوفمبر 2026', '8:08 م', '227655', 'ر أ ق 3893', 'Default', 'عبد القادر محمد', 'اويل', '-7120', '-347.32', '-7220.32', '-', '0', '0', 'صحيحة', '-', 'عادي'],
+  ];
+  const ar = rowsToTxs(rows);
+  assert.equal(ar.length, 2);
+  assert.equal(ar[0].at, '2026-11-10T16:15');
+  assert.equal(ar[0].liters, 296.59);
+  assert.equal(ar[0].km, 757106.6);
+  assert.equal(ar[0].driver, 'محمد صلاح');
+  assert.equal(ar[0].cardValidity, 'Wrong');
+  assert.equal(ar[0].txType, 'Normal');
+  assert.equal(ar[1].liters, -347.32);
+  assert.equal(ar[1].km, null);
+}
 
 console.log('fuel math: all checks passed');

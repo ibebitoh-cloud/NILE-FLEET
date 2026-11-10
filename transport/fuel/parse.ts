@@ -13,7 +13,19 @@ const HEADERS: Record<string, keyof FuelTx | 'date' | 'time'> = {
   'km reading': 'km', 'odometer': 'km', 'distance': 'cardDistance',
   'fuel consumption (km/l)': 'cardKmL', 'distance validity': 'cardValidity',
   'distance validaty reason': 'cardReason', 'distance validity reason': 'cardReason', 'transaction type': 'txType',
+  // Arabic export of the same report.
+  'الرقم التعريفي للمركبة': 'vehicleId', 'نوع المركبة': 'vehicleType', 'كود السائق': 'driverCode', 'اسم السائق': 'driver',
+  'نوع الوقود': 'fuelType', 'المبلغ': 'amount', 'الكمية': 'liters', 'قراءة صورة المضخة': 'pumpReading', 'الفرق': 'variance',
+  'المبلغ الكلي': 'totalAmount', 'عداد الكيلومترات': 'km', 'المسافه': 'cardDistance', 'معدل الاستهلاك': 'cardKmL',
+  'صلاحية المسافه': 'cardValidity', 'سبب عدم صلاحية المسافه': 'cardReason', 'نوع المعامله': 'txType',
 };
+/** Header spelling varies (أ/إ/ا, ة/ه, extra spaces): compare a normalized form. */
+const normHead = (v: unknown) => String(v ?? '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي');
+const HEAD = new Map(Object.entries(HEADERS).map(([k, v]) => [normHead(k), v]));
+const headOf = (v: unknown) => HEAD.get(normHead(v));
+/** The Arabic export says صحيحة / غير صحيحة and عادي; store the English words the rest of the app checks. */
+const VALIDITY: Record<string, string> = { 'صحيحة': 'Correct', 'صحيحه': 'Correct', 'غير صحيحة': 'Wrong', 'غير صحيحه': 'Wrong' };
+const TX_TYPE: Record<string, string> = { 'عادي': 'Normal', 'عادى': 'Normal' };
 
 const MONTHS: Record<string, number> = {
   'يناير': 1, 'فبراير': 2, 'مارس': 3, 'أبريل': 4, 'ابريل': 4, 'إبريل': 4, 'مايو': 5, 'يونيو': 6, 'يونيه': 6,
@@ -70,11 +82,11 @@ const clean = (v: unknown) => { const s = String(v ?? '').replace(/\s+/g, ' ').t
 
 export function rowsToTxs(rows: unknown[][]): FuelTx[] {
   const headerIndex = rows.findIndex(r => {
-    const keys = r.map(c => HEADERS[String(c ?? '').trim().toLowerCase()]);
+    const keys = r.map(headOf);
     return keys.includes('liters') && keys.includes('plate');
   });
   if (headerIndex < 0) return [];
-  const map = rows[headerIndex].map(c => HEADERS[String(c ?? '').trim().toLowerCase()]);
+  const map = rows[headerIndex].map(headOf);
   const out: FuelTx[] = [];
   for (const r of rows.slice(headerIndex + 1)) {
     const raw: Record<string, unknown> = {};
@@ -103,9 +115,9 @@ export function rowsToTxs(rows: unknown[][]): FuelTx[] {
       km: numOrNull(raw.km),
       cardDistance: numOrNull(raw.cardDistance),
       cardKmL: numOrNull(raw.cardKmL),
-      cardValidity: clean(raw.cardValidity),
+      cardValidity: VALIDITY[clean(raw.cardValidity)] || clean(raw.cardValidity),
       cardReason: clean(raw.cardReason),
-      txType: clean(raw.txType),
+      txType: TX_TYPE[clean(raw.txType)] || clean(raw.txType),
     });
   }
   return out;
@@ -113,11 +125,37 @@ export function rowsToTxs(rows: unknown[][]): FuelTx[] {
 
 export async function parseFuelWorkbook(file: File): Promise<FuelTx[]> {
   const XLSX = await import('xlsx-js-style');
-  const wb = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true });
+  // CSV exports are UTF-8 text (Arabic headers): decode them as text so the Arabic is read right.
+  const wb = /\.csv$/i.test(file.name)
+    ? XLSX.read(new TextDecoder('utf-8').decode(await file.arrayBuffer()).replace(/^\uFEFF/, ''), { type: 'string', cellDates: true })
+    : XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true });
   const out: FuelTx[] = [];
   for (const name of wb.SheetNames) {
     const rows: unknown[][] = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: '', raw: true });
     out.push(...rowsToTxs(rows));
   }
   return out;
+}
+
+/** Same pump transaction even if the export gave it another "#": truck, time, liters, amount. */
+const sameTx = (t: FuelTx) => `${t.plate}|${t.at}|${t.liters.toFixed(2)}|${t.amount.toFixed(2)}`;
+
+/**
+ * Splits an uploaded file into what is new and what the system already has.
+ * A row is "in system" if its # or its truck + time + liters + amount is already saved,
+ * and "repeated" if it appears twice in the same file. Only `fresh` gets saved.
+ */
+export function splitUpload(rows: FuelTx[], existing: FuelTx[]): { fresh: FuelTx[]; inSystem: number; repeated: number } {
+  const ids = new Set(existing.map(t => t.id));
+  const keys = new Set(existing.map(sameTx));
+  const seenIds = new Set<string>(), seenKeys = new Set<string>();
+  const fresh: FuelTx[] = [];
+  let inSystem = 0, repeated = 0;
+  for (const t of rows) {
+    const k = sameTx(t);
+    if (ids.has(t.id) || keys.has(k)) { inSystem++; continue; }
+    if (seenIds.has(t.id) || seenKeys.has(k)) { repeated++; continue; }
+    seenIds.add(t.id); seenKeys.add(k); fresh.push(t);
+  }
+  return { fresh, inSystem, repeated };
 }

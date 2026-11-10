@@ -30,6 +30,8 @@ export interface PrintKpi { label: string; value: string; sub?: string }
 
 export function printFuelReport(o: {
   lang: Lang; t: FuelStrings; period: string; filters: string; kpis: PrintKpi[]; tables: Sheet[];
+  /** 'How we calculate' box under the totals: first line is the heading. */
+  method?: string[];
 }) {
   const rtl = o.lang === 'ar';
   const origin = window.location.origin;
@@ -52,6 +54,8 @@ export function printFuelReport(o: {
   .kpi { border: 1px solid #e3dccf; border-radius: 8px; padding: 6px 8px; }
   .kpi b { display: block; font-size: 7px; letter-spacing: 1.5px; color: #8a7350; text-transform: uppercase; }
   .kpi div { font-size: 13px; font-weight: 900; margin-top: 2px; } .kpi i { font-style: normal; color: #777; font-size: 7.5px; }
+  .method { margin: 8px 0 2px; border: 1px solid #e3dccf; border-inline-start: 3px solid #c2a378; border-radius: 8px; padding: 6px 10px; background: #fbf8f2; }
+  .method b { font-size: 9px; color: #07111f; } .method ol { margin: 3px 0 0; padding-inline-start: 16px; } .method li { margin: 1px 0; line-height: 1.45; }
   h3 { margin: 12px 0 4px; font-size: 11px; color: #07111f; }
   table { width: 100%; border-collapse: collapse; page-break-inside: auto; }
   tr { page-break-inside: avoid; }
@@ -69,6 +73,7 @@ export function printFuelReport(o: {
   </div>
   <div class="meta">${esc(o.t.period)}: <b dir="ltr">${esc(o.period)}</b>${o.filters ? ` · ${esc(o.filters)}` : ''} · ${esc(o.t.generated)}: <span dir="ltr">${stamp()}</span></div>
   <div class="kpis">${o.kpis.map(k => `<div class="kpi"><b>${esc(k.label)}</b><div>${esc(k.value)}</div>${k.sub ? `<i>${esc(k.sub)}</i>` : ''}</div>`).join('')}</div>
+  ${o.method?.length ? `<div class="method"><b>${esc(o.method[0])}</b><ol>${o.method.slice(1).map(m => `<li>${esc(m)}</li>`).join('')}</ol></div>` : ''}
   ${o.tables.map(table).join('')}
   <div class="foot">
     <div>NILE FLEET · nilefleet.app</div>
