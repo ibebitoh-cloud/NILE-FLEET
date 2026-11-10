@@ -13,7 +13,7 @@
  *  1. Reversals: a negative transaction cancels the matching positive one.
  *  2. Split fills: some pumps stop at 9,999 EGP, so one full tank becomes two
  *     transactions minutes apart. Transactions of the same truck within
- *     `splitHours`, or with almost the same km reading, count as one fill.
+ *     `splitHours` and no more than 50 km apart, count as one fill.
  *  3. Bad odometer readings (typos, same km, going backwards, impossible
  *     jumps) are skipped. Their liters are carried into the next good reading
  *     so no fuel is lost from the totals.
@@ -59,7 +59,7 @@ export interface FuelSettings {
   price: number;
   /** Two transactions of the same truck this close together are one fill. */
   splitHours: number;
-  /** Two transactions with fewer km than this between them are one fill. */
+  /** Maximum odometer difference for merging split transactions; hard-capped at 50 km. */
   minKm: number;
   /** Most km a truck can drive on one full tank. Longer jumps are bad readings. */
   maxKmPerFill: number;
@@ -285,10 +285,10 @@ export function computeFuel(allTxs: FuelTx[], settings: FuelSettings = DEFAULT_S
     };
     for (const t of list) {
       const prev = cur[cur.length - 1];
-      const close = prev && (
-        hoursBetween(prev.at, t.at) <= s.splitHours ||
-        (prev.km != null && t.km != null && t.km >= prev.km && t.km - prev.km < s.minKm && hoursBetween(prev.at, t.at) <= 48)
-      );
+      const kmGap = prev?.km != null && t.km != null && t.km >= prev.km ? t.km - prev.km : null;
+      // Never merge split transactions on time alone: the odometer gap must be known and <= 50 km.
+      const close = !!prev && hoursBetween(prev.at, t.at) >= 0 && hoursBetween(prev.at, t.at) <= s.splitHours
+        && kmGap != null && kmGap <= Math.min(50, Math.max(0, s.minKm));
       if (prev && !close) flush();
       cur.push(t);
     }
