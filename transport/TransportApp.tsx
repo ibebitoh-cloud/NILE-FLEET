@@ -8,11 +8,14 @@ import { buildPdfHtml, DEFAULT_SIGNER, DEFAULT_TERMS, exportCsv, exportExcelBran
 import { parseRateWorkbook } from './importExcel';
 import SheetEditor, { SheetResult } from './SheetEditor';
 import DaliChat from './DaliChat';
+import { FUEL_STRINGS } from './fuel/i18n';
+
+const FuelScreen = React.lazy(() => import('./fuel/FuelScreen'));
 
 const fmt = (n: number) => (n ? n.toLocaleString('en-US') : '—');
 const goHome = () => { window.location.hash = ''; };
 
-type Tab = 'overview' | 'rates' | 'customers';
+type Tab = 'overview' | 'rates' | 'customers' | 'fuel';
 type SortKey = 'customer' | 'load_port' | 'destination' | 'transit_port' | PriceKey | 'updated_at';
 
 interface Filters {
@@ -117,7 +120,7 @@ const LoginView: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; 
 
 const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user: TransportUser; onLogout: () => void }> = ({ t, lang, setLang, user, onLogout }) => {
   const [tab, setTab] = useState<Tab>(() => {
-    try { const v = localStorage.getItem('nf_transport_tab'); return (v === 'overview' || v === 'customers') ? v : 'rates'; } catch { return 'rates'; }
+    try { const v = localStorage.getItem('nf_transport_tab'); return (v === 'overview' || v === 'customers' || v === 'fuel') ? v : 'rates'; } catch { return 'rates'; }
   });
   const [rates, setRates] = useState<Rate[] | null>(null);
   const [loadError, setLoadError] = useState('');
@@ -165,10 +168,10 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
             </div>
           </button>
           <nav className="order-3 flex w-full gap-1 overflow-x-auto sm:order-none sm:w-auto">
-            {(['overview', 'rates', 'customers'] as Tab[]).map(k => (
+            {(['overview', 'rates', 'customers', 'fuel'] as Tab[]).map(k => (
               <button key={k} onClick={() => setTab(k)}
                 className={`whitespace-nowrap rounded-full px-4 py-2 text-[11px] font-black uppercase tracking-[.18em] transition ${tab === k ? 'bg-[#c2a378] text-[#07111f]' : 'text-white/70 hover:bg-white/10'}`}>
-                {t[k]}
+                {k === 'fuel' ? `⛽ ${FUEL_STRINGS[lang].tab}` : t[k]}
               </button>
             ))}
           </nav>
@@ -188,7 +191,8 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
 
       <main className="mx-auto w-full max-w-[1500px] flex-1 px-4 py-6 sm:px-6">
         {loadError && <div role="alert" className="mb-4 rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-bold text-red-800">{t.failed}: {loadError}</div>}
-        {rates === null ? <DaliLoader fullScreen label={<span className="text-xs font-bold text-slate-500">{t.loading}</span>} />
+        {tab === 'fuel' ? <React.Suspense fallback={<DaliLoader fullScreen />}><FuelScreen lang={lang} isAdmin={isAdmin} setToast={setToast} /></React.Suspense>
+          : rates === null ? <DaliLoader fullScreen label={<span className="text-xs font-bold text-slate-500">{t.loading}</span>} />
           : tab === 'overview' ? <Overview t={t} rates={rates} onCustomer={openCustomer} />
           : tab === 'customers' ? <Customers t={t} rates={rates} isAdmin={isAdmin} onView={openCustomer} onQuote={quoteCustomer} onSheet={c => openSheet((rates || []).filter(r => r.customer === c), c)} setRates={setRates} setToast={setToast} />
           : <RatesScreen t={t} lang={lang} rates={rates} setRates={setRates} isAdmin={isAdmin} filters={filters} setFilters={setFilters} setToast={setToast}

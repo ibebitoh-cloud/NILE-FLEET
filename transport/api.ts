@@ -1,5 +1,6 @@
 import { transportDb } from './transportClient';
 import { Rate, RateDraft, TransportRole, TransportUser } from './types';
+import type { FuelSettings, FuelTx } from './fuel/math';
 
 const COLUMNS = 'id,customer,load_port,destination,transit_port,price_1x20,price_2x20,price_40dc,price_40rf,currency,notes,active,updated_at';
 
@@ -129,4 +130,70 @@ export async function listTransportUsers(): Promise<{ name: string; email: strin
   const { data, error } = await transportDb.from('transport_users').select('name,email,role').order('role');
   if (error) return [];
   return data || [];
+}
+
+/* ============================== Fuel ============================== */
+
+
+const FUEL_LOCAL = 'nf_transport_fuel_v1';
+const FUEL_SETTINGS_LOCAL = 'nf_transport_fuel_settings_v1';
+/** True when the fuel tables are not in the database yet (data then stays in this browser). */
+const missingTable = (e: { code?: string; message?: string } | null) =>
+  !!e && (e.code === '42P01' || e.code === 'PGRST205' || /does not exist|schema cache/i.test(e.message || ''));
+
+const readLocal = <T,>(key: string, fallback: T): T => { try { return JSON.parse(localStorage.getItem(key) || 'null') ?? fallback; } catch { return fallback; } };
+const writeLocal = (key: string, v: unknown) => { try { localStorage.setItem(key, JSON.stringify(v)); } catch { /* storage full */ } };
+
+export interface FuelLoad { txs: FuelTx[]; local: boolean }
+
+export async function loadFuel(): Promise<FuelLoad> {
+  const page = 1000;
+  const all: FuelTx[] = [];
+  for (let from = 0; ; from += page) {
+    const { data, error } = await transportDb.from('transport_fuel_tx').select('data').order('at').range(from, from + page - 1);
+    if (missingTable(error)) return { txs: readLocal<FuelTx[]>(FUEL_LOCAL, []), local: true };
+    if (error) throw new Error(error.message);
+    all.push(...(data || []).map(r => r.data as FuelTx));
+    if (!data || data.length < page) break;
+  }
+  return { txs: all, local: false };
+}
+
+/** Adds or replaces transactions (same card transaction number = same row). */
+export async function saveFuel(txs: FuelTx[], local: boolean): Promise<void> {
+  if (local) {
+    const m = new Map(readLocal<FuelTx[]>(FUEL_LOCAL, []).map(t => [t.id, t]));
+    txs.forEach(t => m.set(t.id, t));
+    writeLocal(FUEL_LOCAL, [...m.values()]);
+    return;
+  }
+  for (let i = 0; i < txs.length; i += 500) {
+    const rows = txs.slice(i, i + 500).map(t => ({ id: t.id, at: t.at, plate: t.plate, data: t }));
+    const { error } = await transportDb.from('transport_fuel_tx').upsert(rows, { onConflict: 'id' });
+    if (error) throw new Error(error.message);
+  }
+}
+
+export async function deleteFuel(ids: string[], local: boolean): Promise<void> {
+  if (local) {
+    const gone = new Set(ids);
+    writeLocal(FUEL_LOCAL, readLocal<FuelTx[]>(FUEL_LOCAL, []).filter(t => !gone.has(t.id)));
+    return;
+  }
+  for (let i = 0; i < ids.length; i += 200) {
+    const { error } = await transportDb.from('transport_fuel_tx').delete().in('id', ids.slice(i, i + 200));
+    if (error) throw new Error(error.message);
+  }
+}
+
+export async function loadFuelSettings(): Promise<Partial<FuelSettings>> {
+  const { data, error } = await transportDb.from('transport_settings').select('value').eq('key', 'fuel').maybeSingle();
+  if (error || !data) return readLocal<Partial<FuelSettings>>(FUEL_SETTINGS_LOCAL, {});
+  return data.value as Partial<FuelSettings>;
+}
+
+export async function saveFuelSettings(s: FuelSettings): Promise<void> {
+  writeLocal(FUEL_SETTINGS_LOCAL, s);
+  const { error } = await transportDb.from('transport_settings').upsert({ key: 'fuel', value: s }, { onConflict: 'key' });
+  if (error && !missingTable(error)) throw new Error(error.message);
 }
