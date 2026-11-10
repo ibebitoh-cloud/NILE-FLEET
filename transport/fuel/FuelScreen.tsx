@@ -6,6 +6,7 @@ import { FUEL_STRINGS, FuelStrings } from './i18n';
 import { cardTotals, computeFuel, DEFAULT_SETTINGS, Fill, FuelResult, FuelSettings, FuelTx, Segment, SegmentStatus, Summary, summarize, TxView } from './math';
 import { parseFuelWorkbook, splitUpload } from './parse';
 import { exportFuelExcel, printFuelReport, Sheet } from './exports';
+import { explainHealth, explainSegment, methodText } from './explain';
 import { AlertKind, AlertLevel, FuelAlert, fuelAlerts, HEALTH_KM, HealthStatus, TruckHealth, truckHealth, weekEnd, weekOf } from './alerts';
 
 /* ------------------------------ helpers ------------------------------ */
@@ -197,6 +198,8 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     return phone ? 'home' : 'trucks';
   });
   const [sheet, setSheet] = useState<'' | 'more' | 'filters'>('');
+  /** The fill (segment key) or truck (health) whose calculation is open in the explain dialog. */
+  const [explain, setExplain] = useState<{ seg?: string; plate?: string } | null>(null);
   const [busy, setBusy] = useState('');
   const [preview, setPreview] = useState<{ total: number; fresh: FuelTx[]; inSystem: number; repeated: number; from: string; to: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -489,7 +492,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
       { key: 'alerts', label: t.alerts, num: true, get: r => r.alerts || null },
     ];
     printFuelReport({
-      lang, t: { ...t, reportTitle: t.weeklyTitle }, period: ltr(`${wk} → ${weekEnd(wk)}`), filters: weekEnd(wk) > lastDay ? t.soFar : '',
+      lang, t: { ...t, reportTitle: t.weeklyTitle }, method: methodText(lang), period: ltr(`${wk} → ${weekEnd(wk)}`), filters: weekEnd(wk) > lastDay ? t.soFar : '',
       kpis: [
         { label: t.liters, value: n0(a.liters), sub: ch(a.liters, b.liters) },
         { label: t.cost, value: `${n0(a.cost)} ${t.egp}`, sub: ch(a.cost, b.cost) },
@@ -502,7 +505,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
         toSheet(t.health, healthCols, health),
         toSheet(t.trucks, wcols, wrows),
         toSheet(t.alerts, alertCols, wkAlerts),
-        toSheet(t.flagged, pick2(fillCols, ['at', 'truck', 'driver', 'dist', 'liters', 'kml', 'target', 'diffL', 'diffE', 'status', 'notes']),
+        toSheet(t.flagged, [...pick2(fillCols, ['at', 'truck', 'driver', 'dist', 'liters', 'kml', 'target', 'diffL', 'diffE', 'status']), whyCol],
           now.segs.filter(s => s.status === 'high' || s.status === 'low')),
       ],
     });
@@ -545,6 +548,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
 
   const filterText = [f.plate, f.driver, f.station, f.type, f.status && (f.status in STATUS_CLS ? statusLabel(t, f.status as SegmentStatus) : t[`st_${f.status}` as const]), f.q].filter(Boolean).join(' · ');
   const period = kpi.from ? ltr(`${day(kpi.from)} → ${day(kpi.to)}`) : '—';
+  const whyCol: Col<Segment> = { key: 'why', label: t.why, get: r => explainSegment(r, settings, result.price, lang).short };
   const healthCols: Col<TruckHealth>[] = [
     { key: 'truck', label: t.truck, get: r => `${r.plate} (${r.vehicleType})` },
     { key: 'health', label: t.status, get: r => t[`h_${r.status}` as const] },
@@ -554,15 +558,16 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     { key: 'vs', label: t.vsTarget, get: r => pct(r.vsTargetPct) },
     { key: 'normal', label: `${t.normal} ${t.kmL}`, num: true, get: r => r.baseKmL || null },
     { key: 'trend', label: t.trend, get: r => pct(r.trendPct) },
+    { key: 'why', label: t.whyHealth, get: r => explainHealth(r, lang, HEALTH_KM) },
   ];
   const doExcel = () => exportFuelExcel([
     toSheet(t.health, healthCols, health),
     toSheet(t.alerts, alertCols, openAlerts),
-    toSheet(t.trucks, truckCols, trucks), toSheet(t.drivers, driverCols, drivers), toSheet(t.fills, fillCols, filtered.segs),
+    toSheet(t.trucks, truckCols, trucks), toSheet(t.drivers, driverCols, drivers), toSheet(t.fills, [...fillCols, whyCol], filtered.segs),
     toSheet(t.transactions, txCols, filtered.views), toSheet(t.weeks, weekCols, weeks), toSheet(t.months, monthCols, months), toSheet(t.stations, stationCols, stations),
   ], lang, t.reportTitle);
   const doPrint = () => printFuelReport({
-    lang, t, period, filters: filterText,
+    lang, t, period, filters: filterText, method: methodText(lang),
     kpis: [
       { label: t.liters, value: n0(kpi.liters) },
       { label: t.cost, value: `${n0(kpi.cost)} ${t.egp}`, sub: `${n2(result.price)} ${t.perLiter}` },
@@ -576,7 +581,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
       toSheet(t.trucks, pick2(truckCols, ['truck', 'fills', 'liters', 'cost', 'km', 'kml', 'l100', 'target', 'vs', 'diffL', 'over', 'loss', 'cardKm', 'kmDiff', 'cardKml', 'bad']).map(c => c.key === 'truck' ? { ...c, get: (r: Summary) => `${r.label} (${r.vehicleType})` } : c), trucks),
       toSheet(t.drivers, pick2(driverCols, ['driver', 'fills', 'liters', 'km', 'kml', 'target', 'vs', 'diffL', 'loss']), drivers),
       toSheet(t.weeks, pick2(weekCols, ['week', 'fills', 'liters', 'cost', 'dL', 'km', 'kml', 'dKml', 'l100', 'vs', 'loss']), [...weeks].reverse()),
-      toSheet(t.flagged, pick2(fillCols, ['at', 'truck', 'driver', 'dist', 'cardDist', 'liters', 'kml', 'cardKml', 'target', 'diffL', 'diffE', 'status', 'notes']),
+      toSheet(t.flagged, [...pick2(fillCols, ['at', 'truck', 'driver', 'dist', 'cardDist', 'liters', 'kml', 'cardKml', 'target', 'diffL', 'diffE', 'status']), whyCol],
         filtered.segs.filter(s => s.status === 'high' || s.status === 'low' || s.notes.length)),
       toSheet(t.alerts, alertCols, openAlerts),
     ],
@@ -680,7 +685,10 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
                     <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-black ${HEALTH_PILL[h.status]}`}>{t[`h_${h.status}` as const]}</span>
                   </div>
                   <div className="mt-2 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-2">
-                    <div><div className="text-[9px] font-bold uppercase text-slate-500">{t.recent}</div><div className="text-xl font-black tabular-nums text-[#07111f]">{n2(h.recentKmL)}</div></div>
+                    <div><div className="flex items-center gap-1.5 text-[9px] font-bold uppercase text-slate-500">{t.recent}
+                      <span role="button" tabIndex={0} aria-label={t.whyHealth} title={t.whyHealth} onClick={e => { e.stopPropagation(); setExplain({ plate: h.plate }); }}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.stopPropagation(); setExplain({ plate: h.plate }); } }}
+                        className="grid h-4 w-4 place-items-center rounded-full bg-white text-[10px] font-black normal-case text-[#07111f] ring-1 ring-[#d9d0c0]">?</span></div><div className="text-xl font-black tabular-nums text-[#07111f]">{n2(h.recentKmL)}</div></div>
                     <div className="text-[10px] leading-4 text-slate-500 sm:text-end">
                       <div>{t.target} {n2(h.target)} <b className={h.vsTargetPct < -settings.marginPct ? 'text-red-600' : ''}>{pct(h.vsTargetPct)}</b></div>
                       <div>{t.normal} {n2(h.baseKmL)} <b className={h.trendPct <= -settings.marginPct ? 'text-red-600' : h.trendPct < 0 ? 'text-amber-700' : 'text-emerald-700'}>{h.trendPct < 0 ? '▼' : h.trendPct > 0 ? '▲' : ''} {pct(h.trendPct)}</b></div>
@@ -781,9 +789,10 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
             onRow={r => { set({ plate: r.key }); setView('fills'); }} highlight={r => r.status === 'high' ? 'bg-red-50/40' : ''} />}
           {view === 'drivers' && <DataTable sortLabel={t.sort} mobile={{ title: 'driver', badge: 'status', stats: ['kml', 'target', 'vs', 'liters', 'km', 'loss'] }} rows={drivers} cols={driverCols} rowKey={r => r.key} initial={{ key: 'vs', dir: 1 }} empty={t.noMatch}
             onRow={r => { set({ driver: r.key === '—' ? '' : r.key }); setView('fills'); }} />}
-          {view === 'fills' && <DataTable sortLabel={t.sort} mobile={{ title: 'truck', sub: 'at', badge: 'status', stats: ['dist', 'liters', 'kml', 'target', 'diffL', 'cardKml'], foot: 'notes' }} rows={filtered.segs} cols={fillCols} rowKey={r => r.key} initial={{ key: 'at', dir: -1 }} empty={t.noMatch}
+          {(view === 'fills' || view === 'tx') && <p className="text-[11px] font-bold text-slate-500">ⓘ {t.tapHint}</p>}
+          {view === 'fills' && <DataTable onRow={r => setExplain({ seg: r.key })} sortLabel={t.sort} mobile={{ title: 'truck', sub: 'at', badge: 'status', stats: ['dist', 'liters', 'kml', 'target', 'diffL', 'cardKml'], foot: 'notes' }} rows={filtered.segs} cols={fillCols} rowKey={r => r.key} initial={{ key: 'at', dir: -1 }} empty={t.noMatch}
             highlight={r => r.status === 'high' ? 'bg-red-50/40' : r.status === 'low' ? 'bg-amber-50/40' : ''} />}
-          {view === 'tx' && <DataTable sortLabel={t.sort} mobile={{ title: 'truck', sub: 'at', stats: ['liters', 'amount', 'odo', 'ourKm', 'ourKml', 'station'], foot: 'flags' }} rows={filtered.views} cols={txCols} rowKey={r => r.tx.id} initial={{ key: 'at', dir: -1 }} empty={t.noMatch}
+          {view === 'tx' && <DataTable onRow={r => r.segmentKey && setExplain({ seg: r.segmentKey })} sortLabel={t.sort} mobile={{ title: 'truck', sub: 'at', stats: ['liters', 'amount', 'odo', 'ourKm', 'ourKml', 'station'], foot: 'flags' }} rows={filtered.views} cols={txCols} rowKey={r => r.tx.id} initial={{ key: 'at', dir: -1 }} empty={t.noMatch}
             highlight={r => r.flags.includes('reversal') || r.flags.includes('reversed') ? 'opacity-60 line-through decoration-red-300' : ''} />}
           {view === 'weeks' && <DataTable sortLabel={t.sort} mobile={{ title: 'week', badge: 'status', stats: ['liters', 'dL', 'km', 'kml', 'dKml', 'loss'], foot: 'print' }} rows={weeks} cols={[...weekCols, { key: 'print', label: '🖨', get: () => null, render: r => <button className="rounded-lg px-2 py-1 hover:bg-[#f1ebe0]" title={t.weeklyReport} onClick={e => { e.stopPropagation(); weeklyReport(r.key); }}>🖨{isMobile ? ` ${t.weeklyReport}` : ''}</button> }]} rowKey={r => r.key} initial={{ key: 'week', dir: -1 }} empty={t.noMatch}
             onRow={r => { set({ from: r.key, to: weekEnd(r.key) }); setView('fills'); }} highlight={r => r.status === 'high' ? 'bg-red-50/40' : ''} />}
@@ -852,6 +861,50 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
           </div>
         </div>
       )}
+
+      {explain && (() => {
+        const seg = explain.seg ? result.segments.find(x => x.key === explain.seg) : undefined;
+        const h = explain.plate ? health.find(x => x.plate === explain.plate) : undefined;
+        if (!seg && !h) return null;
+        const ex = seg ? explainSegment(seg, settings, result.price, lang) : null;
+        const tone = seg ? (seg.status === 'high' ? 'border-red-200 bg-red-50 text-red-800' : seg.status === 'low' ? 'border-amber-200 bg-amber-50 text-amber-900' : seg.status === 'pending' ? 'border-slate-200 bg-slate-50 text-slate-700' : 'border-emerald-200 bg-emerald-50 text-emerald-900')
+          : h!.status === 'service' ? 'border-red-200 bg-red-50 text-red-800' : h!.status === 'watch' ? 'border-amber-200 bg-amber-50 text-amber-900' : 'border-emerald-200 bg-emerald-50 text-emerald-900';
+        return (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#07111f]/60 sm:items-center sm:p-4" onClick={() => setExplain(null)}>
+            <div role="dialog" aria-modal="true" aria-label={t.howCalc} onClick={e => e.stopPropagation()}
+              className="max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-2xl pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-[.2em] text-[#8a7350]">{seg ? t.howCalc : t.whyHealth}</div>
+                  <div className="mt-1 text-lg font-black text-[#07111f]">{seg ? seg.plate : h!.plate} <span className="text-xs font-bold text-slate-500">{seg ? seg.driver : h!.vehicleType}</span></div>
+                  {seg && <div className="text-[11px] text-slate-500" dir="ltr">{when(seg.fromAt)} → {when(seg.at)}</div>}
+                </div>
+                <div className="flex items-center gap-2">
+                  {seg ? <Badge t={t} s={seg.status} /> : <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-black ${HEALTH_PILL[h!.status]}`}>{t[`h_${h!.status}` as const]}</span>}
+                  <button className={`${btnGhost} !px-3`} onClick={() => setExplain(null)} aria-label={t.close}>✕</button>
+                </div>
+              </div>
+              {ex && (
+                <ol className="mt-4 space-y-2">
+                  {ex.steps.map((st, i) => (
+                    <li key={i} className="flex gap-2.5 text-[13px] leading-6 text-slate-700">
+                      <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#07111f] text-[10px] font-black text-white">{i + 1}</span>
+                      <span>{st}</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+              <div className={`mt-4 rounded-xl border p-3 text-[13px] font-bold leading-6 ${tone}`}>
+                <div className="text-[10px] font-black uppercase tracking-[.2em] opacity-70">{t.result}</div>
+                {ex ? ex.verdict : explainHealth(h!, lang, HEALTH_KM)}
+              </div>
+              {seg && (
+                <button className={`${btnGhost} mt-3 w-full justify-center`} onClick={() => { set({ plate: seg.plate }); setView('fills'); setExplain(null); }}>↗ {t.fills} · {seg.plate}</button>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {preview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07111f]/60 p-4" role="dialog" aria-modal="true">

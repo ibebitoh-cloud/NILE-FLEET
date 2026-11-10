@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import { computeFuel, summarize, DEFAULT_SETTINGS } from '../transport/fuel/math.ts';
 import { fuelAlerts, truckHealth } from '../transport/fuel/alerts.ts';
+import { explainSegment, explainHealth } from '../transport/fuel/explain.ts';
 import { parseDate, parseTime, rowsToTxs, splitUpload } from '../transport/fuel/parse.ts';
 
 let n = 0;
@@ -162,6 +163,30 @@ assert.equal(sp.cost, 2050 + 2200);
   assert.equal(up.fresh.length, 1);
   assert.equal(up.inSystem, 2);
   assert.equal(up.repeated, 1);
+}
+
+// Explanation: a split fill is explained step by step and the numbers match the segment.
+{
+  const strip = x => x.replace(/[\u2066-\u2069]/g, '');
+  const r = computeFuel([
+    tx('E1', '2026-10-01T08:00:00Z', 400, 100000),
+    tx('E1', '2026-10-03T08:00:00Z', 487, 101000),            // pump stopped at 9,999 EGP
+    tx('E1', '2026-10-03T08:20:00Z', 13, 101000),
+  ], { ...DEFAULT_SETTINGS, truckTargets: { E1: 3 } });
+  const seg = r.segments.find(x => x.plate === 'E1' && x.status !== 'pending');
+  for (const lang of ['en', 'ar']) {
+    const ex = explainSegment(seg, { ...DEFAULT_SETTINGS, truckTargets: { E1: 3 } }, r.price, lang);
+    const all = strip(ex.steps.join(' ') + ' ' + ex.verdict);
+    assert.ok(all.includes('1,000'), lang + ' distance');
+    assert.ok(all.includes('500'), lang + ' liters');
+    assert.ok(all.includes('2.00'), lang + ' km/L');
+    assert.ok(all.includes('3.00'), lang + ' target');
+    assert.ok(strip(ex.short).includes('2.00'), lang + ' short');
+    assert.equal(seg.status, 'high');
+  }
+  assert.ok(strip(explainSegment(seg, DEFAULT_SETTINGS, r.price, 'en').steps.join(' ')).includes('joined into one fill'));
+  const h = { plate: 'X', vehicleType: 'T', driver: '', target: 2.3, recentKmL: 1.8, recentKm: 1600, recentFrom: '', baseKmL: 2.3, baseKm: 3000, trendPct: -21.7, vsTargetPct: -21.7, status: 'service' };
+  assert.ok(explainHealth(h, 'en', 1500).includes('maintenance'));
 }
 
 console.log('fuel math: all checks passed');
