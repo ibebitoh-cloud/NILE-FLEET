@@ -35,7 +35,7 @@ const Card: React.FC<{ className?: string; children: React.ReactNode }> = ({ cla
 type StatusFilter = '' | SegmentStatus | 'badKm' | 'split' | 'partial' | 'reversed';
 interface Filters { q: string; from: string; to: string; plate: string; driver: string; station: string; type: string; status: StatusFilter }
 const NO_FILTERS: Filters = { q: '', from: '', to: '', plate: '', driver: '', station: '', type: '', status: '' };
-type View = 'alerts' | 'trucks' | 'types' | 'drivers' | 'fills' | 'tx' | 'weeks' | 'months' | 'stations' | 'settings';
+type View = 'alerts' | 'trucks' | 'drivers' | 'fills' | 'tx' | 'weeks' | 'months' | 'stations' | 'settings';
 
 type WeekRow = Summary & { prevLiters: number | null; prevKmL: number | null };
 
@@ -208,7 +208,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     return exp ? Math.round((sum(done, s => s.distance) / exp) * 100) / 100 : result.fleetKmL || 2.3;
   };
   type Data = { segs: Segment[]; txs: FuelTx[]; fills: Fill[] };
-  const group = (key: (x: { plate: string; driver: string; at: string; vehicleType: string; station?: string }) => string, label: (k: string) => string, useTruckTarget: boolean, data: Data = filtered): Summary[] => {
+  const group = (key: (x: { plate: string; driver: string; at: string; station?: string }) => string, label: (k: string) => string, useTruckTarget: boolean, data: Data = filtered): Summary[] => {
     const keys = uniq([...data.segs.map(key), ...data.txs.map(key)]);
     return keys.map(k => {
       const segs = data.segs.filter(s => key(s) === k);
@@ -220,8 +220,6 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   };
   const trucks: Summary[] = useMemo(() => group(x => x.plate, k => k, true), [filtered, result, settings]); // eslint-disable-line react-hooks/exhaustive-deps
   const drivers: Summary[] = useMemo(() => group(x => x.driver || '—', k => k, false), [filtered, result, settings]); // eslint-disable-line react-hooks/exhaustive-deps
-  // By vehicle type: target = the type setting, else the type's own average (weighted by its trucks' targets).
-  const typeRows: Summary[] = useMemo(() => group(x => x.vehicleType || '—', k => k, false), [filtered, result, settings]); // eslint-disable-line react-hooks/exhaustive-deps
   const months: Summary[] = useMemo(() => group(x => x.at.slice(0, 7), k => k, false), [filtered, result, settings]); // eslint-disable-line react-hooks/exhaustive-deps
   const weeks: WeekRow[] = useMemo(() => {
     const list: Summary[] = group(x => weekOf(x.at), k => `${k} → ${weekEnd(k)}`, false).sort((a: Summary, b: Summary) => a.key.localeCompare(b.key));
@@ -283,7 +281,6 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   ];
   const truckCols = summaryCols({ key: 'truck', label: t.truck, get: r => r.label, render: r => <div><b className="text-[#07111f]">{r.label}</b><div className="text-[10px] text-slate-500">{r.vehicleType} · {r.drivers.join('، ')}</div></div> });
   const driverCols = summaryCols({ key: 'driver', label: t.driver, get: r => r.label, render: r => <div><b>{r.label}</b><div className="text-[10px] text-slate-500">{r.plates.join(' · ')}</div></div> });
-  const typeCols = summaryCols({ key: 'type', label: t.type, get: r => r.label, render: r => <div><b className="text-[#07111f]">{r.label}</b><div className="text-[10px] text-slate-500">{r.plates.length} {t.trucks.toLowerCase()} · {r.plates.join(' · ')}</div></div> });
   const monthCols = summaryCols({ key: 'month', label: t.month, get: r => r.label, render: r => <b dir="ltr">{r.label}</b> }).filter(c => c.key !== 'status');
 
   const change = (now: number, prev: number | null) => (prev ? ((now - prev) / prev) * 100 : null);
@@ -468,7 +465,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const period = kpi.from ? `${day(kpi.from)} → ${day(kpi.to)}` : '—';
   const doExcel = () => exportFuelExcel([
     toSheet(t.alerts, alertCols, openAlerts),
-    toSheet(t.trucks, truckCols, trucks), toSheet(t.types, typeCols, typeRows), toSheet(t.drivers, driverCols, drivers), toSheet(t.fills, fillCols, filtered.segs),
+    toSheet(t.trucks, truckCols, trucks), toSheet(t.drivers, driverCols, drivers), toSheet(t.fills, fillCols, filtered.segs),
     toSheet(t.transactions, txCols, filtered.views), toSheet(t.weeks, weekCols, weeks), toSheet(t.months, monthCols, months), toSheet(t.stations, stationCols, stations),
   ], lang, t.reportTitle);
   const doPrint = () => printFuelReport({
@@ -483,7 +480,6 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     ],
     tables: [
       toSheet(t.trucks, pick2(truckCols, ['truck', 'fills', 'liters', 'cost', 'km', 'kml', 'l100', 'target', 'vs', 'diffL', 'over', 'loss', 'cardKm', 'kmDiff', 'cardKml', 'bad']).map(c => c.key === 'truck' ? { ...c, get: (r: Summary) => `${r.label} (${r.vehicleType})` } : c), trucks),
-      toSheet(t.types, pick2(typeCols, ['type', 'fills', 'liters', 'cost', 'km', 'kml', 'l100', 'target', 'vs', 'diffL', 'over', 'loss']).map(c => c.key === 'type' ? { ...c, get: (r: Summary) => `${r.label} (${r.plates.length})` } : c), typeRows),
       toSheet(t.drivers, pick2(driverCols, ['driver', 'fills', 'liters', 'km', 'kml', 'target', 'vs', 'diffL', 'loss']), drivers),
       toSheet(t.weeks, pick2(weekCols, ['week', 'fills', 'liters', 'cost', 'dL', 'km', 'kml', 'dKml', 'l100', 'vs', 'loss']), [...weeks].reverse()),
       toSheet(t.flagged, pick2(fillCols, ['at', 'truck', 'driver', 'dist', 'cardDist', 'liters', 'kml', 'cardKml', 'target', 'diffL', 'diffE', 'status', 'notes']),
@@ -496,7 +492,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   if (txs === null) return <DaliLoader fullScreen label={<span className="text-xs font-bold text-slate-500">{t.title}</span>} />;
   const hasData = txs.length > 0;
   const views: [View, string, number | null][] = [
-    ['alerts', `🔔 ${t.alerts}`, openAlerts.length], ['trucks', t.trucks, trucks.length], ['types', t.types, typeRows.length], ['drivers', t.drivers, drivers.length], ['fills', t.fills, filtered.segs.length],
+    ['alerts', `🔔 ${t.alerts}`, openAlerts.length], ['trucks', t.trucks, trucks.length], ['drivers', t.drivers, drivers.length], ['fills', t.fills, filtered.segs.length],
     ['tx', t.transactions, filtered.views.length], ['weeks', t.weeks, weeks.length], ['months', t.months, months.length], ['stations', t.stations, stations.length], ['settings', t.settings, null],
   ];
   const statusOptions: [StatusFilter, string][] = [
@@ -644,8 +640,6 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
             highlight={r => r.flags.includes('reversal') || r.flags.includes('reversed') ? 'opacity-60 line-through decoration-red-300' : ''} />}
           {view === 'weeks' && <DataTable rows={weeks} cols={[...weekCols, { key: 'print', label: '🖨', get: () => null, render: r => <button className="rounded-lg px-2 py-1 hover:bg-[#f1ebe0]" title={t.weeklyReport} onClick={e => { e.stopPropagation(); weeklyReport(r.key); }}>🖨</button> }]} rowKey={r => r.key} initial={{ key: 'week', dir: -1 }} empty={t.noMatch}
             onRow={r => { set({ from: r.key, to: weekEnd(r.key) }); setView('fills'); }} highlight={r => r.status === 'high' ? 'bg-red-50/40' : ''} />}
-          {view === 'types' && <DataTable rows={typeRows} cols={typeCols} rowKey={r => r.key} initial={{ key: 'vs', dir: 1 }} empty={t.noMatch}
-            onRow={r => { set({ type: r.key === '—' ? '' : r.key }); setView('trucks'); }} highlight={r => r.status === 'high' ? 'bg-red-50/40' : ''} />}
           {view === 'months' && <DataTable rows={months} cols={monthCols} rowKey={r => r.key} initial={{ key: 'month', dir: -1 }} empty={t.noMatch} />}
           {view === 'stations' && <DataTable rows={stations} cols={stationCols} rowKey={r => r.station} initial={{ key: 'liters', dir: -1 }} empty={t.noMatch}
             onRow={r => { set({ station: r.station === '—' ? '' : r.station }); setView('tx'); }} />}
