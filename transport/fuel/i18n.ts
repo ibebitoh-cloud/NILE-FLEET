@@ -1,15 +1,18 @@
 import type { Lang } from '../i18n';
 import type { AlertKind, AlertLevel, FuelAlert } from './alerts';
 
-const f0 = (v: unknown) => Math.round(Number(v) || 0).toLocaleString('en-US');
-const f2 = (v: unknown) => (Number(v) || 0).toFixed(2);
-const plain = (v: unknown) => String(v ?? '');
-const pctS = (v: unknown) => { const n = Number(v) || 0; return n ? `${n > 0 ? '+' : ''}${n.toFixed(1)}%` : '—'; };
+// Numbers, dates and % are wrapped in left-to-right isolates so they read right inside Arabic sentences.
+const iso = (x: string) => `\u2066${x}\u2069`;
+const f0 = (v: unknown) => iso(Math.round(Number(v) || 0).toLocaleString('en-US'));
+const f2 = (v: unknown) => iso((Number(v) || 0).toFixed(2));
+const plain = (v: unknown) => iso(String(v ?? ''));
+const pctS = (v: unknown) => { const n = Number(v) || 0; return n ? iso(`${n > 0 ? '+' : ''}${n.toFixed(1)}%`) : '—'; };
 
 const en = {
   tab: 'Fuel',
   title: 'Fuel consumption (km/L)',
   sub: 'Fuel-card transactions, corrected for split fills, partial fills, reversals and bad odometer readings.',
+  home: 'Home', more: 'More', filters: 'Filters', actions: 'Actions', sort: 'Sort', done: 'Done', close: 'Close',
   upload: 'Upload fuel report', uploading: 'Reading file…', exportXls: 'Excel', print: 'Print / PDF', clearAll: 'Delete all fuel data',
   clearConfirm: 'Delete every saved fuel transaction? Type DELETE to confirm.',
   localNote: 'Saved in this browser only. Run fuel-setup.sql in Supabase so everyone sees the same data.',
@@ -83,7 +86,7 @@ const en = {
       case 'badKm': return `km ${f0(i.km)} was skipped (${i.reason === 'sameKm' ? 'same km as the last fill' : i.reason === 'backwards' ? 'lower than the last fill' : 'too far from the last fill'}). Its ${f0(a.liters)} L moved to the next good reading.`;
       case 'noKm': return `No km reading on this fill (${f0(a.liters)} L). Its liters moved to the next good reading.`;
       case 'pumpVar': return `Transaction ${plain(i.id)}: paid and pump reading differ by ${f2(i.variance)}.`;
-      case 'idle': return `Last fill ${a.at.slice(0, 10)}, ${f0(i.days)} days before the last data (${plain(i.lastData)}). Parked, or fuelled outside the card?`;
+      case 'idle': return `Last fill ${iso(a.at.slice(0, 10))}, ${f0(i.days)} days before the last data (${plain(i.lastData)}). Parked, or fuelled outside the card?`;
       case 'reversal': return `Transaction ${plain(i.id)} of ${f0(a.liters)} L (${f0(a.egp)} EGP) was reversed.`;
       case 'maintenance': case 'dropping': return `Last ${f0(i.recentKm)} km (since ${plain(i.recentFrom)}): ${f2(i.recentKmL)} km/L. Target ${f2(i.target)} (${pctS(i.vsTargetPct)}). Its own normal before: ${i.baseKmL ? f2(i.baseKmL) : '—'} (${pctS(i.trendPct)}).${a.kind === 'maintenance' ? ' Check engine, injectors, tyres and air filter, or ask the driver.' : ' Keep an eye on it.'}`;
       case 'splitJoined': return `${f0(i.count)} transactions counted as one fill of ${f0(a.liters)} L (pump stopped and the truck refilled): # ${plain(i.ids)}.`;
@@ -95,7 +98,7 @@ const en = {
   h_good: 'Good', h_watch: 'Watch', h_service: 'Check maintenance', h_noData: 'Not enough km yet', recent: 'Recent', normal: 'Own normal', trend: 'Trend',
   tank: 'Tank size (L)', tankHint: 'A fill bigger than this raises an alert. 0 = off.', idleDays: 'Alert when no fill for (days)', idleHint: '0 = off',
   weeklyReport: 'Weekly report', weeklyTitle: 'Weekly fuel report', thisWeek: 'This week', lastWeek: 'Last week', change: 'Change', egp: 'EGP',
-  level: 'Level', alert: 'Alert', details: 'Details',
+  level: 'Level', alert: 'Alert', details: 'Details', L: 'L',
   reportTitle: 'Fuel consumption report', period: 'Period', flagged: 'Fills to check', generated: 'Generated',
 };
 
@@ -103,6 +106,7 @@ const ar: typeof en = {
   tab: 'السولار',
   title: 'استهلاك السولار (كم/لتر)',
   sub: 'معاملات كارت الوقود بعد تصحيح التفويل المقسوم والتفويل الناقص والمرتجعات وقراءات العداد الخاطئة.',
+  home: 'الرئيسية', more: 'المزيد', filters: 'الفلاتر', actions: 'إجراءات', sort: 'ترتيب', done: 'تم', close: 'إغلاق',
   upload: 'رفع تقرير الوقود', uploading: 'جاري قراءة الملف…', exportXls: 'إكسل', print: 'طباعة / PDF', clearAll: 'حذف كل بيانات الوقود',
   clearConfirm: 'حذف كل معاملات الوقود المحفوظة؟ اكتب DELETE للتأكيد.',
   localNote: 'محفوظ في هذا المتصفح فقط. شغّل fuel-setup.sql في Supabase ليرى الجميع نفس البيانات.',
@@ -169,7 +173,7 @@ const ar: typeof en = {
       case 'badKm': return `تم تجاهل العداد ${f0(i.km)} (${i.reason === 'sameKm' ? 'نفس كيلومتر التفويلة السابقة' : i.reason === 'backwards' ? 'أقل من التفويلة السابقة' : 'بعيد جدًا عن التفويلة السابقة'}). انتقلت ${f0(a.liters)} لتر لأول قراءة سليمة.`;
       case 'noKm': return `بدون قراءة عداد في هذه التفويلة (${f0(a.liters)} لتر). انتقلت لتراتها لأول قراءة سليمة.`;
       case 'pumpVar': return `المعاملة ${plain(i.id)}: فرق بين المدفوع وقراءة الطلمبة ${f2(i.variance)}.`;
-      case 'idle': return `آخر تفويلة ${a.at.slice(0, 10)}، قبل آخر بيانات (${plain(i.lastData)}) بـ ${f0(i.days)} يوم. واقفة أم تم التفويل خارج الكارت؟`;
+      case 'idle': return `آخر تفويلة ${iso(a.at.slice(0, 10))}، قبل آخر بيانات (${plain(i.lastData)}) بـ ${f0(i.days)} يوم. واقفة أم تم التفويل خارج الكارت؟`;
       case 'reversal': return `المعاملة ${plain(i.id)} بـ ${f0(a.liters)} لتر (${f0(a.egp)} جنيه) تم إرجاعها.`;
       case 'maintenance': case 'dropping': return `آخر ${f0(i.recentKm)} كم (منذ ${plain(i.recentFrom)}): ${f2(i.recentKmL)} كم/لتر. المستهدف ${f2(i.target)} (${pctS(i.vsTargetPct)}). معدلها المعتاد قبل ذلك: ${i.baseKmL ? f2(i.baseKmL) : '—'} (${pctS(i.trendPct)}).${a.kind === 'maintenance' ? ' افحص الموتور والرشاشات والكاوتش وفلتر الهواء أو اسأل السائق.' : ' تابعها.'}`;
       case 'splitJoined': return `${f0(i.count)} معاملات حُسبت كتفويلة واحدة ${f0(a.liters)} لتر (الطلمبة توقفت وتم التفويل مرة أخرى): # ${plain(i.ids)}.`;
@@ -181,7 +185,7 @@ const ar: typeof en = {
   h_good: 'جيدة', h_watch: 'تابعها', h_service: 'تحتاج فحص صيانة', h_noData: 'كيلومترات غير كافية بعد', recent: 'الأخير', normal: 'المعتاد', trend: 'الاتجاه',
   tank: 'سعة التانك (لتر)', tankHint: 'التفويلة الأكبر من ذلك تعطي تنبيه. 0 = إيقاف.', idleDays: 'تنبيه عند عدم التفويل لمدة (أيام)', idleHint: '0 = إيقاف',
   weeklyReport: 'التقرير الأسبوعي', weeklyTitle: 'تقرير السولار الأسبوعي', thisWeek: 'هذا الأسبوع', lastWeek: 'الأسبوع السابق', change: 'التغير', egp: 'جنيه',
-  level: 'المستوى', alert: 'التنبيه', details: 'التفاصيل',
+  level: 'المستوى', alert: 'التنبيه', details: 'التفاصيل', L: 'لتر',
   reportTitle: 'تقرير استهلاك السولار', period: 'الفترة', flagged: 'تفويلات للمراجعة', generated: 'تاريخ الإصدار',
 };
 

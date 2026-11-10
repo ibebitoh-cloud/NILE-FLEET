@@ -15,8 +15,10 @@ const N0 = nf(0), N1 = nf(1), N2 = nf(2);
 const n0 = (v: number | null | undefined) => (v == null || !Number.isFinite(v) ? '—' : N0.format(v));
 const n1 = (v: number | null | undefined) => (v == null || !Number.isFinite(v) ? '—' : N1.format(v));
 const n2 = (v: number | null | undefined) => (v == null || !Number.isFinite(v) || v === 0 ? '—' : N2.format(v));
-const pct = (v: number) => (v ? `${v > 0 ? '+' : ''}${N1.format(v)}%` : '—');
-const signed = (v: number, f = n0) => { const out = f(Math.abs(v)); return !v || /^[0.]+$/.test(out) ? '—' : `${v > 0 ? '+' : '−'}${out}`; };
+/** Keeps signs, % and dates the right way round inside Arabic (right-to-left) text. */
+const ltr = (x: string) => `\u2066${x}\u2069`;
+const pct = (v: number) => (v ? ltr(`${v > 0 ? '+' : ''}${N1.format(v)}%`) : '—');
+const signed = (v: number, f = n0) => { const out = f(Math.abs(v)); return !v || /^[0.]+$/.test(out) ? '—' : ltr(`${v > 0 ? '+' : '−'}${out}`); };
 const day = (at: string) => at.slice(0, 10);
 const when = (at: string) => `${at.slice(0, 10)} ${at.slice(11, 16)}`;
 function sum<T>(xs: readonly T[], f: (x: T) => number): number { return xs.reduce((s, x) => s + (f(x) || 0), 0); }
@@ -35,7 +37,7 @@ const Card: React.FC<{ className?: string; children: React.ReactNode }> = ({ cla
 type StatusFilter = '' | SegmentStatus | 'badKm' | 'split' | 'partial' | 'reversed';
 interface Filters { q: string; from: string; to: string; plate: string; driver: string; station: string; type: string; status: StatusFilter }
 const NO_FILTERS: Filters = { q: '', from: '', to: '', plate: '', driver: '', station: '', type: '', status: '' };
-type View = 'alerts' | 'trucks' | 'drivers' | 'fills' | 'tx' | 'weeks' | 'months' | 'stations' | 'settings';
+type View = 'home' | 'alerts' | 'trucks' | 'drivers' | 'fills' | 'tx' | 'weeks' | 'months' | 'stations' | 'settings';
 
 type WeekRow = Summary & { prevLiters: number | null; prevKmL: number | null };
 
@@ -63,10 +65,28 @@ interface Col<T> {
   render?: (r: T) => React.ReactNode; num?: boolean; className?: string;
 }
 
-function DataTable<T>({ rows, cols, rowKey, initial, onRow, empty, pageSize = 150, highlight }: {
+/** Phone layout (iPhone Pro Max is 430 px wide): cards instead of wide tables, bottom tab bar. */
+const MOBILE_QUERY = '(max-width: 767px)';
+function useIsMobile() {
+  const [m, setM] = useState(() => typeof window !== 'undefined' && window.matchMedia(MOBILE_QUERY).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(MOBILE_QUERY);
+    const on = () => setM(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  return m;
+}
+
+/** Which columns a phone card shows: a title line, a small line under it, a badge, a grid of numbers and a footer. */
+interface MobileCard { title: string; sub?: string; badge?: string; stats: string[]; foot?: string }
+
+function DataTable<T>({ rows, cols, rowKey, initial, onRow, empty, pageSize = 150, highlight, mobile, sortLabel }: {
   rows: T[]; cols: Col<T>[]; rowKey: (r: T) => string; initial?: { key: string; dir: 1 | -1 };
   onRow?: (r: T) => void; empty: string; pageSize?: number; highlight?: (r: T) => string;
+  mobile?: MobileCard; sortLabel?: string;
 }) {
+  const isMobile = useIsMobile();
   const [sort, setSort] = useState(initial || { key: cols[0].key, dir: 1 as 1 | -1 });
   const [limit, setLimit] = useState(pageSize);
   useEffect(() => setLimit(pageSize), [rows, pageSize]);
@@ -82,6 +102,46 @@ function DataTable<T>({ rows, cols, rowKey, initial, onRow, empty, pageSize = 15
     });
   }, [rows, cols, sort]);
   if (!rows.length) return <div className="rounded-xl border border-dashed border-[#d9d0c0] p-8 text-center text-sm font-bold text-slate-500">{empty}</div>;
+  if (isMobile && mobile) {
+    const col = (k?: string) => (k ? cols.find(c => c.key === k) : undefined);
+    const show = (c: Col<T> | undefined, r: T) => (c ? (c.render ? c.render(r) : (c.get(r) ?? '—')) : null);
+    const title = col(mobile.title), sub = col(mobile.sub), badge = col(mobile.badge), foot = col(mobile.foot);
+    const stats = mobile.stats.map(k => col(k)).filter(Boolean) as Col<T>[];
+    return (
+      <div className="space-y-2.5">
+        <div className="flex items-center gap-2">
+          <select aria-label={sortLabel} className={`${inputCls} min-w-0 flex-1 !py-2.5 text-xs`} value={sort.key} onChange={e => setSort({ key: e.target.value, dir: cols.find(c => c.key === e.target.value)?.num ? -1 : 1 })}>
+            {cols.filter(c => c.label && c.key !== 'print').map(c => <option key={c.key} value={c.key}>{sortLabel ? `${sortLabel}: ` : ''}{c.label}</option>)}
+          </select>
+          <button className={`${btnGhost} !px-3 !py-2.5`} onClick={() => setSort(s => ({ ...s, dir: s.dir === 1 ? -1 : 1 }))} aria-label="sort direction">{sort.dir === 1 ? '▲' : '▼'}</button>
+        </div>
+        {sorted.slice(0, limit).map(r => (
+          <div key={rowKey(r)} role={onRow ? 'button' : undefined} onClick={onRow ? () => onRow(r) : undefined}
+            className={`rounded-2xl border border-[#e3dccf] bg-white p-3.5 shadow-[0_1px_0_rgba(7,17,31,.04)] ${onRow ? 'active:scale-[.99] active:bg-[#fbf8f2]' : ''} ${highlight?.(r) || ''}`}>
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 text-sm">
+                <div className="truncate font-black text-[#07111f]">{show(title, r)}</div>
+                {sub && <div className="mt-0.5 truncate text-[11px] text-slate-500">{show(sub, r)}</div>}
+              </div>
+              {badge && <div className="shrink-0">{show(badge, r)}</div>}
+            </div>
+            <div className="mt-2.5 grid grid-cols-3 gap-x-2 gap-y-2">
+              {stats.map(c => (
+                <div key={c.key} className="min-w-0">
+                  <div className="truncate text-[9px] font-bold uppercase tracking-wide text-slate-400">{c.label}</div>
+                  <div className="truncate text-[13px] font-bold tabular-nums text-[#07111f]">{show(c, r)}</div>
+                </div>
+              ))}
+            </div>
+            {foot && <div className="mt-2.5 border-t border-[#f1ebe0] pt-2 text-[11px] text-slate-600">{show(foot, r)}</div>}
+          </div>
+        ))}
+        {sorted.length > limit && (
+          <button className={`${btnGhost} w-full justify-center !py-3`} onClick={() => setLimit(l => l + pageSize)}>+ {Math.min(pageSize, sorted.length - limit)} ({limit} / {sorted.length})</button>
+        )}
+      </div>
+    );
+  }
   return (
     <div className="overflow-x-auto rounded-xl border border-[#eee7da]">
       <table className="w-full whitespace-nowrap text-xs">
@@ -130,13 +190,32 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const [error, setError] = useState('');
   const [settings, setSettings] = useState<FuelSettings>(DEFAULT_SETTINGS);
   const [f, setF] = useState<Filters>(NO_FILTERS);
-  const [view, setView] = useState<View>(() => { try { return (localStorage.getItem('nf_transport_fuel_view') as View) || 'trucks'; } catch { return 'trucks'; } });
+  const isMobile = useIsMobile();
+  const [view, setView] = useState<View>(() => {
+    const phone = typeof window !== 'undefined' && window.matchMedia(MOBILE_QUERY).matches;
+    try { const v = localStorage.getItem('nf_transport_fuel_view') as View | null; if (v && (v !== 'home' || phone)) return v; } catch { /* ignore */ }
+    return phone ? 'home' : 'trucks';
+  });
+  const [sheet, setSheet] = useState<'' | 'more' | 'filters'>('');
   const [busy, setBusy] = useState('');
   const [preview, setPreview] = useState<{ total: number; fresh: FuelTx[]; inSystem: number; repeated: number; from: string; to: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const set = (p: Partial<Filters>) => setF(x => ({ ...x, ...p }));
 
   useEffect(() => { try { localStorage.setItem('nf_transport_fuel_view', view); } catch { /* ignore */ } }, [view]);
+  // 'home' is the phone dashboard; on a wide screen the dashboard is always on top, so fall back to the trucks list.
+  useEffect(() => { if (!isMobile && view === 'home') setView('trucks'); }, [isMobile, view]);
+  // Phone: make room for the bottom tab bar, and lift DALI's button and the toast above it.
+  useEffect(() => {
+    if (!isMobile) return;
+    const root = document.documentElement, body = document.body;
+    root.style.setProperty('--nf-fab-bottom', 'calc(5.25rem + env(safe-area-inset-bottom))');
+    const pad = body.style.paddingBottom;
+    body.style.paddingBottom = 'calc(4.5rem + env(safe-area-inset-bottom))';
+    return () => { root.style.removeProperty('--nf-fab-bottom'); body.style.paddingBottom = pad; };
+  }, [isMobile]);
+  // Phone: a new tab starts at the top of the page.
+  useEffect(() => { if (isMobile) window.scrollTo({ top: 0 }); }, [view, isMobile]);
   useEffect(() => {
     api.loadFuel().then(r => { setTxs(r.txs); setLocal(r.local); }).catch(e => { setError(String(e.message || e)); setTxs([]); });
     api.loadFuelSettings().then(s => setSettings({ ...DEFAULT_SETTINGS, ...s })).catch(() => {});
@@ -263,7 +342,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     first,
     { key: 'fills', label: t.count, num: true, get: r => r.fillCount },
     { key: 'liters', label: t.liters, num: true, get: r => Math.round(r.liters), render: r => n0(r.liters) },
-    { key: 'cost', label: `${t.cost} EGP`, num: true, get: r => Math.round(r.cost), render: r => n0(r.cost) },
+    { key: 'cost', label: `${t.cost} (${t.egp})`, num: true, get: r => Math.round(r.cost), render: r => n0(r.cost) },
     { key: 'km', label: t.trackedKm, num: true, get: r => Math.round(r.trackedKm), render: r => n0(r.trackedKm) },
     { key: 'kml', label: t.kmL, num: true, get: r => r.kmL, render: r => <b>{n2(r.kmL)}</b> },
     { key: 'l100', label: t.l100, num: true, get: r => r.l100, render: r => n1(r.l100) },
@@ -297,7 +376,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   ];
   const noteText = (s: Segment) => s.notes.map(n => t[`n_${n}` as const]).join(' · ');
   const fillCols: Col<Segment>[] = [
-    { key: 'at', label: t.date, get: r => r.at, render: r => <span dir="ltr">{when(r.at)}</span> },
+    { key: 'at', label: t.date, get: r => when(r.at), render: r => <span dir="ltr">{when(r.at)}</span> },
     { key: 'truck', label: t.truck, get: r => r.plate, render: r => <b>{r.plate}</b> },
     { key: 'driver', label: t.driver, get: r => r.driver },
     { key: 'fromKm', label: t.fromKm, num: true, get: r => r.fromKm, render: r => n0(r.fromKm) },
@@ -350,8 +429,8 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     { key: 'count', label: t.txs, num: true, get: r => r.count },
     { key: 'trucks', label: t.trucks, num: true, get: r => r.trucks },
     { key: 'liters', label: t.liters, num: true, get: r => Math.round(r.liters), render: r => n0(r.liters) },
-    { key: 'cost', label: `${t.cost} EGP`, num: true, get: r => Math.round(r.cost), render: r => n0(r.cost) },
-    { key: 'charged', label: `${t.charged} EGP`, num: true, get: r => Math.round(r.charged), render: r => n0(r.charged) },
+    { key: 'cost', label: `${t.cost} (${t.egp})`, num: true, get: r => Math.round(r.cost), render: r => n0(r.cost) },
+    { key: 'charged', label: `${t.charged} (${t.egp})`, num: true, get: r => Math.round(r.charged), render: r => n0(r.charged) },
     { key: 'share', label: t.share, num: true, get: r => Math.round(r.share * 10) / 10, render: r => (
       <div className="flex items-center justify-end gap-2"><div className="h-1.5 w-20 rounded-full bg-[#f1ebe0]"><div className="h-1.5 rounded-full bg-[#c2a378]" style={{ width: `${r.share}%` }} /></div>{n1(r.share)}%</div>
     ) },
@@ -391,7 +470,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     const total = (d: Data) => { const done = d.segs.filter(s => s.status !== 'pending'); const km = sum(done, s => s.distance), L = sum(done, s => s.liters); return { liters: sum(d.txs, x => x.liters), cost: sum(d.txs, x => x.amount), km, kmL: L ? km / L : 0 }; };
     const a = total(now), b = total(prev);
     const wkAlerts = alerts.filter(x => !checked.has(x.id) && (weekOf(x.at) === wk || x.kind === 'idle'));
-    const ch = (x: number, y: number) => (y ? `${x >= y ? '+' : ''}${N1.format(((x - y) / y) * 100)}% ${t.vsLastWeek}` : '');
+    const ch = (x: number, y: number) => (y ? `${ltr(`${x >= y ? '+' : ''}${N1.format(((x - y) / y) * 100)}%`)} ${t.vsLastWeek}` : '');
     type WRow = Summary & { prevKmL: number | null; alerts: number };
     const wrows: WRow[] = rowsNow.map(r => ({ ...r, prevKmL: rowsPrev.get(r.key)?.kmL || null, alerts: wkAlerts.filter(x => x.plate === r.key).length }))
       .sort((x, y) => x.vsTargetPct - y.vsTargetPct);
@@ -399,7 +478,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
       { key: 'truck', label: t.truck, get: r => `${r.label} (${r.vehicleType})` },
       { key: 'driver', label: t.driver, get: r => r.drivers.join('، ') },
       { key: 'liters', label: t.liters, num: true, get: r => Math.round(r.liters) },
-      { key: 'cost', label: `${t.cost} EGP`, num: true, get: r => Math.round(r.cost) },
+      { key: 'cost', label: `${t.cost} (${t.egp})`, num: true, get: r => Math.round(r.cost) },
       { key: 'km', label: t.trackedKm, num: true, get: r => Math.round(r.trackedKm) },
       { key: 'kml', label: `${t.kmL} · ${t.thisWeek}`, num: true, get: r => r.kmL || null },
       { key: 'prev', label: `${t.kmL} · ${t.lastWeek}`, num: true, get: r => r.prevKmL },
@@ -410,13 +489,13 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
       { key: 'alerts', label: t.alerts, num: true, get: r => r.alerts || null },
     ];
     printFuelReport({
-      lang, t: { ...t, reportTitle: t.weeklyTitle }, period: `${wk} → ${weekEnd(wk)}`, filters: weekEnd(wk) > lastDay ? t.soFar : '',
+      lang, t: { ...t, reportTitle: t.weeklyTitle }, period: ltr(`${wk} → ${weekEnd(wk)}`), filters: weekEnd(wk) > lastDay ? t.soFar : '',
       kpis: [
         { label: t.liters, value: n0(a.liters), sub: ch(a.liters, b.liters) },
-        { label: t.cost, value: `${n0(a.cost)} EGP`, sub: ch(a.cost, b.cost) },
+        { label: t.cost, value: `${n0(a.cost)} ${t.egp}`, sub: ch(a.cost, b.cost) },
         { label: t.trackedKm, value: n0(a.km), sub: ch(a.km, b.km) },
         { label: t.fleetKmL, value: n2(a.kmL), sub: `${t.lastWeek} ${n2(b.kmL)}` },
-        { label: t.overMargin, value: `${n0(sum(rowsNow, r => r.overMarginL))} L`, sub: `${n0(sum(rowsNow, r => r.lossEgp))} EGP` },
+        { label: t.overMargin, value: `${n0(sum(rowsNow, r => r.overMarginL))} ${t.L}`, sub: `${n0(sum(rowsNow, r => r.lossEgp))} ${t.egp}` },
         { label: t.alerts, value: String(wkAlerts.length), sub: `${wkAlerts.filter(x => x.level === 'high').length} ${t.lvl.high}` },
       ],
       tables: [
@@ -465,12 +544,12 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   };
 
   const filterText = [f.plate, f.driver, f.station, f.type, f.status && (f.status in STATUS_CLS ? statusLabel(t, f.status as SegmentStatus) : t[`st_${f.status}` as const]), f.q].filter(Boolean).join(' · ');
-  const period = kpi.from ? `${day(kpi.from)} → ${day(kpi.to)}` : '—';
+  const period = kpi.from ? ltr(`${day(kpi.from)} → ${day(kpi.to)}`) : '—';
   const healthCols: Col<TruckHealth>[] = [
     { key: 'truck', label: t.truck, get: r => `${r.plate} (${r.vehicleType})` },
     { key: 'health', label: t.status, get: r => t[`h_${r.status}` as const] },
     { key: 'recent', label: `${t.recent} ${t.kmL}`, num: true, get: r => r.recentKmL || null },
-    { key: 'recentKm', label: `${t.recent} km`, num: true, get: r => r.recentKm },
+    { key: 'recentKm', label: `${t.recent} ${t.km}`, num: true, get: r => r.recentKm },
     { key: 'target', label: t.target, num: true, get: r => r.target },
     { key: 'vs', label: t.vsTarget, get: r => pct(r.vsTargetPct) },
     { key: 'normal', label: `${t.normal} ${t.kmL}`, num: true, get: r => r.baseKmL || null },
@@ -486,10 +565,10 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     lang, t, period, filters: filterText,
     kpis: [
       { label: t.liters, value: n0(kpi.liters) },
-      { label: t.cost, value: `${n0(kpi.cost)} EGP`, sub: `${n2(result.price)} ${t.perLiter}` },
+      { label: t.cost, value: `${n0(kpi.cost)} ${t.egp}`, sub: `${n2(result.price)} ${t.perLiter}` },
       { label: t.trackedKm, value: n0(kpi.trackedKm) },
       { label: t.fleetKmL, value: n2(kpi.kmL), sub: `${t.target} ${n2(kpi.target)} · ${n1(kpi.kmL ? 100 / kpi.kmL : 0)} ${t.l100}` },
-      { label: t.overMargin, value: `${n0(kpi.overL)} L`, sub: `${n0(kpi.loss)} EGP` },
+      { label: t.overMargin, value: `${n0(kpi.overL)} ${t.L}`, sub: `${n0(kpi.loss)} ${t.egp}` },
       { label: t.checks, value: String(kpi.outside + kpi.bad), sub: `${kpi.outside} ${t.fillsOutside} · ${kpi.bad} ${t.badReadings}` },
     ],
     tables: [
@@ -515,15 +594,32 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     ['badKm', t.st_badKm], ['split', t.st_split], ['partial', t.st_partial], ['reversed', t.st_reversed],
   ];
   const anyFilter = JSON.stringify(f) !== JSON.stringify(NO_FILTERS);
+  const activeFilters = (Object.keys(NO_FILTERS) as (keyof Filters)[]).filter(k => k !== 'q' && f[k] !== NO_FILTERS[k]).length;
+  const filterFields = (
+    <>
+              <label className="flex items-center gap-1 text-[10px] font-black text-slate-500">{t.from}<input type="date" className={`${inputCls} w-full min-w-0`} value={f.from} onChange={e => set({ from: e.target.value })} /></label>
+              <label className="flex items-center gap-1 text-[10px] font-black text-slate-500">{t.to}<input type="date" className={`${inputCls} w-full min-w-0`} value={f.to} onChange={e => set({ to: e.target.value })} /></label>
+              <select className={inputCls} value={f.plate} onChange={e => set({ plate: e.target.value })}><option value="">{t.allTrucks}</option>{options.plates.map(x => <option key={x}>{x}</option>)}</select>
+              <select className={inputCls} value={f.driver} onChange={e => set({ driver: e.target.value })}><option value="">{t.allDrivers}</option>{options.drivers.map(x => <option key={x}>{x}</option>)}</select>
+              <select className={inputCls} value={f.station} onChange={e => set({ station: e.target.value })}><option value="">{t.allStations}</option>{options.stations.map(x => <option key={x}>{x}</option>)}</select>
+              <select className={inputCls} value={f.type} onChange={e => set({ type: e.target.value })}><option value="">{t.allTypes}</option>{options.types.map(x => <option key={x}>{x}</option>)}</select>
+              <select className={inputCls} value={f.status} onChange={e => set({ status: e.target.value as StatusFilter })}><option value="">{t.anyStatus}</option>{statusOptions.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+    </>
+  );
+  const moreViews: View[] = ['drivers', 'fills', 'tx', 'months', 'stations', 'settings'];
+  const tabs: [View | 'more', string, string, number | null][] = [
+    ['home', '⌂', t.home, null], ['alerts', '🔔', t.alerts, urgent || null], ['trucks', '🚛', t.trucks, null], ['weeks', '🗓', t.weeks, null], ['more', '☰', t.more, null],
+  ];
+  const viewLabel = (views.find(v => v[0] === view) || [view, t.home, null]) as [View, string, number | null];
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-xl font-black uppercase italic tracking-tight text-[#07111f] sm:text-2xl">{t.title}</h1>
-          <p className="mt-1 max-w-2xl text-xs text-slate-500">{t.sub}</p>
+          <p className="mt-1 hidden max-w-2xl text-xs text-slate-500 sm:block">{t.sub}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className={`flex-wrap gap-2 ${hasData ? 'hidden md:flex' : 'flex'}`}>
           {isAdmin && <button className={btnGold} disabled={!!busy} onClick={() => fileRef.current?.click()}>⬆ {t.upload}</button>}
           {hasData && <button className={btnGhost} onClick={doExcel}>⬇ {t.exportXls}</button>}
           {hasData && <button className={btnNavy} onClick={doPrint}>🖨 {t.print}</button>}
@@ -545,35 +641,37 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
       ) : (
         <>
           {/* Filters */}
+          {isMobile ? (
+            <div className="flex items-center gap-2">
+              <input className={`${inputCls} min-w-0 flex-1 !py-2.5`} type="search" placeholder={t.search} value={f.q} onChange={e => set({ q: e.target.value })} />
+              <button className={`${activeFilters ? btnNavy : btnGhost} !px-3 !py-2.5 whitespace-nowrap`} onClick={() => setSheet('filters')} data-tab="filters">⚙ {t.filters}{activeFilters ? ` (${activeFilters})` : ''}</button>
+            </div>
+          ) : (
           <Card className="!p-3">
             <div className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-9">
               <input className={`${inputCls} col-span-2`} placeholder={t.search} value={f.q} onChange={e => set({ q: e.target.value })} />
-              <label className="flex items-center gap-1 text-[10px] font-black text-slate-500">{t.from}<input type="date" className={`${inputCls} w-full min-w-0`} value={f.from} onChange={e => set({ from: e.target.value })} /></label>
-              <label className="flex items-center gap-1 text-[10px] font-black text-slate-500">{t.to}<input type="date" className={`${inputCls} w-full min-w-0`} value={f.to} onChange={e => set({ to: e.target.value })} /></label>
-              <select className={inputCls} value={f.plate} onChange={e => set({ plate: e.target.value })}><option value="">{t.allTrucks}</option>{options.plates.map(x => <option key={x}>{x}</option>)}</select>
-              <select className={inputCls} value={f.driver} onChange={e => set({ driver: e.target.value })}><option value="">{t.allDrivers}</option>{options.drivers.map(x => <option key={x}>{x}</option>)}</select>
-              <select className={inputCls} value={f.station} onChange={e => set({ station: e.target.value })}><option value="">{t.allStations}</option>{options.stations.map(x => <option key={x}>{x}</option>)}</select>
-              <select className={inputCls} value={f.type} onChange={e => set({ type: e.target.value })}><option value="">{t.allTypes}</option>{options.types.map(x => <option key={x}>{x}</option>)}</select>
-              <select className={inputCls} value={f.status} onChange={e => set({ status: e.target.value as StatusFilter })}><option value="">{t.anyStatus}</option>{statusOptions.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+              {filterFields}
               {anyFilter && <button className={`${btnGhost} justify-center`} onClick={() => setF(NO_FILTERS)}>✕ {t.clear}</button>}
             </div>
           </Card>
+          )}
 
           {urgent > 0 && view !== 'alerts' && (
             <button onClick={() => setView('alerts')} className="flex w-full items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-start">
               <span className="flex items-center gap-2 text-sm font-black text-red-700">🔔 {t.alertsBanner(urgent)}
                 <span className="hidden text-xs font-bold text-red-600/80 sm:inline">· {[...new Set(openAlerts.filter(a => a.level !== 'low').map(a => t.kind[a.kind]))].slice(0, 3).join(' · ')}</span></span>
-              <span className="whitespace-nowrap text-xs font-black text-red-700">{t.openAlerts} →</span>
+              <span className="whitespace-nowrap text-xs font-black text-red-700">{t.openAlerts} <span className="inline-block rtl:rotate-180">→</span></span>
             </button>
           )}
 
+          {(!isMobile || view === 'home') && <>
           {/* Truck health: the main question, is each truck still doing its normal km/L? */}
           <Card>
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <div className="text-xs font-black uppercase tracking-[.2em] text-[#07111f]">{t.health}</div>
               <div className="text-[11px] text-slate-500">{t.healthHint(HEALTH_KM)}</div>
             </div>
-            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-3 xl:grid-cols-5">
               {health.filter(h => (!f.plate || h.plate === f.plate) && (!f.type || h.vehicleType === f.type)).map(h => (
                 <button key={h.plate} onClick={() => { set({ plate: h.plate }); setView('fills'); }}
                   className={`rounded-xl border p-3 text-start transition hover:border-[#c2a378] ${HEALTH_CLS[h.status]}`}>
@@ -581,9 +679,9 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
                     <b className="truncate text-sm text-[#07111f]">{h.plate}</b>
                     <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-black ${HEALTH_PILL[h.status]}`}>{t[`h_${h.status}` as const]}</span>
                   </div>
-                  <div className="mt-2 flex items-end justify-between gap-2">
+                  <div className="mt-2 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-2">
                     <div><div className="text-[9px] font-bold uppercase text-slate-500">{t.recent}</div><div className="text-xl font-black tabular-nums text-[#07111f]">{n2(h.recentKmL)}</div></div>
-                    <div className="text-end text-[10px] leading-4 text-slate-500">
+                    <div className="text-[10px] leading-4 text-slate-500 sm:text-end">
                       <div>{t.target} {n2(h.target)} <b className={h.vsTargetPct < -settings.marginPct ? 'text-red-600' : ''}>{pct(h.vsTargetPct)}</b></div>
                       <div>{t.normal} {n2(h.baseKmL)} <b className={h.trendPct <= -settings.marginPct ? 'text-red-600' : h.trendPct < 0 ? 'text-amber-700' : 'text-emerald-700'}>{h.trendPct < 0 ? '▼' : h.trendPct > 0 ? '▲' : ''} {pct(h.trendPct)}</b></div>
                     </div>
@@ -596,11 +694,11 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
           {/* KPIs */}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
             <Kpi label={t.liters} value={n0(kpi.liters)} sub={<span dir="ltr">{period}</span>} />
-            <Kpi label={t.cost} value={`${n0(kpi.cost)}`} unit="EGP" sub={`${n2(result.price)} ${t.perLiter}${settings.price ? '' : ` (${t.auto})`}`} />
-            <Kpi label={t.charged} value={n0(kpi.charged)} unit="EGP" sub={`+${n0(kpi.fees)} ${t.fees}`} />
+            <Kpi label={t.cost} value={`${n0(kpi.cost)}`} unit={t.egp} sub={`${n2(result.price)} ${t.perLiter}${settings.price ? '' : ` (${t.auto})`}`} />
+            <Kpi label={t.charged} value={n0(kpi.charged)} unit={t.egp} sub={`${ltr(`+${n0(kpi.fees)}`)} ${t.fees}`} />
             <Kpi label={t.fleetKmL} value={n2(kpi.kmL)} tone={kpi.kmL && kpi.kmL < kpi.target * (1 - settings.marginPct / 100) ? 'red' : 'navy'}
-              sub={`${t.target} ${n2(kpi.target)} ± ${settings.marginPct}% · ${n1(kpi.kmL ? 100 / kpi.kmL : 0)} ${t.l100}`} />
-            <Kpi label={t.overMargin} value={n0(kpi.overL)} unit="L" tone={kpi.overL ? 'red' : 'navy'} sub={`${n0(kpi.loss)} EGP`} />
+              sub={`${t.target} ${n2(kpi.target)} ${ltr(`± ${settings.marginPct}%`)} · ${n1(kpi.kmL ? 100 / kpi.kmL : 0)} ${t.l100}`} />
+            <Kpi label={t.overMargin} value={n0(kpi.overL)} unit={t.L} tone={kpi.overL ? 'red' : 'navy'} sub={`${n0(kpi.loss)} ${t.egp}`} />
             <Kpi label={t.checks} value={String(kpi.outside + kpi.bad)} tone={kpi.outside + kpi.bad ? 'amber' : 'navy'} sub={`${kpi.outside} ${t.fillsOutside} · ${kpi.bad} ${t.badReadings}`} />
           </div>
 
@@ -610,7 +708,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
               <div className="text-xs font-black uppercase tracking-[.2em] text-[#07111f]">{t.cardVsActual}</div>
               <div className="text-[11px] text-slate-500">{t.cardVsActualHint}</div>
             </div>
-            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 xl:grid-cols-4">
               <Compare label={t.km} card={n0(kpi.cardKm)} actual={n0(kpi.trackedKm)} diff={signed(kpi.cardKm - kpi.trackedKm)} bad={Math.abs(kpi.cardKm - kpi.trackedKm) > 100} t={t} />
               <Compare label={t.kmL} card={n2(kpi.cardKmL)} actual={n2(kpi.kmL)} diff={signed(kpi.cardKmL - kpi.kmL, n2)} bad={Math.abs(kpi.cardKmL - kpi.kmL) > 0.1} t={t} />
               <Compare label={t.l100} card={n1(kpi.cardKmL ? 100 / kpi.cardKmL : 0)} actual={n1(kpi.kmL ? 100 / kpi.kmL : 0)} diff={signed((kpi.cardKmL ? 100 / kpi.cardKmL : 0) - (kpi.kmL ? 100 / kpi.kmL : 0), n1)} bad={false} t={t} />
@@ -622,8 +720,16 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
             </div>
           </Card>
 
+          </>}
+
           {/* Views */}
-          <nav className="flex gap-1 overflow-x-auto rounded-2xl border border-[#e3dccf] bg-white p-1">
+          {isMobile && view !== 'home' && (
+            <div className="flex items-center justify-between gap-2 pt-1">
+              <h2 className="text-base font-black uppercase tracking-wide text-[#07111f]">{viewLabel[1]}</h2>
+              {viewLabel[2] != null && <span className="rounded-full bg-[#07111f] px-2.5 py-0.5 text-[11px] font-black text-white">{viewLabel[2]}</span>}
+            </div>
+          )}
+          <nav className="hidden gap-1 md:flex overflow-x-auto rounded-2xl border border-[#e3dccf] bg-white p-1">
             {views.map(([k, label, count]) => (
               <button key={k} onClick={() => setView(k)} className={`whitespace-nowrap rounded-xl px-3.5 py-2 text-[11px] font-black uppercase tracking-wider transition ${view === k ? 'bg-[#07111f] text-white' : 'text-[#07111f]/70 hover:bg-[#f8f5ef]'}`}>
                 {label}{count != null && <span className={`ms-1.5 rounded-full px-1.5 text-[10px] ${view === k ? 'bg-[#c2a378] text-[#07111f]' : 'bg-[#f1ebe0]'}`}>{count}</span>}
@@ -633,7 +739,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
 
           {view === 'alerts' && (
             <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="grid grid-cols-2 items-center gap-2 sm:flex sm:flex-wrap">
                 <select className={inputCls} value={af.level} onChange={e => setAf({ ...af, level: e.target.value as '' | AlertLevel })}>
                   <option value="">{t.allLevels}</option>{(['high', 'medium', 'low'] as AlertLevel[]).map(l => <option key={l} value={l}>{t.lvl[l]}</option>)}
                 </select>
@@ -648,7 +754,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
                 const done = checked.has(a.id);
                 return (
                   <Card key={a.id} className={`!p-3.5 ${done ? 'opacity-50' : ''}`}>
-                    <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${LEVEL_CLS[a.level]}`}>{t.lvl[a.level]}</span>
@@ -660,8 +766,8 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
                         </div>
                         <p className="mt-1.5 text-xs leading-5 text-slate-600">{t.alertText(a)}</p>
                       </div>
-                      <div className="flex shrink-0 items-center gap-2">
-                        {a.egp > 0 && <span className="text-sm font-black tabular-nums text-red-600">{n0(a.egp)} <span className="text-[10px] text-slate-400">EGP</span></span>}
+                      <div className="flex shrink-0 items-center gap-2 border-t border-[#f1ebe0] pt-2.5 sm:border-0 sm:pt-0">
+                        {a.egp > 0 && <span className="me-auto text-sm font-black tabular-nums text-red-600 sm:me-0">{n0(a.egp)} <span className="text-[10px] text-slate-400">{t.egp}</span></span>}
                         {a.kind !== 'idle' && <button className={btnGhost} onClick={() => openAlert(a)}>↗</button>}
                         {isAdmin && <button className={btnGhost} onClick={() => toggleChecked([a.id], !done)}>{done ? t.undoChecked : `✓ ${t.markChecked}`}</button>}
                       </div>
@@ -671,31 +777,87 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
               })}
             </div>
           )}
-          {view === 'trucks' && <DataTable rows={trucks} cols={truckCols} rowKey={r => r.key} initial={{ key: 'vs', dir: 1 }} empty={t.noMatch}
+          {view === 'trucks' && <DataTable sortLabel={t.sort} mobile={{ title: 'truck', badge: 'status', stats: ['kml', 'target', 'vs', 'liters', 'cost', 'loss'] }} rows={trucks} cols={truckCols} rowKey={r => r.key} initial={{ key: 'vs', dir: 1 }} empty={t.noMatch}
             onRow={r => { set({ plate: r.key }); setView('fills'); }} highlight={r => r.status === 'high' ? 'bg-red-50/40' : ''} />}
-          {view === 'drivers' && <DataTable rows={drivers} cols={driverCols} rowKey={r => r.key} initial={{ key: 'vs', dir: 1 }} empty={t.noMatch}
+          {view === 'drivers' && <DataTable sortLabel={t.sort} mobile={{ title: 'driver', badge: 'status', stats: ['kml', 'target', 'vs', 'liters', 'km', 'loss'] }} rows={drivers} cols={driverCols} rowKey={r => r.key} initial={{ key: 'vs', dir: 1 }} empty={t.noMatch}
             onRow={r => { set({ driver: r.key === '—' ? '' : r.key }); setView('fills'); }} />}
-          {view === 'fills' && <DataTable rows={filtered.segs} cols={fillCols} rowKey={r => r.key} initial={{ key: 'at', dir: -1 }} empty={t.noMatch}
+          {view === 'fills' && <DataTable sortLabel={t.sort} mobile={{ title: 'truck', sub: 'at', badge: 'status', stats: ['dist', 'liters', 'kml', 'target', 'diffL', 'cardKml'], foot: 'notes' }} rows={filtered.segs} cols={fillCols} rowKey={r => r.key} initial={{ key: 'at', dir: -1 }} empty={t.noMatch}
             highlight={r => r.status === 'high' ? 'bg-red-50/40' : r.status === 'low' ? 'bg-amber-50/40' : ''} />}
-          {view === 'tx' && <DataTable rows={filtered.views} cols={txCols} rowKey={r => r.tx.id} initial={{ key: 'at', dir: -1 }} empty={t.noMatch}
+          {view === 'tx' && <DataTable sortLabel={t.sort} mobile={{ title: 'truck', sub: 'at', stats: ['liters', 'amount', 'odo', 'ourKm', 'ourKml', 'station'], foot: 'flags' }} rows={filtered.views} cols={txCols} rowKey={r => r.tx.id} initial={{ key: 'at', dir: -1 }} empty={t.noMatch}
             highlight={r => r.flags.includes('reversal') || r.flags.includes('reversed') ? 'opacity-60 line-through decoration-red-300' : ''} />}
-          {view === 'weeks' && <DataTable rows={weeks} cols={[...weekCols, { key: 'print', label: '🖨', get: () => null, render: r => <button className="rounded-lg px-2 py-1 hover:bg-[#f1ebe0]" title={t.weeklyReport} onClick={e => { e.stopPropagation(); weeklyReport(r.key); }}>🖨</button> }]} rowKey={r => r.key} initial={{ key: 'week', dir: -1 }} empty={t.noMatch}
+          {view === 'weeks' && <DataTable sortLabel={t.sort} mobile={{ title: 'week', badge: 'status', stats: ['liters', 'dL', 'km', 'kml', 'dKml', 'loss'], foot: 'print' }} rows={weeks} cols={[...weekCols, { key: 'print', label: '🖨', get: () => null, render: r => <button className="rounded-lg px-2 py-1 hover:bg-[#f1ebe0]" title={t.weeklyReport} onClick={e => { e.stopPropagation(); weeklyReport(r.key); }}>🖨{isMobile ? ` ${t.weeklyReport}` : ''}</button> }]} rowKey={r => r.key} initial={{ key: 'week', dir: -1 }} empty={t.noMatch}
             onRow={r => { set({ from: r.key, to: weekEnd(r.key) }); setView('fills'); }} highlight={r => r.status === 'high' ? 'bg-red-50/40' : ''} />}
-          {view === 'months' && <DataTable rows={months} cols={monthCols} rowKey={r => r.key} initial={{ key: 'month', dir: -1 }} empty={t.noMatch} />}
-          {view === 'stations' && <DataTable rows={stations} cols={stationCols} rowKey={r => r.station} initial={{ key: 'liters', dir: -1 }} empty={t.noMatch}
+          {view === 'months' && <DataTable sortLabel={t.sort} mobile={{ title: 'month', stats: ['liters', 'cost', 'km', 'kml', 'vs', 'loss'] }} rows={months} cols={monthCols} rowKey={r => r.key} initial={{ key: 'month', dir: -1 }} empty={t.noMatch} />}
+          {view === 'stations' && <DataTable sortLabel={t.sort} mobile={{ title: 'station', stats: ['count', 'trucks', 'liters', 'cost', 'share'] }} rows={stations} cols={stationCols} rowKey={r => r.station} initial={{ key: 'liters', dir: -1 }} empty={t.noMatch}
             onRow={r => { set({ station: r.station === '—' ? '' : r.station }); setView('tx'); }} />}
           {view === 'settings' && <SettingsPanel t={t} isAdmin={isAdmin} settings={settings} result={result} plates={options.plates} types={options.types}
             onSave={async s => { try { await api.saveFuelSettings(s); setSettings(s); setToast('✓'); } catch (e: any) { setToast(String(e?.message || e)); } }} />}
 
-          {isAdmin && <div className="pt-2 text-end"><button className="text-[11px] font-bold text-red-600 hover:underline" onClick={clearAll}>{t.clearAll}</button></div>}
+          {isAdmin && !isMobile && <div className="pt-2 text-end"><button className="text-[11px] font-bold text-red-600 hover:underline" onClick={clearAll}>{t.clearAll}</button></div>}
         </>
+      )}
+
+      {isMobile && hasData && (
+        <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-white/10 bg-[#07111f]/95 px-1 pt-1.5 text-white backdrop-blur-xl pb-[calc(0.4rem+env(safe-area-inset-bottom))]">
+          {tabs.map(([k, icon, label, badge]) => {
+            const on = k === 'more' ? (sheet === 'more' || moreViews.includes(view)) : view === k && sheet !== 'more';
+            return (
+              <button key={k} data-tab={k} onClick={() => { if (k === 'more') setSheet(sheet === 'more' ? '' : 'more'); else { setSheet(''); setView(k); } }}
+                className={`relative flex flex-col items-center gap-0.5 rounded-xl py-1.5 text-[10px] font-black transition ${on ? 'text-[#c2a378]' : 'text-white/60'}`}>
+                <span className="text-lg leading-none">{icon}</span>
+                <span className="max-w-full truncate px-0.5">{label}</span>
+                {badge != null && <span className="absolute end-[18%] top-0.5 min-w-[18px] rounded-full bg-red-500 px-1 text-[10px] leading-[18px] text-white">{badge}</span>}
+                {on && <span className="absolute -top-1.5 h-0.5 w-8 rounded-full bg-[#c2a378]" />}
+              </button>
+            );
+          })}
+        </nav>
+      )}
+
+      {isMobile && sheet && (
+        <div className="fixed inset-0 z-[45] flex items-end bg-[#07111f]/50" onClick={() => setSheet('')}>
+          <div role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}
+            className="max-h-[80vh] w-full overflow-y-auto rounded-t-3xl bg-white px-4 pt-2 shadow-2xl pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
+            <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-[#e3dccf]" />
+            {sheet === 'more' ? (
+              <>
+                <div className="grid grid-cols-3 gap-2">
+                  {views.filter(v => moreViews.includes(v[0])).map(([k, label, count]) => (
+                    <button key={k} data-tab={k} onClick={() => { setView(k); setSheet(''); }}
+                      className={`flex min-h-[72px] flex-col items-center justify-center gap-1 rounded-2xl border p-2 text-center text-[11px] font-black ${view === k ? 'border-[#07111f] bg-[#07111f] text-white' : 'border-[#e3dccf] bg-[#fbf8f2] text-[#07111f]'}`}>
+                      <span className="leading-tight">{label}</span>
+                      {count != null && <span className={`rounded-full px-2 text-[10px] ${view === k ? 'bg-[#c2a378] text-[#07111f]' : 'bg-white'}`}>{count}</span>}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-5 text-[10px] font-black uppercase tracking-[.2em] text-slate-400">{t.actions}</div>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  {isAdmin && <button className={`${btnGold} justify-center !py-3`} disabled={!!busy} onClick={() => { setSheet(''); fileRef.current?.click(); }}>⬆ {t.upload}</button>}
+                  <button className={`${btnNavy} justify-center !py-3`} onClick={() => { setSheet(''); weeklyReport(latestWeek); }}>🗓 {t.weeklyReport}</button>
+                  <button className={`${btnNavy} justify-center !py-3`} onClick={() => { setSheet(''); doPrint(); }}>🖨 {t.print}</button>
+                  <button className={`${btnGhost} justify-center !py-3`} onClick={() => { setSheet(''); doExcel(); }}>⬇ {t.exportXls}</button>
+                </div>
+                {isAdmin && <div className="mt-4 text-center"><button className="text-[11px] font-bold text-red-600" onClick={() => { setSheet(''); clearAll(); }}>{t.clearAll}</button></div>}
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <div className="text-base font-black text-[#07111f]">⚙ {t.filters}</div>
+                  {anyFilter && <button className="text-xs font-black text-red-600" onClick={() => setF(NO_FILTERS)}>✕ {t.clear}</button>}
+                </div>
+                <div className="mt-3 grid grid-cols-1 gap-2.5 [&_input]:!py-2.5 [&_select]:!py-2.5">{filterFields}</div>
+                <button className={`${btnNavy} mt-4 w-full justify-center !py-3`} onClick={() => setSheet('')}>{t.done}</button>
+              </>
+            )}
+          </div>
+        </div>
       )}
 
       {preview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07111f]/60 p-4" role="dialog" aria-modal="true">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
             <div className="text-lg font-black text-[#07111f]">⛽ {t.upload}</div>
-            <p className="mt-3 text-sm text-slate-600">{t.found(preview.total, preview.from, preview.to)}</p>
+            <p className="mt-3 text-sm text-slate-600">{t.found(preview.total, ltr(preview.from), ltr(preview.to))}</p>
             <div className="mt-4 grid grid-cols-3 gap-2 text-center">
               <div className="rounded-xl bg-emerald-50 p-3"><div className="text-2xl font-black text-emerald-700">{preview.fresh.length}</div><div className="text-[10px] font-bold text-emerald-800">{t.upNew}</div></div>
               <div className="rounded-xl bg-[#f8f5ef] p-3"><div className="text-2xl font-black text-slate-600">{preview.inSystem}</div><div className="text-[10px] font-bold text-slate-500">{t.upInSystem}</div></div>
