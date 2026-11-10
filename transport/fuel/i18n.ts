@@ -106,6 +106,10 @@ const en = {
   tank: 'Tank size (L)', tankHint: 'A fill bigger than this raises an alert. 0 = off.', idleDays: 'Alert when no fill for (days)', idleHint: '0 = off',
   weeklyReport: 'Weekly report', weeklyTitle: 'Weekly fuel report', thisWeek: 'This week', lastWeek: 'Last week', change: 'Change', egp: 'EGP',
   level: 'Level', alert: 'Alert', details: 'Details', L: 'L',
+  summary: 'Summary', summarySub: (wk: string, last: string) => `Each truck's overall km/L (all data), this week (${wk}) and its last fill. Last upload: ${last}. Tap a truck to see all its data.`,
+  overall: 'Overall', lastFill: 'Last fill', daysAgo: (n: number) => (n <= 0 ? 'same day as last upload' : `${n} day${n === 1 ? '' : 's'} before last upload`),
+  noFillWeek: 'No closed fill this week yet', allTrucks2: 'All trucks', truckData: 'All data for this truck', openAlertsN: (n: number) => `${n} open alert${n === 1 ? '' : 's'}`,
+  firstFill: 'First fill', kmTotal: 'Tracked km', fillsDone: 'Fills', overallHint: 'Overall = every closed full-to-full fill in the data, not only the filter dates.',
   reportTitle: 'Fuel consumption report', period: 'Period', flagged: 'Fills to check', generated: 'Generated',
 };
 
@@ -200,6 +204,10 @@ const ar: typeof en = {
   tank: 'سعة التانك (لتر)', tankHint: 'التفويلة الأكبر من ذلك تعطي تنبيه. 0 = إيقاف.', idleDays: 'تنبيه عند عدم التفويل لمدة (أيام)', idleHint: '0 = إيقاف',
   weeklyReport: 'التقرير الأسبوعي', weeklyTitle: 'تقرير السولار الأسبوعي', thisWeek: 'هذا الأسبوع', lastWeek: 'الأسبوع السابق', change: 'التغير', egp: 'جنيه',
   level: 'المستوى', alert: 'التنبيه', details: 'التفاصيل', L: 'لتر',
+  summary: 'الملخص', summarySub: (wk: string, last: string) => `الكم/لتر الإجمالي لكل عربية (كل البيانات)، وهذا الأسبوع (${iso(wk)})، وآخر تفويل. آخر رفع: ${iso(last)}. اضغط على أي عربية تشوف كل بياناتها.`,
+  overall: 'الإجمالي', lastFill: 'آخر تفويل', daysAgo: (n: number) => (n <= 0 ? 'نفس يوم آخر رفع' : `قبل آخر رفع بـ ${iso(String(n))} يوم`),
+  noFillWeek: 'مفيش تفويلة مقفولة الأسبوع ده لسه', allTrucks2: 'كل العربيات', truckData: 'كل بيانات العربية', openAlertsN: (n: number) => `${iso(String(n))} تنبيه مفتوح`,
+  firstFill: 'أول تفويل', kmTotal: 'الكيلومترات المحسوبة', fillsDone: 'التفويلات', overallHint: 'الإجمالي = كل تفويلة من تانك كامل لتانك كامل في البيانات، مش بس تواريخ الفلتر.',
   reportTitle: 'تقرير استهلاك السولار', period: 'الفترة', flagged: 'تفويلات للمراجعة', generated: 'تاريخ الإصدار',
 };
 

@@ -22,6 +22,7 @@ const ltr = (x: string) => `\u2066${x}\u2069`;
 const pct = (v: number) => (v ? ltr(`${v > 0 ? '+' : ''}${N1.format(v)}%`) : '—');
 const signed = (v: number, f = n0) => { const out = f(Math.abs(v)); return !v || /^[0.]+$/.test(out) ? '—' : ltr(`${v > 0 ? '+' : '−'}${out}`); };
 const day = (at: string) => at.slice(0, 10);
+const round1 = (v: number) => Math.round(v * 10) / 10;
 const when = (at: string) => `${at.slice(0, 10)} ${at.slice(11, 16)}`;
 function sum<T>(xs: readonly T[], f: (x: T) => number): number { return xs.reduce((s, x) => s + (f(x) || 0), 0); }
 const uniq = (xs: string[]) => [...new Set(xs.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar'));
@@ -39,9 +40,9 @@ const Card: React.FC<{ className?: string; children: React.ReactNode }> = ({ cla
 type StatusFilter = '' | SegmentStatus | 'badKm' | 'split' | 'partial' | 'reversed';
 interface Filters { q: string; from: string; to: string; plate: string; driver: string; station: string; type: string; status: StatusFilter }
 const NO_FILTERS: Filters = { q: '', from: '', to: '', plate: '', driver: '', station: '', type: '', status: '' };
-type View = 'home' | 'alerts' | 'trucks' | 'drivers' | 'fills' | 'tx' | 'weeks' | 'months' | 'stations' | 'settings';
+type View = 'home' | 'summary' | 'truck' | 'alerts' | 'trucks' | 'drivers' | 'fills' | 'tx' | 'weeks' | 'months' | 'stations' | 'settings';
 
-const VIEW_ICON: Record<string, string> = { home: '⌂', alerts: '🔔', trucks: '🚛', drivers: '🧑‍✈️', fills: '⛽', tx: '🧾', weeks: '🗓', months: '📅', stations: '📍', settings: '⚙' };
+const VIEW_ICON: Record<string, string> = { home: '⌂', summary: '📊', truck: '🚛', alerts: '🔔', trucks: '🚛', drivers: '🧑‍✈️', fills: '⛽', tx: '🧾', weeks: '🗓', months: '📅', stations: '📍', settings: '⚙' };
 
 type WeekRow = Summary & { prevLiters: number | null; prevKmL: number | null };
 
@@ -202,6 +203,10 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     return 'home';
   });
   const [sheet, setSheet] = useState<'' | 'more' | 'filters'>('');
+  /** The truck open in the truck page (all its data). */
+  const [truckPlate, setTruckPlate] = useState<string>(() => { try { return localStorage.getItem('nf_transport_fuel_truck') || ''; } catch { return ''; } });
+  const [truckTab, setTruckTab] = useState<'fills' | 'tx' | 'weeks' | 'months' | 'alerts'>('fills');
+  const openTruck = (plate: string) => { setTruckPlate(plate); setTruckTab('fills'); setView('truck'); try { localStorage.setItem('nf_transport_fuel_truck', plate); } catch { /* ignore */ } };
   /** The fill (segment key) or truck (health) whose calculation is open in the explain dialog. */
   const [explain, setExplain] = useState<{ seg?: string; plate?: string } | null>(null);
   const [fullRead, setFullRead] = useState(false);
@@ -367,6 +372,50 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     const last = (txs || []).reduce((m, x) => (x.at > m ? x.at : m), '').slice(0, 10);
     return list.map((w, i) => ({ ...w, label: weekEnd(w.key) > last ? `${w.label} · ${t.soFar}` : w.label, prevLiters: i ? list[i - 1].liters : null, prevKmL: i ? list[i - 1].kmL || null : null }));
   }, [filtered, result, settings]); // eslint-disable-line react-hooks/exhaustive-deps
+  /* ---- summary screen: each truck overall, this week (of the last upload) and its last fill ---- */
+  const lastAt = (txs || []).reduce((m, x) => (x.at > m ? x.at : m), '');
+  const thisWeek = lastAt ? weekOf(lastAt) : '';
+  const prevWeek = thisWeek ? weekOf(new Date(Date.parse(`${thisWeek}T00:00:00Z`) - 86_400_000).toISOString()) : '';
+  const allData: Data = useMemo(() => ({ segs: result.segments, txs: txs || [], fills: result.fills }), [result, txs]);
+  const only = (d: Data, ok: (x: { at: string; plate: string }) => boolean): Data => ({ segs: d.segs.filter(ok), txs: d.txs.filter(ok), fills: d.fills.filter(ok) });
+  type TruckCardRow = { plate: string; all: Summary; week?: Summary; prev?: Summary; last?: FuelTx; first?: FuelTx; days: number; health?: TruckHealth; open: number };
+  const truckCards: TruckCardRow[] = useMemo(() => {
+    const byPlate = (d: Data) => new Map(group(x => x.plate, k => k, true, d).map(x => [x.key, x]));
+    const wk = byPlate(only(allData, x => weekOf(x.at) === thisWeek)), pw = byPlate(only(allData, x => weekOf(x.at) === prevWeek));
+    const q2 = q;
+    return group(x => x.plate, k => k, true, allData)
+      .filter(r => (!f.plate || r.key === f.plate) && (!f.type || r.vehicleType.includes(f.type)) && (!q2 || `${r.key} ${r.drivers.join(' ')}`.toLowerCase().includes(q2)))
+      .map(r => {
+        const mine = (txs || []).filter(x => x.plate === r.key && x.amount > 0).sort((a, b) => a.at.localeCompare(b.at));
+        const last = mine[mine.length - 1];
+        return { plate: r.key, all: r, week: wk.get(r.key), prev: pw.get(r.key), last, first: mine[0], health: health.find(h => h.plate === r.key),
+          days: last && lastAt ? Math.round((Date.parse(`${lastAt.slice(0, 10)}T00:00:00Z`) - Date.parse(`${last.at.slice(0, 10)}T00:00:00Z`)) / 86_400_000) : 0,
+          open: openAlerts.filter(a => a.plate === r.key).length };
+      })
+      .sort((a, b) => (a.all.vsTargetPct || 0) - (b.all.vsTargetPct || 0));
+  }, [allData, health, openAlerts, f, thisWeek, prevWeek]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* ---- truck page: everything about one truck ---- */
+  const truck = useMemo(() => {
+    if (!truckPlate) return null;
+    const d = only(allData, x => x.plate === truckPlate);
+    if (!d.txs.length) return null;
+    const wl = group(x => weekOf(x.at), k => `${k} → ${weekEnd(k)}`, true, d).map(w => ({ ...w, label: w.label })).sort((a, b) => a.key.localeCompare(b.key));
+    const weeksT: WeekRow[] = wl.map((w, i) => ({ ...w, label: weekEnd(w.key) > lastAt.slice(0, 10) ? `${w.label} · ${t.soFar}` : w.label, prevLiters: i ? wl[i - 1].liters : null, prevKmL: i ? wl[i - 1].kmL || null : null }));
+    // group() picks the target by key; for one truck every row must use the truck's own target.
+    const tg = result.targets[truckPlate] || weightedTarget(d.segs);
+    const fix = (r: Summary) => summarize(r.key, r.label, d.segs.filter(s => weekOf(s.at) === r.key || s.at.slice(0, 7) === r.key), d.txs.filter(x => weekOf(x.at) === r.key || x.at.slice(0, 7) === r.key), d.fills.filter(x => weekOf(x.at) === r.key || x.at.slice(0, 7) === r.key), tg, settings.marginPct, result.price);
+    return {
+      plate: truckPlate, data: d,
+      card: truckCards.find(c => c.plate === truckPlate),
+      all: summarize(truckPlate, truckPlate, d.segs, d.txs, d.fills, tg, settings.marginPct, result.price),
+      weeks: weeksT.map(w => ({ ...w, ...fix(w), label: w.label, prevLiters: w.prevLiters, prevKmL: w.prevKmL })),
+      months: group(x => x.at.slice(0, 7), k => k, true, d).map(fix),
+      views: result.txViews.filter(v => v.tx.plate === truckPlate),
+      alerts: alerts.filter(a => a.plate === truckPlate).sort((a, b) => Number(isChecked(a, checked)) - Number(isChecked(b, checked)) || b.at.localeCompare(a.at)),
+    };
+  }, [truckPlate, allData, truckCards, alerts, checked, settings]); // eslint-disable-line react-hooks/exhaustive-deps
+
   type StationRow = { station: string; count: number; liters: number; cost: number; charged: number; share: number; trucks: number };
   const stations: StationRow[] = useMemo(() => {
     const total = sum(filtered.txs, x => x.liters) || 1;
@@ -677,7 +726,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   if (txs === null) return <DaliLoader fullScreen label={<span className="text-xs font-bold text-slate-500">{t.title}</span>} />;
   const hasData = txs.length > 0;
   const views: [View, string, number | null][] = [
-    ['home', t.home, null], ['alerts', `🔔 ${t.alerts}`, openAlerts.length], ['trucks', t.trucks, trucks.length], ['drivers', t.drivers, drivers.length], ['fills', t.fills, filtered.segs.length],
+    ['home', t.home, null], ['summary', t.summary, truckCards.length], ['alerts', `🔔 ${t.alerts}`, openAlerts.length], ['trucks', t.trucks, trucks.length], ['drivers', t.drivers, drivers.length], ['fills', t.fills, filtered.segs.length],
     ['tx', t.transactions, filtered.views.length], ['weeks', t.weeks, weeks.length], ['months', t.months, months.length], ['stations', t.stations, stations.length], ['settings', t.settings, null],
   ];
   const statusOptions: [StatusFilter, string][] = [
@@ -697,11 +746,36 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
               <select className={inputCls} value={f.status} onChange={e => set({ status: e.target.value as StatusFilter })}><option value="">{t.anyStatus}</option>{statusOptions.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
     </>
   );
-  const moreViews: View[] = ['drivers', 'fills', 'tx', 'months', 'stations', 'settings'];
+  const moreViews: View[] = ['trucks', 'drivers', 'fills', 'tx', 'months', 'stations', 'settings'];
   const tabs: [View | 'more', string, string, number | null][] = [
-    ['home', '⌂', t.home, null], ['alerts', '🔔', t.alerts, urgent || null], ['trucks', '🚛', t.trucks, null], ['weeks', '🗓', t.weeks, null], ['more', '☰', t.more, null],
+    ['home', '⌂', t.home, null], ['alerts', '🔔', t.alerts, urgent || null], ['summary', '📊', t.summary, null], ['weeks', '🗓', t.weeks, null], ['more', '☰', t.more, null],
   ];
-  const viewLabel = (views.find(v => v[0] === view) || [view, t.home, null]) as [View, string, number | null];
+  const renderAlert = (a: FuelAlert) => {
+                const done = isChecked(a, checked);
+                return (
+                  <Card key={a.id} className={`!p-3.5 ${done ? 'opacity-50' : ''}`}>
+                    <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${LEVEL_CLS[a.level]}`}>{t.lvl[a.level]}</span>
+                          <b className="text-sm text-[#07111f]">{t.kind[a.kind]}</b>
+                          <span className="text-xs font-bold text-[#07111f]">{a.plate}</span>
+                          <span className="text-[11px] text-slate-500">{a.driver}</span>
+                          <span dir="ltr" className="text-[11px] text-slate-400">{when(a.at)}</span>
+                          {done && <Chip>✓ {t.checkedBy}</Chip>}
+                        </div>
+                        <p className="mt-1.5 text-xs leading-5 text-slate-600">{t.alertText(a)}</p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2 border-t border-[#f1ebe0] pt-2.5 sm:border-0 sm:pt-0">
+                        {a.egp > 0 && <span className="me-auto text-sm font-black tabular-nums text-red-600 sm:me-0">{n0(a.egp)} <span className="text-[10px] text-slate-400">{t.egp}</span></span>}
+                        {a.kind !== 'idle' && <button className={btnGhost} onClick={() => openAlert(a)}>↗</button>}
+                        {isAdmin && <button className={btnGhost} onClick={() => toggleChecked(done ? storedIds(a, checked) : checkIds(a), !done)}>{done ? t.undoChecked : `✓ ${t.markChecked}`}</button>}
+                      </div>
+                    </div>
+                  </Card>
+                );
+  };
+  const viewLabel = (views.find(v => v[0] === view) || [view, view === 'truck' ? truckPlate : t.home, null]) as [View, string, number | null];
 
   return (
     <div className="md:flex md:items-start md:gap-7">
@@ -771,7 +845,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-3 xl:grid-cols-5">
               {health.filter(h => (!f.plate || h.plate === f.plate) && (!f.type || h.vehicleType === f.type)).map(h => (
-                <button key={h.plate} onClick={() => { set({ plate: h.plate }); setView('fills'); }}
+                <button key={h.plate} onClick={() => openTruck(h.plate)}
                   className={`rounded-xl border p-3 text-start transition hover:border-[#c2a378] ${HEALTH_CLS[h.status]}`}>
                   <div className="flex items-center justify-between gap-2">
                     <b className="truncate text-sm text-[#07111f]">{h.plate}</b>
@@ -824,7 +898,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
           </>}
 
           {/* Views */}
-          {view !== 'home' && (
+          {view !== 'home' && view !== 'truck' && (
             <div className="flex items-center justify-between gap-2 pt-1">
               <h2 className="text-base font-black uppercase tracking-wide text-[#07111f] md:text-lg">{!isMobile && VIEW_ICON[view] ? `${VIEW_ICON[view]} ` : ''}{viewLabel[1].replace(/^🔔 /, '')}</h2>
               {viewLabel[2] != null && <span className="rounded-full bg-[#07111f] px-2.5 py-0.5 text-[11px] font-black text-white">{viewLabel[2]}</span>}
@@ -844,35 +918,93 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
               </div>
               {!shownAlerts.length ? (
                 <div className="rounded-xl border border-dashed border-[#d9d0c0] p-8 text-center text-sm font-bold text-slate-500">✓ {t.noAlerts}</div>
-              ) : shownAlerts.slice(0, 300).map(a => {
-                const done = isChecked(a, checked);
+              ) : shownAlerts.slice(0, 300).map(renderAlert)}
+            </div>
+          )}
+          {view === 'summary' && <>
+            <p className="text-[11px] font-bold leading-5 text-slate-500">ⓘ {t.summarySub(thisWeek ? `${thisWeek} → ${weekEnd(thisWeek)}` : '—', lastAt ? when(lastAt) : '—')}</p>
+            {!truckCards.length && <div className="rounded-xl border border-dashed border-[#d9d0c0] p-8 text-center text-sm font-bold text-slate-500">{t.noMatch}</div>}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {truckCards.map(c => {
+                const hs = c.health?.status || 'noData';
+                const wkKmL = c.week?.kmL || 0, pvKmL = c.prev?.kmL || 0;
                 return (
-                  <Card key={a.id} className={`!p-3.5 ${done ? 'opacity-50' : ''}`}>
-                    <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${LEVEL_CLS[a.level]}`}>{t.lvl[a.level]}</span>
-                          <b className="text-sm text-[#07111f]">{t.kind[a.kind]}</b>
-                          <span className="text-xs font-bold text-[#07111f]">{a.plate}</span>
-                          <span className="text-[11px] text-slate-500">{a.driver}</span>
-                          <span dir="ltr" className="text-[11px] text-slate-400">{when(a.at)}</span>
-                          {done && <Chip>✓ {t.checkedBy}</Chip>}
-                        </div>
-                        <p className="mt-1.5 text-xs leading-5 text-slate-600">{t.alertText(a)}</p>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-2 border-t border-[#f1ebe0] pt-2.5 sm:border-0 sm:pt-0">
-                        {a.egp > 0 && <span className="me-auto text-sm font-black tabular-nums text-red-600 sm:me-0">{n0(a.egp)} <span className="text-[10px] text-slate-400">{t.egp}</span></span>}
-                        {a.kind !== 'idle' && <button className={btnGhost} onClick={() => openAlert(a)}>↗</button>}
-                        {isAdmin && <button className={btnGhost} onClick={() => toggleChecked(done ? storedIds(a, checked) : checkIds(a), !done)}>{done ? t.undoChecked : `✓ ${t.markChecked}`}</button>}
+                  <button key={c.plate} onClick={() => openTruck(c.plate)} data-truck={c.plate}
+                    className={`rounded-2xl border p-4 text-start shadow-sm transition hover:-translate-y-0.5 hover:border-[#c2a378] hover:shadow-md ${HEALTH_CLS[hs]}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0"><b className="block truncate text-base text-[#07111f]">{c.plate}</b>
+                        <div className="truncate text-[10px] text-slate-500">{c.all.vehicleType} · {c.all.drivers.slice(-2).join('، ')}</div></div>
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-black ${HEALTH_PILL[hs]}`}>{t[`h_${hs}` as const]}</span>
+                        {c.open > 0 && <span className="whitespace-nowrap rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-black text-red-700 ring-1 ring-red-200">🔔 {t.openAlertsN(c.open)}</span>}
                       </div>
                     </div>
-                  </Card>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <div className="rounded-xl bg-white/80 p-2.5 ring-1 ring-[#eee7da]">
+                        <div className="text-[9px] font-black uppercase tracking-widest text-[#8a7350]">{t.overall}</div>
+                        <div className="text-2xl font-black tabular-nums text-[#07111f]">{n2(c.all.kmL)}</div>
+                        <div className="text-[10px] text-slate-500">{t.target} {n2(c.all.target)} <b className={c.all.status === 'high' ? 'text-red-600' : c.all.vsTargetPct < 0 ? 'text-amber-700' : 'text-emerald-700'}>{pct(c.all.vsTargetPct)}</b></div>
+                        <div className="text-[10px] text-slate-400">{n0(c.all.trackedKm)} {t.km} · {n0(c.all.liters)} {t.L}</div>
+                      </div>
+                      <div className="rounded-xl bg-white/80 p-2.5 ring-1 ring-[#eee7da]">
+                        <div className="text-[9px] font-black uppercase tracking-widest text-[#8a7350]">{t.thisWeek}</div>
+                        {wkKmL ? <>
+                          <div className="text-2xl font-black tabular-nums text-[#07111f]">{n2(wkKmL)}</div>
+                          <div className="text-[10px] text-slate-500">{t.lastWeek} {n2(pvKmL)} {pvKmL ? <b className={wkKmL < pvKmL ? 'text-red-600' : 'text-emerald-700'}>{wkKmL < pvKmL ? '▼' : '▲'} {pct(round1((wkKmL / pvKmL - 1) * 100))}</b> : null}</div>
+                          <div className="text-[10px] text-slate-400">{n0(c.week?.trackedKm)} {t.km} · {n0(c.week?.liters)} {t.L}</div>
+                        </> : <div className="mt-1 text-[11px] font-bold leading-4 text-slate-400">{t.noFillWeek}{c.week?.liters ? ` · ${n0(c.week.liters)} ${t.L}` : ''}</div>}
+                      </div>
+                    </div>
+                    {c.last && <div className="mt-2.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 border-t border-[#eee7da] pt-2 text-[10px] text-slate-500">
+                      <span><b className="text-[#07111f]">{t.lastFill}</b> <span dir="ltr">{when(c.last.at)}</span> · {n0(c.last.liters)} {t.L}</span>
+                      <span className={c.days >= (settings.idleDays || 99) ? 'font-black text-red-600' : ''}>{t.daysAgo(c.days)}</span>
+                    </div>}
+                  </button>
                 );
               })}
             </div>
-          )}
+          </>}
+
+          {view === 'truck' && (truck ? <>
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+              <div className="flex items-center gap-2">
+                <button className={`${btnGhost} !px-3`} onClick={() => setView('summary')}><span className="inline-block rtl:rotate-180">←</span> {t.allTrucks2}</button>
+                <h2 className="text-lg font-black text-[#07111f]">🚛 {truck.plate}</h2>
+              </div>
+              <span className="text-[11px] text-slate-500">{truck.all.vehicleType} · {truck.all.drivers.join('، ')}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+              <Kpi label={t.overall} value={n2(truck.all.kmL)} unit={t.kmL} tone={truck.all.status === 'high' ? 'red' : 'navy'} sub={<>{t.target} {n2(truck.all.target)} {pct(truck.all.vsTargetPct)}</>} />
+              <Kpi label={t.thisWeek} value={n2(truck.card?.week?.kmL || 0)} unit={t.kmL} sub={<>{t.lastWeek} {n2(truck.card?.prev?.kmL || 0)}</>} />
+              <Kpi label={t.recent} value={n2(truck.card?.health?.recentKmL || 0)} unit={t.kmL} tone={truck.card?.health?.status === 'service' ? 'red' : truck.card?.health?.status === 'watch' ? 'amber' : 'navy'}
+                sub={truck.card?.health ? t[`h_${truck.card.health.status}` as const] : ''} />
+              <Kpi label={t.kmTotal} value={n0(truck.all.trackedKm)} unit={t.km} sub={`${truck.all.fillCount} ${t.fillsDone}`} />
+              <Kpi label={t.liters} value={n0(truck.all.liters)} unit={t.L} sub={`${n0(truck.all.cost)} ${t.egp}`} />
+              <Kpi label={t.lastFill} value={truck.card?.last ? truck.card.last.at.slice(5, 10) : '—'} sub={<>{truck.card?.first ? <span dir="ltr">{t.firstFill} {truck.card.first.at.slice(0, 10)}</span> : null}</>} />
+            </div>
+            <p className="text-[10px] text-slate-400">ⓘ {t.overallHint}</p>
+            <div role="tablist" className="flex gap-1 overflow-x-auto rounded-2xl bg-[#f1ebe0] p-1">
+              {([['fills', t.fills, truck.data.segs.length], ['tx', t.transactions, truck.views.length], ['weeks', t.weeks, truck.weeks.length], ['months', t.months, truck.months.length], ['alerts', t.alerts, truck.alerts.filter(a => !isChecked(a, checked)).length]] as const).map(([k, label, count]) => (
+                <button key={k} role="tab" aria-selected={truckTab === k} onClick={() => setTruckTab(k)}
+                  className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-black transition ${truckTab === k ? 'bg-[#07111f] text-white shadow' : 'text-[#07111f]/70 hover:bg-white/60'}`}>
+                  {label}<span className={`rounded-full px-1.5 text-[10px] ${truckTab === k ? 'bg-[#c2a378] text-[#07111f]' : 'bg-white'}`}>{count}</span>
+                </button>
+              ))}
+            </div>
+            {(truckTab === 'fills' || truckTab === 'tx') && <p className="text-[11px] font-bold text-slate-500">ⓘ {t.tapHint}</p>}
+            {truckTab === 'fills' && <DataTable onRow={r => setExplain({ seg: r.key })} sortLabel={t.sort} mobile={{ title: 'at', badge: 'status', stats: ['dist', 'liters', 'kml', 'target', 'diffL', 'cardKml'], foot: 'notes' }} rows={truck.data.segs} cols={fillCols} rowKey={r => r.key} initial={{ key: 'at', dir: -1 }} empty={t.noMatch}
+              highlight={r => r.status === 'high' ? 'bg-red-50/40' : r.status === 'low' ? 'bg-amber-50/40' : ''} />}
+            {truckTab === 'tx' && <DataTable onRow={r => setTxOpen(r.tx.id)} sortLabel={t.sort} mobile={{ title: 'at', stats: ['liters', 'amount', 'odo', 'ourKm', 'ourKml', 'station'], foot: 'flags' }} rows={truck.views} cols={txCols} rowKey={r => r.tx.id} initial={{ key: 'at', dir: -1 }} empty={t.noMatch} />}
+            {truckTab === 'weeks' && <DataTable sortLabel={t.sort} mobile={{ title: 'week', badge: 'status', stats: ['liters', 'dL', 'km', 'kml', 'dKml', 'loss'] }} rows={truck.weeks} cols={weekCols} rowKey={r => r.key} initial={{ key: 'week', dir: -1 }} empty={t.noMatch}
+              highlight={r => r.status === 'high' ? 'bg-red-50/40' : ''} />}
+            {truckTab === 'months' && <DataTable sortLabel={t.sort} mobile={{ title: 'month', stats: ['liters', 'cost', 'km', 'kml', 'vs', 'loss'] }} rows={truck.months} cols={monthCols} rowKey={r => r.key} initial={{ key: 'month', dir: -1 }} empty={t.noMatch} />}
+            {truckTab === 'alerts' && <div className="space-y-2">{truck.alerts.length ? truck.alerts.slice(0, 200).map(renderAlert)
+              : <div className="rounded-xl border border-dashed border-[#d9d0c0] p-8 text-center text-sm font-bold text-slate-500">✓ {t.noAlerts}</div>}</div>}
+          </> : <div className="rounded-xl border border-dashed border-[#d9d0c0] p-8 text-center text-sm font-bold text-slate-500">
+            {t.noMatch} <button className={`${btnGhost} ms-2`} onClick={() => setView('summary')}>{t.allTrucks2}</button></div>)}
+
           {view === 'trucks' && <DataTable sortLabel={t.sort} mobile={{ title: 'truck', badge: 'status', stats: ['kml', 'target', 'vs', 'liters', 'cost', 'loss'] }} rows={trucks} cols={truckCols} rowKey={r => r.key} initial={{ key: 'vs', dir: 1 }} empty={t.noMatch}
-            onRow={r => { set({ plate: r.key }); setView('fills'); }} highlight={r => r.status === 'high' ? 'bg-red-50/40' : ''} />}
+            onRow={r => openTruck(r.key)} highlight={r => r.status === 'high' ? 'bg-red-50/40' : ''} />}
           {view === 'drivers' && <DataTable sortLabel={t.sort} mobile={{ title: 'driver', badge: 'status', stats: ['kml', 'target', 'vs', 'liters', 'km', 'loss'] }} rows={drivers} cols={driverCols} rowKey={r => r.key} initial={{ key: 'vs', dir: 1 }} empty={t.noMatch}
             onRow={r => { set({ driver: r.key === '—' ? '' : r.key }); setView('fills'); }} />}
           {(view === 'fills' || view === 'tx') && <p className="text-[11px] font-bold text-slate-500">ⓘ {t.tapHint}</p>}
