@@ -252,3 +252,17 @@ assert.equal(sp.cost, 2050 + 2200);
 }
 
 console.log('fuel math: all checks passed');
+
+// Alternating fills (one tank filled higher than the next): 2.5 / 1.5 / 2.5 must not report a fuel loss.
+{
+  let k = 0;
+  const t2 = (at, liters, km) => ({ id: 'alt' + (++k), at, vehicleId: '', plate: 'ALT', vehicleType: 'Trailer', driverCode: '', driver: 'D', station: 'S', fuelType: 'diesel',
+    amount: liters * 20.5, liters, pumpReading: null, variance: 0, totalAmount: liters * 20.5, km, cardDistance: null, cardKmL: null, cardValidity: 'Correct', cardReason: '', txType: 'Normal' });
+  const alt = [t2('2026-10-01T08:00', 300, 10000), t2('2026-10-03T08:00', 300, 10690), t2('2026-10-05T08:00', 300, 11380),
+    t2('2026-10-07T08:00', 300, 12130), t2('2026-10-09T08:00', 300, 12580), t2('2026-10-11T08:00', 300, 13330), t2('2026-10-13T08:00', 300, 14020)];
+  const ra = computeFuel(alt, { ...DEFAULT_SETTINGS, truckTargets: { ALT: 2.3 } });
+  const alerts = fuelAlerts(ra, alt, { ...DEFAULT_SETTINGS, truckTargets: { ALT: 2.3 } });
+  assert.equal(alerts.filter(a => a.kind === 'overUse').length, 0, 'alternating fills are not a fuel loss');
+  assert.ok(ra.segments.some(s => s.notes.includes('paired')), 'the over fill is paired with its neighbour');
+}
+console.log('fuel math: alternating fills check passed');

@@ -51,6 +51,7 @@ export const ALERT_LEVEL: Record<AlertKind, AlertLevel> = {
 const MIN_LITERS = 10;
 /** An open (not yet closed) run is only worth an alert once it is this long. */
 const OPEN_KM = 1000;
+const sum = <T,>(xs: T[], f: (x: T) => number) => xs.reduce((a, x) => a + (f(x) || 0), 0);
 const round = (n: number, d = 2) => { const f = 10 ** d; return Math.round(n * f) / f; };
 
 /** Week key = the Saturday the work week starts on ("YYYY-MM-DD"). */
@@ -95,9 +96,14 @@ export function fuelAlerts(result: FuelResult, txs: FuelTx[], settings: FuelSett
     const open = s.status === 'pending' && s.notes.includes('partial') && s.distance >= OPEN_KM;
     if ((s.status === 'low' && !s.notes.includes('partial')) || open) {
       const missing = round(s.distance / s.target - s.liters, 0);
+      // A transaction reversed inside this stretch is the usual explanation: the fuel went into the
+      // truck but the card charge was cancelled (paid another way). Say so instead of leaving it a mystery.
+      const rev = txs.filter(t => t.plate === s.plate && t.amount < 0 && t.at > s.fromAt && t.at <= s.at);
+      const revL = round(sum(rev, t => Math.abs(t.liters)), 0);
       if (missing >= MIN_LITERS) add({ id: `tooFewLiters|${s.key}`, kind: 'tooFewLiters', plate: s.plate, driver: s.driver, at: s.at, liters: missing,
         egp: round(missing * price, 0), segmentKey: s.key,
-        info: { km: s.distance, liters: s.liters, kmL: round(s.distance / s.liters), target: s.target, fromAt: s.fromAt.slice(0, 10), open: open ? 1 : 0 } });
+        info: { km: s.distance, liters: s.liters, kmL: round(s.distance / s.liters), target: s.target, fromAt: s.fromAt.slice(0, 10), open: open ? 1 : 0,
+          revL, revAt: rev[0]?.at.slice(0, 10) || '', revIds: rev.map(t => t.id).join(', ') } });
     }
   }
 
@@ -111,6 +117,8 @@ export function fuelAlerts(result: FuelResult, txs: FuelTx[], settings: FuelSett
   }
   for (const s of result.segments) {
     if (!s.notes.includes('partial') && !s.notes.includes('paired')) continue;
+    // One open fill waiting for the next is not a join yet ("1 fills joined" read wrong); tooFewLiters covers it.
+    if (s.fills.length < 2) continue;
     add({ id: `partialJoined|${s.key}`, kind: 'partialJoined', plate: s.plate, driver: s.driver, at: s.at, liters: s.liters, egp: 0, segmentKey: s.key,
       info: { ids: ids(s.fills.flatMap(f => f.txs)), fills: s.fills.length, fromAt: s.fromAt.slice(0, 10), km: s.distance, kmL: s.kmL, open: s.status === 'pending' ? 1 : 0 } });
   }

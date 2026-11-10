@@ -85,9 +85,10 @@ const en = {
     switch (a.kind) {
       case 'overUse': return `${f0(i.km)} km at ${f2(i.kmL)} km/L (target ${f2(i.target)}) since ${plain(i.fromAt)}. ${f0(a.liters)} L over the margin ≈ ${f0(a.egp)} EGP.`;
       case 'weekDrop': return `Week of ${plain(i.week)}: ${f2(i.kmL)} km/L over ${f0(i.km)} km, target ${f2(i.target)}. ${f0(a.liters)} L over the margin ≈ ${f0(a.egp)} EGP.`;
-      case 'tooFewLiters': return i.open
+      case 'tooFewLiters': return (i.open
         ? `${f0(i.km)} km since ${plain(i.fromAt)} on only ${f0(i.liters)} L (${f2(i.kmL)} km/L). The next full fill should be about ${f0(a.liters)} L. If it isn't, fuel came from outside the card or a km reading is wrong.`
-        : `${f0(i.km)} km on ${f0(i.liters)} L (${f2(i.kmL)} km/L, target ${f2(i.target)}). About ${f0(a.liters)} L missing: fuel bought outside the card, or a wrong km reading.`;
+        : `${f0(i.km)} km on ${f0(i.liters)} L (${f2(i.kmL)} km/L, target ${f2(i.target)}). About ${f0(a.liters)} L missing: fuel bought outside the card, or a wrong km reading.`)
+        + (Number(i.revL) ? ` A ${f0(i.revL)} L transaction on ${plain(i.revAt)} was reversed in this period (#${plain(i.revIds)}): if that fuel went into the truck and was paid another way, it explains most of this.` : '');
       case 'overTank': return `${f0(i.liters)} L in one fill, the tank holds ${f0(i.tank)} L. ${f0(a.liters)} L too many ≈ ${f0(a.egp)} EGP.`;
       case 'badKm': return `km ${f0(i.km)} was skipped (${i.reason === 'sameKm' ? 'same km as the last fill' : i.reason === 'backwards' ? 'lower than the last fill' : 'too far from the last fill'}). Its ${f0(a.liters)} L moved to the next good reading.`;
       case 'noKm': return `No km reading on this fill (${f0(a.liters)} L). Its liters moved to the next good reading.`;
@@ -178,9 +179,10 @@ const ar: typeof en = {
     switch (a.kind) {
       case 'overUse': return `${f0(i.km)} كم بمعدل ${f2(i.kmL)} كم/لتر (المستهدف ${f2(i.target)}) منذ ${plain(i.fromAt)}. ${f0(a.liters)} لتر فوق الهامش ≈ ${f0(a.egp)} جنيه.`;
       case 'weekDrop': return `أسبوع ${plain(i.week)}: ${f2(i.kmL)} كم/لتر على ${f0(i.km)} كم، المستهدف ${f2(i.target)}. ${f0(a.liters)} لتر فوق الهامش ≈ ${f0(a.egp)} جنيه.`;
-      case 'tooFewLiters': return i.open
+      case 'tooFewLiters': return (i.open
         ? `${f0(i.km)} كم منذ ${plain(i.fromAt)} على ${f0(i.liters)} لتر فقط (${f2(i.kmL)} كم/لتر). التفويلة الكاملة القادمة يجب أن تكون حوالي ${f0(a.liters)} لتر. إن لم تكن، فالسولار من خارج الكارت أو قراءة العداد خاطئة.`
-        : `${f0(i.km)} كم على ${f0(i.liters)} لتر (${f2(i.kmL)} كم/لتر، المستهدف ${f2(i.target)}). حوالي ${f0(a.liters)} لتر ناقصة: سولار من خارج الكارت أو قراءة عداد خاطئة.`;
+        : `${f0(i.km)} كم على ${f0(i.liters)} لتر (${f2(i.kmL)} كم/لتر، المستهدف ${f2(i.target)}). حوالي ${f0(a.liters)} لتر ناقصة: سولار من خارج الكارت أو قراءة عداد خاطئة.`)
+        + (Number(i.revL) ? ` في الفترة دي اتلغت معاملة ${f0(i.revL)} لتر يوم ${plain(i.revAt)} (#${plain(i.revIds)}): لو السولار ده دخل العربية واتدفع بطريقة تانية، فده بيفسر أغلب الفرق.` : '');
       case 'overTank': return `${f0(i.liters)} لتر في تفويلة واحدة والتانك ${f0(i.tank)} لتر. زيادة ${f0(a.liters)} لتر ≈ ${f0(a.egp)} جنيه.`;
       case 'badKm': return `تم تجاهل العداد ${f0(i.km)} (${i.reason === 'sameKm' ? 'نفس كيلومتر التفويلة السابقة' : i.reason === 'backwards' ? 'أقل من التفويلة السابقة' : 'بعيد جدًا عن التفويلة السابقة'}). انتقلت ${f0(a.liters)} لتر لأول قراءة سليمة.`;
       case 'noKm': return `بدون قراءة عداد في هذه التفويلة (${f0(a.liters)} لتر). انتقلت لتراتها لأول قراءة سليمة.`;
