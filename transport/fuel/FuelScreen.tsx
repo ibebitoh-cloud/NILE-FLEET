@@ -4,7 +4,8 @@ import * as api from '../api';
 import type { Lang } from '../i18n';
 import { FUEL_STRINGS, FuelStrings } from './i18n';
 import { cardTotals, computeFuel, DEFAULT_SETTINGS, Fill, FuelResult, FuelSettings, FuelTx, Segment, SegmentStatus, Summary, summarize, TxView } from './math';
-import { parseFuelWorkbook, splitUpload } from './parse';
+import { emptyProblems, FileProblems, parseFuelWorkbook, splitUpload } from './parse';
+import { CardIssue, explainCardIssue, summarizeCardIssues } from './cardnote';
 import { exportFuelExcel, printFuelReport, Sheet } from './exports';
 import { explainHealth, explainSegment, healthSimple, methodText } from './explain';
 import { AlertKind, AlertLevel, FuelAlert, fuelAlerts, HEALTH_KM, HealthStatus, TruckHealth, truckHealth, weekEnd, weekOf } from './alerts';
@@ -206,7 +207,9 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const txOverExplain = useRef(false);
   useEffect(() => setFullRead(false), [explain]);
   const [busy, setBusy] = useState('');
-  const [preview, setPreview] = useState<{ total: number; fresh: FuelTx[]; inSystem: number; repeated: number; from: string; to: string } | null>(null);
+  const [preview, setPreview] = useState<{ total: number; fresh: FuelTx[]; inSystem: number; repeated: number; from: string; to: string; rows: FuelTx[]; problems: FileProblems } | null>(null);
+  /** Plain-language reasons a file could not be read (shown instead of a bare error). */
+  const [uploadFail, setUploadFail] = useState<string[] | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const set = (p: Partial<Filters>) => setF(x => ({ ...x, ...p }));
 
@@ -476,8 +479,9 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     { key: 'ourKm', label: t.ourKm, num: true, get: r => r.actualDistance, render: r => r.actualDistance == null ? <span className="text-slate-400">—</span> : <b>{n0(r.actualDistance)}</b> },
     { key: 'cardKml', label: `${t.cardSays} ${t.kmL}`, num: true, get: r => r.tx.cardKmL, render: r => n2(r.tx.cardKmL) },
     { key: 'ourKml', label: t.actualKmL, num: true, get: r => r.actualKmL, render: r => r.actualKmL == null ? <span className="text-slate-400">—</span> : <b>{n2(r.actualKmL)}</b> },
-    { key: 'valid', label: t.cardSays, get: r => `${r.tx.cardValidity} ${r.tx.cardReason}`.trim(), render: r => r.tx.cardValidity
-      ? <span className={/wrong/i.test(r.tx.cardValidity) ? 'font-bold text-red-600' : 'text-slate-500'}>{r.tx.cardValidity}{r.tx.cardReason ? ` · ${r.tx.cardReason}` : ''}</span> : '—' },
+    { key: 'valid', label: t.cardSays, get: r => explainCardIssue(r, r.segmentKey ? segByKey.get(r.segmentKey) : undefined, lang)?.title || '', render: r => {
+      const ci = explainCardIssue(r, r.segmentKey ? segByKey.get(r.segmentKey) : undefined, lang);
+      return ci ? <span className="font-bold text-amber-800" title={`${ci.meaning} ${ci.did}`}>{ci.title} <span className="text-emerald-700">✓</span></span> : <span className="text-slate-400">—</span>; } },
     { key: 'merged', label: t.mergedWith, get: r => { const sg = r.segmentKey ? segByKey.get(r.segmentKey) : undefined; const ids = sg ? segTxIds(sg).filter(x => x !== r.tx.id) : []; return ids.length ? ids.map(x => `#${x}`).join(' ') : null; },
       render: r => { const sg = r.segmentKey ? segByKey.get(r.segmentKey) : undefined; const ids = sg ? segTxIds(sg).filter(x => x !== r.tx.id) : []; return ids.length ? <span dir="ltr" className="text-[11px] font-bold text-sky-800">🔗 {ids.map(x => `#${x}`).join(' ')}</span> : <span className="text-slate-400">—</span>; } },
     { key: 'flags', label: t.flags, get: r => r.flags.join(', '), render: r => <div className="flex flex-wrap gap-1">{r.flags.map(fl => <Chip key={fl} tone={flagTone(fl)}>{t[`f_${fl}` as const]}</Chip>)}</div> },
@@ -574,13 +578,24 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const onFile = async (file: File) => {
     setBusy(t.uploading);
     try {
-      const rows = await parseFuelWorkbook(file);
-      if (!rows.length) { setToast(t.foundNone); return; }
+      const problems = emptyProblems();
+      const rows = await parseFuelWorkbook(file, problems);
+      if (!rows.length) {
+        const why = problemLines(problems);
+        setUploadFail(why.length ? why : [t.foundNone]);
+        return;
+      }
       const ats = rows.map(x => x.at).sort();
-      setPreview({ total: rows.length, ...splitUpload(rows, txs || []), from: day(ats[0]), to: day(ats[ats.length - 1]) });
+      setPreview({ total: rows.length, ...splitUpload(rows, txs || []), from: day(ats[0]), to: day(ats[ats.length - 1]), rows, problems });
     } catch (e: any) { setToast(String(e?.message || e)); }
     finally { setBusy(''); if (fileRef.current) fileRef.current.value = ''; }
   };
+  const problemLines = (p: FileProblems) => [
+    ...(p.noHeader ? [t.upNoHeader(p.noHeader.map(c => `«${c}»`).join(lang === 'ar' ? '، ' : ', '))] : []),
+    ...(p.skipped.date ? [t.upBadDate(p.skipped.date, p.skipped.dateExample || '')] : []),
+    ...(p.skipped.liters ? [t.upBadLiters(p.skipped.liters, p.skipped.litersExample || '')] : []),
+    ...(p.skipped.plate ? [t.upNoPlate(p.skipped.plate)] : []),
+  ];
   const saveUpload = async () => {
     if (!preview) return;
     setBusy(t.uploading);
@@ -1043,10 +1058,23 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
         const v = result.txViews.find(x => x.tx.id === txOpen);
         if (!v) return null;
         const sg = v.segmentKey ? segByKey.get(v.segmentKey) : undefined;
-        return <TxDialog t={t} lang={lang} v={v} seg={sg} simple={sg ? explainSegment(sg, settings, result.price, lang).simple : []}
+        return <TxDialog t={t} lang={lang} v={v} seg={sg} cardIssue={explainCardIssue(v, sg, lang)} simple={sg ? explainSegment(sg, settings, result.price, lang).simple : []}
           isAdmin={isAdmin} busy={!!busy} onClose={() => setTxOpen(null)} onSave={saveTx} onDelete={() => removeTx(v.tx.id)}
           onOpenFill={sg ? () => { if (explain?.seg === sg.key) setTxOpen(null); else { setExplain({ seg: sg.key }); setTxOpen(null); } } : undefined} />;
       })()}
+
+      {uploadFail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07111f]/60 p-4" role="dialog" aria-modal="true" onClick={() => setUploadFail(null)}>
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="text-lg font-black text-red-700">⚠ {t.upFail}</div>
+            {uploadFail.map((l, i) => <p key={i} className="mt-3 text-sm font-bold leading-6 text-slate-700">{l}</p>)}
+            <div className="mt-5 flex justify-end gap-2">
+              <button className={btnGhost} onClick={() => setUploadFail(null)}>{t.close}</button>
+              {isAdmin && <button className={btnGold} onClick={() => { setUploadFail(null); fileRef.current?.click(); }}>⬆ {t.upload}</button>}
+            </div>
+          </div>
+        </div>
+      )}
 
       {preview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07111f]/60 p-4" role="dialog" aria-modal="true">
@@ -1059,6 +1087,25 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
               <div className="rounded-xl bg-[#f8f5ef] p-3"><div className="text-2xl font-black text-slate-600">{preview.repeated}</div><div className="text-[10px] font-bold text-slate-500">{t.upRepeated}</div></div>
             </div>
             <p className="mt-3 text-xs text-slate-500">{preview.fresh.length ? t.upOnlyNew : t.upNothing}</p>
+            {(() => {
+              const skipped = problemLines({ ...preview.problems, noHeader: undefined });
+              return skipped.length ? (
+                <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12px] font-bold leading-5 text-amber-900">
+                  <div className="text-[10px] font-black uppercase tracking-widest">{t.upSkipped}</div>
+                  {skipped.map((l, i) => <p key={i} className="mt-1">{l}</p>)}
+                </div>
+              ) : null;
+            })()}
+            {(() => {
+              const ci = summarizeCardIssues(preview.rows, lang);
+              return ci ? (
+                <div className="mt-3 max-h-56 overflow-y-auto rounded-xl border border-sky-200 bg-sky-50 p-3 text-[12px] leading-5 text-sky-950">
+                  <div className="font-black">{ci.head}</div>
+                  {ci.items.map(it => <p key={it.title} className="mt-1.5"><b><span dir="ltr">{it.count}</span> × {it.title}:</b> {it.meaning}</p>)}
+                  <p className="mt-2 font-black text-emerald-800">✓ {ci.handled}</p>
+                </div>
+              ) : null;
+            })()}
             <div className="mt-6 flex justify-end gap-2">
               <button className={btnGhost} onClick={() => setPreview(null)}>✕</button>
               <button className={btnGold} disabled={!!busy || !preview.fresh.length} onClick={saveUpload}>{busy ? <DaliLoader size={16} /> : '✓'} {t.saveUpload} ({preview.fresh.length})</button>
@@ -1079,9 +1126,9 @@ const EDIT_FIELDS = ['at', 'km', 'liters', 'amount', 'totalAmount', 'driver', 's
 type EditField = typeof EDIT_FIELDS[number];
 
 const TxDialog: React.FC<{
-  t: FuelStrings; lang: Lang; v: TxView; seg?: Segment; simple: string[]; isAdmin: boolean; busy: boolean;
+  t: FuelStrings; lang: Lang; v: TxView; seg?: Segment; simple: string[]; isAdmin: boolean; busy: boolean; cardIssue: CardIssue | null;
   onClose: () => void; onSave: (x: FuelTx) => Promise<boolean>; onDelete: () => void; onOpenFill?: () => void;
-}> = ({ t, v, seg, simple, isAdmin, busy, onClose, onSave, onDelete, onOpenFill }) => {
+}> = ({ t, v, seg, simple, isAdmin, busy, cardIssue, onClose, onSave, onDelete, onOpenFill }) => {
   const x = v.tx;
   const [edit, setEdit] = useState(false);
   const blank = () => ({ at: x.at, km: x.km == null ? '' : String(x.km), liters: String(x.liters), amount: String(x.amount), totalAmount: String(x.totalAmount), driver: x.driver, station: x.station, note: x.note || '' });
@@ -1178,6 +1225,15 @@ const TxDialog: React.FC<{
               {x.note && <F label={t.note} wide><span className="font-bold">{x.note}</span></F>}
             </div>
             {x.edited && <p className="mt-2 text-[11px] font-bold text-amber-800">{t.editedOn(x.edited.at)}</p>}
+
+            {/* The card's complaint about this row, explained (not repeated). */}
+            {cardIssue && (
+              <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-[13px] leading-6 text-amber-950">
+                <div className="font-black">⚠ {cardIssue.title}</div>
+                <p className="mt-0.5">{cardIssue.meaning}</p>
+                <p className="mt-1 font-bold text-emerald-800">✓ {cardIssue.did}</p>
+              </div>
+            )}
 
             {/* SUB: the card company's own report, for reference only. */}
             <details className="mt-3 rounded-2xl border border-[#e3dccf] bg-white">
