@@ -9,6 +9,7 @@ import { parseRateWorkbook } from './importExcel';
 import SheetEditor, { SheetResult } from './SheetEditor';
 import DaliChat from './DaliChat';
 import FuelDali from './fuel/FuelDali';
+import SideNav from './SideNav';
 
 const FuelScreen = React.lazy(() => import('./fuel/FuelScreen'));
 
@@ -18,7 +19,8 @@ const goHome = () => { window.location.hash = ''; };
 /** Two separate sections: Fuel and Customer Rates. They share only the sign-in. */
 type Section = 'home' | 'fuel' | 'rates';
 /** Pages inside Customer Rates. */
-type Tab = 'overview' | 'rates' | 'customers';
+type Tab = 'overview' | 'rates' | 'customers' | 'dests' | 'ports';
+const RATES_ICON: Record<Tab, string> = { overview: '📊', rates: '💲', customers: '👥', dests: '📍', ports: '⚓' };
 const readSection = (): Section => { const m = window.location.hash.match(/^#\/?transport\/(fuel|rates)\b/); return m ? (m[1] as Section) : 'home'; };
 const goSection = (s: Section) => { window.location.hash = s === 'home' ? 'transport' : `transport/${s}`; };
 type SortKey = 'customer' | 'load_port' | 'destination' | 'transit_port' | PriceKey | 'updated_at';
@@ -125,7 +127,7 @@ const LoginView: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; 
 
 const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user: TransportUser; onLogout: () => void }> = ({ t, lang, setLang, user, onLogout }) => {
   const [tab, setTab] = useState<Tab>(() => {
-    try { const v = localStorage.getItem('nf_transport_tab'); return (v === 'overview' || v === 'customers') ? v : 'rates'; } catch { return 'rates'; }
+    try { const v = localStorage.getItem('nf_transport_tab'); return (v === 'overview' || v === 'customers' || v === 'dests' || v === 'ports') ? v : 'rates'; } catch { return 'rates'; }
   });
   const [rates, setRates] = useState<Rate[] | null>(null);
   const [loadError, setLoadError] = useState('');
@@ -185,14 +187,12 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
               <div className="mt-1 text-[9px] font-black uppercase tracking-[.3em] text-white/50">{section === 'fuel' ? t.secFuel : section === 'rates' ? t.secRates : t.system}</div>
             </div>
           </button>
-          <nav aria-label={t.sections} className="order-3 flex w-full gap-1 overflow-x-auto sm:order-none sm:w-auto">
-            {(fuelOnly ? ['fuel'] as const : ['fuel', 'rates'] as const).map(k => (
-              <button key={k} onClick={() => goSection(k)} aria-current={section === k ? 'page' : undefined}
-                className={`flex-1 whitespace-nowrap rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-[.08em] transition sm:flex-none sm:px-4 sm:tracking-[.18em] ${section === k ? 'bg-[#c2a378] text-[#07111f]' : 'border border-white/15 text-white/75 hover:bg-white/10'}`}>
-                {k === 'fuel' ? `⛽ ${t.secFuel}` : `💲 ${t.secRates}`}
-              </button>
-            ))}
-          </nav>
+          {/* Inside a section nothing of the other section is shown: only a way back to the section picker. */}
+          {section !== 'home' && !fuelOnly && (
+            <button onClick={() => goSection('home')} className="order-3 rounded-full border border-white/15 px-3 py-2 text-[11px] font-black uppercase tracking-[.12em] text-white/75 hover:bg-white/10 sm:order-none">
+              {lang === 'ar' ? '→' : '←'} {t.allSections}
+            </button>
+          )}
           <div className="ms-auto flex items-center gap-2 sm:gap-3">
             <div className="hidden text-end sm:block">
               <div className="text-xs font-bold">{user.name}</div>
@@ -211,19 +211,30 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
         {section === 'rates' && loadError && <div role="alert" className="mb-4 rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-bold text-red-800">{t.failed}: {loadError}</div>}
         {section === 'home' ? <SectionHome t={t} lang={lang} />
           : section === 'fuel' ? <React.Suspense fallback={<DaliLoader fullScreen />}><FuelScreen lang={lang} isAdmin={isAdmin || fuelOnly} setToast={setToast} /></React.Suspense>
-          : <>
-            <div role="tablist" aria-label={t.secRates} className="mb-5 flex gap-1 overflow-x-auto rounded-2xl border border-[#e3dccf] bg-white p-1 sm:inline-flex">
-              {(['overview', 'rates', 'customers'] as Tab[]).map(k => (
+          : <div className="md:flex md:items-start md:gap-7">
+            <SideNav title={t.secRates} icon="💲" dir={lang === 'ar' ? 'rtl' : 'ltr'} active={tab} onSelect={k => setTab(k as Tab)}
+              hideLabel={lang === 'ar' ? 'إخفاء القائمة' : 'Hide menu'} showLabel={lang === 'ar' ? 'إظهار القائمة' : 'Show menu'}
+              items={(['overview', 'rates', 'customers', 'dests', 'ports'] as Tab[]).map(k => ({ key: k, label: k === 'dests' ? t.byDest : k === 'ports' ? t.byPort : t[k], icon: RATES_ICON[k] }))} />
+            <div className="min-w-0 flex-1">
+            <div className="mb-4">
+              <h1 className="text-2xl font-black uppercase italic text-[#07111f] sm:text-3xl">💲 {t.secRates}</h1>
+              <p className="mt-1 text-xs text-slate-500">{t.ratesSub}</p>
+            </div>
+            <div role="tablist" aria-label={t.secRates} className="mb-5 flex gap-1 overflow-x-auto rounded-2xl border border-[#e3dccf] bg-white p-1 md:hidden">
+              {(['overview', 'rates', 'customers', 'dests', 'ports'] as Tab[]).map(k => (
                 <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
-                  className={`flex-1 whitespace-nowrap rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-[.12em] transition sm:flex-none ${tab === k ? 'bg-[#07111f] text-white' : 'text-slate-600 hover:bg-[#f4f1ea]'}`}>{t[k]}</button>
+                  className={`flex-1 whitespace-nowrap rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-[.12em] transition sm:flex-none ${tab === k ? 'bg-[#07111f] text-white' : 'text-slate-600 hover:bg-[#f4f1ea]'}`}>{k === 'dests' ? t.byDest : k === 'ports' ? t.byPort : t[k]}</button>
               ))}
             </div>
             {rates === null ? <DaliLoader fullScreen label={<span className="text-xs font-bold text-slate-500">{t.loading}</span>} />
               : tab === 'overview' ? <Overview t={t} rates={rates} onCustomer={openCustomer} />
+              : tab === 'dests' || tab === 'ports' ? <RouteGroups t={t} rates={rates} by={tab === 'dests' ? 'destination' : 'load_port'}
+                  onOpen={v => { setFilters({ ...NO_FILTERS, ...(tab === 'dests' ? { destination: v } : { loadPort: v }) }); setTab('rates'); }} />
               : tab === 'customers' ? <Customers t={t} rates={rates} isAdmin={isAdmin} onView={openCustomer} onQuote={quoteCustomer} onSheet={c => openSheet((rates || []).filter(r => r.customer === c), c)} setRates={setRates} setToast={setToast} />
               : <RatesScreen t={t} lang={lang} rates={rates} setRates={setRates} isAdmin={isAdmin} filters={filters} setFilters={setFilters} setToast={setToast}
                   onExport={(rows, customer) => setExportFor({ rows, customer })} onSheet={openSheet} />}
-          </>}
+            </div>
+          </div>}
       </main>
 
       <DaliSignature tone="light" className="pb-8 pt-4" />
@@ -246,13 +257,17 @@ const SectionHome: React.FC<{ t: Strings; lang: Lang }> = ({ t, lang }) => (
     <h1 className="mt-2 text-3xl font-black uppercase italic leading-none text-[#07111f] sm:text-4xl">{t.chooseTitle}</h1>
     <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">{t.chooseSub}</p>
     <div className="mt-8 grid gap-5 md:grid-cols-2">
-      {([['fuel', '⛽', t.secFuel, t.fuelDesc, t.fuelDali], ['rates', '💲', t.secRates, t.ratesDesc, t.ratesDali]] as const).map(([k, icon, title, desc, daliNote]) => (
+      {([['fuel', '⛽', t.secFuel, t.fuelDesc, t.fuelDali, t.fuelScreens], ['rates', '💲', t.secRates, t.ratesDesc, t.ratesDali, t.ratesScreens]] as const).map(([k, icon, title, desc, daliNote, screens]) => (
         <button key={k} onClick={() => goSection(k)}
           className="group relative flex min-h-[220px] flex-col overflow-hidden rounded-[1.75rem] bg-[#07111f] p-6 text-start text-white shadow-[0_18px_40px_rgba(7,17,31,.18)] ring-1 ring-[#c2a378]/30 transition hover:-translate-y-1 hover:ring-[#c2a378] sm:p-8">
           <div className="pointer-events-none absolute -end-16 -top-16 h-48 w-48 rounded-full bg-[#c2a378]/10 blur-2xl" />
           <span className="grid h-14 w-14 place-items-center rounded-2xl bg-[#c2a378]/15 text-3xl">{icon}</span>
           <div className="mt-5 text-2xl font-black uppercase italic tracking-tight">{title}</div>
           <p className="mt-2 text-sm leading-6 text-white/65">{desc}</p>
+          <div className="mt-5 text-[10px] font-black uppercase tracking-[.25em] text-[#c2a378]">{t.screens}</div>
+          <ul className="mt-2 space-y-1.5 text-[13px] text-white/80">
+            {screens.map(x => <li key={x} className="flex gap-2"><span className="text-[#c2a378]">•</span><span>{x}</span></li>)}
+          </ul>
           <div className="mt-auto flex items-center justify-between pt-6">
             <span className="flex items-center gap-2 text-[11px] font-bold text-[#c2a378]"><img src="/dali/dali-mark.png" alt="" className="h-4 w-4 object-contain" />{daliNote}</span>
             <span className="rounded-full bg-[#c2a378] px-4 py-2 text-[11px] font-black uppercase tracking-[.2em] text-[#07111f] transition group-hover:brightness-110">{t.open} {lang === 'ar' ? '←' : '→'}</span>
@@ -262,6 +277,51 @@ const SectionHome: React.FC<{ t: Strings; lang: Lang }> = ({ t, lang }) => (
     </div>
   </div>
 );
+
+/* ======================= Destinations / Load ports ======================= */
+
+const RouteGroups: React.FC<{ t: Strings; rates: Rate[]; by: 'destination' | 'load_port'; onOpen: (v: string) => void }> = ({ t, rates, by, onOpen }) => {
+  const [q, setQ] = useState('');
+  const groups = useMemo(() => {
+    const m = new Map<string, Rate[]>();
+    rates.forEach(r => { const k = r[by] || '—'; (m.get(k) || m.set(k, []).get(k)!).push(r); });
+    const needle = q.trim().toLowerCase();
+    return [...m].map(([name, rows]) => ({
+      name, rows,
+      customers: new Set(rows.map(r => r.customer)).size,
+      other: [...new Set(rows.map(r => (by === 'destination' ? r.load_port : r.destination)).filter(Boolean))],
+      ranges: PRICE_KEYS.map(k => { const v = rows.map(r => r[k]).filter(Boolean); return [k, v.length ? Math.min(...v) : 0, v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : 0, v.length ? Math.max(...v) : 0] as const; }),
+    })).filter(g => !needle || `${g.name} ${g.other.join(' ')}`.toLowerCase().includes(needle))
+      .sort((a, b) => b.rows.length - a.rows.length);
+  }, [rates, by, q]);
+  return (
+    <div className="space-y-4">
+      <input value={q} onChange={e => setQ(e.target.value)} placeholder={t.destSearch} className={`${inputCls} w-full sm:max-w-md`} />
+      {!groups.length && <div className="rounded-xl border border-dashed border-[#d9d0c0] p-8 text-center text-sm font-bold text-slate-500">{rates.length ? t.empty : t.noData}</div>}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {groups.map(g => (
+          <Card key={g.name} className="flex flex-col">
+            <div className="flex items-start justify-between gap-3">
+              <div className="text-base font-black text-[#07111f]">{g.name}</div>
+              <span className="shrink-0 rounded-full bg-[#f1ebe0] px-2.5 py-1 text-[10px] font-black text-[#8a7350]">{t.routesN(g.rows.length)}</span>
+            </div>
+            <div className="mt-1 text-[11px] font-bold text-slate-500">{t.customersN(g.customers)} · {by === 'destination' ? t.loadPorts : t.destinations}: {g.other.slice(0, 4).join('، ') || '—'}{g.other.length > 4 ? ` +${g.other.length - 4}` : ''}</div>
+            <div className="mt-3 text-[10px] font-black uppercase tracking-[.18em] text-[#8a7350]">{t.perContainer}</div>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {g.ranges.map(([k, min, avg, max]) => (
+                <div key={k} className="rounded-lg bg-[#f8f5ef] p-2 text-[11px]">
+                  <div className="font-black text-[#8a7350]" dir="ltr">{PRICE_LABELS[k]}</div>
+                  {max ? <div className="tabular-nums"><b className="text-sm text-[#07111f]">{fmt(avg)}</b> <span className="text-slate-500">({fmt(min)}–{fmt(max)})</span></div> : <div className="text-slate-400">—</div>}
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 pt-1"><button onClick={() => onOpen(g.name === '—' ? '' : g.name)} className={btnGhost}>{t.viewRates}</button></div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 /* ============================== Overview ============================== */
 

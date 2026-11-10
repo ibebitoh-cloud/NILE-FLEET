@@ -5,13 +5,17 @@ import * as dali from './dali';
 
 const DALI_MARK = '/dali/dali-mark.png';
 
+/** Shows **bold** from DALI's answers as bold text instead of raw asterisks. */
+const rich = (text: string) => text.replace(/^#{1,4}\s*/gm, '').split(/(\*\*[^*\n]+\*\*)/g)
+  .map((part, i) => (/^\*\*[^*\n]+\*\*$/.test(part) ? <b key={i} className="font-black text-[#07111f]">{part.slice(2, -2)}</b> : part));
+
 // Staff talk to DALI in Arabic, so the chat stays Arabic whatever the app language (same as the Customer Rates DALI).
 const TX = {
-  title: 'دالي', sub: 'مساعد السولار',
-  placeholder: 'اسأل عن السولار: عربية، سواق، أسبوع، تنبيه…', send: 'إرسال', newChat: 'محادثة جديدة',
-  hello: (n: string) => `أهلاً ${n}. أنا دالي بتاع قسم السولار. أعرف كل تفويلات الكارت، كم/لتر لكل عربية وسواق، التنبيهات، حالة العربيات والأسابيع. اسألني مثلاً أنهي عربية محتاجة صيانة، أو استهلاك عربية معينة الأسبوع ده.`,
-  thinking: 'دالي بيفكر…', failed: 'حصلت مشكلة', loading: 'بحمّل بيانات السولار…',
-  tries: ['أنهي عربيات محتاجة فحص صيانة؟', 'استهلاك الأسطول الأسبوع ده مقارنة بالأسبوع اللي فات؟', 'إيه أهم التنبيهات المفتوحة؟', 'مين أكتر سواق استهلك سولار؟'],
+  title: 'دالي', sub: 'مساعد الوقود',
+  placeholder: 'اكتب سؤالك عن الوقود: شاحنة، سائق، أسبوع، تنبيه…', send: 'إرسال', newChat: 'محادثة جديدة',
+  hello: (n: string) => `مرحباً ${n}،\nأنا دالي، المساعد الذكي لقسم الوقود في نايل فليت.\n\nأتابع معاملات كارت الوقود، ومعدل الاستهلاك (كم/لتر) لكل شاحنة وسائق، والتنبيهات المفتوحة، والحالة الفنية للشاحنات، والتقارير الأسبوعية والشهرية.\n\nيمكنك أن تسألني مثلاً: أي الشاحنات تحتاج إلى فحص صيانة؟ أو ما معدل استهلاك شاحنة معينة هذا الأسبوع؟`,
+  thinking: 'جارٍ إعداد الإجابة…', failed: 'تعذّر الحصول على إجابة، يُرجى المحاولة مرة أخرى', loading: 'جارٍ تحميل بيانات الوقود…',
+  tries: ['أي الشاحنات تحتاج إلى فحص صيانة؟', 'قارن استهلاك الأسطول هذا الأسبوع بالأسبوع السابق', 'ما أهم التنبيهات المفتوحة؟', 'من السائق الأعلى استهلاكاً للوقود؟'],
 };
 
 type Msg = { id: number; role: 'user' | 'assistant'; content: string; error?: boolean };
@@ -89,7 +93,7 @@ const FuelDali: React.FC<{ lang: Lang; user: TransportUser }> = ({ lang, user })
           </div>
 
           <div className="flex-1 space-y-3 overflow-y-auto px-3 py-4">
-            <div className="max-w-[88%] rounded-2xl rounded-ss-sm bg-white px-3.5 py-2.5 text-[13px] leading-6 shadow-sm">{TX.hello(user.name.split(' ')[0] || user.name)}</div>
+            <div className="max-w-[88%] rounded-2xl rounded-ss-sm bg-white px-3.5 py-2.5 text-[13px] leading-6 shadow-sm whitespace-pre-wrap">{TX.hello(user.name.split(' ')[0] || user.name)}</div>
             {!msgs.length && (
               <div className="flex flex-wrap gap-2">
                 {TX.tries.map(s => <button key={s} onClick={() => send(s)} style={{ minHeight: 0 }} className="rounded-full border border-[#c2a378]/60 bg-white px-3 py-1.5 text-[11px] font-bold text-[#6f5a3a] hover:bg-[#fbf3e4]">{s}</button>)}
@@ -98,7 +102,7 @@ const FuelDali: React.FC<{ lang: Lang; user: TransportUser }> = ({ lang, user })
             {msgs.map(m => m.role === 'user' ? (
               <div key={m.id} className="ms-auto max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-se-sm bg-[#07111f] px-3.5 py-2.5 text-[13px] leading-6 text-white">{m.content}</div>
             ) : (
-              <div key={m.id} className={`max-w-[92%] whitespace-pre-wrap rounded-2xl rounded-ss-sm px-3.5 py-2.5 text-[13px] leading-6 shadow-sm ${m.error ? 'bg-red-50 text-red-800' : 'bg-white'}`}>{m.content}</div>
+              <div key={m.id} className={`max-w-[92%] whitespace-pre-wrap rounded-2xl rounded-ss-sm px-3.5 py-2.5 text-[13px] leading-6 shadow-sm ${m.error ? 'bg-red-50 text-red-800' : 'bg-white'}`}>{m.role === 'assistant' ? rich(m.content) : m.content}</div>
             ))}
             {busy && <div className="flex items-center gap-2 px-1 text-[11px] font-bold text-slate-500"><img src={DALI_MARK} alt="" className="h-4 w-4 animate-spin object-contain" style={{ animationDuration: '.6s' }} />{data.current ? TX.thinking : TX.loading}</div>}
             <div ref={endRef} />

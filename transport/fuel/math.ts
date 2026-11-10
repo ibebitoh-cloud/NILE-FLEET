@@ -385,6 +385,22 @@ export function computeFuel(allTxs: FuelTx[], settings: FuelSettings = DEFAULT_S
           break;
         }
       }
+      // An "over" fill next to a fill that did better than target, normal when counted together:
+      // one tank was filled higher than the other (fills alternate 2.5 / 1.5 / 2.5 …). Count them as one
+      // so a single fill is not reported as fuel loss. The pair is still judged against the target.
+      if (!done && usable(a) && kmlOfRaw(a) < target * (1 - m)) {
+        const within = (x: Raw, y: Raw) => { const k = (x.distance + y.distance) / (x.liters + y.liters); return k >= target * (1 - m) && k <= target * (1 + m); };
+        const good = (r?: Raw) => usable(r) && !r!.notes.includes('paired') && kmlOfRaw(r!) > target && kmlOfRaw(r!) <= target * (1 + m);
+        const prev = paired[paired.length - 1], next = joined[i + 1];
+        if (good(prev) && within(prev, a)) {
+          paired.pop();
+          paired.push({ ...mergeRaw(prev, a), notes: [...new Set([...prev.notes, ...a.notes, 'paired' as SegmentNote])], pair: [round(kmlOfRaw(prev), 2), round(kmlOfRaw(a), 2)] });
+          done = true;
+        } else if (good(next) && within(a, next)) {
+          paired.push({ ...mergeRaw(a, next), notes: [...new Set([...a.notes, ...next.notes, 'paired' as SegmentNote])], pair: [round(kmlOfRaw(a), 2), round(kmlOfRaw(next), 2)] });
+          i += 1; done = true;
+        }
+      }
       if (!done) paired.push(a);
     }
     for (const r of paired) segments.push(score(r, target, s.fillMarginPct, price, !!r.pending));

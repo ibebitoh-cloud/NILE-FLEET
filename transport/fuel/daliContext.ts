@@ -3,7 +3,7 @@ import type { ChatTurn } from '../daliCore';
 // .ts extensions so node can run this file in tests (vite and tsc accept them too).
 import { computeFuel, summarize } from './math.ts';
 import type { FuelResult, FuelSettings, FuelTx, Segment, Summary } from './math.ts';
-import { fuelAlerts, LEVEL_ORDER, truckHealth, weekEnd, weekOf } from './alerts.ts';
+import { fuelAlerts, isChecked, LEVEL_ORDER, truckHealth, weekEnd, weekOf } from './alerts.ts';
 import type { FuelAlert, TruckHealth } from './alerts.ts';
 import { FUEL_STRINGS } from './i18n.ts';
 import { methodText } from './explain.ts';
@@ -73,7 +73,7 @@ export function buildFuelContext(d: FuelData, user: TransportUser, question: str
   const weeks = group(d, x => weekOf(x.at), false).sort((a, b) => a.key.localeCompare(b.key)).slice(-6);
   const months = group(d, x => x.at.slice(0, 7), false).sort((a, b) => a.key.localeCompare(b.key));
   const checked = new Set(d.settings.checkedAlerts || []);
-  const open = d.alerts.filter(a => !checked.has(a.id)).sort((a, b) => LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level] || b.at.localeCompare(a.at));
+  const open = d.alerts.filter(a => !isChecked(a, checked)).sort((a, b) => LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level] || b.at.localeCompare(a.at));
   const T = FUEL_STRINGS.en;
   const alertLine = (a: FuelAlert) => `[${a.level}] ${a.at.slice(0, 10)} ${a.plate}${a.driver ? ` (${a.driver})` : ''}: ${T.kind[a.kind]}. ${T.alertText(a).replace(/[⁦-⁩]/g, '')}`;
   const byStation = new Map<string, number>();
