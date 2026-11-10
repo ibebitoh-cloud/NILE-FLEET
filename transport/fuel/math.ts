@@ -77,7 +77,25 @@ export interface FuelSettings {
   idleDays: number;
   /** Alert ids an admin marked as checked. */
   checkedAlerts: string[];
+  /** Truck details by plate number (digits only, e.g. "7179"): assigned driver, branch, model, year. */
+  vehicles: Record<string, VehicleInfo>;
 }
+
+export interface VehicleInfo { driver: string; branch: string; model: string; year: string }
+
+/** The number part of a plate ("ص د ج 7179" → "7179"), Arabic digits too, so details match whatever letters the card uses. */
+export const plateNo = (plate: string) => (plate || '').replace(/[٠-٩]/g, d => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/\D/g, '');
+export const vehicleOf = (settings: Pick<FuelSettings, 'vehicles'>, plate: string): VehicleInfo | undefined => (settings.vehicles || {})[plateNo(plate)];
+
+/** Alexandria branch list sent by the user on 2026-11-10 (ALEX NILE FLEET CARS KM.L), copied exactly as written. */
+export const DEFAULT_VEHICLES: Record<string, VehicleInfo> = {
+  7179: { driver: 'Moustafa Ismail', branch: 'Alexandria', model: 'MERCIDES', year: '2003' },
+  6567: { driver: 'Yousef Abd Elnaby', branch: 'Alexandria', model: 'IVECO', year: '2018' },
+  4363: { driver: 'Reda Abd Elbaset', branch: 'Alexandria', model: 'IVECO', year: '2017' },
+  4324: { driver: 'Mohamed Aalam', branch: 'Alexandria', model: 'IVECO', year: '2017' },
+  4323: { driver: 'Mohamed Hussein', branch: 'Alexandria', model: 'IVECO', year: '2017' },
+  6467: { driver: 'AHMED HAWARY', branch: 'Alexandria', model: '', year: '' },
+};
 
 export const DEFAULT_SETTINGS: FuelSettings = {
   price: 0,
@@ -91,6 +109,7 @@ export const DEFAULT_SETTINGS: FuelSettings = {
   tankLiters: 0,
   idleDays: 5,
   checkedAlerts: [],
+  vehicles: DEFAULT_VEHICLES,
 };
 
 export type TxFlag = 'reversed' | 'reversal' | 'split' | 'badKm' | 'fixedKm' | 'opening';

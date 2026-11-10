@@ -4,7 +4,7 @@ import SideNav from '../SideNav';
 import * as api from '../api';
 import type { Lang } from '../i18n';
 import { FUEL_STRINGS, FuelStrings } from './i18n';
-import { cardTotals, computeFuel, DEFAULT_SETTINGS, Fill, FuelResult, FuelSettings, FuelTx, Segment, SegmentStatus, Summary, summarize, TxView } from './math';
+import { cardTotals, computeFuel, DEFAULT_SETTINGS, plateNo, vehicleOf, VehicleInfo, Fill, FuelResult, FuelSettings, FuelTx, Segment, SegmentStatus, Summary, summarize, TxView } from './math';
 import { parseFuelWorkbook, splitUpload } from './parse';
 import { exportFuelExcel, printFuelReport, Sheet } from './exports';
 import { explainHealth, explainSegment, healthSimple, methodText } from './explain';
@@ -23,6 +23,7 @@ const pct = (v: number) => (v ? ltr(`${v > 0 ? '+' : ''}${N1.format(v)}%`) : '�
 const signed = (v: number, f = n0) => { const out = f(Math.abs(v)); return !v || /^[0.]+$/.test(out) ? '—' : ltr(`${v > 0 ? '+' : '−'}${out}`); };
 const day = (at: string) => at.slice(0, 10);
 const round1 = (v: number) => Math.round(v * 10) / 10;
+const vehicleLine = (v: VehicleInfo) => [v.model, v.year, v.branch, v.driver && `👤 ${v.driver}`].filter(Boolean).join(' · ');
 const when = (at: string) => `${at.slice(0, 10)} ${at.slice(11, 16)}`;
 function sum<T>(xs: readonly T[], f: (x: T) => number): number { return xs.reduce((s, x) => s + (f(x) || 0), 0); }
 const uniq = (xs: string[]) => [...new Set(xs.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar'));
@@ -384,7 +385,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     const wk = byPlate(only(allData, x => weekOf(x.at) === thisWeek)), pw = byPlate(only(allData, x => weekOf(x.at) === prevWeek));
     const q2 = q;
     return group(x => x.plate, k => k, true, allData)
-      .filter(r => (!f.plate || r.key === f.plate) && (!f.type || r.vehicleType.includes(f.type)) && (!q2 || `${r.key} ${r.drivers.join(' ')}`.toLowerCase().includes(q2)))
+      .filter(r => (!f.plate || r.key === f.plate) && (!f.type || r.vehicleType.includes(f.type)) && (!q2 || `${r.key} ${r.drivers.join(' ')} ${Object.values(vehicleOf(settings, r.key) || {}).join(' ')}`.toLowerCase().includes(q2)))
       .map(r => {
         const mine = (txs || []).filter(x => x.plate === r.key && x.amount > 0).sort((a, b) => a.at.localeCompare(b.at));
         const last = mine[mine.length - 1];
@@ -933,7 +934,8 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
                     className={`rounded-2xl border p-4 text-start shadow-sm transition hover:-translate-y-0.5 hover:border-[#c2a378] hover:shadow-md ${HEALTH_CLS[hs]}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0"><b className="block truncate text-base text-[#07111f]">{c.plate}</b>
-                        <div className="truncate text-[10px] text-slate-500">{c.all.vehicleType} · {c.all.drivers.slice(-2).join('، ')}</div></div>
+                        <div className="truncate text-[10px] text-slate-500">{c.all.vehicleType} · {c.all.drivers.slice(-2).join('، ')}</div>
+                        {vehicleOf(settings, c.plate) && <div className="text-[10px] font-bold leading-4 text-[#8a7350]">{vehicleLine(vehicleOf(settings, c.plate)!)}</div>}</div>
                       <div className="flex shrink-0 flex-col items-end gap-1">
                         <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-black ${HEALTH_PILL[hs]}`}>{t[`h_${hs}` as const]}</span>
                         {c.open > 0 && <span className="whitespace-nowrap rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-black text-red-700 ring-1 ring-red-200">🔔 {t.openAlertsN(c.open)}</span>}
@@ -973,6 +975,11 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
               </div>
               <span className="text-[11px] text-slate-500">{truck.all.vehicleType} · {truck.all.drivers.join('، ')}</span>
             </div>
+            {vehicleOf(settings, truck.plate) && <div className="flex flex-wrap gap-2">
+              {([[t.assignedDriver, vehicleOf(settings, truck.plate)!.driver], [t.branch, vehicleOf(settings, truck.plate)!.branch], [t.model, vehicleOf(settings, truck.plate)!.model], [t.year, vehicleOf(settings, truck.plate)!.year]] as const).filter(([, v]) => v).map(([k, v]) => (
+                <span key={k} className="rounded-full bg-white px-3 py-1 text-[11px] text-slate-500 ring-1 ring-[#eee7da]">{k}: <b dir="auto" className="text-[#07111f]">{v}</b></span>
+              ))}
+            </div>}
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
               <Kpi label={t.overall} value={n2(truck.all.kmL)} unit={t.kmL} tone={truck.all.status === 'high' ? 'red' : 'navy'} sub={<>{t.target} {n2(truck.all.target)} {pct(truck.all.vsTargetPct)}</>} />
               <Kpi label={t.thisWeek} value={n2(truck.card?.week?.kmL || 0)} unit={t.kmL} sub={<>{t.lastWeek} {n2(truck.card?.prev?.kmL || 0)}</>} />
@@ -1378,6 +1385,10 @@ const Compare: React.FC<{ label: string; card: string; actual: string; diff: str
   </div>
 );
 
+/** Plate numbers from the data plus any already in the truck details, in order. */
+const uniqNos = (plates: string[], vehicles: Record<string, VehicleInfo> | undefined) =>
+  [...new Set([...plates.map(plateNo), ...Object.keys(vehicles || {})])].filter(Boolean).sort();
+
 const SettingsPanel: React.FC<{
   t: FuelStrings; isAdmin: boolean; settings: FuelSettings; result: FuelResult; plates: string[]; types: string[];
   onSave: (s: FuelSettings) => void;
@@ -1439,6 +1450,26 @@ const SettingsPanel: React.FC<{
               </label>
             ))}
           </div>
+        </Card>
+        <Card>
+          <div className="text-xs font-black uppercase tracking-[.2em] text-[#07111f]">{t.truckDetails}</div>
+          <p className="mt-1 text-[10px] text-slate-500">{t.truckDetailsHint}</p>
+          <div className="mt-3 space-y-2">
+            {uniqNos(plates, d.vehicles).map(no => {
+              const v: VehicleInfo = (d.vehicles || {})[no] || { driver: '', branch: '', model: '', year: '' };
+              const put = (k: keyof VehicleInfo, val: string) => setD({ ...d, vehicles: { ...(d.vehicles || {}), [no]: { ...v, [k]: val } } });
+              return (
+                <div key={no} className="grid grid-cols-[3.5rem_1fr_1fr] items-center gap-1.5 sm:grid-cols-[3.5rem_1.4fr_1fr_1fr_4.5rem]">
+                  <b className="text-xs tabular-nums text-[#07111f]">{no}</b>
+                  <input aria-label={t.assignedDriver} placeholder={t.assignedDriver} disabled={!isAdmin} className={`${inputCls} !py-1.5 text-xs`} value={v.driver} onChange={e => put('driver', e.target.value)} />
+                  <input aria-label={t.branch} placeholder={t.branch} disabled={!isAdmin} className={`${inputCls} !py-1.5 text-xs`} value={v.branch} onChange={e => put('branch', e.target.value)} />
+                  <input aria-label={t.model} placeholder={t.model} disabled={!isAdmin} className={`${inputCls} col-start-2 !py-1.5 text-xs sm:col-start-auto`} value={v.model} onChange={e => put('model', e.target.value)} />
+                  <input aria-label={t.year} placeholder={t.year} disabled={!isAdmin} inputMode="numeric" className={`${inputCls} !py-1.5 text-xs`} value={v.year} onChange={e => put('year', e.target.value)} />
+                </div>
+              );
+            })}
+          </div>
+          {isAdmin && <button className={`${btnGold} mt-4`} onClick={() => onSave(d)}>✓ {t.saveSettings}</button>}
         </Card>
         <Card>
           <div className="text-xs font-black uppercase tracking-[.2em] text-[#07111f]">{t.how}</div>
