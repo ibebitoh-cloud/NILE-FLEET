@@ -29,7 +29,7 @@ const en = {
   cardWrong: 'rows the card marks "Wrong"', diff: 'Difference',
   cardVsActualHint: 'Card = the uploaded file\'s own Distance column over the rows it does not mark Wrong. Actual = our odometer math after joining split and partial fills and skipping bad readings.',
   // views
-  trucks: 'Trucks', drivers: 'Drivers', fills: 'Fills', transactions: 'Transactions', weeks: 'Weekly', week: 'Week (Sat → Fri)', vsLastWeek: 'vs last week', soFar: 'so far', months: 'Monthly', stations: 'Stations', settings: 'Margins & targets',
+  trucks: 'Trucks', types: 'Vehicle types', drivers: 'Drivers', fills: 'Fills', transactions: 'Transactions', weeks: 'Weekly', week: 'Week (Sat → Fri)', vsLastWeek: 'vs last week', soFar: 'so far', months: 'Monthly', stations: 'Stations', settings: 'Margins & targets',
   // columns
   truck: 'Truck', type: 'Type', driver: 'Driver', station: 'Station', date: 'Date', month: 'Month', count: 'Fills', txs: 'Transactions',
   km: 'km', distance: 'Distance', kmL: 'km/L', l100: 'L/100km', vsTarget: 'vs target', diffL: 'Diff L', diffEgp: 'Diff EGP',
@@ -109,7 +109,7 @@ const ar: typeof en = {
   cardVsActual: 'تقرير الكارت مقابل الفعلي', cardKm: 'كم الكارت', actual: 'الفعلي', actualKm: 'كم الفعلي', cardKmL: 'كم/لتر الكارت', actualKmL: 'كم/لتر الفعلي',
   cardWrong: 'صفوف يعتبرها الكارت "Wrong"', diff: 'الفرق',
   cardVsActualHint: 'الكارت = عمود المسافة في الملف المرفوع للصفوف غير المعلمة Wrong. الفعلي = حسابنا من العداد بعد دمج التفويل المقسوم والناقص وتجاهل القراءات الخاطئة.',
-  trucks: 'السيارات', drivers: 'السائقون', fills: 'التفويلات', transactions: 'المعاملات', weeks: 'أسبوعي', week: 'الأسبوع (سبت ← جمعة)', vsLastWeek: 'مقابل الأسبوع السابق', soFar: 'حتى الآن', months: 'شهري', stations: 'المحطات', settings: 'الهوامش والمستهدف',
+  trucks: 'السيارات', types: 'أنواع المركبات', drivers: 'السائقون', fills: 'التفويلات', transactions: 'المعاملات', weeks: 'أسبوعي', week: 'الأسبوع (سبت ← جمعة)', vsLastWeek: 'مقابل الأسبوع السابق', soFar: 'حتى الآن', months: 'شهري', stations: 'المحطات', settings: 'الهوامش والمستهدف',
   truck: 'السيارة', type: 'النوع', driver: 'السائق', station: 'المحطة', date: 'التاريخ', month: 'الشهر', count: 'تفويلات', txs: 'معاملات',
   km: 'كم', distance: 'المسافة', kmL: 'كم/لتر', l100: 'لتر/100كم', vsTarget: 'مقابل المستهدف', diffL: 'فرق لتر', diffEgp: 'فرق جنيه',
   overL: 'لتر فوق الهامش', loss: 'خسارة جنيه', splits: 'مقسوم', partials: 'ناقص', bad: 'عداد خاطئ', status: 'الحالة', notes: 'ملاحظات',
