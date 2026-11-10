@@ -767,29 +767,57 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     ['home', '⌂', t.home, null], ['alerts', '🔔', t.alerts, urgent || null], ['summary', '📊', t.summary, null], ['weeks', '🗓', t.weeks, null], ['more', '☰', t.more, null],
   ];
   const renderAlert = (a: FuelAlert) => {
-                const done = isChecked(a, checked);
-                return (
-                  <Card key={a.id} className={`!p-3.5 ${done ? 'opacity-50' : ''}`}>
-                    <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${LEVEL_CLS[a.level]}`}>{t.lvl[a.level]}</span>
-                          <b className="text-sm text-[#07111f]">{t.kind[a.kind]}</b>
-                          <span className="text-xs font-bold text-[#07111f]">{a.plate}</span>
-                          <span className="text-[11px] text-slate-500">{a.driver}</span>
-                          <span dir="ltr" className="text-[11px] text-slate-400">{when(a.at)}</span>
-                          {done && <Chip>✓ {t.checkedBy}</Chip>}
-                        </div>
-                        <p className="mt-1.5 text-xs leading-5 text-slate-600">{t.alertText(a)}</p>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-2 border-t border-[#f1ebe0] pt-2.5 sm:border-0 sm:pt-0">
-                        {a.egp > 0 && <span className="me-auto text-sm font-black tabular-nums text-red-600 sm:me-0">{n0(a.egp)} <span className="text-[10px] text-slate-400">{t.egp}</span></span>}
-                        {a.kind !== 'idle' && <button className={btnGhost} onClick={() => openAlert(a)}>↗</button>}
-                        {isAdmin && <button className={btnGhost} onClick={() => toggleChecked(done ? storedIds(a, checked) : checkIds(a), !done)}>{done ? t.undoChecked : `✓ ${t.markChecked}`}</button>}
-                      </div>
-                    </div>
-                  </Card>
-                );
+    const done = isChecked(a, checked);
+    const severity = a.level === 'high'
+      ? 'border-red-400 bg-red-50/50'
+      : a.level === 'medium'
+        ? 'border-amber-400 bg-amber-50/40'
+        : 'border-sky-300 bg-sky-50/30';
+    const severityText = a.level === 'high'
+      ? 'text-red-800 bg-red-100 ring-red-200'
+      : a.level === 'medium'
+        ? 'text-amber-900 bg-amber-100 ring-amber-200'
+        : 'text-sky-800 bg-sky-100 ring-sky-200';
+    return (
+      <article key={a.id} className={`overflow-hidden rounded-2xl border border-[#e7e0d4] bg-white shadow-[0_2px_10px_rgba(7,17,31,.045)] transition hover:shadow-md ${done ? 'opacity-60' : ''}`}>
+        <div className={`border-s-4 px-3.5 py-3 sm:px-4 ${severity}`}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <span className={`rounded-lg px-2.5 py-1 text-[10px] font-black ring-1 ${severityText}`}>{t.lvl[a.level]}</span>
+              <b className="text-sm font-black text-[#07111f]">{t.kind[a.kind]}</b>
+              {done && <Chip>✓ {t.checkedBy}</Chip>}
+            </div>
+            <span dir="ltr" className="rounded-lg bg-white/80 px-2.5 py-1 text-[10px] font-bold tabular-nums text-slate-500 ring-1 ring-black/5">{when(a.at)}</span>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="rounded-xl bg-white/85 px-3 py-2 ring-1 ring-black/5">
+              <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{t.truck}</div>
+              <div className="mt-0.5 truncate text-sm font-black text-[#07111f]">{a.plate}</div>
+            </div>
+            <div className="rounded-xl bg-white/85 px-3 py-2 ring-1 ring-black/5">
+              <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{t.driver}</div>
+              <div className="mt-0.5 truncate text-sm font-bold text-[#07111f]">{a.driver || '—'}</div>
+            </div>
+            <div className="rounded-xl bg-white/85 px-3 py-2 ring-1 ring-black/5">
+              <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{t.level}</div>
+              <div className="mt-0.5 text-sm font-black text-[#07111f]">{t.lvl[a.level]}</div>
+            </div>
+            <div className="rounded-xl bg-white/85 px-3 py-2 ring-1 ring-black/5">
+              <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{lang === 'ar' ? 'التأثير التقديري' : 'Estimated impact'}</div>
+              <div className={`mt-0.5 text-sm font-black tabular-nums ${a.egp > 0 ? 'text-red-700' : 'text-slate-400'}`}>{a.egp > 0 ? n0(a.egp) : '—'} <span className="text-[10px] font-bold text-slate-400">{a.egp > 0 ? t.egp : ''}</span></div>
+            </div>
+          </div>
+          <div className="mt-3 rounded-xl bg-white/90 p-3 ring-1 ring-black/5">
+            <div className="mb-1 text-[9px] font-black uppercase tracking-[.16em] text-[#8a7350]">{t.details}</div>
+            <p className="text-xs leading-6 text-slate-700">{t.alertText(a)}</p>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+            {a.kind !== 'idle' && <button className={btnNavy} onClick={() => openAlert(a)}>↗ {t.why}</button>}
+            {isAdmin && <button className={done ? btnGhost : btnGold} onClick={() => toggleChecked(done ? storedIds(a, checked) : checkIds(a), !done)}>{done ? t.undoChecked : `✓ ${t.markChecked}`}</button>}
+          </div>
+        </div>
+      </article>
+    );
   };
   const viewLabel = (views.find(v => v[0] === view) || [view, view === 'truck' ? truckPlate : t.home, null]) as [View, string, number | null];
 
@@ -927,7 +955,22 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
           )}
 
           {view === 'alerts' && (
-            <div className="space-y-3">
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-2">
+                <div className="rounded-2xl border border-red-200 bg-red-50 p-3">
+                  <div className="text-[9px] font-black uppercase tracking-wider text-red-600">{t.lvl.high}</div>
+                  <div className="mt-1 text-2xl font-black tabular-nums text-red-800">{shownAlerts.filter(a => a.level === 'high').length}</div>
+                </div>
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3">
+                  <div className="text-[9px] font-black uppercase tracking-wider text-amber-700">{t.lvl.medium}</div>
+                  <div className="mt-1 text-2xl font-black tabular-nums text-amber-900">{shownAlerts.filter(a => a.level === 'medium').length}</div>
+                </div>
+                <div className="rounded-2xl border border-sky-200 bg-sky-50 p-3">
+                  <div className="text-[9px] font-black uppercase tracking-wider text-sky-700">{t.lvl.low}</div>
+                  <div className="mt-1 text-2xl font-black tabular-nums text-sky-900">{shownAlerts.filter(a => a.level === 'low').length}</div>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-[#e7e0d4] bg-white p-3 shadow-sm">
               <div className="grid grid-cols-2 items-center gap-2 sm:flex sm:flex-wrap">
                 <select className={inputCls} value={af.level} onChange={e => setAf({ ...af, level: e.target.value as '' | AlertLevel })}>
                   <option value="">{t.allLevels}</option>{(['high', 'medium', 'low'] as AlertLevel[]).map(l => <option key={l} value={l}>{t.lvl[l]}</option>)}
@@ -936,6 +979,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
                   <option value="">{t.allKinds}</option>{(Object.keys(t.kind) as AlertKind[]).map(k => <option key={k} value={k}>{t.kind[k]} ({alerts.filter(a => a.kind === k && alertOk(a) && (af.showChecked || !isChecked(a, checked))).length})</option>)}
                 </select>
                 <label className="flex items-center gap-2 text-xs font-bold text-slate-600"><input type="checkbox" checked={af.showChecked} onChange={e => setAf({ ...af, showChecked: e.target.checked })} />{t.showChecked}</label>
+              </div>
               </div>
               {!shownAlerts.length ? (
                 <div className="rounded-xl border border-dashed border-[#d9d0c0] p-8 text-center text-sm font-bold text-slate-500">✓ {t.noAlerts}</div>
