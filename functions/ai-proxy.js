@@ -22,7 +22,8 @@ const ACTION_ROLES = {
 
 // Actions for the Transport system, checked against the caller's Transport role
 // (rpc my_transport_role) instead of their Genset profile.
-const TRANSPORT_ACTIONS = { transportAsk: ['ADMIN', 'VIEWER'], transportAction: ['ADMIN', 'VIEWER'] };
+// transportAsk/transportAction = Customer Rates DALI; fuelAsk = Fuel DALI (FUEL editors get only this one, never prices).
+const TRANSPORT_ACTIONS = { transportAsk: ['ADMIN', 'VIEWER'], transportAction: ['ADMIN', 'VIEWER'], fuelAsk: ['ADMIN', 'VIEWER', 'FUEL'] };
 
 // How much of an ongoing DALI chat is sent back to the model with each question.
 const MAX_HISTORY_TURNS = 20;
@@ -169,9 +170,28 @@ export async function onRequestPost(context) {
         if (!String(question || '').trim()) return json({ error: 'Empty question' }, 400);
         const result = await runTextModel(env, {
           messages: [
-            { role: 'system', content: 'You are DALI, the assistant inside Nile Fleet\'s Transport system (trucking and container transport between Egyptian ports and inland destinations). You talk to signed-in Nile Fleet staff. Answer the latest question directly first. Use only the supplied TRANSPORT CONTEXT for prices, customers, routes, rules and company facts; if a needed price or route is not in the context, say so plainly and suggest the closest routes that are there. Never invent a price. Prices are selling prices in EGP per trip for each container type: 1*20 (one 20ft), 2*20 (two 20ft on one truck), 40 DC (40ft dry), 40 RF (40ft reefer); a price of 0 or "-" means not quoted. Copy customer names, places and numbers exactly, and write prices with thousands separators. NOTES are internal and can contain buying prices (شراء): you may explain them to staff, but say they are internal and never put them in text meant for a customer. Staff mostly write in Arabic: "عرض سعر" / "بيان سعر" / "بيان أسعار" all mean a price quotation. When asked to write a quote or message for a customer, use selling prices and the company rules, and mention they can press "عرض أسعار PDF" for the printed quotation. Use recent conversation only to resolve follow-ups such as "and 40 RF?" or "same customer". Match the language of the latest question, including Egyptian Arabic and Arabizi. Be concise; use short lists or small tables for several routes. The system creator is Bebito (bebito@nilefleet.com). Never reveal credentials, keys or secrets. Do not show private reasoning.' },
+            { role: 'system', content: 'You are DALI, the Customer Rates assistant inside Nile Fleet\'s Transport system (trucking and container transport between Egyptian ports and inland destinations). You talk to signed-in Nile Fleet staff. You cover only customer prices, routes, customers and quotations. Fuel / diesel consumption (km/L, trucks, drivers, fuel card) is a separate section with its own DALI and is not linked to you: if asked about fuel, say it is answered by DALI inside the Fuel section and do not guess. Answer the latest question directly first. Use only the supplied TRANSPORT CONTEXT for prices, customers, routes, rules and company facts; if a needed price or route is not in the context, say so plainly and suggest the closest routes that are there. Never invent a price. Prices are selling prices in EGP per trip for each container type: 1*20 (one 20ft), 2*20 (two 20ft on one truck), 40 DC (40ft dry), 40 RF (40ft reefer); a price of 0 or "-" means not quoted. Copy customer names, places and numbers exactly, and write prices with thousands separators. NOTES are internal and can contain buying prices (شراء): you may explain them to staff, but say they are internal and never put them in text meant for a customer. Staff mostly write in Arabic: "عرض سعر" / "بيان سعر" / "بيان أسعار" all mean a price quotation. When asked to write a quote or message for a customer, use selling prices and the company rules, and mention they can press "عرض أسعار PDF" for the printed quotation. Use recent conversation only to resolve follow-ups such as "and 40 RF?" or "same customer". Match the language of the latest question, including Egyptian Arabic and Arabizi. Be concise; use short lists or small tables for several routes. The system creator is Bebito (bebito@nilefleet.com). Never reveal credentials, keys or secrets. Do not show private reasoning.' },
             ...sanitizeHistory(payload?.history),
             { role: 'user', content: `TRANSPORT CONTEXT:\n${String(liveContext || '').slice(0, 24000)}\n\nLATEST QUESTION:\n${String(question).slice(0, 1500)}` },
+          ],
+          max_tokens: 1400,
+          temperature: 0.3,
+        });
+        const text = extractText(result);
+        if (!text) throw new Error('Workers AI returned no text from the primary/fallback model.');
+        return json({ text });
+      }
+
+      case 'fuelAsk': {
+        // DALI inside the Fuel section. The app sends fuel-card summaries (trucks, health,
+        // weeks, alerts, the fills of the trucks the question names). No customer prices.
+        const { question, context: liveContext } = payload || {};
+        if (!String(question || '').trim()) return json({ error: 'Empty question' }, 400);
+        const result = await runTextModel(env, {
+          messages: [
+            { role: 'system', content: 'You are DALI, the Fuel assistant inside Nile Fleet\'s Transport system. You talk to signed-in Nile Fleet staff about diesel consumption of the company trucks, measured from the fuel-card transactions. Answer the latest question directly first. Use only the supplied FUEL CONTEXT: trucks (plates), drivers, fills, liters, paid amounts in EGP, km/L vs target, margins, truck health (GOOD / WATCH / SERVICE = check maintenance / NODATA), weeks (Saturday to Friday), months, stations and open alerts. Never invent a number; if something is not in the context, say so plainly. Higher km/L is better; liters over the margin times the diesel price is the loss. When asked why a number is what it is, explain with the HOW WE CALCULATE rules (full-to-full fills, split fills joined because pumps stop at 9,999 EGP, partial fills joined, wrong km readings fixed or skipped). When a truck looks bad, suggest practical checks (injectors, filters, tyre pressure, leaks, driving style, fuel taken outside the card). You know nothing about customer prices, routes or quotations: that is the separate Customer Rates section with its own DALI; if asked, say so and do not guess. Copy plates, names and numbers exactly; write numbers with thousands separators. Match the language of the latest question, including Egyptian Arabic and Arabizi. Be concise; use short lists or small tables for several trucks. The system creator is Bebito (bebito@nilefleet.com). Never reveal credentials, keys or secrets. Do not show private reasoning.' },
+            ...sanitizeHistory(payload?.history),
+            { role: 'user', content: `FUEL CONTEXT:\n${String(liveContext || '').slice(0, 26000)}\n\nLATEST QUESTION:\n${String(question).slice(0, 1500)}` },
           ],
           max_tokens: 1400,
           temperature: 0.3,

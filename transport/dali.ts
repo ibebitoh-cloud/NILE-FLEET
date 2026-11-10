@@ -3,30 +3,15 @@ import { COMPANY, DEFAULT_SIGNER, DEFAULT_TERMS } from './exports';
 import { PRICE_KEYS, PRICE_LABELS, PriceKey, Rate, TransportUser } from './types';
 
 /**
- * DALI inside the Transport system. The model never sees the whole database:
+ * DALI for the Customer Rates section (Fuel has its own DALI in fuel/dali.ts). The model never sees the whole database:
  * this file picks the price rows that match the question, adds summaries,
  * the quotation rules, DALI's knowledge base and the user's chat memory, and
  * sends that as context. Actions are parsed on the server and applied here
  * only after the user confirms them.
  */
 
-export type ChatTurn = { role: 'user' | 'assistant'; content: string };
-
-async function callAi<T = any>(action: string, payload: any): Promise<T> {
-  const { data } = await transportDb.auth.getSession();
-  const token = data.session?.access_token;
-  if (!token) throw new Error('No active session');
-  const res = await fetch('/ai-proxy', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ action, payload }),
-  });
-  const raw = await res.text();
-  let body: any = null;
-  try { body = raw ? JSON.parse(raw) : null; } catch { body = null; }
-  if (!res.ok) throw new Error(body?.detail || body?.error || raw || `HTTP ${res.status}`);
-  return body;
-}
+import { callAi, ChatTurn, loadMemory as loadAppMemory, remember as rememberApp, sessionId as appSession } from './daliCore';
+export type { ChatTurn };
 
 /* ------------------------------ matching ------------------------------ */
 
@@ -164,6 +149,7 @@ export async function buildContext(rates: Rate[], user: TransportUser, question:
   const kb = await knowledge(question);
   const parts = [
     `TODAY: ${new Date().toISOString().slice(0, 10)}`,
+    'SECTION: Customer Rates (price list, customers, quotations). Fuel consumption is a separate section with its own DALI and is not in this context.',
     `USER: ${user.name} (${user.email}), Transport role ${user.role}${user.role === 'VIEWER' ? ' (read only: cannot change prices)' : ''}`,
     `COMPANY: ${COMPANY.nameEn} / ${COMPANY.nameAr} · phones ${COMPANY.phones} · ${COMPANY.email} · ${COMPANY.site}. Quotations are signed by ${(() => { try { return localStorage.getItem('nf_transport_signer') || DEFAULT_SIGNER; } catch { return DEFAULT_SIGNER; } })()}. Built by Dali Studio.`,
     `PRICE LIST TOTALS: ${rates.length} routes, ${byCustomer.size} customers, ${new Set(rates.map(r => r.destination)).size} destinations.`,
@@ -215,35 +201,8 @@ export async function parseAction(question: string, rates: Rate[], history: Chat
 export const WRITE_ACTIONS = new Set(['set_price', 'add_rate', 'adjust_prices', 'delete_rate', 'rename_customer']);
 
 /* ------------------------------ memory ------------------------------ */
+// Customer Rates DALI only: its own session and memory, never the Fuel chats.
 
-const SESSION_KEY = 'nf_transport_dali_session';
-export function sessionId(reset = false): string {
-  try {
-    let id = reset ? '' : localStorage.getItem(SESSION_KEY) || '';
-    if (!id) { id = `transport-${Date.now().toString(36)}`; localStorage.setItem(SESSION_KEY, id); }
-    return id;
-  } catch { return 'transport-local'; }
-}
-
-export async function remember(session: string, role: 'user' | 'assistant', message: string) {
-  try {
-    const { data } = await transportDb.auth.getUser();
-    if (!data.user) return;
-    await transportDb.from('dali_conversations').insert({ user_id: data.user.id, session_id: session, role, message: message.slice(0, 4000), entities: { app: 'transport' }, archived: false });
-  } catch { /* memory is best effort */ }
-}
-
-/** This chat's turns, plus short lines from the user's other DALI conversations. */
-export async function loadMemory(session: string): Promise<{ turns: ChatTurn[]; earlier: string[] }> {
-  try {
-    const { data: u } = await transportDb.auth.getUser();
-    if (!u.user) return { turns: [], earlier: [] };
-    const { data } = await transportDb.from('dali_conversations').select('role,message,session_id,created_at')
-      .eq('user_id', u.user.id).eq('archived', false).order('created_at', { ascending: false }).limit(120);
-    const all = [...(data || [])].reverse() as { role: string; message: string; session_id: string; created_at: string }[];
-    const turns = all.filter(m => m.session_id === session && (m.role === 'user' || m.role === 'assistant')).map(m => ({ role: m.role as ChatTurn['role'], content: m.message }));
-    const earlier = all.filter(m => m.session_id !== session && m.role === 'user').slice(-25)
-      .map(m => `${m.created_at.slice(0, 10)} asked: ${m.message.replace(/\s+/g, ' ').slice(0, 160)}`);
-    return { turns: turns.slice(-30), earlier };
-  } catch { return { turns: [], earlier: [] }; }
-}
+export const sessionId = (reset = false) => appSession('transport', reset);
+export const remember = (session: string, role: 'user' | 'assistant', message: string) => rememberApp('transport', session, role, message);
+export const loadMemory = (session: string) => loadAppMemory('transport', session);

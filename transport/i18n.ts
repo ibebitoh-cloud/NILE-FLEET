@@ -2,10 +2,14 @@ export type Lang = 'en' | 'ar';
 
 const en = {
   system: 'Transport System', signIn: 'Sign in', email: 'Email', password: 'Password', signingIn: 'Signing in…',
-  backHome: 'Back to website', loginTitle: 'Transport operations', loginSub: 'Customer price lists, quotations and exports. Prices are visible to signed-in staff only.',
+  backHome: 'Back to website', loginTitle: 'Transport operations', loginSub: 'Two sections: Fuel (diesel km/L per truck) and Customer Rates (price lists, quotations and exports). Prices are visible to signed-in staff only.',
   noAccess: 'This account has no Transport access. Ask an administrator.', badLogin: 'Wrong email or password.',
   admin: 'Admin', viewer: 'Viewer', fuelEditor: 'Fuel editor', readOnly: 'Read only', logout: 'Sign out',
   overview: 'Overview', rates: 'Price list', customers: 'Customers',
+  secFuel: 'Fuel', secRates: 'Customer Rates', sections: 'Sections', chooseTitle: 'Choose a section', chooseSub: 'Fuel and Customer Rates are separate. Each has its own data and its own DALI.',
+  fuelDesc: 'Fuel-card uploads, km/L per truck and driver, truck health, alerts, weekly and monthly reports.',
+  ratesDesc: 'Customer price list, customers, overview, quotations and exports.',
+  fuelDali: 'DALI here answers fuel questions only', ratesDali: 'DALI here answers price questions only', open: 'Open',
   search: 'Search customer, port, destination, notes…', allCustomers: 'All customers', allPorts: 'All load ports', allDest: 'All destinations',
   anyContainer: 'Any container', hasPrice: 'has a price', min: 'Min', max: 'Max', onlyPriced: 'Only rows with prices', clear: 'Clear filters',
   customer: 'Customer', loadPort: 'Load port', destination: 'Destination', transitPort: 'Transit port', notes: 'Notes', updated: 'Updated',
@@ -42,10 +46,14 @@ const en = {
 
 const ar: typeof en = {
   system: 'نظام النقل', signIn: 'تسجيل الدخول', email: 'البريد الإلكتروني', password: 'كلمة المرور', signingIn: 'جاري الدخول…',
-  backHome: 'العودة للموقع', loginTitle: 'عمليات النقل', loginSub: 'قوائم أسعار العملاء وعروض الأسعار والتصدير. الأسعار تظهر لفريق العمل بعد تسجيل الدخول فقط.',
+  backHome: 'العودة للموقع', loginTitle: 'عمليات النقل', loginSub: 'قسمين: السولار (كم/لتر لكل عربية) وأسعار العملاء (قوائم الأسعار وعروض الأسعار والتصدير). الأسعار تظهر لفريق العمل بعد تسجيل الدخول فقط.',
   noAccess: 'هذا الحساب ليس له صلاحية على نظام النقل. تواصل مع المسؤول.', badLogin: 'البريد أو كلمة المرور غير صحيحة.',
   admin: 'مسؤول', viewer: 'مشاهد', fuelEditor: 'محرر الوقود', readOnly: 'عرض فقط', logout: 'خروج',
   overview: 'نظرة عامة', rates: 'قائمة الأسعار', customers: 'العملاء',
+  secFuel: 'السولار', secRates: 'أسعار العملاء', sections: 'الأقسام', chooseTitle: 'اختار القسم', chooseSub: 'السولار وأسعار العملاء قسمين منفصلين. كل قسم له بياناته ودالي الخاص بيه.',
+  fuelDesc: 'رفع تقارير كارت السولار، كم/لتر لكل عربية وسواق، حالة العربيات، التنبيهات، والتقارير الأسبوعية والشهرية.',
+  ratesDesc: 'قائمة أسعار العملاء، العملاء، نظرة عامة، عروض الأسعار والتصدير.',
+  fuelDali: 'دالي هنا بيجاوب على أسئلة السولار بس', ratesDali: 'دالي هنا بيجاوب على أسئلة الأسعار بس', open: 'افتح',
   search: 'ابحث بالعميل أو الميناء أو الوجهة أو الملاحظات…', allCustomers: 'كل العملاء', allPorts: 'كل موانئ التحميل', allDest: 'كل الوجهات',
   anyContainer: 'أي حاوية', hasPrice: 'له سعر', min: 'من', max: 'إلى', onlyPriced: 'الخطوط المسعرة فقط', clear: 'مسح الفلاتر',
   customer: 'العميل', loadPort: 'ميناء التحميل', destination: 'الوجهة', transitPort: 'ميناء العودة', notes: 'ملاحظات', updated: 'آخر تعديل',

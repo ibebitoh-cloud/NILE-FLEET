@@ -8,7 +8,7 @@ const DALI_MARK = '/dali/dali-mark.png';
 
 const TX = {
   en: {
-    title: 'DALI', sub: 'Transport assistant', placeholder: 'Ask about prices, or tell DALI what to change…', send: 'Send', newChat: 'New chat',
+    title: 'DALI', sub: 'Customer rates assistant', placeholder: 'Ask about prices, or tell DALI what to change…', send: 'Send', newChat: 'New chat',
     hello: (n: string) => `Hi ${n}. I know the whole price list, every customer and the quotation rules. Ask me a price, compare customers, write a quote message, or tell me what to change.`,
     thinking: 'DALI is thinking…', confirm: 'Confirm', cancel: 'Cancel', done: 'Done. Saved.', cancelled: 'Cancelled. Nothing was changed.',
     adminOnly: 'Only an admin can change prices. Your account is read only.', failed: 'Something went wrong', rowsUsed: (n: number) => `${n} price rows used`,
@@ -21,7 +21,7 @@ const TX = {
     tries: ['Price for Insta Freight to Damietta?', 'Which customers have 40 RF to the 10th of Ramadan?', 'Raise Sea Sky prices 5%', 'Make a quotation for Royal Med'],
   },
   ar: {
-    title: 'دالي', sub: 'مساعد النقل', placeholder: 'اسأل عن الأسعار، أو قول لدالي يغير إيه…', send: 'إرسال', newChat: 'محادثة جديدة',
+    title: 'دالي', sub: 'مساعد أسعار العملاء', placeholder: 'اسأل عن الأسعار، أو قول لدالي يغير إيه…', send: 'إرسال', newChat: 'محادثة جديدة',
     hello: (n: string) => `أهلاً ${n}. أنا عارف قائمة الأسعار كلها وكل العملاء وشروط عروض الأسعار. اسألني عن سعر، قارن بين العملاء، اكتب رسالة عرض سعر، أو قولي أغير إيه.`,
     thinking: 'دالي بيفكر…', confirm: 'تأكيد', cancel: 'إلغاء', done: 'تم الحفظ.', cancelled: 'تم الإلغاء. مفيش حاجة اتغيرت.',
     adminOnly: 'تعديل الأسعار للمسؤول فقط. حسابك عرض فقط.', failed: 'حصلت مشكلة', rowsUsed: (n: number) => `استخدمت ${n} سطر أسعار`,
