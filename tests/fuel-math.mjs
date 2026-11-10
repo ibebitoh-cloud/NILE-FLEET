@@ -2,6 +2,7 @@
 // Run: npm run test:fuel
 import assert from 'node:assert/strict';
 import { computeFuel, summarize, DEFAULT_SETTINGS } from '../transport/fuel/math.ts';
+import { fuelAlerts } from '../transport/fuel/alerts.ts';
 import { parseDate, parseTime, rowsToTxs } from '../transport/fuel/parse.ts';
 
 let n = 0;
@@ -102,5 +103,28 @@ const P = [tx('P', '2026-10-01T08:00', 100, 1000), tx('P', '2026-10-02T08:00', 1
 const rp = computeFuel(P, DEFAULT_SETTINGS);
 const sp = summarize('P', 'P', rp.segments, P, rp.fills, 2.3, 10, rp.price);
 assert.equal(sp.cost, 2050 + 2200);
+
+// Alerts.
+{
+  const S = { ...DEFAULT_SETTINGS, truckTargets: { H: 2.3, L: 2.3, Q: 2.3 }, tankLiters: 400, idleDays: 5 };
+  const H = [ // one bad fill: 460 km on 300 L = 1.53 km/L
+    tx('H', '2026-11-01T08:00', 300, 10000), tx('H', '2026-11-02T08:00', 300, 10690), tx('H', '2026-11-03T08:00', 300, 11150),
+    tx('H', '2026-11-04T08:00', 450, 12185), // 1035 km / 450 L = 2.3, but 450 L > 400 L tank
+  ];
+  const L = [ // not filled to full, then the next one makes up for it: no alert
+    tx('L', '2026-11-01T08:00', 300, 20000), tx('L', '2026-11-02T08:00', 220, 20690), tx('L', '2026-11-03T08:00', 380, 21380),
+  ];
+  const Q = [tx('Q', '2026-10-20T08:00', 300, 30000), tx('Q', '2026-10-21T08:00', 300, 30690)]; // stopped fuelling 2 weeks ago
+  const all = [...H, ...L, ...Q];
+  const ra = computeFuel(all, S);
+  const al = fuelAlerts(ra, all, S);
+  const of = (kind, plate) => al.filter(a => a.kind === kind && a.plate === plate);
+  assert.equal(of('overUse', 'H').length, 1, 'bad fill raises overUse');
+  assert.ok(of('overUse', 'H')[0].liters > 30, 'overUse liters');
+  assert.equal(of('overTank', 'H').length, 1, 'fill bigger than tank');
+  assert.equal(al.filter(a => a.plate === 'L' && (a.kind === 'overUse' || a.kind === 'tooFewLiters')).length, 0, 'not-full fill paired with next: no alert');
+  assert.equal(of('idle', 'Q').length, 1, 'idle truck');
+  assert.equal(al[0].level, 'high', 'urgent first');
+}
 
 console.log('fuel math: all checks passed');

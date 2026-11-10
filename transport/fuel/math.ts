@@ -67,6 +67,12 @@ export interface FuelSettings {
   typeTargets: Record<string, number>;
   /** Target km/L per truck (plate). Wins over the type target. */
   truckTargets: Record<string, number>;
+  /** Tank size in liters; a bigger fill raises an alert. 0 = off. */
+  tankLiters: number;
+  /** Alert when a truck has no fill for this many days. 0 = off. */
+  idleDays: number;
+  /** Alert ids an admin marked as checked. */
+  checkedAlerts: string[];
 }
 
 export const DEFAULT_SETTINGS: FuelSettings = {
@@ -78,6 +84,9 @@ export const DEFAULT_SETTINGS: FuelSettings = {
   fillMarginPct: 25,
   typeTargets: {},
   truckTargets: {},
+  tankLiters: 0,
+  idleDays: 5,
+  checkedAlerts: [],
 };
 
 export type TxFlag = 'reversed' | 'reversal' | 'split' | 'badKm' | 'fixedKm' | 'opening';

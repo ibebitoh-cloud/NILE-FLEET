@@ -1,4 +1,9 @@
 import type { Lang } from '../i18n';
+import type { AlertKind, AlertLevel, FuelAlert } from './alerts';
+
+const f0 = (v: unknown) => Math.round(Number(v) || 0).toLocaleString('en-US');
+const f2 = (v: unknown) => (Number(v) || 0).toFixed(2);
+const plain = (v: unknown) => String(v ?? '');
 
 const en = {
   tab: 'Fuel',
@@ -53,6 +58,33 @@ const en = {
     'A reversal cancels the transaction it refunds.',
     'Over margin = liters above what the target allows after the margin. Loss = those liters × price.',
   ],
+  // alerts + weekly report
+  alerts: 'Alerts', alertsBanner: (n: number) => `${n} alert${n === 1 ? '' : 's'} need a look`, openAlerts: 'Open alerts',
+  noAlerts: 'No alerts. Everything is within the margins.', showChecked: 'Show checked', markChecked: 'Mark checked', undoChecked: 'Undo',
+  checkedBy: 'checked', allKinds: 'All alert types', allLevels: 'All levels', lvl: { high: 'Urgent', medium: 'Check', low: 'Info' } as Record<AlertLevel, string>,
+  kind: {
+    overUse: 'Used too much fuel', weekDrop: 'Bad week', tooFewLiters: 'Too few liters for the km', overTank: 'Fill bigger than the tank',
+    badKm: 'Wrong km reading', noKm: 'No km reading', pumpVar: 'Paid ≠ pump', idle: 'No fill for days', reversal: 'Reversed transaction',
+  } as Record<AlertKind, string>,
+  alertText: (a: FuelAlert): string => {
+    const i = a.info;
+    switch (a.kind) {
+      case 'overUse': return `${f0(i.km)} km at ${f2(i.kmL)} km/L (target ${f2(i.target)}) since ${plain(i.fromAt)}. ${f0(a.liters)} L over the margin ≈ ${f0(a.egp)} EGP.`;
+      case 'weekDrop': return `Week of ${plain(i.week)}: ${f2(i.kmL)} km/L over ${f0(i.km)} km, target ${f2(i.target)}. ${f0(a.liters)} L over the margin ≈ ${f0(a.egp)} EGP.`;
+      case 'tooFewLiters': return i.open
+        ? `${f0(i.km)} km since ${plain(i.fromAt)} on only ${f0(i.liters)} L (${f2(i.kmL)} km/L). The next full fill should be about ${f0(a.liters)} L. If it isn't, fuel came from outside the card or a km reading is wrong.`
+        : `${f0(i.km)} km on ${f0(i.liters)} L (${f2(i.kmL)} km/L, target ${f2(i.target)}). About ${f0(a.liters)} L missing: fuel bought outside the card, or a wrong km reading.`;
+      case 'overTank': return `${f0(i.liters)} L in one fill, the tank holds ${f0(i.tank)} L. ${f0(a.liters)} L too many ≈ ${f0(a.egp)} EGP.`;
+      case 'badKm': return `km ${f0(i.km)} was skipped (${i.reason === 'sameKm' ? 'same km as the last fill' : i.reason === 'backwards' ? 'lower than the last fill' : 'too far from the last fill'}). Its ${f0(a.liters)} L moved to the next good reading.`;
+      case 'noKm': return `No km reading on this fill (${f0(a.liters)} L). Its liters moved to the next good reading.`;
+      case 'pumpVar': return `Transaction ${plain(i.id)}: paid and pump reading differ by ${f2(i.variance)}.`;
+      case 'idle': return `Last fill ${a.at.slice(0, 10)}, ${f0(i.days)} days before the last data (${plain(i.lastData)}). Parked, or fuelled outside the card?`;
+      case 'reversal': return `Transaction ${plain(i.id)} of ${f0(a.liters)} L (${f0(a.egp)} EGP) was reversed.`;
+    }
+  },
+  tank: 'Tank size (L)', tankHint: 'A fill bigger than this raises an alert. 0 = off.', idleDays: 'Alert when no fill for (days)', idleHint: '0 = off',
+  weeklyReport: 'Weekly report', weeklyTitle: 'Weekly fuel report', thisWeek: 'This week', lastWeek: 'Last week', change: 'Change', egp: 'EGP',
+  level: 'Level', alert: 'Alert', details: 'Details',
   reportTitle: 'Fuel consumption report', period: 'Period', flagged: 'Fills to check', generated: 'Generated',
 };
 
@@ -103,6 +135,32 @@ const ar: typeof en = {
     'المرتجع يلغي المعاملة التي يردها.',
     'فوق الهامش = اللترات الزائدة عن المسموح بعد الهامش. الخسارة = هذه اللترات × السعر.',
   ],
+  alerts: 'التنبيهات', alertsBanner: n => `${n} تنبيه يحتاج مراجعة`, openAlerts: 'فتح التنبيهات',
+  noAlerts: 'لا توجد تنبيهات. كل شيء داخل الهوامش.', showChecked: 'إظهار ما تمت مراجعته', markChecked: 'تمت المراجعة', undoChecked: 'تراجع',
+  checkedBy: 'تمت مراجعته', allKinds: 'كل أنواع التنبيهات', allLevels: 'كل المستويات', lvl: { high: 'عاجل', medium: 'راجع', low: 'معلومة' },
+  kind: {
+    overUse: 'استهلاك زائد', weekDrop: 'أسبوع سيئ', tooFewLiters: 'لترات قليلة بالنسبة للكيلومترات', overTank: 'تفويلة أكبر من التانك',
+    badKm: 'قراءة عداد خاطئة', noKm: 'بدون قراءة عداد', pumpVar: 'المدفوع ≠ الطلمبة', idle: 'بدون تفويل منذ أيام', reversal: 'معاملة مرتجعة',
+  },
+  alertText: (a: FuelAlert): string => {
+    const i = a.info;
+    switch (a.kind) {
+      case 'overUse': return `${f0(i.km)} كم بمعدل ${f2(i.kmL)} كم/لتر (المستهدف ${f2(i.target)}) منذ ${plain(i.fromAt)}. ${f0(a.liters)} لتر فوق الهامش ≈ ${f0(a.egp)} جنيه.`;
+      case 'weekDrop': return `أسبوع ${plain(i.week)}: ${f2(i.kmL)} كم/لتر على ${f0(i.km)} كم، المستهدف ${f2(i.target)}. ${f0(a.liters)} لتر فوق الهامش ≈ ${f0(a.egp)} جنيه.`;
+      case 'tooFewLiters': return i.open
+        ? `${f0(i.km)} كم منذ ${plain(i.fromAt)} على ${f0(i.liters)} لتر فقط (${f2(i.kmL)} كم/لتر). التفويلة الكاملة القادمة يجب أن تكون حوالي ${f0(a.liters)} لتر. إن لم تكن، فالسولار من خارج الكارت أو قراءة العداد خاطئة.`
+        : `${f0(i.km)} كم على ${f0(i.liters)} لتر (${f2(i.kmL)} كم/لتر، المستهدف ${f2(i.target)}). حوالي ${f0(a.liters)} لتر ناقصة: سولار من خارج الكارت أو قراءة عداد خاطئة.`;
+      case 'overTank': return `${f0(i.liters)} لتر في تفويلة واحدة والتانك ${f0(i.tank)} لتر. زيادة ${f0(a.liters)} لتر ≈ ${f0(a.egp)} جنيه.`;
+      case 'badKm': return `تم تجاهل العداد ${f0(i.km)} (${i.reason === 'sameKm' ? 'نفس كيلومتر التفويلة السابقة' : i.reason === 'backwards' ? 'أقل من التفويلة السابقة' : 'بعيد جدًا عن التفويلة السابقة'}). انتقلت ${f0(a.liters)} لتر لأول قراءة سليمة.`;
+      case 'noKm': return `بدون قراءة عداد في هذه التفويلة (${f0(a.liters)} لتر). انتقلت لتراتها لأول قراءة سليمة.`;
+      case 'pumpVar': return `المعاملة ${plain(i.id)}: فرق بين المدفوع وقراءة الطلمبة ${f2(i.variance)}.`;
+      case 'idle': return `آخر تفويلة ${a.at.slice(0, 10)}، قبل آخر بيانات (${plain(i.lastData)}) بـ ${f0(i.days)} يوم. واقفة أم تم التفويل خارج الكارت؟`;
+      case 'reversal': return `المعاملة ${plain(i.id)} بـ ${f0(a.liters)} لتر (${f0(a.egp)} جنيه) تم إرجاعها.`;
+    }
+  },
+  tank: 'سعة التانك (لتر)', tankHint: 'التفويلة الأكبر من ذلك تعطي تنبيه. 0 = إيقاف.', idleDays: 'تنبيه عند عدم التفويل لمدة (أيام)', idleHint: '0 = إيقاف',
+  weeklyReport: 'التقرير الأسبوعي', weeklyTitle: 'تقرير السولار الأسبوعي', thisWeek: 'هذا الأسبوع', lastWeek: 'الأسبوع السابق', change: 'التغير', egp: 'جنيه',
+  level: 'المستوى', alert: 'التنبيه', details: 'التفاصيل',
   reportTitle: 'تقرير استهلاك السولار', period: 'الفترة', flagged: 'تفويلات للمراجعة', generated: 'تاريخ الإصدار',
 };
 
