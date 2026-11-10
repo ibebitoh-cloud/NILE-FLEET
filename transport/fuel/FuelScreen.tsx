@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import DaliLoader from '../../components/DaliLoader';
+import SideNav from '../SideNav';
 import * as api from '../api';
 import type { Lang } from '../i18n';
 import { FUEL_STRINGS, FuelStrings } from './i18n';
@@ -39,6 +40,8 @@ type StatusFilter = '' | SegmentStatus | 'badKm' | 'split' | 'partial' | 'revers
 interface Filters { q: string; from: string; to: string; plate: string; driver: string; station: string; type: string; status: StatusFilter }
 const NO_FILTERS: Filters = { q: '', from: '', to: '', plate: '', driver: '', station: '', type: '', status: '' };
 type View = 'home' | 'alerts' | 'trucks' | 'drivers' | 'fills' | 'tx' | 'weeks' | 'months' | 'stations' | 'settings';
+
+const VIEW_ICON: Record<string, string> = { home: '⌂', alerts: '🔔', trucks: '🚛', drivers: '🧑‍✈️', fills: '⛽', tx: '🧾', weeks: '🗓', months: '📅', stations: '📍', settings: '⚙' };
 
 type WeekRow = Summary & { prevLiters: number | null; prevKmL: number | null };
 
@@ -194,8 +197,9 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const isMobile = useIsMobile();
   const [view, setView] = useState<View>(() => {
     const phone = typeof window !== 'undefined' && window.matchMedia(MOBILE_QUERY).matches;
-    try { const v = localStorage.getItem('nf_transport_fuel_view') as View | null; if (v && (v !== 'home' || phone)) return v; } catch { /* ignore */ }
-    return phone ? 'home' : 'trucks';
+    void phone;
+    try { const v = localStorage.getItem('nf_transport_fuel_view') as View | null; if (v) return v; } catch { /* ignore */ }
+    return 'home';
   });
   const [sheet, setSheet] = useState<'' | 'more' | 'filters'>('');
   /** The fill (segment key) or truck (health) whose calculation is open in the explain dialog. */
@@ -211,8 +215,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const set = (p: Partial<Filters>) => setF(x => ({ ...x, ...p }));
 
   useEffect(() => { try { localStorage.setItem('nf_transport_fuel_view', view); } catch { /* ignore */ } }, [view]);
-  // 'home' is the phone dashboard; on a wide screen the dashboard is always on top, so fall back to the trucks list.
-  useEffect(() => { if (!isMobile && view === 'home') setView('trucks'); }, [isMobile, view]);
+  // 'home' is the dashboard (truck health, key numbers, card vs actual) on phone and desktop alike.
   // Back button / swipe-back: every tab change and every open popup is a step in the browser history,
   // so the phone's swipe from the edge (or the back button) goes to the previous tab or closes the popup.
   const viewRef = useRef(view);
@@ -666,7 +669,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   if (txs === null) return <DaliLoader fullScreen label={<span className="text-xs font-bold text-slate-500">{t.title}</span>} />;
   const hasData = txs.length > 0;
   const views: [View, string, number | null][] = [
-    ['alerts', `🔔 ${t.alerts}`, openAlerts.length], ['trucks', t.trucks, trucks.length], ['drivers', t.drivers, drivers.length], ['fills', t.fills, filtered.segs.length],
+    ['home', t.home, null], ['alerts', `🔔 ${t.alerts}`, openAlerts.length], ['trucks', t.trucks, trucks.length], ['drivers', t.drivers, drivers.length], ['fills', t.fills, filtered.segs.length],
     ['tx', t.transactions, filtered.views.length], ['weeks', t.weeks, weeks.length], ['months', t.months, months.length], ['stations', t.stations, stations.length], ['settings', t.settings, null],
   ];
   const statusOptions: [StatusFilter, string][] = [
@@ -693,7 +696,14 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const viewLabel = (views.find(v => v[0] === view) || [view, t.home, null]) as [View, string, number | null];
 
   return (
-    <div className="space-y-4">
+    <div className="md:flex md:items-start md:gap-7">
+      {/* Desktop: fixed side menu with an edge arrow to hide/show it. Phones use the bottom tab bar. */}
+      {hasData && (
+        <SideNav mobile={isMobile} title={t.tab} icon="⛽" dir={lang === 'ar' ? 'rtl' : 'ltr'} active={view} onSelect={k => setView(k as View)}
+          hideLabel={lang === 'ar' ? 'إخفاء القائمة' : 'Hide menu'} showLabel={lang === 'ar' ? 'إظهار القائمة' : 'Show menu'}
+          items={views.map(([k, label, count]) => ({ key: k, label: label.replace(/^🔔 /, ''), badge: count, icon: VIEW_ICON[k] }))} />
+      )}
+    <div className="min-w-0 flex-1 space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-xl font-black uppercase italic tracking-tight text-[#07111f] sm:text-2xl">{t.title}</h1>
@@ -728,7 +738,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
             </div>
           ) : (
           <Card className="!p-3">
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-9">
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-9">
               <input className={`${inputCls} col-span-2`} placeholder={t.search} value={f.q} onChange={e => set({ q: e.target.value })} />
               {filterFields}
               {anyFilter && <button className={`${btnGhost} justify-center`} onClick={() => setF(NO_FILTERS)}>✕ {t.clear}</button>}
@@ -744,7 +754,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
             </button>
           )}
 
-          {(!isMobile || view === 'home') && <>
+          {view === 'home' && <>
           {/* Truck health: the main question, is each truck still doing its normal km/L? */}
           <Card>
             <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -806,19 +816,12 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
           </>}
 
           {/* Views */}
-          {isMobile && view !== 'home' && (
+          {view !== 'home' && (
             <div className="flex items-center justify-between gap-2 pt-1">
-              <h2 className="text-base font-black uppercase tracking-wide text-[#07111f]">{viewLabel[1]}</h2>
+              <h2 className="text-base font-black uppercase tracking-wide text-[#07111f] md:text-lg">{!isMobile && VIEW_ICON[view] ? `${VIEW_ICON[view]} ` : ''}{viewLabel[1].replace(/^🔔 /, '')}</h2>
               {viewLabel[2] != null && <span className="rounded-full bg-[#07111f] px-2.5 py-0.5 text-[11px] font-black text-white">{viewLabel[2]}</span>}
             </div>
           )}
-          <nav className="hidden gap-1 md:flex overflow-x-auto rounded-2xl border border-[#e3dccf] bg-white p-1">
-            {views.map(([k, label, count]) => (
-              <button key={k} onClick={() => setView(k)} className={`whitespace-nowrap rounded-xl px-3.5 py-2 text-[11px] font-black uppercase tracking-wider transition ${view === k ? 'bg-[#07111f] text-white' : 'text-[#07111f]/70 hover:bg-[#f8f5ef]'}`}>
-                {label}{count != null && <span className={`ms-1.5 rounded-full px-1.5 text-[10px] ${view === k ? 'bg-[#c2a378] text-[#07111f]' : 'bg-[#f1ebe0]'}`}>{count}</span>}
-              </button>
-            ))}
-          </nav>
 
           {view === 'alerts' && (
             <div className="space-y-3">
@@ -1066,6 +1069,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 };
