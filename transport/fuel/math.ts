@@ -410,7 +410,7 @@ function score(r: any, target: number, marginPct: number, price: number, pending
   const { pending: _pending, ...rest } = r;
   return {
     ...rest,
-    kmL, l100: kmL ? round(100 / kmL, 1) : 0, cost: round(r.liters * price),
+    kmL, l100: kmL ? round(100 / kmL, 1) : 0, cost: round(sum(r.fills as Fill[], f => f.amount)),
     target, expectedL: round(expectedL), allowedL: round(allowedL), diffL: round(diffL), diffEgp: round(diffL * price),
     overMarginL: round(overMarginL), lossEgp: round(overMarginL * price),
     vsTargetPct: kmL && !pending ? round((kmL / target - 1) * 100, 1) : 0,
@@ -442,7 +442,8 @@ export function summarize(
     txCount: live.length,
     fillCount: fills.length,
     liters: round(sum(net, t => t.liters)),
-    cost: round(sum(net, t => t.liters) * price),
+    // What was actually paid at the pump (stays right if the diesel price changes mid-period).
+    cost: round(sum(net, t => t.amount)),
     card: round(sum(net, t => t.totalAmount)),
     trackedKm, trackedL, kmL, l100: kmL ? round(100 / kmL, 1) : 0, target,
     vsTargetPct: kmL ? round((kmL / target - 1) * 100, 1) : 0,
