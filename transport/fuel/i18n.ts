@@ -4,6 +4,7 @@ import type { AlertKind, AlertLevel, FuelAlert } from './alerts';
 const f0 = (v: unknown) => Math.round(Number(v) || 0).toLocaleString('en-US');
 const f2 = (v: unknown) => (Number(v) || 0).toFixed(2);
 const plain = (v: unknown) => String(v ?? '');
+const pctS = (v: unknown) => { const n = Number(v) || 0; return n ? `${n > 0 ? '+' : ''}${n.toFixed(1)}%` : '—'; };
 
 const en = {
   tab: 'Fuel',
@@ -67,6 +68,7 @@ const en = {
   kind: {
     overUse: 'Used too much fuel', weekDrop: 'Bad week', tooFewLiters: 'Too few liters for the km', overTank: 'Fill bigger than the tank',
     badKm: 'Wrong km reading', noKm: 'No km reading', pumpVar: 'Paid ≠ pump', idle: 'No fill for days', reversal: 'Reversed transaction',
+    maintenance: 'Check maintenance', dropping: 'km/L dropping',
     splitJoined: 'Transactions joined (split fill)', partialJoined: 'Fills joined (not filled to full)', kmFixed: 'km reading corrected',
   } as Record<AlertKind, string>,
   alertText: (a: FuelAlert): string => {
@@ -83,11 +85,14 @@ const en = {
       case 'pumpVar': return `Transaction ${plain(i.id)}: paid and pump reading differ by ${f2(i.variance)}.`;
       case 'idle': return `Last fill ${a.at.slice(0, 10)}, ${f0(i.days)} days before the last data (${plain(i.lastData)}). Parked, or fuelled outside the card?`;
       case 'reversal': return `Transaction ${plain(i.id)} of ${f0(a.liters)} L (${f0(a.egp)} EGP) was reversed.`;
+      case 'maintenance': case 'dropping': return `Last ${f0(i.recentKm)} km (since ${plain(i.recentFrom)}): ${f2(i.recentKmL)} km/L. Target ${f2(i.target)} (${pctS(i.vsTargetPct)}). Its own normal before: ${i.baseKmL ? f2(i.baseKmL) : '—'} (${pctS(i.trendPct)}).${a.kind === 'maintenance' ? ' Check engine, injectors, tyres and air filter, or ask the driver.' : ' Keep an eye on it.'}`;
       case 'splitJoined': return `${f0(i.count)} transactions counted as one fill of ${f0(a.liters)} L (pump stopped and the truck refilled): # ${plain(i.ids)}.`;
       case 'partialJoined': return `${f0(i.fills)} fills since ${plain(i.fromAt)} counted together (${f0(a.liters)} L${i.open ? ', waiting for the next fill' : `, ${f0(i.km)} km = ${f2(i.kmL)} km/L`}) because one wasn't filled to full: # ${plain(i.ids)}.`;
       case 'kmFixed': return `km ${f0(i.from)} looks typed with an extra digit, used ${f0(i.to)} instead: # ${plain(i.ids)}.`;
     }
   },
+  health: 'Truck health (km/L)', healthHint: (km: number) => `Each truck's last ${km.toLocaleString('en-US')} km compared with its target and with its own normal before. Closed full-to-full fills only.`,
+  h_good: 'Good', h_watch: 'Watch', h_service: 'Check maintenance', h_noData: 'Not enough km yet', recent: 'Recent', normal: 'Own normal', trend: 'Trend',
   tank: 'Tank size (L)', tankHint: 'A fill bigger than this raises an alert. 0 = off.', idleDays: 'Alert when no fill for (days)', idleHint: '0 = off',
   weeklyReport: 'Weekly report', weeklyTitle: 'Weekly fuel report', thisWeek: 'This week', lastWeek: 'Last week', change: 'Change', egp: 'EGP',
   level: 'Level', alert: 'Alert', details: 'Details',
@@ -149,6 +154,7 @@ const ar: typeof en = {
   kind: {
     overUse: 'استهلاك زائد', weekDrop: 'أسبوع سيئ', tooFewLiters: 'لترات قليلة بالنسبة للكيلومترات', overTank: 'تفويلة أكبر من التانك',
     badKm: 'قراءة عداد خاطئة', noKm: 'بدون قراءة عداد', pumpVar: 'المدفوع ≠ الطلمبة', idle: 'بدون تفويل منذ أيام', reversal: 'معاملة مرتجعة',
+    maintenance: 'تحتاج فحص صيانة', dropping: 'كم/لتر في انخفاض',
     splitJoined: 'معاملات تم دمجها (تفويل مقسوم)', partialJoined: 'تفويلات تم دمجها (لم تُملأ للآخر)', kmFixed: 'تم تصحيح قراءة العداد',
   },
   alertText: (a: FuelAlert): string => {
@@ -165,11 +171,14 @@ const ar: typeof en = {
       case 'pumpVar': return `المعاملة ${plain(i.id)}: فرق بين المدفوع وقراءة الطلمبة ${f2(i.variance)}.`;
       case 'idle': return `آخر تفويلة ${a.at.slice(0, 10)}، قبل آخر بيانات (${plain(i.lastData)}) بـ ${f0(i.days)} يوم. واقفة أم تم التفويل خارج الكارت؟`;
       case 'reversal': return `المعاملة ${plain(i.id)} بـ ${f0(a.liters)} لتر (${f0(a.egp)} جنيه) تم إرجاعها.`;
+      case 'maintenance': case 'dropping': return `آخر ${f0(i.recentKm)} كم (منذ ${plain(i.recentFrom)}): ${f2(i.recentKmL)} كم/لتر. المستهدف ${f2(i.target)} (${pctS(i.vsTargetPct)}). معدلها المعتاد قبل ذلك: ${i.baseKmL ? f2(i.baseKmL) : '—'} (${pctS(i.trendPct)}).${a.kind === 'maintenance' ? ' افحص الموتور والرشاشات والكاوتش وفلتر الهواء أو اسأل السائق.' : ' تابعها.'}`;
       case 'splitJoined': return `${f0(i.count)} معاملات حُسبت كتفويلة واحدة ${f0(a.liters)} لتر (الطلمبة توقفت وتم التفويل مرة أخرى): # ${plain(i.ids)}.`;
       case 'partialJoined': return `${f0(i.fills)} تفويلات منذ ${plain(i.fromAt)} حُسبت معًا (${f0(a.liters)} لتر${i.open ? '، في انتظار التفويلة القادمة' : `، ${f0(i.km)} كم = ${f2(i.kmL)} كم/لتر`}) لأن إحداها لم تُملأ للآخر: # ${plain(i.ids)}.`;
       case 'kmFixed': return `العداد ${f0(i.from)} مكتوب بخانة زائدة على الأرجح، تم استخدام ${f0(i.to)}: # ${plain(i.ids)}.`;
     }
   },
+  health: 'حالة السيارات (كم/لتر)', healthHint: km => `آخر ${km.toLocaleString('en-US')} كم لكل سيارة مقارنة بالمستهدف وبمعدلها المعتاد قبل ذلك. التفويلات الكاملة فقط.`,
+  h_good: 'جيدة', h_watch: 'تابعها', h_service: 'تحتاج فحص صيانة', h_noData: 'كيلومترات غير كافية بعد', recent: 'الأخير', normal: 'المعتاد', trend: 'الاتجاه',
   tank: 'سعة التانك (لتر)', tankHint: 'التفويلة الأكبر من ذلك تعطي تنبيه. 0 = إيقاف.', idleDays: 'تنبيه عند عدم التفويل لمدة (أيام)', idleHint: '0 = إيقاف',
   weeklyReport: 'التقرير الأسبوعي', weeklyTitle: 'تقرير السولار الأسبوعي', thisWeek: 'هذا الأسبوع', lastWeek: 'الأسبوع السابق', change: 'التغير', egp: 'جنيه',
   level: 'المستوى', alert: 'التنبيه', details: 'التفاصيل',

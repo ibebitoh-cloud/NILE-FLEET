@@ -17,7 +17,9 @@ export type AlertKind =
   | 'reversal'     // a transaction was reversed
   | 'splitJoined'  // two or more transactions joined into one fill (pump stopped at 9,999 EGP)
   | 'partialJoined'// a fill that wasn't to full joined with the next one for km/L
-  | 'kmFixed';     // a km reading typed with an extra digit was corrected
+  | 'kmFixed'      // a km reading typed with an extra digit was corrected
+  | 'maintenance'  // recent km/L well below target and getting worse: check the truck
+  | 'dropping';    // recent km/L slipping below target or below the truck's own normal
 
 export type AlertLevel = 'high' | 'medium' | 'low';
 
@@ -41,6 +43,7 @@ export const LEVEL_ORDER: Record<AlertLevel, number> = { high: 0, medium: 1, low
 export const ALERT_LEVEL: Record<AlertKind, AlertLevel> = {
   overUse: 'high', weekDrop: 'high', overTank: 'high', tooFewLiters: 'medium', pumpVar: 'medium',
   badKm: 'medium', idle: 'medium', noKm: 'low', reversal: 'low',
+  maintenance: 'high', dropping: 'medium',
   partialJoined: 'medium', kmFixed: 'medium', splitJoined: 'low',
 };
 
@@ -160,5 +163,72 @@ export function fuelAlerts(result: FuelResult, txs: FuelTx[], settings: FuelSett
     }
   }
 
+  for (const h of truckHealth(result, settings)) {
+    if (h.status !== 'service' && h.status !== 'watch') continue;
+    add({ id: `${h.status === 'service' ? 'maintenance' : 'dropping'}|${h.plate}|${h.recentFrom}`, kind: h.status === 'service' ? 'maintenance' : 'dropping',
+      plate: h.plate, driver: h.driver, at: last || h.recentFrom, liters: 0, egp: 0,
+      info: { recentKmL: h.recentKmL, baseKmL: h.baseKmL, trendPct: h.trendPct, target: h.target, vsTargetPct: h.vsTargetPct, recentKm: h.recentKm, recentFrom: h.recentFrom } });
+  }
+
   return out.sort((a, b) => LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level] || b.at.localeCompare(a.at));
+}
+
+/* ------------------------------ truck health ------------------------------ */
+
+export type HealthStatus = 'good' | 'watch' | 'service' | 'noData';
+
+export interface TruckHealth {
+  plate: string;
+  vehicleType: string;
+  driver: string;
+  target: number;
+  /** km/L over the latest stretch of driving (at least HEALTH_KM). */
+  recentKmL: number;
+  recentKm: number;
+  recentFrom: string;
+  /** km/L over everything before that: the truck's own normal. */
+  baseKmL: number;
+  baseKm: number;
+  /** Recent vs the truck's own normal, %. Negative = burning more than it used to. */
+  trendPct: number;
+  /** Recent vs target, %. */
+  vsTargetPct: number;
+  status: HealthStatus;
+}
+
+/** km needed to judge a truck: a few fills, so one odd fill can't decide. */
+export const HEALTH_KM = 1500;
+
+/**
+ * Is the truck still doing its normal km/L, or is it getting worse (worth a maintenance check)?
+ * Uses only closed full-to-full fills. A truck is "service" when its recent km/L is below target
+ * by more than the margin AND worse than its own past, or far below target (twice the margin).
+ */
+export function truckHealth(result: FuelResult, settings: FuelSettings): TruckHealth[] {
+  const m = settings.marginPct / 100;
+  const byPlate = new Map<string, Segment[]>();
+  for (const s of result.segments) if (s.status !== 'pending' && s.distance > 0) (byPlate.get(s.plate) || byPlate.set(s.plate, []).get(s.plate)!).push(s);
+  const out: TruckHealth[] = [];
+  for (const [plate, list] of byPlate) {
+    const segs = [...list].sort((a, b) => a.at.localeCompare(b.at));
+    const target = result.targets[plate] || result.fleetKmL;
+    const recent: Segment[] = [];
+    let km = 0;
+    for (let i = segs.length - 1; i >= 0 && km < HEALTH_KM; i--) { recent.unshift(segs[i]); km += segs[i].distance; }
+    const base = segs.slice(0, segs.length - recent.length);
+    const kmL = (xs: Segment[]) => { const L = xs.reduce((a, s) => a + s.liters, 0); return L ? xs.reduce((a, s) => a + s.distance, 0) / L : 0; };
+    const recentKmL = round(kmL(recent)), baseKmL = round(kmL(base));
+    const baseKm = round(base.reduce((a, s) => a + s.distance, 0), 0);
+    const trendPct = baseKmL && baseKm >= HEALTH_KM ? round((recentKmL / baseKmL - 1) * 100, 1) : 0;
+    const vsTargetPct = recentKmL ? round((recentKmL / target - 1) * 100, 1) : 0;
+    let status: HealthStatus = 'good';
+    if (km < HEALTH_KM) status = 'noData';
+    else if (recentKmL < target * (1 - 2 * m) || (recentKmL < target * (1 - m) && trendPct <= -settings.marginPct)) status = 'service';
+    else if (recentKmL < target * (1 - m) || trendPct <= -settings.marginPct) status = 'watch';
+    const last = segs[segs.length - 1];
+    out.push({ plate, vehicleType: last.vehicleType, driver: last.driver, target, recentKmL, recentKm: round(km, 0), recentFrom: recent[0]?.fromAt.slice(0, 10) || '',
+      baseKmL, baseKm, trendPct, vsTargetPct, status });
+  }
+  const order: Record<HealthStatus, number> = { service: 0, watch: 1, good: 2, noData: 3 };
+  return out.sort((a, b) => order[a.status] - order[b.status] || a.vsTargetPct - b.vsTargetPct);
 }

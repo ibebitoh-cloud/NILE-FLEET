@@ -2,7 +2,7 @@
 // Run: npm run test:fuel
 import assert from 'node:assert/strict';
 import { computeFuel, summarize, DEFAULT_SETTINGS } from '../transport/fuel/math.ts';
-import { fuelAlerts } from '../transport/fuel/alerts.ts';
+import { fuelAlerts, truckHealth } from '../transport/fuel/alerts.ts';
 import { parseDate, parseTime, rowsToTxs, splitUpload } from '../transport/fuel/parse.ts';
 
 let n = 0;
@@ -133,6 +133,20 @@ assert.equal(sp.cost, 2050 + 2200);
   assert.ok(al.some(a => a.kind === 'splitJoined' && a.plate === 'A' && a.info.count === 2), 'split fill alerted');
   assert.ok(al.some(a => a.kind === 'partialJoined' && a.plate === 'B' && a.info.fills === 2), 'partial fill alerted');
   assert.ok(al.some(a => a.kind === 'kmFixed' && a.plate === 'C' && a.info.to === 300690), 'km typo alerted');
+}
+
+// Truck health: steady 2.3 km/L for 2,760 km, then 1.8 km/L for the last 1,620 km → check maintenance.
+{
+  const M = [tx('M', '2026-10-01T08:00', 300, 50000)];
+  let km = 50000, d = 2;
+  for (let i = 0; i < 4; i++) { km += 690; M.push(tx('M', `2026-10-0${d++}T08:00`, 300, km)); }       // 2.3
+  for (let i = 0; i < 3; i++) { km += 540; M.push(tx('M', `2026-10-${10 + i}T08:00`, 300, km)); }      // 1.8
+  const S = { ...DEFAULT_SETTINGS, truckTargets: { M: 2.3 } };
+  const rm = computeFuel(M, S);
+  const h = truckHealth(rm, S).find(x => x.plate === 'M');
+  assert.equal(h.status, 'service', `health ${JSON.stringify(h)}`);
+  assert.ok(h.trendPct < -10);
+  assert.ok(fuelAlerts(rm, M, S).some(a => a.kind === 'maintenance' && a.plate === 'M'));
 }
 
 // Upload: only new rows are added.

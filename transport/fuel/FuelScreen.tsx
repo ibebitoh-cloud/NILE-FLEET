@@ -6,7 +6,7 @@ import { FUEL_STRINGS, FuelStrings } from './i18n';
 import { cardTotals, computeFuel, DEFAULT_SETTINGS, Fill, FuelResult, FuelSettings, FuelTx, Segment, SegmentStatus, Summary, summarize, TxView } from './math';
 import { parseFuelWorkbook, splitUpload } from './parse';
 import { exportFuelExcel, printFuelReport, Sheet } from './exports';
-import { AlertKind, AlertLevel, FuelAlert, fuelAlerts, weekEnd, weekOf } from './alerts';
+import { AlertKind, AlertLevel, FuelAlert, fuelAlerts, HEALTH_KM, HealthStatus, TruckHealth, truckHealth, weekEnd, weekOf } from './alerts';
 
 /* ------------------------------ helpers ------------------------------ */
 
@@ -39,6 +39,8 @@ type View = 'alerts' | 'trucks' | 'drivers' | 'fills' | 'tx' | 'weeks' | 'months
 
 type WeekRow = Summary & { prevLiters: number | null; prevKmL: number | null };
 
+const HEALTH_CLS: Record<HealthStatus, string> = { service: 'border-red-300 bg-red-50/60', watch: 'border-amber-300 bg-amber-50/60', good: 'border-[#eee7da] bg-white', noData: 'border-[#eee7da] bg-[#faf8f4] opacity-70' };
+const HEALTH_PILL: Record<HealthStatus, string> = { service: 'bg-red-600 text-white', watch: 'bg-amber-100 text-amber-900', good: 'bg-emerald-100 text-emerald-800', noData: 'bg-slate-100 text-slate-500' };
 const STATUS_CLS: Record<SegmentStatus, string> = {
   ok: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   high: 'bg-red-50 text-red-700 border-red-200',
@@ -143,6 +145,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const result: FuelResult = useMemo(() => computeFuel(txs || [], settings), [txs, settings]);
   const segByKey: Map<string, Segment> = useMemo(() => new Map(result.segments.map(s => [s.key, s])), [result]);
   const alerts: FuelAlert[] = useMemo(() => fuelAlerts(result, txs || [], settings), [result, txs, settings]);
+  const health: TruckHealth[] = useMemo(() => truckHealth(result, settings), [result, settings]);
   const checked: Set<string> = useMemo(() => new Set(settings.checkedAlerts || []), [settings]);
   const [af, setAf] = useState<{ kind: '' | AlertKind; level: '' | AlertLevel; showChecked: boolean }>({ kind: '', level: '', showChecked: false });
 
@@ -417,6 +420,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
         { label: t.alerts, value: String(wkAlerts.length), sub: `${wkAlerts.filter(x => x.level === 'high').length} ${t.lvl.high}` },
       ],
       tables: [
+        toSheet(t.health, healthCols, health),
         toSheet(t.trucks, wcols, wrows),
         toSheet(t.alerts, alertCols, wkAlerts),
         toSheet(t.flagged, pick2(fillCols, ['at', 'truck', 'driver', 'dist', 'liters', 'kml', 'target', 'diffL', 'diffE', 'status', 'notes']),
@@ -462,7 +466,18 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
 
   const filterText = [f.plate, f.driver, f.station, f.type, f.status && (f.status in STATUS_CLS ? statusLabel(t, f.status as SegmentStatus) : t[`st_${f.status}` as const]), f.q].filter(Boolean).join(' · ');
   const period = kpi.from ? `${day(kpi.from)} → ${day(kpi.to)}` : '—';
+  const healthCols: Col<TruckHealth>[] = [
+    { key: 'truck', label: t.truck, get: r => `${r.plate} (${r.vehicleType})` },
+    { key: 'health', label: t.status, get: r => t[`h_${r.status}` as const] },
+    { key: 'recent', label: `${t.recent} ${t.kmL}`, num: true, get: r => r.recentKmL || null },
+    { key: 'recentKm', label: `${t.recent} km`, num: true, get: r => r.recentKm },
+    { key: 'target', label: t.target, num: true, get: r => r.target },
+    { key: 'vs', label: t.vsTarget, get: r => pct(r.vsTargetPct) },
+    { key: 'normal', label: `${t.normal} ${t.kmL}`, num: true, get: r => r.baseKmL || null },
+    { key: 'trend', label: t.trend, get: r => pct(r.trendPct) },
+  ];
   const doExcel = () => exportFuelExcel([
+    toSheet(t.health, healthCols, health),
     toSheet(t.alerts, alertCols, openAlerts),
     toSheet(t.trucks, truckCols, trucks), toSheet(t.drivers, driverCols, drivers), toSheet(t.fills, fillCols, filtered.segs),
     toSheet(t.transactions, txCols, filtered.views), toSheet(t.weeks, weekCols, weeks), toSheet(t.months, monthCols, months), toSheet(t.stations, stationCols, stations),
@@ -478,6 +493,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
       { label: t.checks, value: String(kpi.outside + kpi.bad), sub: `${kpi.outside} ${t.fillsOutside} · ${kpi.bad} ${t.badReadings}` },
     ],
     tables: [
+      toSheet(t.health, healthCols, health),
       toSheet(t.trucks, pick2(truckCols, ['truck', 'fills', 'liters', 'cost', 'km', 'kml', 'l100', 'target', 'vs', 'diffL', 'over', 'loss', 'cardKm', 'kmDiff', 'cardKml', 'bad']).map(c => c.key === 'truck' ? { ...c, get: (r: Summary) => `${r.label} (${r.vehicleType})` } : c), trucks),
       toSheet(t.drivers, pick2(driverCols, ['driver', 'fills', 'liters', 'km', 'kml', 'target', 'vs', 'diffL', 'loss']), drivers),
       toSheet(t.weeks, pick2(weekCols, ['week', 'fills', 'liters', 'cost', 'dL', 'km', 'kml', 'dKml', 'l100', 'vs', 'loss']), [...weeks].reverse()),
@@ -550,6 +566,32 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
               <span className="whitespace-nowrap text-xs font-black text-red-700">{t.openAlerts} →</span>
             </button>
           )}
+
+          {/* Truck health: the main question, is each truck still doing its normal km/L? */}
+          <Card>
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <div className="text-xs font-black uppercase tracking-[.2em] text-[#07111f]">{t.health}</div>
+              <div className="text-[11px] text-slate-500">{t.healthHint(HEALTH_KM)}</div>
+            </div>
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+              {health.filter(h => (!f.plate || h.plate === f.plate) && (!f.type || h.vehicleType === f.type)).map(h => (
+                <button key={h.plate} onClick={() => { set({ plate: h.plate }); setView('fills'); }}
+                  className={`rounded-xl border p-3 text-start transition hover:border-[#c2a378] ${HEALTH_CLS[h.status]}`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <b className="truncate text-sm text-[#07111f]">{h.plate}</b>
+                    <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-black ${HEALTH_PILL[h.status]}`}>{t[`h_${h.status}` as const]}</span>
+                  </div>
+                  <div className="mt-2 flex items-end justify-between gap-2">
+                    <div><div className="text-[9px] font-bold uppercase text-slate-500">{t.recent}</div><div className="text-xl font-black tabular-nums text-[#07111f]">{n2(h.recentKmL)}</div></div>
+                    <div className="text-end text-[10px] leading-4 text-slate-500">
+                      <div>{t.target} {n2(h.target)} <b className={h.vsTargetPct < -settings.marginPct ? 'text-red-600' : ''}>{pct(h.vsTargetPct)}</b></div>
+                      <div>{t.normal} {n2(h.baseKmL)} <b className={h.trendPct <= -settings.marginPct ? 'text-red-600' : h.trendPct < 0 ? 'text-amber-700' : 'text-emerald-700'}>{h.trendPct < 0 ? '▼' : h.trendPct > 0 ? '▲' : ''} {pct(h.trendPct)}</b></div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </Card>
 
           {/* KPIs */}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
