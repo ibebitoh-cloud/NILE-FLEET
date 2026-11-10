@@ -201,6 +201,9 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   /** The fill (segment key) or truck (health) whose calculation is open in the explain dialog. */
   const [explain, setExplain] = useState<{ seg?: string; plate?: string } | null>(null);
   const [fullRead, setFullRead] = useState(false);
+  /** The card transaction open in the preview / edit popup. */
+  const [txOpen, setTxOpen] = useState<string | null>(null);
+  const txOverExplain = useRef(false);
   useEffect(() => setFullRead(false), [explain]);
   const [busy, setBusy] = useState('');
   const [preview, setPreview] = useState<{ total: number; fresh: FuelTx[]; inSystem: number; repeated: number; from: string; to: string } | null>(null);
@@ -219,8 +222,9 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     try { if (!history.state?.fuelView) history.replaceState({ ...(history.state || {}), fuelView: view }, ''); } catch { /* ignore */ }
     const onPop = (e: PopStateEvent) => {
       const st = e.state || {};
-      if (st.fuelOverlay) return;
-      setExplain(null); setSheet('');
+      if (st.fuelOverlay === 'tx') return;
+      if (st.fuelOverlay) { setTxOpen(null); return; }
+      setTxOpen(null); setExplain(null); setSheet('');
       if (st.fuelView && st.fuelView !== viewRef.current) setView(st.fuelView as View);
     };
     window.addEventListener('popstate', onPop);
@@ -235,6 +239,18 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
       else history.pushState({ fuelView: view }, '');
     } catch { /* ignore */ }
   }, [view]);
+  // The transaction popup is its own history step, so swipe-back closes only it (and leaves a fill popup under it open).
+  useEffect(() => {
+    try {
+      const st = history.state || {};
+      if (txOpen && st.fuelOverlay !== 'tx') { txOverExplain.current = !!explain || !!sheet; history.pushState({ fuelView: viewRef.current, fuelOverlay: 'tx' }, ''); }
+      if (!txOpen && st.fuelOverlay === 'tx') {
+        // Opened on its own and now a fill popup takes its place: reuse the step instead of going back.
+        if (!txOverExplain.current && (explain || sheet)) history.replaceState({ fuelView: viewRef.current, fuelOverlay: true }, '');
+        else history.back();
+      }
+    } catch { /* ignore */ }
+  }, [txOpen]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     try {
       const st = history.state || {};
@@ -284,7 +300,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
       if (f.type && s.vehicleType !== f.type) return false;
       if (f.station && !s.fills.some(x => x.station === f.station)) return false;
       if (f.status) {
-        if (f.status === 'badKm' || f.status === 'split' || f.status === 'partial') { if (!s.notes.includes(f.status)) return false; }
+        if (f.status === 'badKm' || f.status === 'split' || f.status === 'partial') { if (!s.notes.includes(f.status) && !(f.status === 'partial' && s.notes.includes('paired'))) return false; }
         else if (f.status === 'reversed') return false;
         else if (s.status !== f.status) return false;
       }
@@ -302,7 +318,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
         const sg = v.segmentKey ? segByKey.get(v.segmentKey) : undefined;
         if (f.status === 'reversed') { if (!v.flags.includes('reversed') && !v.flags.includes('reversal')) return false; }
         else if (f.status === 'badKm' || f.status === 'split') { if (!v.flags.includes(f.status)) return false; }
-        else if (f.status === 'partial') { if (!sg?.notes.includes('partial')) return false; }
+        else if (f.status === 'partial') { if (!sg?.notes.includes('partial') && !sg?.notes.includes('paired')) return false; }
         else if (sg?.status !== f.status) return false;
       }
       if (q && !`${x.id} ${x.plate} ${x.driver} ${x.station}`.toLowerCase().includes(q)) return false;
@@ -585,6 +601,25 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     finally { setBusy(''); }
   };
 
+  /** Saves one hand-edited transaction (or removes it) and recalculates everything. */
+  const saveTx = async (next: FuelTx) => {
+    setBusy('…');
+    try {
+      await api.saveFuel([next], local);
+      setTxs((txs || []).map(x => (x.id === next.id ? next : x)));
+      setToast(t.txSaved);
+      return true;
+    } catch (e: any) { setToast(String(e?.message || e)); return false; }
+    finally { setBusy(''); }
+  };
+  const removeTx = async (id: string) => {
+    if (!window.confirm(t.deleteTxConfirm)) return;
+    setBusy('…');
+    try { await api.deleteFuel([id], local); setTxs((txs || []).filter(x => x.id !== id)); setTxOpen(null); setToast(t.txDeleted); }
+    catch (e: any) { setToast(String(e?.message || e)); }
+    finally { setBusy(''); }
+  };
+
   const filterText = [f.plate, f.driver, f.station, f.type, f.status && (f.status in STATUS_CLS ? statusLabel(t, f.status as SegmentStatus) : t[`st_${f.status}` as const]), f.q].filter(Boolean).join(' · ');
   const period = kpi.from ? ltr(`${day(kpi.from)} → ${day(kpi.to)}`) : '—';
   const idsCol: Col<Segment> = { key: 'ids', label: t.txIds, get: r => segTxIds(r).map(x => `#${x}`).join(' ') };
@@ -763,7 +798,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
               <div className="rounded-xl bg-[#f8f5ef] p-3">
                 <div className="text-[10px] font-black uppercase tracking-widest text-[#8a7350]">{t.cardWrong}</div>
                 <div className="mt-1 text-2xl font-black tabular-nums text-[#07111f]">{kpi.cardWrong}</div>
-                <div className="text-[10px] text-slate-500">{filtered.fills.filter(x => x.txs.length > 1).length} {t.st_split.toLowerCase()} · {filtered.segs.filter(s => s.notes.includes('partial')).length} {t.st_partial.toLowerCase()}</div>
+                <div className="text-[10px] text-slate-500">{filtered.fills.filter(x => x.txs.length > 1).length} {t.st_split.toLowerCase()} · {filtered.segs.filter(s => s.notes.includes('partial') || s.notes.includes('paired')).length} {t.st_partial.toLowerCase()}</div>
               </div>
             </div>
           </Card>
@@ -832,7 +867,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
           {(view === 'fills' || view === 'tx') && <p className="text-[11px] font-bold text-slate-500">ⓘ {t.tapHint}</p>}
           {view === 'fills' && <DataTable onRow={r => setExplain({ seg: r.key })} sortLabel={t.sort} mobile={{ title: 'truck', sub: 'at', badge: 'status', stats: ['dist', 'liters', 'kml', 'target', 'diffL', 'cardKml'], foot: 'notes' }} rows={filtered.segs} cols={fillCols} rowKey={r => r.key} initial={{ key: 'at', dir: -1 }} empty={t.noMatch}
             highlight={r => r.status === 'high' ? 'bg-red-50/40' : r.status === 'low' ? 'bg-amber-50/40' : ''} />}
-          {view === 'tx' && <DataTable onRow={r => r.segmentKey && setExplain({ seg: r.segmentKey })} sortLabel={t.sort} mobile={{ title: 'truck', sub: 'at', stats: ['liters', 'amount', 'odo', 'ourKm', 'ourKml', 'station'], foot: 'flags' }} rows={filtered.views} cols={txCols} rowKey={r => r.tx.id} initial={{ key: 'at', dir: -1 }} empty={t.noMatch}
+          {view === 'tx' && <DataTable onRow={r => setTxOpen(r.tx.id)} sortLabel={t.sort} mobile={{ title: 'truck', sub: 'at', stats: ['liters', 'amount', 'odo', 'ourKm', 'ourKml', 'station'], foot: 'flags' }} rows={filtered.views} cols={txCols} rowKey={r => r.tx.id} initial={{ key: 'at', dir: -1 }} empty={t.noMatch}
             highlight={r => r.flags.includes('reversal') || r.flags.includes('reversed') ? 'opacity-60 line-through decoration-red-300' : ''} />}
           {view === 'weeks' && <DataTable sortLabel={t.sort} mobile={{ title: 'week', badge: 'status', stats: ['liters', 'dL', 'km', 'kml', 'dKml', 'loss'], foot: 'print' }} rows={weeks} cols={[...weekCols, { key: 'print', label: '🖨', get: () => null, render: r => <button className="rounded-lg px-2 py-1 hover:bg-[#f1ebe0]" title={t.weeklyReport} onClick={e => { e.stopPropagation(); weeklyReport(r.key); }}>🖨{isMobile ? ` ${t.weeklyReport}` : ''}</button> }]} rowKey={r => r.key} initial={{ key: 'week', dir: -1 }} empty={t.noMatch}
             onRow={r => { set({ from: r.key, to: weekEnd(r.key) }); setView('fills'); }} highlight={r => r.status === 'high' ? 'bg-red-50/40' : ''} />}
@@ -935,7 +970,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
                   const bad = fl.badKm.some(k => k.km === x.km);
                   const roles = [
                     ...(fl.txs.length > 1 && xi > 0 ? [t.roleSplit] : []),
-                    ...(seg.notes.includes('partial') && fi < seg.fills.length - 1 && xi === fl.txs.length - 1 ? [t.rolePartial] : []),
+                    ...((seg.notes.includes('partial') || seg.notes.includes('paired')) && fi < seg.fills.length - 1 && xi === fl.txs.length - 1 ? [t.rolePartial] : []),
                     ...(fixed ? [t.roleFixed] : []), ...(bad ? [t.roleBad] : []),
                     ...(fi === seg.fills.length - 1 && xi === fl.txs.length - 1 ? [t.roleClose] : []),
                   ];
@@ -945,7 +980,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
                 return (
                   <div className={`mt-3 overflow-hidden rounded-2xl border ${merged ? 'border-sky-200' : 'border-[#e3dccf]'}`}>
                     <div className={`flex items-center justify-between gap-2 px-3 py-2 text-[11px] font-black ${merged ? 'bg-sky-50 text-sky-900' : 'bg-[#fbf8f2] text-[#07111f]'}`}>
-                      <span>🔗 {t.mergedRef}</span>{merged && <span className="rounded-full bg-sky-600 px-2 py-0.5 text-[10px] text-white">{t.mergedHint(rows.length)}</span>}
+                      <span>🔗 {t.mergedRef}<span className="ms-1 font-bold text-slate-500">· {t.tapTxHint}</span></span>{merged && <span className="rounded-full bg-sky-600 px-2 py-0.5 text-[10px] text-white">{t.mergedHint(rows.length)}</span>}
                     </div>
                     <div className="divide-y divide-[#f1ebe0] text-[12px]">
                       <div className="flex items-center justify-between gap-2 bg-slate-50 px-3 py-2 text-slate-600">
@@ -953,9 +988,10 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
                         <div className="text-end"><div className="text-[9px] font-bold uppercase text-slate-400">{t.odometer}</div><b dir="ltr" className="tabular-nums text-[#07111f]">{n0(seg.fromKm)}</b></div>
                       </div>
                       {rows.map(({ x, fixed, bad, roles }) => (
-                        <div key={x.id} className="px-3 py-2">
+                        <div key={x.id} role="button" tabIndex={0} onClick={() => setTxOpen(x.id)} onKeyDown={e => { if (e.key === 'Enter') setTxOpen(x.id); }}
+                          className="cursor-pointer px-3 py-2 hover:bg-[#fbf8f2] active:bg-[#f6f1e7]" style={{ minHeight: 0 }}>
                           <div className="flex items-center justify-between gap-2">
-                            <div className="min-w-0"><b dir="ltr" className="text-[#07111f]">#{x.id}</b> <span dir="ltr" className="text-[11px] text-slate-500">{when(x.at)}</span></div>
+                            <div className="min-w-0"><b dir="ltr" className="text-[#07111f] underline decoration-dotted underline-offset-2">#{x.id}</b> <span dir="ltr" className="text-[11px] text-slate-500">{when(x.at)}</span>{x.edited && <span className="ms-1"><Chip tone="amber">✎ {t.editedTag}</Chip></span>}</div>
                             <div className="flex flex-wrap justify-end gap-1">{roles.map(r => <Chip key={r} tone={r === t.roleClose ? 'slate' : r === t.roleBad ? 'red' : r === t.roleFixed ? 'amber' : 'blue'}>{r}</Chip>)}</div>
                           </div>
                           <div className="mt-1 grid grid-cols-4 gap-2 tabular-nums">
@@ -1003,6 +1039,15 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
         );
       })()}
 
+      {txOpen && (() => {
+        const v = result.txViews.find(x => x.tx.id === txOpen);
+        if (!v) return null;
+        const sg = v.segmentKey ? segByKey.get(v.segmentKey) : undefined;
+        return <TxDialog t={t} lang={lang} v={v} seg={sg} simple={sg ? explainSegment(sg, settings, result.price, lang).simple : []}
+          isAdmin={isAdmin} busy={!!busy} onClose={() => setTxOpen(null)} onSave={saveTx} onDelete={() => removeTx(v.tx.id)}
+          onOpenFill={sg ? () => { if (explain?.seg === sg.key) setTxOpen(null); else { setExplain({ seg: sg.key }); setTxOpen(null); } } : undefined} />;
+      })()}
+
       {preview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07111f]/60 p-4" role="dialog" aria-modal="true">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
@@ -1028,6 +1073,145 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
 export default FuelScreen;
 
 /* ------------------------------ small parts ------------------------------ */
+
+/** Fields an admin can correct by hand. */
+const EDIT_FIELDS = ['at', 'km', 'liters', 'amount', 'totalAmount', 'driver', 'station', 'note'] as const;
+type EditField = typeof EDIT_FIELDS[number];
+
+const TxDialog: React.FC<{
+  t: FuelStrings; lang: Lang; v: TxView; seg?: Segment; simple: string[]; isAdmin: boolean; busy: boolean;
+  onClose: () => void; onSave: (x: FuelTx) => Promise<boolean>; onDelete: () => void; onOpenFill?: () => void;
+}> = ({ t, v, seg, simple, isAdmin, busy, onClose, onSave, onDelete, onOpenFill }) => {
+  const x = v.tx;
+  const [edit, setEdit] = useState(false);
+  const blank = () => ({ at: x.at, km: x.km == null ? '' : String(x.km), liters: String(x.liters), amount: String(x.amount), totalAmount: String(x.totalAmount), driver: x.driver, station: x.station, note: x.note || '' });
+  const [d, setD] = useState<Record<EditField, string>>(blank);
+  useEffect(() => { setD(blank()); setEdit(false); }, [x]); // eslint-disable-line react-hooks/exhaustive-deps
+  const orig = x.edited?.orig || {};
+  const num = (s: string) => { const n = Number(String(s).replace(/,/g, '')); return Number.isFinite(n) ? n : 0; };
+
+  const save = async () => {
+    const next: FuelTx = {
+      ...x, at: d.at.slice(0, 16) || x.at, km: d.km.trim() === '' ? null : num(d.km), liters: num(d.liters), amount: num(d.amount),
+      totalAmount: num(d.totalAmount), driver: d.driver.trim(), station: d.station.trim(), note: d.note.trim() || undefined,
+    };
+    // Keep the card's first value of every field that changed, so it can always be restored.
+    const o: Partial<FuelTx> = { ...orig };
+    let changed = false;
+    for (const k of EDIT_FIELDS) {
+      const a = (x as any)[k] ?? undefined, b = (next as any)[k] ?? undefined;
+      if (a === b) continue;
+      changed = true;
+      if (k !== 'note' && !(k in o)) (o as any)[k] = a ?? null;
+    }
+    if (!changed) { setEdit(false); return; }
+    // A field typed back to the card's value is not an edit any more.
+    for (const k of Object.keys(o)) if ((o as any)[k] === ((next as any)[k] ?? null)) delete (o as any)[k];
+    if (Object.keys(o).length) { const n = new Date(), z = (v: number) => String(v).padStart(2, '0'); next.edited = { at: `${n.getFullYear()}-${z(n.getMonth() + 1)}-${z(n.getDate())} ${z(n.getHours())}:${z(n.getMinutes())}`, orig: o }; }
+    else delete next.edited;
+    if (await onSave(next)) setEdit(false);
+  };
+  const restore = async () => {
+    const next: FuelTx = { ...x, ...(orig as Partial<FuelTx>) };
+    delete next.edited;
+    if (await onSave(next)) setEdit(false);
+  };
+
+  const was = (k: keyof FuelTx, fmt: (v: any) => string) => (k in orig ? <div className="text-[10px] font-bold text-amber-700">{t.origWas}: <span dir="ltr">{fmt((orig as any)[k])}</span></div> : null);
+  const F: React.FC<{ label: string; children: React.ReactNode; k?: keyof FuelTx; fmt?: (v: any) => string; wide?: boolean }> = ({ label, children, k, fmt = String, wide }) => (
+    <div className={`rounded-xl bg-[#f8f5ef] px-3 py-2 ${wide ? 'col-span-2' : ''}`}>
+      <div className="text-[9px] font-black uppercase tracking-widest text-slate-500">{label}</div>
+      <div className="mt-0.5 text-sm font-black tabular-nums text-[#07111f]">{children}</div>
+      {k && was(k, fmt)}
+    </div>
+  );
+  const I = (k: EditField, label: string, type: 'number' | 'text' | 'datetime-local' = 'number', wide = false) => (
+    <label className={`block ${wide ? 'col-span-2' : ''}`}>
+      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{label}</span>
+      <input type={type} inputMode={type === 'number' ? 'decimal' : undefined} step="any" dir={type === 'text' ? undefined : 'ltr'}
+        className={`${inputCls} mt-1 w-full`} value={d[k]} onChange={e => setD(p => ({ ...p, [k]: e.target.value }))} />
+    </label>
+  );
+  const perL = x.liters > 0 ? x.amount / x.liters : 0;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-[#07111f]/60 sm:items-center sm:p-4" onClick={onClose}>
+      <div role="dialog" aria-modal="true" aria-label={t.txPreview} onClick={e => e.stopPropagation()}
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-2xl pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="text-[10px] font-black uppercase tracking-[.2em] text-[#8a7350]">{t.txPreview} {x.edited && <Chip tone="amber">✎ {t.editedTag}</Chip>}</div>
+            <div className="mt-1 text-lg font-black text-[#07111f]"><span dir="ltr">#{x.id}</span> · {x.plate}</div>
+            <div className="text-[11px] text-slate-500" dir="ltr">{when(x.at)}</div>
+          </div>
+          <button className={`${btnGhost} !px-3`} onClick={onClose} aria-label={t.close}>✕</button>
+        </div>
+
+        {!edit ? (
+          <>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <F label={t.date} k="at" fmt={when}><span dir="ltr">{when(x.at)}</span></F>
+              <F label={t.vehicleType}>{x.vehicleType || '—'}</F>
+              <F label={t.driver} k="driver">{x.driver || '—'}</F>
+              <F label={t.station} k="station">{x.station || '—'}</F>
+              <F label={t.liters} k="liters" fmt={n1}>{n1(x.liters)} <span className="text-[10px] text-slate-400">{t.L}</span></F>
+              <F label={t.amount} k="amount" fmt={n2}>{n2(x.amount)} <span className="text-[10px] text-slate-400">{t.pricePerL} {n2(perL)}</span></F>
+              <F label={t.total} k="totalAmount" fmt={n2}>{n2(x.totalAmount)} <span className="text-[10px] text-slate-400">{t.fee} {n2(x.totalAmount - x.amount)}</span></F>
+              <F label={t.odometer} k="km" fmt={n0}><span dir="ltr">{n0(x.km)}</span></F>
+              <F label={`${t.cardSays} ${t.km}`}>{n0(x.cardDistance)}</F>
+              <F label={`${t.cardSays} ${t.kmL}`}>{n2(x.cardKmL)}</F>
+              <F label={t.ourKm}>{v.actualDistance == null ? '—' : n0(v.actualDistance)}</F>
+              <F label={t.actualKmL}>{v.actualKmL == null ? '—' : n2(v.actualKmL)}</F>
+              {(x.cardValidity || x.cardReason) && <F label={t.cardSays} wide><span className={/wrong/i.test(x.cardValidity) ? 'text-red-600' : ''}>{x.cardValidity}{x.cardReason ? ` · ${x.cardReason}` : ''}</span></F>}
+              {!!v.flags.length && <F label={t.flags} wide><div className="flex flex-wrap gap-1">{v.flags.map(fl => <Chip key={fl}>{t[`f_${fl}` as const]}</Chip>)}</div></F>}
+              {x.note && <F label={t.note} wide><span className="font-bold">{x.note}</span></F>}
+            </div>
+            {x.edited && <p className="mt-2 text-[11px] font-bold text-amber-800">{t.editedOn(x.edited.at)}</p>}
+
+            {seg && (
+              <div className="mt-3 rounded-2xl border border-[#e3dccf] p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-[10px] font-black uppercase tracking-[.2em] text-[#8a7350]">{t.inFill}</div>
+                  <Badge t={t} s={seg.status} />
+                </div>
+                <div className="mt-1.5 space-y-1 text-[13px] font-bold leading-6 text-slate-700">{simple.map((l, i) => <p key={i}>{l}</p>)}</div>
+                {onOpenFill && <button className={`${btnGhost} mt-2 w-full justify-center`} onClick={onOpenFill}>🔗 {t.openFill}</button>}
+              </div>
+            )}
+
+            {isAdmin && (
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <button className={`${btnGold} justify-center !py-3`} onClick={() => setEdit(true)}>✎ {t.editTx}</button>
+                {x.edited && Object.keys(orig).length ? <button className={`${btnGhost} justify-center !py-3`} disabled={busy} onClick={restore}>↺ {t.restoreTx}</button>
+                  : <button className={`${btnGhost} justify-center !py-3 !text-red-600`} disabled={busy} onClick={onDelete}>🗑 {t.deleteTx}</button>}
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              {I('at', t.date, 'datetime-local', true)}
+              {I('liters', t.liters)}
+              {I('km', t.odometer)}
+              {I('amount', t.amount)}
+              {I('totalAmount', t.total)}
+              {I('driver', t.driver, 'text')}
+              {I('station', t.station, 'text')}
+              {I('note', t.note, 'text', true)}
+            </div>
+            <p className="mt-3 text-[11px] leading-5 text-slate-500">{t.editHint}</p>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <button className={`${btnGhost} justify-center !py-3`} onClick={() => { setD(blank()); setEdit(false); }}>{t.cancel}</button>
+              <button className={`${btnGold} justify-center !py-3`} disabled={busy} onClick={save}>{busy ? <DaliLoader size={16} /> : '✓'} {t.saveTx}</button>
+            </div>
+            {x.edited && Object.keys(orig).length > 0 && <button className="mt-3 w-full text-center text-[11px] font-bold text-slate-600 hover:underline" onClick={restore}>↺ {t.restoreTx}</button>}
+            <button className="mt-3 w-full text-center text-[11px] font-bold text-red-600 hover:underline" onClick={onDelete}>🗑 {t.deleteTx}</button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const Kpi: React.FC<{ label: string; value: string; unit?: string; sub?: React.ReactNode; tone?: 'navy' | 'red' | 'amber' }> = ({ label, value, unit, sub, tone = 'navy' }) => (
   <Card className="!p-4">
@@ -1058,7 +1242,7 @@ const SettingsPanel: React.FC<{
   useEffect(() => setD(settings), [settings]);
   const num = (v: string) => (v === '' ? 0 : Number(v));
   const typeAvg = (type: string) => {
-    const segs: Segment[] = result.segments.filter((s: Segment) => s.vehicleType === type && s.status !== 'pending' && !s.notes.includes('partial'));
+    const segs: Segment[] = result.segments.filter((s: Segment) => s.vehicleType === type && s.status !== 'pending' && !s.notes.includes('partial') && !s.notes.includes('paired'));
     const L = sum(segs, s => s.liters);
     return L ? sum(segs, s => s.distance) / L : 0;
   };
