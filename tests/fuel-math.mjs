@@ -126,6 +126,14 @@ assert.equal(sp.cost, 2050 + 2200);
   assert.equal(of('idle', 'Q').length, 1, 'idle truck');
   assert.equal(al[0].level, 'high', 'urgent first');
 }
+// Every merge / correction raises an alert (truck A has a split fill, B a partial fill, C a km typo).
+{
+  const all = [...A, ...B, ...C];
+  const al = fuelAlerts(computeFuel(all, DEFAULT_SETTINGS), all, DEFAULT_SETTINGS);
+  assert.ok(al.some(a => a.kind === 'splitJoined' && a.plate === 'A' && a.info.count === 2), 'split fill alerted');
+  assert.ok(al.some(a => a.kind === 'partialJoined' && a.plate === 'B' && a.info.fills === 2), 'partial fill alerted');
+  assert.ok(al.some(a => a.kind === 'kmFixed' && a.plate === 'C' && a.info.to === 300690), 'km typo alerted');
+}
 
 // Upload: only new rows are added.
 {

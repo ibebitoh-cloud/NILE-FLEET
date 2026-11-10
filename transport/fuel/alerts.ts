@@ -14,7 +14,10 @@ export type AlertKind =
   | 'noKm'         // no odometer reading on a fill
   | 'pumpVar'      // amount charged differs from the pump reading
   | 'idle'         // no fill for many days
-  | 'reversal';    // a transaction was reversed
+  | 'reversal'     // a transaction was reversed
+  | 'splitJoined'  // two or more transactions joined into one fill (pump stopped at 9,999 EGP)
+  | 'partialJoined'// a fill that wasn't to full joined with the next one for km/L
+  | 'kmFixed';     // a km reading typed with an extra digit was corrected
 
 export type AlertLevel = 'high' | 'medium' | 'low';
 
@@ -38,6 +41,7 @@ export const LEVEL_ORDER: Record<AlertLevel, number> = { high: 0, medium: 1, low
 export const ALERT_LEVEL: Record<AlertKind, AlertLevel> = {
   overUse: 'high', weekDrop: 'high', overTank: 'high', tooFewLiters: 'medium', pumpVar: 'medium',
   badKm: 'medium', idle: 'medium', noKm: 'low', reversal: 'low',
+  partialJoined: 'medium', kmFixed: 'medium', splitJoined: 'low',
 };
 
 /** Alerts below this many liters are noise. */
@@ -92,6 +96,20 @@ export function fuelAlerts(result: FuelResult, txs: FuelTx[], settings: FuelSett
         egp: round(missing * price, 0), segmentKey: s.key,
         info: { km: s.distance, liters: s.liters, kmL: round(s.distance / s.liters), target: s.target, fromAt: s.fromAt.slice(0, 10), open: open ? 1 : 0 } });
     }
+  }
+
+  /* every merge or correction the math makes, so nothing changes the km/L silently */
+  const ids = (txs: FuelTx[]) => txs.map(t => t.id).join(', ');
+  for (const f of result.fills) {
+    if (f.txs.length > 1) add({ id: `splitJoined|${f.key}`, kind: 'splitJoined', plate: f.plate, driver: f.driver, at: f.at, liters: f.liters, egp: 0,
+      info: { ids: ids(f.txs), count: f.txs.length } });
+    for (const x of f.fixedKm) add({ id: `kmFixed|${f.key}|${x.from}`, kind: 'kmFixed', plate: f.plate, driver: f.driver, at: f.at, liters: f.liters, egp: 0,
+      info: { from: x.from, to: x.to, ids: ids(f.txs.filter(t => t.km === x.from)) } });
+  }
+  for (const s of result.segments) {
+    if (!s.notes.includes('partial')) continue;
+    add({ id: `partialJoined|${s.key}`, kind: 'partialJoined', plate: s.plate, driver: s.driver, at: s.at, liters: s.liters, egp: 0, segmentKey: s.key,
+      info: { ids: ids(s.fills.flatMap(f => f.txs)), fills: s.fills.length, fromAt: s.fromAt.slice(0, 10), km: s.distance, kmL: s.kmL, open: s.status === 'pending' ? 1 : 0 } });
   }
 
   /* per fill */
