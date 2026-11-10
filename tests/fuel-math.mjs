@@ -189,4 +189,23 @@ assert.equal(sp.cost, 2050 + 2200);
   assert.ok(explainHealth(h, 'en', 1500).includes('maintenance'));
 }
 
+// The Arabic export (CSV) of the same report.
+{
+  const rows = [
+    ['#', 'التاريخ', 'الوقت', 'الرقم التعريفي للمركبة', 'رقم اللوحة', 'نوع المركبة', 'إسم السائق', 'المحطة', 'المبلغ', 'الكمية', 'المبلغ الكلي', 'عداد الكيلومترات', 'المسافه', 'معدل الإستهلاك', 'صلاحية المسافه', 'سبب عدم صلاحية المسافه', 'نوع المعاملة'],
+    ['17288386', '10 نوفمبر 2026', '4:15 م', '117352', '4363 ر ا ق', 'Default', 'محمد صلاح', 'موبيل-  27 صحراوى', '6080.1', '296.59', '6167.88', '757106.6', '798.6', '2.69', 'غير صحيحة', 'بداية محاسبه جديدة', 'عادي'],
+    ['17124639', '04 نوفمبر 2026', '8:08 م', '227655', 'ر أ ق 3893', 'Default', 'عبد القادر محمد', 'اويل', '-7120', '-347.32', '-7220.32', '-', '0', '0', 'صحيحة', '-', 'عادي'],
+  ];
+  const ar = rowsToTxs(rows);
+  assert.equal(ar.length, 2);
+  assert.equal(ar[0].at, '2026-11-10T16:15');
+  assert.equal(ar[0].liters, 296.59);
+  assert.equal(ar[0].km, 757106.6);
+  assert.equal(ar[0].driver, 'محمد صلاح');
+  assert.equal(ar[0].cardValidity, 'Wrong');
+  assert.equal(ar[0].txType, 'Normal');
+  assert.equal(ar[1].liters, -347.32);
+  assert.equal(ar[1].km, null);
+}
+
 console.log('fuel math: all checks passed');
