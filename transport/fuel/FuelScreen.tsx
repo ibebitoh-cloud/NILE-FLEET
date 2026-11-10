@@ -806,6 +806,11 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
         <div>
           <h1 className="text-xl font-black uppercase italic tracking-tight text-[#07111f] sm:text-2xl">{t.title}</h1>
           <p className="mt-1 hidden max-w-2xl text-xs text-slate-500 sm:block">{t.sub}</p>
+          {local && <div role="alert" className="mt-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">
+            {lang === 'ar'
+              ? 'وضع محلي: جدول الوقود غير متاح على قاعدة البيانات. البيانات المعروضة محفوظة في هذا المتصفح فقط وقد لا تظهر على الأجهزة الأخرى.'
+              : 'LOCAL MODE: the Fuel database table is unavailable. Fuel records are stored in this browser only and may not appear on other devices.'}
+          </div>}
         </div>
         <div className={`flex-wrap gap-2 ${hasData ? 'hidden md:flex' : 'flex'}`}>
           {isAdmin && <button className={btnGold} disabled={!!busy} onClick={() => fileRef.current?.click()}>⬆ {t.upload}</button>}
@@ -1039,7 +1044,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
           {view === 'months' && <DataTable sortLabel={t.sort} mobile={{ title: 'month', stats: ['liters', 'cost', 'km', 'kml', 'vs', 'loss'] }} rows={months} cols={monthCols} rowKey={r => r.key} initial={{ key: 'month', dir: -1 }} empty={t.noMatch} />}
           {view === 'stations' && <DataTable sortLabel={t.sort} mobile={{ title: 'station', stats: ['count', 'trucks', 'liters', 'cost', 'share'] }} rows={stations} cols={stationCols} rowKey={r => r.station} initial={{ key: 'liters', dir: -1 }} empty={t.noMatch}
             onRow={r => { set({ station: r.station === '—' ? '' : r.station }); setView('tx'); }} />}
-          {view === 'settings' && <SettingsPanel t={t} isAdmin={isAdmin} settings={settings} result={result} plates={options.plates} types={options.types}
+          {view === 'settings' && <SettingsPanel t={t} lang={lang} isAdmin={isAdmin} settings={settings} result={result} plates={options.plates} types={options.types}
             onSave={async s => { try { await api.saveFuelSettings(s); setSettings(s); setToast('✓'); } catch (e: any) { setToast(String(e?.message || e)); } }} />}
 
           {isAdmin && !isMobile && <div className="pt-2 text-end"><button className="text-[11px] font-bold text-red-600 hover:underline" onClick={clearAll}>{t.clearAll}</button></div>}
@@ -1461,9 +1466,9 @@ const uniqNos = (plates: string[], vehicles: Record<string, VehicleInfo> | undef
   [...new Set([...plates.map(plateNo), ...Object.keys(vehicles || {})])].filter(Boolean).sort();
 
 const SettingsPanel: React.FC<{
-  t: FuelStrings; isAdmin: boolean; settings: FuelSettings; result: FuelResult; plates: string[]; types: string[];
+  t: FuelStrings; lang: Lang; isAdmin: boolean; settings: FuelSettings; result: FuelResult; plates: string[]; types: string[];
   onSave: (s: FuelSettings) => void;
-}> = ({ t, isAdmin, settings, result, plates, types, onSave }) => {
+}> = ({ t, lang, isAdmin, settings, result, plates, types, onSave }) => {
   const [d, setD] = useState({ ...settings, vehicles: settings.vehicles || DEFAULT_VEHICLES });
   useEffect(() => setD({ ...settings, vehicles: settings.vehicles || DEFAULT_VEHICLES }), [settings]);
   const num = (v: string) => (v === '' ? 0 : Number(v));
@@ -1472,6 +1477,11 @@ const SettingsPanel: React.FC<{
     const L = sum(segs, s => s.liters);
     return L ? sum(segs, s => s.distance) / L : 0;
   };
+  const typeTruckCount = (type: string) => new Set(result.fills.filter(f => f.vehicleType === type).map(f => f.plate)).size;
+  const profileMissing = uniqNos(plates, d.vehicles).filter(no => {
+    const v = (d.vehicles || {})[no];
+    return !v || !v.driver || !v.branch || !v.model || !v.year;
+  }).length;
   const field = (label: string, key: 'price' | 'marginPct' | 'fillMarginPct' | 'splitHours' | 'minKm' | 'maxKmPerFill' | 'tankLiters' | 'idleDays', hint?: string, step = '1') => (
     <label className="block text-xs font-bold text-slate-700">{label}
       <input type="number" step={step} min="0" disabled={!isAdmin} className={`${inputCls} mt-1 w-full`} value={d[key] || ''} placeholder={key === 'price' ? `${result.price}` : '0'}
@@ -1500,6 +1510,9 @@ const SettingsPanel: React.FC<{
             <label key={type} className="block text-xs font-bold text-slate-700">{type}
               <input type="number" step="0.01" min="0" disabled={!isAdmin} className={`${inputCls} mt-1 w-full`} placeholder={`${t.fleetAvg} ${n2(typeAvg(type))}`}
                 value={d.typeTargets[type] || ''} onChange={e => setD({ ...d, typeTargets: { ...d.typeTargets, [type]: num(e.target.value) } })} />
+              {typeTruckCount(type) <= 1 && <span className="mt-1 block text-[10px] font-bold text-amber-700">
+                {lang === 'ar' ? 'مؤقت: نوع به سيارة واحدة فقط؛ المتوسط لا يمثل معيارًا مستقلًا.' : 'Provisional: only one truck in this type; its average is not an independent benchmark.'}
+              </span>}
             </label>
           ))}
         </div>
@@ -1525,6 +1538,9 @@ const SettingsPanel: React.FC<{
         <Card>
           <div className="text-xs font-black uppercase tracking-[.2em] text-[#07111f]">{t.truckDetails}</div>
           <p className="mt-1 text-[10px] text-slate-500">{t.truckDetailsHint}</p>
+          {profileMissing > 0 && <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-bold text-amber-800">
+            {lang === 'ar' ? `بيانات ناقصة في ${profileMissing} سيارات. أكمل السائق والفرع والموديل وسنة الصنع.` : `${profileMissing} truck profiles are incomplete. Complete driver, branch, model and year.`}
+          </p>}
           <div className="mt-3 space-y-2">
             {uniqNos(plates, d.vehicles).map(no => {
               const v: VehicleInfo = (d.vehicles || {})[no] || { driver: '', branch: '', model: '', year: '' };

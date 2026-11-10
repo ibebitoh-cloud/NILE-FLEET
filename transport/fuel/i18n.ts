@@ -99,7 +99,11 @@ const en = {
       case 'overTank': return `${f0(i.liters)} L in one fill, the tank holds ${f0(i.tank)} L. ${f0(a.liters)} L too many ≈ ${f0(a.egp)} EGP.`;
       case 'badKm': return `km ${f0(i.km)} was skipped (${i.reason === 'sameKm' ? 'same km as the last fill' : i.reason === 'backwards' ? 'lower than the last fill' : 'too far from the last fill'}). Its ${f0(a.liters)} L moved to the next good reading.`;
       case 'noKm': return `No km reading on this fill (${f0(a.liters)} L). Its liters moved to the next good reading.`;
-      case 'pumpVar': return i.misread ? `Transaction ${plain(i.id)}: paid ${f2(i.paid)} but the pump photo was read as ${f2(i.pump)}. Most likely the card system misread the photo, not missing money. Check the photo.` : `Transaction ${plain(i.id)}: paid and pump reading differ by ${f2(i.variance)}.`;
+      case 'pumpVar': return i.rawMismatch
+        ? `Transaction ${plain(i.id)}: recorded pump reading ${f2(i.pump)} vs paid amount ${f2(i.paid)}; imported variance is ${f2(i.variance)}. Source values do not reconcile. Check the original fuel-card report before editing.`
+        : i.misread
+          ? `Transaction ${plain(i.id)}: paid ${f2(i.paid)} but the pump photo was read as ${f2(i.pump)}. This may be a reading/import error, not missing money. Check the original report.`
+          : `Transaction ${plain(i.id)}: paid and pump reading differ by ${f2(i.variance)}.`;
       case 'idle': return `Last fill ${iso(a.at.slice(0, 10))}, ${f0(i.days)} days before the last data (${plain(i.lastData)}). Parked, or fuelled outside the card?`;
       case 'reversal': return `Transaction ${plain(i.id)} of ${f0(a.liters)} L (${f0(a.egp)} EGP) was reversed.`;
       case 'maintenance': case 'dropping': return `Last ${f0(i.recentKm)} km (since ${plain(i.recentFrom)}): ${f2(i.recentKmL)} km/L. Target ${f2(i.target)} (${pctS(i.vsTargetPct)}). Its own normal before: ${i.baseKmL ? f2(i.baseKmL) : '—'} (${pctS(i.trendPct)}).${a.kind === 'maintenance' ? ' Check engine, injectors, tyres and air filter, or ask the driver.' : ' Keep an eye on it.'}`;
@@ -205,7 +209,11 @@ const ar: typeof en = {
       case 'overTank': return `${f0(i.liters)} لتر في تفويلة واحدة والتانك ${f0(i.tank)} لتر. زيادة ${f0(a.liters)} لتر ≈ ${f0(a.egp)} جنيه.`;
       case 'badKm': return `تم تجاهل العداد ${f0(i.km)} (${i.reason === 'sameKm' ? 'نفس كيلومتر التفويلة السابقة' : i.reason === 'backwards' ? 'أقل من التفويلة السابقة' : 'بعيد جدًا عن التفويلة السابقة'}). انتقلت ${f0(a.liters)} لتر لأول قراءة سليمة.`;
       case 'noKm': return `بدون قراءة عداد في هذه التفويلة (${f0(a.liters)} لتر). انتقلت لتراتها لأول قراءة سليمة.`;
-      case 'pumpVar': return i.misread ? `المعاملة ${plain(i.id)}: المدفوع ${f2(i.paid)} لكن صورة الطلمبة اتقرت ${f2(i.pump)}. غالباً سيستم الكارت قرا الصورة غلط، مش فلوس ناقصة. راجع الصورة.` : `المعاملة ${plain(i.id)}: فرق بين المدفوع وقراءة الطلمبة ${f2(i.variance)}.`;
+      case 'pumpVar': return i.rawMismatch
+        ? `المعاملة ${plain(i.id)}: قراءة الطلمبة المسجلة ${f2(i.pump)} مقابل المدفوع ${f2(i.paid)}، رغم أن فرق التقرير ${f2(i.variance)}. القيم غير متطابقة؛ راجع تقرير الكارت الأصلي قبل أي تعديل.`
+        : i.misread
+          ? `المعاملة ${plain(i.id)}: المدفوع ${f2(i.paid)} لكن قراءة صورة الطلمبة ${f2(i.pump)}. قد يكون خطأ قراءة أو استيراد، وليس نقصًا في الأموال. راجع التقرير الأصلي.`
+          : `المعاملة ${plain(i.id)}: فرق بين المدفوع وقراءة الطلمبة ${f2(i.variance)}.`;
       case 'idle': return `آخر تفويلة ${iso(a.at.slice(0, 10))}، قبل آخر بيانات (${plain(i.lastData)}) بـ ${f0(i.days)} يوم. واقفة أم تم التفويل خارج الكارت؟`;
       case 'reversal': return `المعاملة ${plain(i.id)} بـ ${f0(a.liters)} لتر (${f0(a.egp)} جنيه) تم إرجاعها.`;
       case 'maintenance': case 'dropping': return `آخر ${f0(i.recentKm)} كم (منذ ${plain(i.recentFrom)}): ${f2(i.recentKmL)} كم/لتر. المستهدف ${f2(i.target)} (${pctS(i.vsTargetPct)}). معدلها المعتاد قبل ذلك: ${i.baseKmL ? f2(i.baseKmL) : '—'} (${pctS(i.trendPct)}).${a.kind === 'maintenance' ? ' افحص الموتور والرشاشات والكاوتش وفلتر الهواء أو اسأل السائق.' : ' تابعها.'}`;

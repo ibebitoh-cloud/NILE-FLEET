@@ -188,12 +188,17 @@ export async function deleteFuel(ids: string[], local: boolean): Promise<void> {
 
 export async function loadFuelSettings(): Promise<Partial<FuelSettings>> {
   const { data, error } = await transportDb.from('transport_settings').select('value').eq('key', 'fuel').maybeSingle();
-  if (error || !data) return readLocal<Partial<FuelSettings>>(FUEL_SETTINGS_LOCAL, {});
+  // Browser fallback is only valid when the table is genuinely unavailable. A network,
+  // permission or timeout error must not silently look like successfully loaded settings.
+  if (missingTable(error) || (!error && !data)) return readLocal<Partial<FuelSettings>>(FUEL_SETTINGS_LOCAL, {});
+  if (error) throw new Error(error.message);
   return data.value as Partial<FuelSettings>;
 }
 
 export async function saveFuelSettings(s: FuelSettings): Promise<void> {
-  writeLocal(FUEL_SETTINGS_LOCAL, s);
   const { error } = await transportDb.from('transport_settings').upsert({ key: 'fuel', value: s }, { onConflict: 'key' });
   if (error && !missingTable(error)) throw new Error(error.message);
+  // Keep a local cache only after the database write succeeds, or in the explicit
+  // missing-table fallback. Never leave an unsaved edit looking like saved settings.
+  writeLocal(FUEL_SETTINGS_LOCAL, s);
 }
