@@ -116,6 +116,7 @@ const en = {
   summary: 'Summary', summarySub: (wk: string, last: string) => `Each truck's overall km/L (all data), this week (${wk}) and its last fill. Last upload: ${last}. Tap a truck to see all its data.`,
   overall: 'Overall', lastFill: 'Last fill', daysAgo: (n: number) => (n <= 0 ? 'same day as last upload' : `${n} day${n === 1 ? '' : 's'} before last upload`),
   noFillWeek: 'No closed fill this week yet', allTrucks2: 'All trucks', truckData: 'All data for this truck', openAlertsN: (n: number) => `${n} open alert${n === 1 ? '' : 's'}`,
+  assignedDriver: 'Assigned driver', branch: 'Branch', model: 'Model', year: 'Year', truckDetails: 'Truck details', truckDetailsHint: 'Assigned driver, branch, model and year per plate number. Fuel-card driver names are never changed.',
   firstFill: 'First fill', kmTotal: 'Tracked km', fillsDone: 'Fills', overallHint: 'Overall = every closed full-to-full fill in the data, not only the filter dates.',
   reportTitle: 'Fuel consumption report', period: 'Period', flagged: 'Fills to check', generated: 'Generated',
 };
@@ -221,6 +222,7 @@ const ar: typeof en = {
   summary: 'الملخص', summarySub: (wk: string, last: string) => `الكم/لتر الإجمالي لكل عربية (كل البيانات)، وهذا الأسبوع (${iso(wk)})، وآخر تفويل. آخر رفع: ${iso(last)}. اضغط على أي عربية تشوف كل بياناتها.`,
   overall: 'الإجمالي', lastFill: 'آخر تفويل', daysAgo: (n: number) => (n <= 0 ? 'نفس يوم آخر رفع' : `قبل آخر رفع بـ ${iso(String(n))} يوم`),
   noFillWeek: 'مفيش تفويلة مقفولة الأسبوع ده لسه', allTrucks2: 'كل العربيات', truckData: 'كل بيانات العربية', openAlertsN: (n: number) => `${iso(String(n))} تنبيه مفتوح`,
+  assignedDriver: 'السائق المسؤول', branch: 'الفرع', model: 'الموديل', year: 'سنة الصنع', truckDetails: 'بيانات الشاحنات', truckDetailsHint: 'السائق المسؤول والفرع والموديل وسنة الصنع لكل رقم لوحة. أسماء السائقين في كارت الوقود لا تتغير.',
   firstFill: 'أول تفويل', kmTotal: 'الكيلومترات المحسوبة', fillsDone: 'التفويلات', overallHint: 'الإجمالي = كل تفويلة من تانك كامل لتانك كامل في البيانات، مش بس تواريخ الفلتر.',
   reportTitle: 'تقرير استهلاك السولار', period: 'الفترة', flagged: 'تفويلات للمراجعة', generated: 'تاريخ الإصدار',
 };
