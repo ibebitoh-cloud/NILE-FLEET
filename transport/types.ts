@@ -1,4 +1,5 @@
-export type TransportRole = 'ADMIN' | 'VIEWER';
+// FUEL = fuel editor: works only in the Fuel tab and never sees prices.
+export type TransportRole = 'ADMIN' | 'VIEWER' | 'FUEL';
 
 export interface TransportUser {
   id: string;
