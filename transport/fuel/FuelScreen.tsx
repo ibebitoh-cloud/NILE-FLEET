@@ -210,6 +210,38 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   useEffect(() => { try { localStorage.setItem('nf_transport_fuel_view', view); } catch { /* ignore */ } }, [view]);
   // 'home' is the phone dashboard; on a wide screen the dashboard is always on top, so fall back to the trucks list.
   useEffect(() => { if (!isMobile && view === 'home') setView('trucks'); }, [isMobile, view]);
+  // Back button / swipe-back: every tab change and every open popup is a step in the browser history,
+  // so the phone's swipe from the edge (or the back button) goes to the previous tab or closes the popup.
+  const viewRef = useRef(view);
+  viewRef.current = view;
+  const overlayOpen = !!explain || !!sheet;
+  useEffect(() => {
+    try { if (!history.state?.fuelView) history.replaceState({ ...(history.state || {}), fuelView: view }, ''); } catch { /* ignore */ }
+    const onPop = (e: PopStateEvent) => {
+      const st = e.state || {};
+      if (st.fuelOverlay) return;
+      setExplain(null); setSheet('');
+      if (st.fuelView && st.fuelView !== viewRef.current) setView(st.fuelView as View);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+  useEffect(() => {
+    try {
+      const st = history.state || {};
+      if (st.fuelView === view) return;
+      // Leaving a popup by picking a tab: reuse the popup's history step.
+      if (st.fuelOverlay) history.replaceState({ fuelView: view }, '');
+      else history.pushState({ fuelView: view }, '');
+    } catch { /* ignore */ }
+  }, [view]);
+  useEffect(() => {
+    try {
+      const st = history.state || {};
+      if (overlayOpen && !st.fuelOverlay) history.pushState({ fuelView: viewRef.current, fuelOverlay: true }, '');
+      if (!overlayOpen && st.fuelOverlay) history.back();
+    } catch { /* ignore */ }
+  }, [overlayOpen]);
   // Phone: make room for the bottom tab bar, and lift DALI's button and the toast above it.
   useEffect(() => {
     if (!isMobile) return;
@@ -227,7 +259,10 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   }, []);
 
   const result: FuelResult = useMemo(() => computeFuel(txs || [], settings), [txs, settings]);
-  const segByKey: Map<string, Segment> = useMemo(() => new Map(result.segments.map(s => [s.key, s])), [result]);
+  /** Segment by key, and the start fill of each segment (the full tank it is measured from). */
+  const segByKey: Map<string, Segment> = useMemo(() => new Map(result.segments.map(x => [x.key, x])), [result]);
+  const fillByAtPlate: Map<string, Fill> = useMemo(() => new Map(result.fills.map(x => [`${x.plate}|${x.at}`, x])), [result]);
+  const segTxIds = (sg: Segment) => sg.fills.flatMap(f => f.txs.map(x => x.id));
   const alerts: FuelAlert[] = useMemo(() => fuelAlerts(result, txs || [], settings), [result, txs, settings]);
   const health: TruckHealth[] = useMemo(() => truckHealth(result, settings), [result, settings]);
   const checked: Set<string> = useMemo(() => new Set(settings.checkedAlerts || []), [settings]);
@@ -427,6 +462,8 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     { key: 'ourKml', label: t.actualKmL, num: true, get: r => r.actualKmL, render: r => r.actualKmL == null ? <span className="text-slate-400">—</span> : <b>{n2(r.actualKmL)}</b> },
     { key: 'valid', label: t.cardSays, get: r => `${r.tx.cardValidity} ${r.tx.cardReason}`.trim(), render: r => r.tx.cardValidity
       ? <span className={/wrong/i.test(r.tx.cardValidity) ? 'font-bold text-red-600' : 'text-slate-500'}>{r.tx.cardValidity}{r.tx.cardReason ? ` · ${r.tx.cardReason}` : ''}</span> : '—' },
+    { key: 'merged', label: t.mergedWith, get: r => { const sg = r.segmentKey ? segByKey.get(r.segmentKey) : undefined; const ids = sg ? segTxIds(sg).filter(x => x !== r.tx.id) : []; return ids.length ? ids.map(x => `#${x}`).join(' ') : null; },
+      render: r => { const sg = r.segmentKey ? segByKey.get(r.segmentKey) : undefined; const ids = sg ? segTxIds(sg).filter(x => x !== r.tx.id) : []; return ids.length ? <span dir="ltr" className="text-[11px] font-bold text-sky-800">🔗 {ids.map(x => `#${x}`).join(' ')}</span> : <span className="text-slate-400">—</span>; } },
     { key: 'flags', label: t.flags, get: r => r.flags.join(', '), render: r => <div className="flex flex-wrap gap-1">{r.flags.map(fl => <Chip key={fl} tone={flagTone(fl)}>{t[`f_${fl}` as const]}</Chip>)}</div> },
   ];
   const stationCols: Col<StationRow>[] = [
@@ -507,7 +544,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
         toSheet(t.health, healthCols, health),
         toSheet(t.trucks, wcols, wrows),
         toSheet(t.alerts, alertCols, wkAlerts),
-        toSheet(t.flagged, [...pick2(fillCols, ['at', 'truck', 'driver', 'dist', 'liters', 'kml', 'target', 'diffL', 'diffE', 'status']), whyCol],
+        toSheet(t.flagged, [...pick2(fillCols, ['at', 'truck', 'driver', 'dist', 'liters', 'kml', 'target', 'diffL', 'diffE', 'status']), idsCol, whyCol],
           now.segs.filter(s => s.status === 'high' || s.status === 'low')),
       ],
     });
@@ -550,6 +587,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
 
   const filterText = [f.plate, f.driver, f.station, f.type, f.status && (f.status in STATUS_CLS ? statusLabel(t, f.status as SegmentStatus) : t[`st_${f.status}` as const]), f.q].filter(Boolean).join(' · ');
   const period = kpi.from ? ltr(`${day(kpi.from)} → ${day(kpi.to)}`) : '—';
+  const idsCol: Col<Segment> = { key: 'ids', label: t.txIds, get: r => segTxIds(r).map(x => `#${x}`).join(' ') };
   const whyCol: Col<Segment> = { key: 'why', label: t.why, get: r => explainSegment(r, settings, result.price, lang).simple.join(' ') };
   const healthCols: Col<TruckHealth>[] = [
     { key: 'truck', label: t.truck, get: r => `${r.plate} (${r.vehicleType})` },
@@ -565,7 +603,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const doExcel = () => exportFuelExcel([
     toSheet(t.health, healthCols, health),
     toSheet(t.alerts, alertCols, openAlerts),
-    toSheet(t.trucks, truckCols, trucks), toSheet(t.drivers, driverCols, drivers), toSheet(t.fills, [...fillCols, whyCol], filtered.segs),
+    toSheet(t.trucks, truckCols, trucks), toSheet(t.drivers, driverCols, drivers), toSheet(t.fills, [...fillCols, idsCol, whyCol], filtered.segs),
     toSheet(t.transactions, txCols, filtered.views), toSheet(t.weeks, weekCols, weeks), toSheet(t.months, monthCols, months), toSheet(t.stations, stationCols, stations),
   ], lang, t.reportTitle);
   const doPrint = () => printFuelReport({
@@ -583,7 +621,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
       toSheet(t.trucks, pick2(truckCols, ['truck', 'fills', 'liters', 'cost', 'km', 'kml', 'l100', 'target', 'vs', 'diffL', 'over', 'loss', 'cardKm', 'kmDiff', 'cardKml', 'bad']).map(c => c.key === 'truck' ? { ...c, get: (r: Summary) => `${r.label} (${r.vehicleType})` } : c), trucks),
       toSheet(t.drivers, pick2(driverCols, ['driver', 'fills', 'liters', 'km', 'kml', 'target', 'vs', 'diffL', 'loss']), drivers),
       toSheet(t.weeks, pick2(weekCols, ['week', 'fills', 'liters', 'cost', 'dL', 'km', 'kml', 'dKml', 'l100', 'vs', 'loss']), [...weeks].reverse()),
-      toSheet(t.flagged, [...pick2(fillCols, ['at', 'truck', 'driver', 'dist', 'cardDist', 'liters', 'kml', 'cardKml', 'target', 'diffL', 'diffE', 'status']), whyCol],
+      toSheet(t.flagged, [...pick2(fillCols, ['at', 'truck', 'driver', 'dist', 'cardDist', 'liters', 'kml', 'cardKml', 'target', 'diffL', 'diffE', 'status']), idsCol, whyCol],
         filtered.segs.filter(s => s.status === 'high' || s.status === 'low' || s.notes.length)),
       toSheet(t.alerts, alertCols, openAlerts),
     ],
@@ -890,6 +928,52 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
               <div className={`mt-4 space-y-1.5 rounded-2xl border p-4 text-[15px] font-bold leading-7 ${tone}`}>
                 {(ex ? ex.simple : healthSimple(h!, lang)).map((line, i) => <p key={i}>{line}</p>)}
               </div>
+              {seg && (() => {
+                const start = fillByAtPlate.get(`${seg.plate}|${seg.fromAt}`);
+                const rows = seg.fills.flatMap((fl, fi) => fl.txs.map((x, xi) => {
+                  const fixed = fl.fixedKm.find(k => k.from === x.km);
+                  const bad = fl.badKm.some(k => k.km === x.km);
+                  const roles = [
+                    ...(fl.txs.length > 1 && xi > 0 ? [t.roleSplit] : []),
+                    ...(seg.notes.includes('partial') && fi < seg.fills.length - 1 && xi === fl.txs.length - 1 ? [t.rolePartial] : []),
+                    ...(fixed ? [t.roleFixed] : []), ...(bad ? [t.roleBad] : []),
+                    ...(fi === seg.fills.length - 1 && xi === fl.txs.length - 1 ? [t.roleClose] : []),
+                  ];
+                  return { x, fixed, bad, roles };
+                }));
+                const merged = rows.length > 1;
+                return (
+                  <div className={`mt-3 overflow-hidden rounded-2xl border ${merged ? 'border-sky-200' : 'border-[#e3dccf]'}`}>
+                    <div className={`flex items-center justify-between gap-2 px-3 py-2 text-[11px] font-black ${merged ? 'bg-sky-50 text-sky-900' : 'bg-[#fbf8f2] text-[#07111f]'}`}>
+                      <span>🔗 {t.mergedRef}</span>{merged && <span className="rounded-full bg-sky-600 px-2 py-0.5 text-[10px] text-white">{t.mergedHint(rows.length)}</span>}
+                    </div>
+                    <div className="divide-y divide-[#f1ebe0] text-[12px]">
+                      <div className="flex items-center justify-between gap-2 bg-slate-50 px-3 py-2 text-slate-600">
+                        <div><b className="text-[#07111f]">{t.startRow}</b>{start && <span dir="ltr" className="ms-2 text-[11px]">#{start.txs.map(x => x.id).join(' #')}</span>}<div dir="ltr" className="text-[11px] text-start">{when(seg.fromAt)}</div></div>
+                        <div className="text-end"><div className="text-[9px] font-bold uppercase text-slate-400">{t.odometer}</div><b dir="ltr" className="tabular-nums text-[#07111f]">{n0(seg.fromKm)}</b></div>
+                      </div>
+                      {rows.map(({ x, fixed, bad, roles }) => (
+                        <div key={x.id} className="px-3 py-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="min-w-0"><b dir="ltr" className="text-[#07111f]">#{x.id}</b> <span dir="ltr" className="text-[11px] text-slate-500">{when(x.at)}</span></div>
+                            <div className="flex flex-wrap justify-end gap-1">{roles.map(r => <Chip key={r} tone={r === t.roleClose ? 'slate' : r === t.roleBad ? 'red' : r === t.roleFixed ? 'amber' : 'blue'}>{r}</Chip>)}</div>
+                          </div>
+                          <div className="mt-1 grid grid-cols-4 gap-2 tabular-nums">
+                            <div><div className="text-[9px] font-bold uppercase text-slate-400">{t.liters}</div><b>{n1(x.liters)}</b></div>
+                            <div><div className="text-[9px] font-bold uppercase text-slate-400">{t.amount}</div><b>{n0(x.amount)}</b></div>
+                            <div className="col-span-2"><div className="text-[9px] font-bold uppercase text-slate-400">{t.odometer}</div>
+                              <b dir="ltr" className={bad ? 'text-slate-400 line-through' : ''}>{x.km == null ? '—' : fixed ? <>{n0(fixed.from)} <span className="text-emerald-700">→ {n0(fixed.to)}</span></> : n0(x.km)}</b></div>
+                          </div>
+                          <div className="mt-0.5 truncate text-[10px] text-slate-500">{x.station}{x.cardKmL != null ? ` · ${t.cardSays} ${n2(x.cardKmL)} ${t.kmL}` : ''}</div>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between gap-2 bg-[#fbf8f2] px-3 py-2 font-black text-[#07111f]">
+                        <span>= {n0(seg.distance)} {t.km} ÷ {n1(seg.liters)} {t.L}</span><span>{n2(seg.kmL)} {t.kmL}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
               <button className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#07111f] px-4 py-3 text-sm font-black text-white" onClick={() => setFullRead(v => !v)} aria-expanded={fullRead}>
                 📖 {fullRead ? t.hideFull : t.readFull} <span className={`transition ${fullRead ? 'rotate-180' : ''}`}>▾</span>
               </button>
