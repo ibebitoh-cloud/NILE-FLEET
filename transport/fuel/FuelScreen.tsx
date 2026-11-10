@@ -47,6 +47,7 @@ type View = 'home' | 'summary' | 'truck' | 'alerts' | 'trucks' | 'drivers' | 'fi
 const VIEW_ICON: Record<string, string> = { home: '⌂', summary: '📊', truck: '🚛', alerts: '🔔', trucks: '🚛', drivers: '🧑‍✈️', fills: '⛽', tx: '🧾', weeks: '🗓', months: '📅', stations: '📍', settings: '⚙' };
 
 type WeekRow = Summary & { prevLiters: number | null; prevKmL: number | null };
+type VehiclePeriodRow = Summary & { period: string; plate: string; prevKmL: number | null };
 
 const HEALTH_CLS: Record<HealthStatus, string> = { service: 'border-red-300 bg-red-50/60', watch: 'border-amber-300 bg-amber-50/60', good: 'border-[#eee7da] bg-white', noData: 'border-[#eee7da] bg-[#faf8f4] opacity-70' };
 const HEALTH_PILL: Record<HealthStatus, string> = { service: 'bg-red-600 text-white', watch: 'bg-amber-100 text-amber-900', good: 'bg-emerald-100 text-emerald-800', noData: 'bg-slate-100 text-slate-500' };
@@ -197,6 +198,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const [error, setError] = useState('');
   const [settings, setSettings] = useState<FuelSettings>(DEFAULT_SETTINGS);
   const [f, setF] = useState<Filters>(NO_FILTERS);
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
   const isMobile = useIsMobile();
   const [view, setView] = useState<View>(() => {
     const phone = typeof window !== 'undefined' && window.matchMedia(MOBILE_QUERY).matches;
@@ -382,6 +384,30 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const prevWeek = thisWeek ? weekOf(new Date(Date.parse(`${thisWeek}T00:00:00Z`) - 86_400_000).toISOString()) : '';
   const allData: Data = useMemo(() => ({ segs: result.segments, txs: txs || [], fills: result.fills }), [result, txs]);
   const only = (d: Data, ok: (x: { at: string; plate: string }) => boolean): Data => ({ segs: d.segs.filter(ok), txs: d.txs.filter(ok), fills: d.fills.filter(ok) });
+  // Fleet period reports are deliberately independent of page filters and include every known vehicle.
+  const knownFuelPlates = useMemo(() => uniqNos(options.plates, settings.vehicles), [options.plates, settings.vehicles]);
+  const vehiclePeriodRows = useMemo(() => {
+    const dates = [...result.segments.map(x => x.at), ...(txs || []).map(x => x.at)];
+    const weekKeys = [...new Set(dates.map(weekOf))].sort();
+    const monthKeys = [...new Set(dates.map(x => x.slice(0, 7)))].sort();
+    const summarizeVehicle = (plate: string, period: string, kind: 'week' | 'month') => {
+      const inPeriod = (at: string) => kind === 'week' ? weekOf(at) === period : at.slice(0, 7) === period;
+      const segs = result.segments.filter(x => x.plate === plate && inPeriod(x.at));
+      const rows = (txs || []).filter(x => x.plate === plate && inPeriod(x.at));
+      const fills = result.fills.filter(x => x.plate === plate && inPeriod(x.at));
+      const target = result.targets[plate] || result.fleetKmL || 2.3;
+      return summarize(plate, plate, segs, rows, fills, target, settings.marginPct, result.price);
+    };
+    const previous = (period: string, kind: 'week' | 'month') => kind === 'week'
+      ? weekOf(new Date(Date.parse(`${period}T00:00:00Z`) - 86_400_000).toISOString())
+      : new Date(Date.parse(`${period}-01T00:00:00Z`) - 86_400_000).toISOString().slice(0, 7);
+    const build = (keys: string[], kind: 'week' | 'month'): VehiclePeriodRow[] => keys.flatMap(period => knownFuelPlates.map(plate => {
+      const current = summarizeVehicle(plate, period, kind);
+      const prev = summarizeVehicle(plate, previous(period, kind), kind);
+      return { ...current, period, plate, prevKmL: prev.kmL || null };
+    })).sort((a, b) => b.period.localeCompare(a.period) || a.plate.localeCompare(b.plate));
+    return { weeks: build(weekKeys, 'week'), months: build(monthKeys, 'month') };
+  }, [result, txs, settings, knownFuelPlates]);
   type TruckCardRow = { plate: string; all: Summary; week?: Summary; prev?: Summary; last?: FuelTx; first?: FuelTx; days: number; health?: TruckHealth; open: number };
   const truckCards: TruckCardRow[] = useMemo(() => {
     const byPlate = (d: Data) => new Map(group(x => x.plate, k => k, true, d).map(x => [x.key, x]));
@@ -478,6 +504,19 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const monthCols = summaryCols({ key: 'month', label: t.month, get: r => r.label, render: r => <b dir="ltr">{r.label}</b> }).filter(c => c.key !== 'status');
 
   const change = (now: number, prev: number | null) => (prev ? ((now - prev) / prev) * 100 : null);
+  const vehiclePeriodCols: Col<VehiclePeriodRow>[] = [
+    { key: 'period', label: lang === 'ar' ? 'الفترة' : 'Period', get: r => r.period },
+    { key: 'plate', label: t.truck, get: r => r.plate, render: r => <b>{r.plate}</b> },
+    { key: 'kml', label: t.kmL, num: true, get: r => r.kmL || null, render: r => r.kmL ? <b>{n2(r.kmL)}</b> : '—' },
+    { key: 'prevKmL', label: lang === 'ar' ? 'الفترة السابقة' : 'Previous period', num: true, get: r => r.prevKmL, render: r => n2(r.prevKmL) },
+    { key: 'deltaKmL', label: lang === 'ar' ? 'التغير كم/لتر' : 'km/L change', num: true, get: r => r.kmL && r.prevKmL ? round1(r.kmL - r.prevKmL) : null,
+      render: r => r.kmL && r.prevKmL ? <span className={r.kmL < r.prevKmL ? 'font-black text-red-600' : 'font-black text-emerald-700'}>{signed(r.kmL - r.prevKmL, n2)}</span> : '—' },
+    { key: 'target', label: t.target, num: true, get: r => r.target, render: r => n2(r.target) },
+    { key: 'vsTargetPct', label: t.vsTarget, num: true, get: r => r.kmL ? r.vsTargetPct : null, render: r => r.kmL ? pct(r.vsTargetPct) : '—' },
+    { key: 'trackedKm', label: t.trackedKm, num: true, get: r => r.trackedKm || null, render: r => n0(r.trackedKm) },
+    { key: 'trackedL', label: t.liters, num: true, get: r => r.trackedL || null, render: r => n1(r.trackedL) },
+    { key: 'status', label: t.status, get: r => r.status, render: r => <Badge t={t} s={r.status} /> },
+  ];
   const weekCols: Col<WeekRow>[] = [
     { key: 'week', label: t.week, get: r => r.label, render: r => <b dir="ltr">{r.label}</b> },
     ...(summaryCols({ key: 'x', label: '', get: () => null }).slice(1, 4) as unknown as Col<WeekRow>[]),
@@ -587,30 +626,29 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     const wkAlerts = alerts.filter(x => !isChecked(x, checked) && (weekOf(x.at) === wk || x.kind === 'idle'));
     const ch = (x: number, y: number) => (y ? `${ltr(`${x >= y ? '+' : ''}${N1.format(((x - y) / y) * 100)}%`)} ${t.vsLastWeek}` : '');
     type WRow = Summary & { prevKmL: number | null; alerts: number };
-    const wrows: WRow[] = rowsNow.map(r => ({ ...r, prevKmL: rowsPrev.get(r.key)?.kmL || null, alerts: wkAlerts.filter(x => x.plate === r.key).length }))
-      .sort((x, y) => x.vsTargetPct - y.vsTargetPct);
+    const wrows: WRow[] = knownFuelPlates.map(plate => {
+      const current = rowsNow.find(r => r.key === plate) || summarize(plate, plate, [], [], [], result.targets[plate] || result.fleetKmL || 2.3, settings.marginPct, result.price);
+      return { ...current, prevKmL: rowsPrev.get(plate)?.kmL || null, alerts: wkAlerts.filter(x => x.plate === plate).length };
+    }).sort((x, y) => (x.kmL || 0) - (y.kmL || 0));
     const wcols: Col<WRow>[] = [
-      { key: 'truck', label: t.truck, get: r => `${r.label} (${r.vehicleType})` },
-      { key: 'driver', label: t.driver, get: r => r.drivers.join('، ') },
-      { key: 'liters', label: t.liters, num: true, get: r => Math.round(r.liters) },
-      { key: 'cost', label: `${t.cost} (${t.egp})`, num: true, get: r => Math.round(r.cost) },
-      { key: 'km', label: t.trackedKm, num: true, get: r => Math.round(r.trackedKm) },
+      { key: 'truck', label: t.truck, get: r => `${r.label} (${r.vehicleType || '—'})` },
+      { key: 'driver', label: t.driver, get: r => r.drivers.join('، ') || '—' },
       { key: 'kml', label: `${t.kmL} · ${t.thisWeek}`, num: true, get: r => r.kmL || null },
       { key: 'prev', label: `${t.kmL} · ${t.lastWeek}`, num: true, get: r => r.prevKmL },
       { key: 'target', label: t.target, num: true, get: r => r.target },
-      { key: 'vs', label: t.vsTarget, get: r => pct(r.vsTargetPct) },
-      { key: 'over', label: t.overL, num: true, get: r => (r.overMarginL ? Math.round(r.overMarginL) : null) },
-      { key: 'loss', label: t.loss, num: true, get: r => (r.lossEgp ? Math.round(r.lossEgp) : null) },
+      { key: 'vs', label: t.vsTarget, get: r => r.kmL ? pct(r.vsTargetPct) : '—' },
+      { key: 'km', label: t.trackedKm, num: true, get: r => r.trackedKm || null },
+      { key: 'liters', label: t.liters, num: true, get: r => r.trackedL || null },
       { key: 'alerts', label: t.alerts, num: true, get: r => r.alerts || null },
     ];
     printFuelReport({
       lang, t: { ...t, reportTitle: t.weeklyTitle }, method: methodText(lang), period: ltr(`${wk} → ${weekEnd(wk)}`), filters: weekEnd(wk) > lastDay ? t.soFar : '',
       kpis: [
-        { label: t.liters, value: n0(a.liters), sub: ch(a.liters, b.liters) },
-        { label: t.cost, value: `${n0(a.cost)} ${t.egp}`, sub: ch(a.cost, b.cost) },
-        { label: t.trackedKm, value: n0(a.km), sub: ch(a.km, b.km) },
         { label: t.fleetKmL, value: n2(a.kmL), sub: `${t.lastWeek} ${n2(b.kmL)}` },
-        { label: t.overMargin, value: `${n0(sum(rowsNow, r => r.overMarginL))} ${t.L}`, sub: `${n0(sum(rowsNow, r => r.lossEgp))} ${t.egp}` },
+        { label: lang === 'ar' ? 'السيارات ببيانات استهلاك' : 'Vehicles with valid km/L', value: String(wrows.filter(r => r.kmL > 0).length), sub: `${lang === 'ar' ? 'من إجمالي' : 'of'} ${knownFuelPlates.length} ${t.trucks}` },
+        { label: t.trackedKm, value: n0(a.km), sub: ch(a.km, b.km) },
+        { label: t.liters, value: n0(sum(wrows, r => r.trackedL)), sub: lang === 'ar' ? 'لترات محسوبة ضمن المسافات المغلقة' : 'Litres used in completed distance calculations' },
+        { label: lang === 'ar' ? 'سيارات بدون نتيجة' : 'Vehicles without a valid result', value: String(wrows.filter(r => !r.kmL).length) },
         { label: t.alerts, value: String(wkAlerts.length), sub: `${wkAlerts.filter(x => x.level === 'high').length} ${t.lvl.high}` },
       ],
       tables: [
@@ -715,7 +753,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     toSheet(t.health, healthCols, health),
     toSheet(t.alerts, alertCols, openAlerts),
     toSheet(t.trucks, truckCols, trucks), toSheet(t.drivers, driverCols, drivers), toSheet(t.fills, [...fillCols, idsCol, whyCol], filtered.segs),
-    toSheet(t.transactions, txCols, filtered.views), toSheet(t.weeks, weekCols, weeks), toSheet(t.months, monthCols, months), toSheet(t.stations, stationCols, stations),
+    toSheet(t.transactions, txCols, filtered.views), toSheet(t.weeks, vehiclePeriodCols, vehiclePeriodRows.weeks), toSheet(t.months, vehiclePeriodCols, vehiclePeriodRows.months), toSheet(t.stations, stationCols, stations),
   ], lang, t.reportTitle);
   const doPrint = () => printFuelReport({
     lang, t, period, filters: filterText, method: methodText(lang),
@@ -750,7 +788,20 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     ['badKm', t.st_badKm], ['split', t.st_split], ['partial', t.st_partial], ['reversed', t.st_reversed],
   ];
   const anyFilter = JSON.stringify(f) !== JSON.stringify(NO_FILTERS);
-  const activeFilters = (Object.keys(NO_FILTERS) as (keyof Filters)[]).filter(k => k !== 'q' && f[k] !== NO_FILTERS[k]).length;
+  const activeFilterKeys = (Object.keys(NO_FILTERS) as (keyof Filters)[]).filter(k => f[k] !== NO_FILTERS[k]);
+  const activeFilters = activeFilterKeys.filter(k => k !== 'q').length;
+  const filterNames: Partial<Record<keyof Filters, string>> = {
+    from: lang === 'ar' ? 'من' : 'From', to: lang === 'ar' ? 'إلى' : 'To',
+    plate: t.truck, driver: t.driver, station: lang === 'ar' ? 'المحطة' : 'Station',
+    type: lang === 'ar' ? 'نوع السيارة' : 'Vehicle type', status: t.status, q: t.search,
+  };
+  const filterValue = (key: keyof Filters) => {
+    const value = f[key];
+    if (!value) return '';
+    if (key === 'status') return statusOptions.find(([k]) => k === value)?.[1] || String(value);
+    return String(value);
+  };
+  const clearFilter = (key: keyof Filters) => set({ [key]: NO_FILTERS[key] } as Partial<Filters>);
   const filterFields = (
     <>
               <label className="flex items-center gap-1 text-[10px] font-black text-slate-500">{t.from}<input type="date" className={`${inputCls} w-full min-w-0`} value={f.from} onChange={e => set({ from: e.target.value })} /></label>
@@ -861,21 +912,28 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
         </Card>
       ) : (
         <>
-          {/* Filters */}
-          {isMobile ? (
+          {/* Compact filters: keep search visible, expand advanced fields only when needed. */}
+          <div className="space-y-2">
             <div className="flex items-center gap-2">
               <input className={`${inputCls} min-w-0 flex-1 !py-2.5`} type="search" placeholder={t.search} value={f.q} onChange={e => set({ q: e.target.value })} />
-              <button className={`${activeFilters ? btnNavy : btnGhost} !px-3 !py-2.5 whitespace-nowrap`} onClick={() => setSheet('filters')} data-tab="filters">⚙ {t.filters}{activeFilters ? ` (${activeFilters})` : ''}</button>
+              {!isMobile && <button className={`${activeFilters ? btnNavy : btnGhost} !px-3 !py-2.5 whitespace-nowrap`} onClick={() => setFiltersExpanded(v => !v)} aria-expanded={filtersExpanded}>⚙ {t.filters}{activeFilters ? ` (${activeFilters})` : ''} <span className="ms-1">{filtersExpanded ? '▴' : '▾'}</span></button>}
+              {isMobile && <button className={`${activeFilters ? btnNavy : btnGhost} !px-3 !py-2.5 whitespace-nowrap`} onClick={() => setSheet('filters')} data-tab="filters">⚙ {t.filters}{activeFilters ? ` (${activeFilters})` : ''}</button>}
+              {anyFilter && !isMobile && <button className={`${btnGhost} !px-3 !py-2.5 whitespace-nowrap`} onClick={() => setF(NO_FILTERS)}>✕ {t.clear}</button>}
             </div>
-          ) : (
-          <Card className="!p-3">
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-9">
-              <input className={`${inputCls} col-span-2`} placeholder={t.search} value={f.q} onChange={e => set({ q: e.target.value })} />
-              {filterFields}
-              {anyFilter && <button className={`${btnGhost} justify-center`} onClick={() => setF(NO_FILTERS)}>✕ {t.clear}</button>}
-            </div>
-          </Card>
-          )}
+            {activeFilterKeys.length > 0 && <div className="flex flex-wrap items-center gap-1.5">
+              {activeFilterKeys.map(key => <button key={key} onClick={() => clearFilter(key)} title={lang === 'ar' ? 'إزالة هذا الفلتر' : 'Remove this filter'}
+                className="inline-flex items-center gap-1 rounded-full border border-[#d9d0c0] bg-white px-2.5 py-1 text-[10px] font-bold text-[#07111f] hover:border-[#c2a378]">
+                <span className="text-slate-400">{filterNames[key]}:</span> <span className="max-w-[150px] truncate">{filterValue(key)}</span> <span aria-hidden="true" className="text-slate-400">×</span>
+              </button>)}
+              {isMobile && <button className="px-2 py-1 text-[10px] font-black text-red-600" onClick={() => setF(NO_FILTERS)}>{t.clear}</button>}
+            </div>}
+            {!isMobile && filtersExpanded && <Card className="!p-3">
+              <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-7">
+                {filterFields}
+                {anyFilter && <button className={`${btnGhost} justify-center`} onClick={() => setF(NO_FILTERS)}>✕ {t.clear}</button>}
+              </div>
+            </Card>}
+          </div>}
 
           {urgent > 0 && view !== 'alerts' && (
             <button onClick={() => setView('alerts')} className="flex w-full items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-start">
@@ -1083,9 +1141,8 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
             highlight={r => r.status === 'high' ? 'bg-red-50/40' : r.status === 'low' ? 'bg-amber-50/40' : ''} />}
           {view === 'tx' && <DataTable onRow={r => setTxOpen(r.tx.id)} sortLabel={t.sort} mobile={{ title: 'truck', sub: 'at', stats: ['liters', 'amount', 'odo', 'ourKm', 'ourKml', 'station'], foot: 'flags' }} rows={filtered.views} cols={txCols} rowKey={r => r.tx.id} initial={{ key: 'at', dir: -1 }} empty={t.noMatch}
             highlight={r => r.flags.includes('reversal') || r.flags.includes('reversed') ? 'opacity-60 line-through decoration-red-300' : ''} />}
-          {view === 'weeks' && <DataTable sortLabel={t.sort} mobile={{ title: 'week', badge: 'status', stats: ['liters', 'dL', 'km', 'kml', 'dKml', 'loss'], foot: 'print' }} rows={weeks} cols={[...weekCols, { key: 'print', label: '🖨', get: () => null, render: r => <button className="rounded-lg px-2 py-1 hover:bg-[#f1ebe0]" title={t.weeklyReport} onClick={e => { e.stopPropagation(); weeklyReport(r.key); }}>🖨{isMobile ? ` ${t.weeklyReport}` : ''}</button> }]} rowKey={r => r.key} initial={{ key: 'week', dir: -1 }} empty={t.noMatch}
-            onRow={r => { set({ from: r.key, to: weekEnd(r.key) }); setView('fills'); }} highlight={r => r.status === 'high' ? 'bg-red-50/40' : ''} />}
-          {view === 'months' && <DataTable sortLabel={t.sort} mobile={{ title: 'month', stats: ['liters', 'cost', 'km', 'kml', 'vs', 'loss'] }} rows={months} cols={monthCols} rowKey={r => r.key} initial={{ key: 'month', dir: -1 }} empty={t.noMatch} />}
+          {view === 'weeks' && <><p className="text-xs font-bold text-slate-500">{lang === 'ar' ? 'استهلاك كل سيارة بالكيلومتر لكل لتر، مع المقارنة بالأسبوع السابق والهدف المحدد.' : 'Each vehicle’s actual km/L, compared with its previous week and configured target. Vehicles without a valid full-to-full result remain listed.'}</p><DataTable sortLabel={t.sort} mobile={{ title: 'plate', sub: 'period', badge: 'status', stats: ['kml', 'prevKmL', 'deltaKmL', 'target', 'trackedKm', 'trackedL'] }} rows={vehiclePeriodRows.weeks} cols={vehiclePeriodCols} rowKey={r => `${r.period}|${r.plate}`} initial={{ key: 'period', dir: -1 }} empty={t.noMatch} /></>}
+          {view === 'months' && <><p className="text-xs font-bold text-slate-500">{lang === 'ar' ? 'استهلاك كل سيارة بالكيلومتر لكل لتر، مع المقارنة بالشهر السابق والهدف المحدد.' : 'Each vehicle’s actual km/L, compared with its previous month and configured target. Vehicles without a valid full-to-full result remain listed.'}</p><DataTable sortLabel={t.sort} mobile={{ title: 'plate', sub: 'period', badge: 'status', stats: ['kml', 'prevKmL', 'deltaKmL', 'target', 'trackedKm', 'trackedL'] }} rows={vehiclePeriodRows.months} cols={vehiclePeriodCols} rowKey={r => `${r.period}|${r.plate}`} initial={{ key: 'period', dir: -1 }} empty={t.noMatch} /></>}
           {view === 'stations' && <DataTable sortLabel={t.sort} mobile={{ title: 'station', stats: ['count', 'trucks', 'liters', 'cost', 'share'] }} rows={stations} cols={stationCols} rowKey={r => r.station} initial={{ key: 'liters', dir: -1 }} empty={t.noMatch}
             onRow={r => { set({ station: r.station === '—' ? '' : r.station }); setView('tx'); }} />}
           {view === 'settings' && <SettingsPanel t={t} lang={lang} isAdmin={isAdmin} settings={settings} result={result} plates={options.plates} types={options.types}
