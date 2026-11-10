@@ -4,7 +4,7 @@ import SideNav from '../SideNav';
 import * as api from '../api';
 import type { Lang } from '../i18n';
 import { FUEL_STRINGS, FuelStrings } from './i18n';
-import { cardTotals, computeFuel, DEFAULT_SETTINGS, plateNo, vehicleOf, VehicleInfo, Fill, FuelResult, FuelSettings, FuelTx, Segment, SegmentStatus, Summary, summarize, TxView } from './math';
+import { cardTotals, computeFuel, DEFAULT_SETTINGS, DEFAULT_VEHICLES, plateNo, vehicleOf, VehicleInfo, Fill, FuelResult, FuelSettings, FuelTx, Segment, SegmentStatus, Summary, summarize, TxView } from './math';
 import { emptyProblems, FileProblems, parseFuelWorkbook, splitUpload } from './parse';
 import { CardIssue, explainCardIssue, summarizeCardIssues } from './cardnote';
 import { exportFuelExcel, printFuelReport, Sheet } from './exports';
@@ -1464,8 +1464,8 @@ const SettingsPanel: React.FC<{
   t: FuelStrings; isAdmin: boolean; settings: FuelSettings; result: FuelResult; plates: string[]; types: string[];
   onSave: (s: FuelSettings) => void;
 }> = ({ t, isAdmin, settings, result, plates, types, onSave }) => {
-  const [d, setD] = useState(settings);
-  useEffect(() => setD(settings), [settings]);
+  const [d, setD] = useState({ ...settings, vehicles: settings.vehicles || DEFAULT_VEHICLES });
+  useEffect(() => setD({ ...settings, vehicles: settings.vehicles || DEFAULT_VEHICLES }), [settings]);
   const num = (v: string) => (v === '' ? 0 : Number(v));
   const typeAvg = (type: string) => {
     const segs: Segment[] = result.segments.filter((s: Segment) => s.vehicleType === type && s.status !== 'pending' && !s.notes.includes('partial') && !s.notes.includes('paired'));
