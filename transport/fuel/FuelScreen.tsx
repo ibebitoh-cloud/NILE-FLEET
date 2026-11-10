@@ -4,7 +4,7 @@ import * as api from '../api';
 import type { Lang } from '../i18n';
 import { FUEL_STRINGS, FuelStrings } from './i18n';
 import { cardTotals, computeFuel, DEFAULT_SETTINGS, Fill, FuelResult, FuelSettings, FuelTx, Segment, SegmentStatus, Summary, summarize, TxView } from './math';
-import { parseFuelWorkbook } from './parse';
+import { parseFuelWorkbook, splitUpload } from './parse';
 import { exportFuelExcel, printFuelReport, Sheet } from './exports';
 import { AlertKind, AlertLevel, FuelAlert, fuelAlerts, weekEnd, weekOf } from './alerts';
 
@@ -130,7 +130,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const [f, setF] = useState<Filters>(NO_FILTERS);
   const [view, setView] = useState<View>(() => { try { return (localStorage.getItem('nf_transport_fuel_view') as View) || 'trucks'; } catch { return 'trucks'; } });
   const [busy, setBusy] = useState('');
-  const [preview, setPreview] = useState<{ txs: FuelTx[]; fresh: number } | null>(null);
+  const [preview, setPreview] = useState<{ total: number; fresh: FuelTx[]; inSystem: number; repeated: number; from: string; to: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const set = (p: Partial<Filters>) => setF(x => ({ ...x, ...p }));
 
@@ -435,8 +435,8 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     try {
       const rows = await parseFuelWorkbook(file);
       if (!rows.length) { setToast(t.foundNone); return; }
-      const have = new Set((txs || []).map(x => x.id));
-      setPreview({ txs: rows, fresh: rows.filter(x => !have.has(x.id)).length });
+      const ats = rows.map(x => x.at).sort();
+      setPreview({ total: rows.length, ...splitUpload(rows, txs || []), from: day(ats[0]), to: day(ats[ats.length - 1]) });
     } catch (e: any) { setToast(String(e?.message || e)); }
     finally { setBusy(''); if (fileRef.current) fileRef.current.value = ''; }
   };
@@ -444,11 +444,10 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     if (!preview) return;
     setBusy(t.uploading);
     try {
-      await api.saveFuel(preview.txs, local);
-      const m = new Map((txs || []).map(x => [x.id, x]));
-      preview.txs.forEach(x => m.set(x.id, x));
-      setTxs([...m.values()]);
-      setToast(t.saved(preview.txs.length));
+      // Only the new rows: nothing already saved is written again.
+      if (preview.fresh.length) await api.saveFuel(preview.fresh, local);
+      setTxs([...(txs || []), ...preview.fresh]);
+      setToast(t.saved(preview.fresh.length));
       setPreview(null);
     } catch (e: any) { setToast(String(e?.message || e)); }
     finally { setBusy(''); }
@@ -654,13 +653,16 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07111f]/60 p-4" role="dialog" aria-modal="true">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
             <div className="text-lg font-black text-[#07111f]">⛽ {t.upload}</div>
-            <p className="mt-3 text-sm text-slate-600">{(() => {
-              const ats = preview.txs.map(x => x.at).sort();
-              return t.found(preview.txs.length, preview.fresh, day(ats[0]), day(ats[ats.length - 1]));
-            })()}</p>
+            <p className="mt-3 text-sm text-slate-600">{t.found(preview.total, preview.from, preview.to)}</p>
+            <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-xl bg-emerald-50 p-3"><div className="text-2xl font-black text-emerald-700">{preview.fresh.length}</div><div className="text-[10px] font-bold text-emerald-800">{t.upNew}</div></div>
+              <div className="rounded-xl bg-[#f8f5ef] p-3"><div className="text-2xl font-black text-slate-600">{preview.inSystem}</div><div className="text-[10px] font-bold text-slate-500">{t.upInSystem}</div></div>
+              <div className="rounded-xl bg-[#f8f5ef] p-3"><div className="text-2xl font-black text-slate-600">{preview.repeated}</div><div className="text-[10px] font-bold text-slate-500">{t.upRepeated}</div></div>
+            </div>
+            <p className="mt-3 text-xs text-slate-500">{preview.fresh.length ? t.upOnlyNew : t.upNothing}</p>
             <div className="mt-6 flex justify-end gap-2">
               <button className={btnGhost} onClick={() => setPreview(null)}>✕</button>
-              <button className={btnGold} disabled={!!busy} onClick={saveUpload}>{busy ? <DaliLoader size={16} /> : '✓'} {t.saveUpload}</button>
+              <button className={btnGold} disabled={!!busy || !preview.fresh.length} onClick={saveUpload}>{busy ? <DaliLoader size={16} /> : '✓'} {t.saveUpload} ({preview.fresh.length})</button>
             </div>
           </div>
         </div>

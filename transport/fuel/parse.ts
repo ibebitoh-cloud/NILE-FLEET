@@ -121,3 +121,26 @@ export async function parseFuelWorkbook(file: File): Promise<FuelTx[]> {
   }
   return out;
 }
+
+/** Same pump transaction even if the export gave it another "#": truck, time, liters, amount. */
+const sameTx = (t: FuelTx) => `${t.plate}|${t.at}|${t.liters.toFixed(2)}|${t.amount.toFixed(2)}`;
+
+/**
+ * Splits an uploaded file into what is new and what the system already has.
+ * A row is "in system" if its # or its truck + time + liters + amount is already saved,
+ * and "repeated" if it appears twice in the same file. Only `fresh` gets saved.
+ */
+export function splitUpload(rows: FuelTx[], existing: FuelTx[]): { fresh: FuelTx[]; inSystem: number; repeated: number } {
+  const ids = new Set(existing.map(t => t.id));
+  const keys = new Set(existing.map(sameTx));
+  const seenIds = new Set<string>(), seenKeys = new Set<string>();
+  const fresh: FuelTx[] = [];
+  let inSystem = 0, repeated = 0;
+  for (const t of rows) {
+    const k = sameTx(t);
+    if (ids.has(t.id) || keys.has(k)) { inSystem++; continue; }
+    if (seenIds.has(t.id) || seenKeys.has(k)) { repeated++; continue; }
+    seenIds.add(t.id); seenKeys.add(k); fresh.push(t);
+  }
+  return { fresh, inSystem, repeated };
+}

@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { computeFuel, summarize, DEFAULT_SETTINGS } from '../transport/fuel/math.ts';
 import { fuelAlerts } from '../transport/fuel/alerts.ts';
-import { parseDate, parseTime, rowsToTxs } from '../transport/fuel/parse.ts';
+import { parseDate, parseTime, rowsToTxs, splitUpload } from '../transport/fuel/parse.ts';
 
 let n = 0;
 const tx = (plate, at, liters, km, extra = {}) => ({
@@ -125,6 +125,21 @@ assert.equal(sp.cost, 2050 + 2200);
   assert.equal(al.filter(a => a.plate === 'L' && (a.kind === 'overUse' || a.kind === 'tooFewLiters')).length, 0, 'not-full fill paired with next: no alert');
   assert.equal(of('idle', 'Q').length, 1, 'idle truck');
   assert.equal(al[0].level, 'high', 'urgent first');
+}
+
+// Upload: only new rows are added.
+{
+  const saved = [tx('U', '2026-11-01T08:00', 300, 1000), tx('U', '2026-11-02T08:00', 300, 1690)];
+  const file = [
+    { ...saved[0] },                                          // same # → already saved
+    { ...saved[1], id: 'other-number' },                      // same truck/time/liters/amount, new # → already saved
+    tx('U', '2026-11-03T08:00', 300, 2380),                   // new
+  ];
+  file.push({ ...file[2] });                                  // the new one twice in the file
+  const up = splitUpload(file, saved);
+  assert.equal(up.fresh.length, 1);
+  assert.equal(up.inSystem, 2);
+  assert.equal(up.repeated, 1);
 }
 
 console.log('fuel math: all checks passed');
