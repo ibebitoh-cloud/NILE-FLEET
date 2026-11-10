@@ -865,7 +865,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
           {view === 'drivers' && <DataTable sortLabel={t.sort} mobile={{ title: 'driver', badge: 'status', stats: ['kml', 'target', 'vs', 'liters', 'km', 'loss'] }} rows={drivers} cols={driverCols} rowKey={r => r.key} initial={{ key: 'vs', dir: 1 }} empty={t.noMatch}
             onRow={r => { set({ driver: r.key === '—' ? '' : r.key }); setView('fills'); }} />}
           {(view === 'fills' || view === 'tx') && <p className="text-[11px] font-bold text-slate-500">ⓘ {t.tapHint}</p>}
-          {view === 'fills' && <DataTable onRow={r => setExplain({ seg: r.key })} sortLabel={t.sort} mobile={{ title: 'truck', sub: 'at', badge: 'status', stats: ['dist', 'liters', 'kml', 'target', 'diffL', 'cardKml'], foot: 'notes' }} rows={filtered.segs} cols={fillCols} rowKey={r => r.key} initial={{ key: 'at', dir: -1 }} empty={t.noMatch}
+          {view === 'fills' && <DataTable onRow={r => setExplain({ seg: r.key })} sortLabel={t.sort} mobile={{ title: 'truck', sub: 'at', badge: 'status', stats: ['dist', 'liters', 'kml', 'target', 'diffL'], foot: 'notes' }} rows={filtered.segs} cols={fillCols} rowKey={r => r.key} initial={{ key: 'at', dir: -1 }} empty={t.noMatch}
             highlight={r => r.status === 'high' ? 'bg-red-50/40' : r.status === 'low' ? 'bg-amber-50/40' : ''} />}
           {view === 'tx' && <DataTable onRow={r => setTxOpen(r.tx.id)} sortLabel={t.sort} mobile={{ title: 'truck', sub: 'at', stats: ['liters', 'amount', 'odo', 'ourKm', 'ourKml', 'station'], foot: 'flags' }} rows={filtered.views} cols={txCols} rowKey={r => r.tx.id} initial={{ key: 'at', dir: -1 }} empty={t.noMatch}
             highlight={r => r.flags.includes('reversal') || r.flags.includes('reversed') ? 'opacity-60 line-through decoration-red-300' : ''} />}
@@ -978,10 +978,10 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
                 }));
                 const merged = rows.length > 1;
                 return (
-                  <div className={`mt-3 overflow-hidden rounded-2xl border ${merged ? 'border-sky-200' : 'border-[#e3dccf]'}`}>
-                    <div className={`flex items-center justify-between gap-2 px-3 py-2 text-[11px] font-black ${merged ? 'bg-sky-50 text-sky-900' : 'bg-[#fbf8f2] text-[#07111f]'}`}>
-                      <span>🔗 {t.mergedRef}<span className="ms-1 font-bold text-slate-500">· {t.tapTxHint}</span></span>{merged && <span className="rounded-full bg-sky-600 px-2 py-0.5 text-[10px] text-white">{t.mergedHint(rows.length)}</span>}
-                    </div>
+                  <details className={`mt-3 overflow-hidden rounded-2xl border ${merged ? 'border-sky-200' : 'border-[#e3dccf]'}`}>
+                    <summary className={`flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-[11px] font-black ${merged ? 'bg-sky-50 text-sky-900' : 'bg-[#fbf8f2] text-[#07111f]'}`}>
+                      <span>🔗 {t.mergedRef}<span className="ms-1 font-bold text-slate-500">· {t.tapTxHint}</span></span>{merged && <span className="shrink-0 rounded-full bg-sky-600 px-2 py-0.5 text-[10px] text-white">{t.mergedHint(rows.length)}</span>}
+                    </summary>
                     <div className="divide-y divide-[#f1ebe0] text-[12px]">
                       <div className="flex items-center justify-between gap-2 bg-slate-50 px-3 py-2 text-slate-600">
                         <div><b className="text-[#07111f]">{t.startRow}</b>{start && <span dir="ltr" className="ms-2 text-[11px]">#{start.txs.map(x => x.id).join(' #')}</span>}<div dir="ltr" className="text-[11px] text-start">{when(seg.fromAt)}</div></div>
@@ -1007,7 +1007,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
                         <span>= {n0(seg.distance)} {t.km} ÷ {n1(seg.liters)} {t.L}</span><span>{n2(seg.kmL)} {t.kmL}</span>
                       </div>
                     </div>
-                  </div>
+                  </details>
                 );
               })()}
               <button className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#07111f] px-4 py-3 text-sm font-black text-white" onClick={() => setFullRead(v => !v)} aria-expanded={fullRead}>
@@ -1149,35 +1149,51 @@ const TxDialog: React.FC<{
 
         {!edit ? (
           <>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <F label={t.date} k="at" fmt={when}><span dir="ltr">{when(x.at)}</span></F>
-              <F label={t.vehicleType}>{x.vehicleType || '—'}</F>
-              <F label={t.driver} k="driver">{x.driver || '—'}</F>
-              <F label={t.station} k="station">{x.station || '—'}</F>
+            {/* MAIN: what the app calculated for the fill this transaction belongs to. */}
+            {seg ? (
+              <div className={`mt-4 rounded-2xl border p-4 ${seg.status === 'high' ? 'border-red-200 bg-red-50' : seg.status === 'low' ? 'border-amber-200 bg-amber-50' : seg.status === 'pending' ? 'border-slate-200 bg-slate-50' : 'border-emerald-200 bg-emerald-50'}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-[10px] font-black uppercase tracking-[.2em] text-[#8a7350]">{t.appResult}</div>
+                  <Badge t={t} s={seg.status} />
+                </div>
+                {seg.status !== 'pending' && (
+                  <div className="mt-2 grid grid-cols-3 gap-2 text-center">
+                    <div><div className="text-3xl font-black tabular-nums text-[#07111f]">{n2(seg.kmL)}</div><div className="text-[10px] font-bold text-slate-500">{t.kmL} · {t.target} {n2(seg.target)}</div></div>
+                    <div><div className="text-xl font-black tabular-nums text-[#07111f]">{n0(seg.distance)}</div><div className="text-[10px] font-bold text-slate-500">{t.km}</div></div>
+                    <div><div className="text-xl font-black tabular-nums text-[#07111f]">{n1(seg.liters)}</div><div className="text-[10px] font-bold text-slate-500">{t.L}</div></div>
+                  </div>
+                )}
+                <div className="mt-2 space-y-1 text-[14px] font-bold leading-6 text-slate-800">{simple.map((l, i) => <p key={i}>{l}</p>)}</div>
+                {onOpenFill && <button className={`${btnGhost} mt-3 w-full justify-center`} onClick={onOpenFill}>🔗 {t.openFill}</button>}
+              </div>
+            ) : null}
+
+            {/* This transaction, in short. */}
+            <div className="mt-3 grid grid-cols-2 gap-2">
               <F label={t.liters} k="liters" fmt={n1}>{n1(x.liters)} <span className="text-[10px] text-slate-400">{t.L}</span></F>
-              <F label={t.amount} k="amount" fmt={n2}>{n2(x.amount)} <span className="text-[10px] text-slate-400">{t.pricePerL} {n2(perL)}</span></F>
-              <F label={t.total} k="totalAmount" fmt={n2}>{n2(x.totalAmount)} <span className="text-[10px] text-slate-400">{t.fee} {n2(x.totalAmount - x.amount)}</span></F>
+              <F label={t.amount} k="amount" fmt={n2}>{n2(x.amount)} <span className="text-[10px] text-slate-400">EGP</span></F>
               <F label={t.odometer} k="km" fmt={n0}><span dir="ltr">{n0(x.km)}</span></F>
-              <F label={`${t.cardSays} ${t.km}`}>{n0(x.cardDistance)}</F>
-              <F label={`${t.cardSays} ${t.kmL}`}>{n2(x.cardKmL)}</F>
-              <F label={t.ourKm}>{v.actualDistance == null ? '—' : n0(v.actualDistance)}</F>
-              <F label={t.actualKmL}>{v.actualKmL == null ? '—' : n2(v.actualKmL)}</F>
-              {(x.cardValidity || x.cardReason) && <F label={t.cardSays} wide><span className={/wrong/i.test(x.cardValidity) ? 'text-red-600' : ''}>{x.cardValidity}{x.cardReason ? ` · ${x.cardReason}` : ''}</span></F>}
-              {!!v.flags.length && <F label={t.flags} wide><div className="flex flex-wrap gap-1">{v.flags.map(fl => <Chip key={fl}>{t[`f_${fl}` as const]}</Chip>)}</div></F>}
+              <F label={t.driver} k="driver">{x.driver || '—'}</F>
+              {!!v.flags.filter(fl => fl !== 'opening').length && <F label={t.flags} wide><div className="flex flex-wrap gap-1">{v.flags.filter(fl => fl !== 'opening').map(fl => <Chip key={fl}>{t[`f_${fl}` as const]}</Chip>)}</div></F>}
               {x.note && <F label={t.note} wide><span className="font-bold">{x.note}</span></F>}
             </div>
             {x.edited && <p className="mt-2 text-[11px] font-bold text-amber-800">{t.editedOn(x.edited.at)}</p>}
 
-            {seg && (
-              <div className="mt-3 rounded-2xl border border-[#e3dccf] p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="text-[10px] font-black uppercase tracking-[.2em] text-[#8a7350]">{t.inFill}</div>
-                  <Badge t={t} s={seg.status} />
-                </div>
-                <div className="mt-1.5 space-y-1 text-[13px] font-bold leading-6 text-slate-700">{simple.map((l, i) => <p key={i}>{l}</p>)}</div>
-                {onOpenFill && <button className={`${btnGhost} mt-2 w-full justify-center`} onClick={onOpenFill}>🔗 {t.openFill}</button>}
+            {/* SUB: the card company's own report, for reference only. */}
+            <details className="mt-3 rounded-2xl border border-[#e3dccf] bg-white">
+              <summary className="cursor-pointer list-none px-3 py-2.5 text-[12px] font-black text-slate-600">📄 {t.cardRef} <span className="font-bold text-slate-400">· {t.cardRefHint}</span></summary>
+              <div className="grid grid-cols-2 gap-2 px-3 pb-3">
+                <F label={t.date} k="at" fmt={when}><span dir="ltr">{when(x.at)}</span></F>
+                <F label={t.station} k="station">{x.station || '—'}</F>
+                <F label={t.total} k="totalAmount" fmt={n2}>{n2(x.totalAmount)} <span className="text-[10px] text-slate-400">{t.fee} {n2(x.totalAmount - x.amount)}</span></F>
+                <F label={t.pricePerL}>{n2(perL)}</F>
+                <F label={`${t.cardSays} ${t.km}`}>{n0(x.cardDistance)}</F>
+                <F label={`${t.cardSays} ${t.kmL}`}>{n2(x.cardKmL)}</F>
+                <F label={t.vehicleType}>{x.vehicleType || '—'}</F>
+                <F label={t.pumpVar}>{Math.abs(x.variance) > 1 ? n2(x.variance) : '—'}</F>
+                {(x.cardValidity || x.cardReason) && <F label={t.cardSays} wide><span className={/wrong/i.test(x.cardValidity) ? 'text-red-600' : ''}>{x.cardValidity}{x.cardReason ? ` · ${x.cardReason}` : ''}</span></F>}
               </div>
-            )}
+            </details>
 
             {isAdmin && (
               <div className="mt-4 grid grid-cols-2 gap-2">
