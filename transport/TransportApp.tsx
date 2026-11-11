@@ -328,11 +328,6 @@ const SectionHome: React.FC<{ t: Strings; lang: Lang; userName: string; fuelOnly
           <path d="M120 129V151" stroke="#c49a62" strokeWidth="2.5" strokeLinecap="round"/>
           <text x="120" y="166" textAnchor="middle" fontSize="13" fontWeight="900" letterSpacing="1.2" fill="#b48649">DALI</text>
           <path d="M80 184Q120 193 163 184" fill="none" stroke="#d9b77f" strokeWidth="2" opacity=".7"/>
-          <g className="nf-pet-free-arm">
-            <path d="M158 127Q178 137 181 157L178 176" fill="none" stroke="#fff" strokeWidth="17" strokeLinecap="round"/>
-            <path d="M177 171L175 185" stroke="url(#nfPetSkin)" strokeWidth="13" strokeLinecap="round"/>
-            <path d="M166 185Q166 174 176 173Q185 175 185 185L182 197Q176 204 169 196Z" fill="url(#nfPetSkin)" stroke="#c18e67" strokeWidth="1.5"/>
-          </g>
           <path d="M77 132Q58 147 64 177" fill="none" stroke="#fff" strokeWidth="17" strokeLinecap="round"/>
           <path d="M64 172L62 185" stroke="url(#nfPetSkin)" strokeWidth="13" strokeLinecap="round"/>
           <path d="M52 185Q53 175 63 175Q72 177 71 187L68 198Q62 204 56 197Z" fill="url(#nfPetSkin)" stroke="#c18e67" strokeWidth="1.5"/>
