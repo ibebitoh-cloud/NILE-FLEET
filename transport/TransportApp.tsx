@@ -84,41 +84,84 @@ const LoginView: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; 
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#07111f] text-white">
-      <div className="pointer-events-none absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-[#c2a378]/10 blur-3xl" />
+    <div className="nf-transport-login relative flex min-h-screen flex-col overflow-hidden bg-[#06101d] text-white">
+      <style>{'.nf-transport-login .port-truck{animation:nf-truck 22s linear infinite}.nf-transport-login .port-hook{transform-box:fill-box;transform-origin:top center;animation:nf-hook 5s ease-in-out infinite}.nf-transport-login .port-glow{animation:nf-glow 8s ease-in-out infinite alternate}@keyframes nf-truck{0%{transform:translateX(-620px)}100%{transform:translateX(1900px)}}@keyframes nf-hook{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}@keyframes nf-glow{from{opacity:.25;transform:scale(.9)}to{opacity:.75;transform:scale(1.1)}}@media(prefers-reduced-motion:reduce){.nf-transport-login *{animation:none!important}}'}</style>
+      <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <linearGradient id="nfl-sky" x2="0" y2="1"><stop stopColor="#17364d"/><stop offset=".65" stopColor="#091a2a"/><stop offset="1" stopColor="#040b14"/></linearGradient>
+          <linearGradient id="nfl-sea" x2="0" y2="1"><stop stopColor="#24495c"/><stop offset="1" stopColor="#07111d"/></linearGradient>
+          <pattern id="nfl-ribs" width="18" height="18" patternUnits="userSpaceOnUse"><path d="M3 0V18" stroke="#fff" strokeOpacity=".15" strokeWidth="2"/></pattern>
+          <filter id="nfl-blur"><feGaussianBlur stdDeviation="42"/></filter>
+        </defs>
+        <rect width="1600" height="1000" fill="url(#nfl-sky)"/>
+        <circle className="port-glow" cx="1150" cy="220" r="230" fill="#c2a378" opacity=".35" filter="url(#nfl-blur)"/>
+        <g fill="none" stroke="#9aabb5" strokeWidth="5" opacity=".55">
+          <path d="M80 590V170H390M110 170 390 590M80 260H390M80 370H390M470 580V115H800M510 115 800 580M470 230H800M470 350H800"/>
+          <path d="M1180 580V205H1510M1215 205 1510 580M1180 315H1510M1180 420H1510"/>
+        </g>
+        <g className="port-hook" fill="none" stroke="#c2a378" strokeWidth="3"><path d="M300 170V360m-10 0h20l-10 18zM650 115V305m-10 0h20l-10 18zM1360 205V370m-10 0h20l-10 18z"/></g>
+        <g opacity=".95">
+          <rect x="20" y="550" width="300" height="150" fill="#8d493d"/><rect x="20" y="550" width="300" height="150" fill="url(#nfl-ribs)"/>
+          <rect x="335" y="505" width="285" height="195" fill="#a98455"/><rect x="335" y="505" width="285" height="195" fill="url(#nfl-ribs)"/>
+          <rect x="635" y="565" width="260" height="135" fill="#315b70"/><rect x="635" y="565" width="260" height="135" fill="url(#nfl-ribs)"/>
+          <rect x="910" y="525" width="300" height="175" fill="#8d493d"/><rect x="910" y="525" width="300" height="175" fill="url(#nfl-ribs)"/>
+          <rect x="1225" y="565" width="350" height="135" fill="#315b70"/><rect x="1225" y="565" width="350" height="135" fill="url(#nfl-ribs)"/>
+          <rect x="165" y="405" width="255" height="130" fill="#315b70"/><rect x="165" y="405" width="255" height="130" fill="url(#nfl-ribs)"/>
+          <rect x="445" y="380" width="300" height="115" fill="#8d493d"/><rect x="445" y="380" width="300" height="115" fill="url(#nfl-ribs)"/>
+          <rect x="1050" y="410" width="260" height="105" fill="#a98455"/><rect x="1050" y="410" width="260" height="105" fill="url(#nfl-ribs)"/>
+        </g>
+        <path d="M0 700H1600V1000H0z" fill="url(#nfl-sea)" opacity=".8"/>
+        <path d="M0 745H1600M0 810H1600M0 885H1600" stroke="#c3d0d6" strokeOpacity=".12" strokeWidth="2"/>
+        <g className="port-truck">
+          <rect x="0" y="710" width="500" height="130" rx="4" fill="#a14e3f" stroke="#d6b78c" strokeOpacity=".65" strokeWidth="3"/>
+          <rect x="12" y="722" width="475" height="106" fill="url(#nfl-ribs)"/>
+          <path d="M500 755h92q25 0 40 25l24 40v20H500z" fill="#c2a378"/>
+          <path d="M550 765h40q16 0 25 17l12 22h-77z" fill="#29485c"/>
+          <path d="M500 840h156" stroke="#07111f" strokeWidth="8"/>
+          <g fill="#07111f" stroke="#8fa0a9" strokeWidth="5"><circle cx="85" cy="843" r="28"/><circle cx="415" cy="843" r="28"/><circle cx="555" cy="843" r="28"/></g>
+          <g fill="#d4b88d"><circle cx="85" cy="843" r="10"/><circle cx="415" cy="843" r="10"/><circle cx="555" cy="843" r="10"/></g>
+        </g>
+        <rect width="1600" height="1000" fill="#020812" opacity=".38"/>
+      </svg>
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#050c16]/95 via-[#07111f]/80 to-[#07111f]/50"/>
+      <div className="pointer-events-none absolute inset-0 opacity-[.07]" style={{backgroundImage:'linear-gradient(rgba(255,255,255,.2) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.2) 1px,transparent 1px)',backgroundSize:'72px 72px'}}/>
       <header className="relative z-10 flex items-center justify-between px-5 py-5 sm:px-10">
-        <button onClick={goHome} className="flex items-center gap-3 text-[11px] font-black uppercase tracking-[.25em] text-white/70 hover:text-[#c2a378]">
+        <button onClick={goHome} className="flex items-center gap-3 text-[11px] font-black uppercase tracking-[.25em] text-white/75 transition hover:text-[#e4c99e]">
           <span className="text-base">{lang === 'ar' ? '→' : '←'}</span>{t.backHome}
         </button>
-        <LangToggle lang={lang} setLang={setLang} dark />
+        <LangToggle lang={lang} setLang={setLang} dark/>
       </header>
-      <main className="relative z-10 mx-auto grid w-full max-w-5xl flex-1 items-center gap-10 px-5 pb-10 sm:px-10 lg:grid-cols-2">
-        <div>
+      <main className="relative z-10 mx-auto grid w-full max-w-7xl flex-1 items-center gap-12 px-5 pb-12 pt-4 sm:px-10 lg:grid-cols-[1.1fr_.9fr]">
+        <section className="max-w-2xl">
           <div className="flex items-center gap-4">
-            <img src="/nile-fleet-logo-white.png" alt="Nile Fleet" className="h-16 w-16 object-contain" />
-            <div className="text-4xl font-black italic tracking-tight">NILE <span className="text-[#c2a378]">FLEET</span></div>
+            <div className="grid h-[68px] w-[68px] place-items-center rounded-2xl border border-white/15 bg-white/[.08] shadow-xl backdrop-blur-md"><img src="/nile-fleet-logo-white.png" alt="Nile Fleet" className="h-14 w-14 object-contain"/></div>
+            <div className="text-4xl font-black italic tracking-tight sm:text-5xl">NILE <span className="text-[#c2a378]">FLEET</span></div>
           </div>
-          <div className="mt-8 text-[11px] font-black uppercase tracking-[.35em] text-[#c2a378]">{t.system}</div>
-          <h1 className="mt-3 text-4xl font-black uppercase italic leading-none sm:text-5xl">{t.loginTitle}</h1>
-          <p className="mt-5 max-w-md text-sm leading-7 text-white/65">{t.loginSub}</p>
-        </div>
-        <form onSubmit={submit} className="rounded-[1.75rem] border border-white/10 bg-white/[.04] p-6 shadow-2xl backdrop-blur sm:p-8">
-          <div className="text-[11px] font-black uppercase tracking-[.3em] text-white/60">{t.signIn}</div>
-          <label className="mt-6 block text-xs font-bold text-white/70">{t.email}
-            <input type="email" autoComplete="username" required value={email} onChange={e => setEmail(e.target.value)} dir="ltr"
-              className="mt-2 w-full rounded-xl border border-white/15 bg-[#0b1a2c] px-4 py-3 text-sm text-white outline-none focus:border-[#c2a378]" />
-          </label>
-          <label className="mt-4 block text-xs font-bold text-white/70">{t.password}
-            <input type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} dir="ltr"
-              className="mt-2 w-full rounded-xl border border-white/15 bg-[#0b1a2c] px-4 py-3 text-sm text-white outline-none focus:border-[#c2a378]" />
-          </label>
+          <div className="mt-9 flex items-center gap-3 text-[10px] font-black uppercase tracking-[.42em] text-[#d9bb8d]"><span className="h-px w-10 bg-[#c2a378]"/>{t.system}</div>
+          <h1 className="mt-4 max-w-xl text-4xl font-black uppercase italic leading-[.98] tracking-tight sm:text-6xl">{t.loginTitle}</h1>
+          <p className="mt-6 max-w-lg text-sm leading-7 text-white/70 sm:text-base">{t.loginSub}</p>
+          <div className="mt-9 flex flex-wrap gap-3 text-[10px] font-bold uppercase tracking-[.16em] text-white/65">
+            <span className="flex items-center gap-2 rounded-full border border-white/15 bg-white/[.07] px-4 py-2 backdrop-blur"><svg viewBox="0 0 24 24" className="h-4 w-4 text-[#d9bb8d]" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M3 8h18M5 8V5h14v3M5 8v11h14V8M8 12h8"/></svg>Container transport</span>
+            <span className="flex items-center gap-2 rounded-full border border-white/15 bg-white/[.07] px-4 py-2 backdrop-blur"><svg viewBox="0 0 24 24" className="h-4 w-4 text-[#d9bb8d]" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M3 17h18M5 17V9l7-4 7 4v8M8 17v-5h8v5"/></svg>Port operations</span>
+            <span className="flex items-center gap-2 rounded-full border border-white/15 bg-white/[.07] px-4 py-2 backdrop-blur"><svg viewBox="0 0 24 24" className="h-4 w-4 text-[#d9bb8d]" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>On the move</span>
+          </div>
+        </section>
+        <form onSubmit={submit} className="relative mx-auto w-full max-w-[470px] overflow-hidden rounded-[2rem] border border-white/15 bg-[#0a1929]/90 p-6 shadow-[0_28px_90px_rgba(0,0,0,.45)] backdrop-blur-2xl sm:p-9">
+          <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[#d9bb8d]/80 to-transparent"/>
+          <div className="mb-8 flex items-center justify-between">
+            <div><div className="text-[10px] font-black uppercase tracking-[.34em] text-[#d9bb8d]">NILE FLEET</div><div className="mt-2 text-2xl font-black tracking-tight">{t.signIn}</div></div>
+            <div className="grid h-12 w-12 place-items-center rounded-2xl border border-[#c2a378]/30 bg-[#c2a378]/10 text-[#d9bb8d]"><svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M12 3 4.5 6v5.5c0 4.5 3.2 7.6 7.5 9.5 4.3-1.9 7.5-5 7.5-9.5V6L12 3Z"/><path d="m8.5 12 2.3 2.3 4.8-5"/></svg></div>
+          </div>
+          <label className="block text-xs font-bold text-white/75">{t.email}<div className="relative mt-2"><svg viewBox="0 0 24 24" className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#c2a378]" fill="none" stroke="currentColor" strokeWidth="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg><input type="email" autoComplete="username" required value={email} onChange={e => setEmail(e.target.value)} dir="ltr" className="w-full rounded-xl border border-white/15 bg-[#06111e]/90 py-3.5 pl-11 pr-4 text-sm text-white outline-none transition focus:border-[#c2a378] focus:ring-2 focus:ring-[#c2a378]/15"/></div></label>
+          <label className="mt-5 block text-xs font-bold text-white/75">{t.password}<div className="relative mt-2"><svg viewBox="0 0 24 24" className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#c2a378]" fill="none" stroke="currentColor" strokeWidth="1.7"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg><input type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} dir="ltr" className="w-full rounded-xl border border-white/15 bg-[#06111e]/90 py-3.5 pl-11 pr-4 text-sm text-white outline-none transition focus:border-[#c2a378] focus:ring-2 focus:ring-[#c2a378]/15"/></div></label>
           {error && <div role="alert" className="mt-4 rounded-xl border border-red-400/40 bg-red-500/10 px-4 py-3 text-xs font-bold text-red-200">{error}</div>}
-          <button disabled={busy} className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl bg-[#c2a378] px-4 py-3.5 text-xs font-black uppercase tracking-[.25em] text-[#07111f] transition hover:brightness-110 disabled:opacity-60">
-            {busy ? <><DaliLoader size={18} />{t.signingIn}</> : <>{t.signIn} <span>{lang === 'ar' ? '←' : '→'}</span></>}
+          <button disabled={busy} className="mt-7 flex w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-[#d8bd94] to-[#b58e5b] px-4 py-4 text-xs font-black uppercase tracking-[.25em] text-[#07111f] shadow-[0_10px_30px_rgba(194,163,120,.2)] transition duration-300 hover:-translate-y-0.5 hover:brightness-110 disabled:opacity-60">
+            {busy ? <><DaliLoader size={18}/>{t.signingIn}</> : <>{t.signIn}<span className="text-base">{lang === 'ar' ? '←' : '→'}</span></>}
           </button>
+          <div className="mt-6 flex items-center justify-center gap-2 text-[9px] font-bold uppercase tracking-[.2em] text-white/35"><span className="h-px w-7 bg-white/15"/>Secure access<span className="h-px w-7 bg-white/15"/></div>
         </form>
       </main>
-      <DaliSignature tone="dark" className="relative z-10 pb-8" />
+      <DaliSignature tone="dark" className="relative z-10 pb-7"/>
     </div>
   );
 };
