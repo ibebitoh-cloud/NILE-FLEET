@@ -671,14 +671,12 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   };
   // The weekly report button gives the last full week (Sat → Fri) in the data; a week still going is in the Weekly tab.
   const lastDay = (activeTxs.reduce((m, x) => (x.at > m ? x.at : m), '') || new Date().toISOString()).slice(0, 10);
-  const latestWeek = weekEnd(weekOf(lastDay)) > lastDay && activeTxs.some(x => x.at < weekOf(lastDay))
-    ? weekOf(new Date(Date.parse(`${weekOf(lastDay)}T00:00:00Z`) - 86_400_000).toISOString()) : weekOf(lastDay);
-  // Weekly screenshot cards always include the latest week that actually has uploaded data.
-  // If the current Saturday→Friday week has no upload, the last available week remains the featured report.
+  // Always report the current week when it has uploads; otherwise fall back to the most recent week with data.
   const localToday = new Date();
   const currentWeekKey = weekOf(`${localToday.getFullYear()}-${String(localToday.getMonth()+1).padStart(2,'0')}-${String(localToday.getDate()).padStart(2,'0')}`);
   const hasCurrentWeekUpload = activeTxs.some(x => weekOf(x.at) === currentWeekKey);
   const latestAvailableWeek = vehiclePeriodRows.weeks.reduce((latest, row) => row.period > latest ? row.period : latest, '');
+  const latestWeek = hasCurrentWeekUpload ? currentWeekKey : latestAvailableWeek;
   const weeklySnapshotKeys = [...new Set(vehiclePeriodRows.weeks.map(row => row.period))].sort((a,b) => b.localeCompare(a)).slice(0, 6);
 
   /* ---- actions ---- */
