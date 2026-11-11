@@ -79,6 +79,8 @@ export interface FuelSettings {
   checkedAlerts: string[];
   /** Optional for compatibility with settings saved before truck details existed. */
   vehicles?: Record<string, VehicleInfo>;
+  /** Vehicles removed from the active fleet; their original card transactions remain archived. */
+  excludedPlates?: string[];
 }
 
 export interface VehicleInfo { driver: string; branch: string; model: string; year: string }
@@ -90,7 +92,6 @@ export const DEFAULT_VEHICLES: Record<string, VehicleInfo> = {
   4363: { driver: 'Reda Abd Elbaset', branch: 'Alexandria', model: 'IVECO', year: '2017' },
   4324: { driver: 'Mohamed Aalam', branch: 'Alexandria', model: 'IVECO', year: '2017' },
   4323: { driver: 'Mohamed Hussein', branch: 'Alexandria', model: 'IVECO', year: '2017' },
-  6467: { driver: 'AHMED HAWARY', branch: 'Alexandria', model: '', year: '' },
 };
 
 export const DEFAULT_SETTINGS: FuelSettings = {
@@ -106,6 +107,7 @@ export const DEFAULT_SETTINGS: FuelSettings = {
   idleDays: 5,
   checkedAlerts: [],
   vehicles: DEFAULT_VEHICLES,
+  excludedPlates: [],
 };
 
 export type TxFlag = 'reversed' | 'reversal' | 'split' | 'badKm' | 'fixedKm' | 'opening';
