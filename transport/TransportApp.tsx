@@ -38,6 +38,7 @@ const readLang = (): Lang => { try { return localStorage.getItem('nf_transport_l
 const TransportApp: React.FC = () => {
   const [lang, setLangState] = useState<Lang>(readLang);
   const [user, setUser] = useState<TransportUser | null>(null);
+  const [welcomeAfterSignIn, setWelcomeAfterSignIn] = useState(false);
   const [checking, setChecking] = useState(true);
   const t = STRINGS[lang];
   const setLang = (l: Lang) => { setLangState(l); try { localStorage.setItem('nf_transport_lang', l); } catch {} };
@@ -52,8 +53,8 @@ const TransportApp: React.FC = () => {
       {/* Dense table rows: skip the global 44px touch-target minimum inside cells. */}
       <style>{'.nf-transport td button,.nf-transport td input,.nf-transport th button,.nf-transport th input{min-height:0}'}</style>
       {user
-        ? <Shell t={t} lang={lang} setLang={setLang} user={user} onLogout={async () => { await api.signOut(); setUser(null); }} />
-        : <LoginView t={t} lang={lang} setLang={setLang} onSignedIn={(u) => { window.location.hash = "transport"; setUser(u); }} />}
+        ? <Shell t={t} lang={lang} setLang={setLang} user={user} welcomeAfterSignIn={welcomeAfterSignIn} onWelcomeSelect={() => setWelcomeAfterSignIn(false)} onLogout={async () => { await api.signOut(); setUser(null); setWelcomeAfterSignIn(false); }} />
+        : <LoginView t={t} lang={lang} setLang={setLang} onSignedIn={(u) => { setWelcomeAfterSignIn(true); setUser(u); }} />}
     </div>
   );
 };
@@ -168,7 +169,7 @@ const LoginView: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; 
 
 /* =============================== Shell =============================== */
 
-const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user: TransportUser; onLogout: () => void }> = ({ t, lang, setLang, user, onLogout }) => {
+const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user: TransportUser; welcomeAfterSignIn: boolean; onWelcomeSelect: () => void; onLogout: () => void }> = ({ t, lang, setLang, user, welcomeAfterSignIn, onWelcomeSelect, onLogout }) => {
   const [tab, setTab] = useState<Tab>(() => {
     try { const v = localStorage.getItem('nf_transport_tab'); return (v === 'overview' || v === 'customers' || v === 'dests' || v === 'ports') ? v : 'rates'; } catch { return 'rates'; }
   });
@@ -187,7 +188,7 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
     window.addEventListener('hashchange', on);
     return () => window.removeEventListener('hashchange', on);
   }, []);
-  const section: Section = fuelOnly ? 'fuel' : sectionRaw;
+  const section: Section = welcomeAfterSignIn ? 'home' : fuelOnly ? 'fuel' : sectionRaw;
   useEffect(() => { window.scrollTo({ top: 0 }); }, [section]);
 
   useEffect(() => { try { localStorage.setItem('nf_transport_tab', tab); } catch {} }, [tab]);
@@ -252,7 +253,7 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
 
       <main className="mx-auto w-full max-w-[1500px] flex-1 px-4 py-6 sm:px-6">
         {section === 'rates' && loadError && <div role="alert" className="mb-4 rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-bold text-red-800">{t.failed}: {loadError}</div>}
-        {section === 'home' ? <SectionHome t={t} lang={lang} userName={user.name} />
+        {section === 'home' ? <SectionHome t={t} lang={lang} userName={user.name} fuelOnly={fuelOnly} onSelect={s => { onWelcomeSelect(); goSection(s); }} />
           : section === 'fuel' ? <React.Suspense fallback={<DaliLoader fullScreen />}><FuelScreen lang={lang} isAdmin={isAdmin || fuelOnly} setToast={setToast} /></React.Suspense>
           : <div className="md:flex md:items-start md:gap-7">
             <SideNav title={t.secRates} icon="💲" dir={lang === 'ar' ? 'rtl' : 'ltr'} active={tab} onSelect={k => setTab(k as Tab)}
@@ -294,7 +295,7 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
 
 /* ============================ Section home ============================ */
 
-const SectionHome: React.FC<{ t: Strings; lang: Lang; userName: string }> = ({ t, lang, userName }) => (
+const SectionHome: React.FC<{ t: Strings; lang: Lang; userName: string; fuelOnly?: boolean; onSelect?: (s: Section) => void }> = ({ t, lang, userName, fuelOnly = false, onSelect }) => (
   <div className="mx-auto max-w-5xl py-4 sm:py-10">
     <style>{'@keyframes nf-pet-wave{0%,100%{transform:rotate(0deg)}18%{transform:rotate(24deg)}34%{transform:rotate(-13deg)}52%{transform:rotate(22deg)}70%{transform:rotate(-8deg)}86%{transform:rotate(12deg)}}@keyframes nf-pet-breathe{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.025)}}@keyframes nf-pet-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}@keyframes nf-pet-head{0%,100%{transform:rotate(0deg)}35%{transform:rotate(-4deg)}70%{transform:rotate(2deg)}}@keyframes nf-pet-blink{0%,45%,49%,100%{transform:scaleY(1)}47%{transform:scaleY(.12)}}@keyframes nf-pet-shift{0%,100%{transform:rotate(0deg)}50%{transform:rotate(3deg)}}@keyframes nf-pet-leg{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(3deg)}}.nf-pet{width:clamp(150px,20vw,205px);height:auto;overflow:visible;filter:drop-shadow(0 10px 10px rgba(7,17,31,.12));animation:nf-pet-bob 3.4s ease-in-out infinite}.nf-pet-body{transform-box:fill-box;transform-origin:center 80%;animation:nf-pet-breathe 3.1s ease-in-out infinite}.nf-pet-head{transform-box:fill-box;transform-origin:50% 90%;animation:nf-pet-head 5.5s ease-in-out infinite}.nf-pet-eyes{transform-box:fill-box;transform-origin:center;animation:nf-pet-blink 5.8s ease-in-out infinite}.nf-pet-wave{transform-box:fill-box;transform-origin:16% 88%;animation:nf-pet-wave 2.1s ease-in-out infinite}.nf-pet-free-arm{transform-box:fill-box;transform-origin:82% 12%;animation:nf-pet-shift 3.8s ease-in-out infinite}.nf-pet-leg{transform-box:fill-box;transform-origin:50% 5%;animation:nf-pet-leg 2.8s ease-in-out infinite}.nf-pet-shadow{animation:nf-pet-bob 3.4s ease-in-out infinite reverse}@media(prefers-reduced-motion:reduce){.nf-pet,.nf-pet *{animation:none!important}}'}</style>
     <div className="mb-8 flex items-center justify-between gap-4 overflow-hidden rounded-[1.6rem] border border-[#d8c7a9] bg-gradient-to-r from-white via-[#fffdf8] to-[#f1e8d8] px-5 py-5 shadow-sm sm:px-7">
@@ -363,8 +364,8 @@ const SectionHome: React.FC<{ t: Strings; lang: Lang; userName: string }> = ({ t
     <h1 className="mt-2 text-3xl font-black uppercase italic leading-none text-[#07111f] sm:text-4xl">{t.chooseTitle}</h1>
     <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">{t.chooseSub}</p>
     <div className="mt-8 grid gap-5 md:grid-cols-2">
-      {([['fuel', '⛽', t.secFuel, t.fuelDesc, t.fuelDali, t.fuelScreens], ['rates', '💲', t.secRates, t.ratesDesc, t.ratesDali, t.ratesScreens]] as const).map(([k, icon, title, desc, daliNote, screens]) => (
-        <button key={k} onClick={() => goSection(k)}
+      {([['fuel', '⛽', t.secFuel, t.fuelDesc, t.fuelDali, t.fuelScreens], ['rates', '💲', t.secRates, t.ratesDesc, t.ratesDali, t.ratesScreens]] as const).filter(([k]) => !fuelOnly || k === 'fuel').map(([k, icon, title, desc, daliNote, screens]) => (
+        <button key={k} onClick={() => onSelect ? onSelect(k) : goSection(k)}
           className="group relative flex min-h-[220px] flex-col overflow-hidden rounded-[1.75rem] bg-[#07111f] p-6 text-start text-white shadow-[0_18px_40px_rgba(7,17,31,.18)] ring-1 ring-[#c2a378]/30 transition hover:-translate-y-1 hover:ring-[#c2a378] sm:p-8">
           <div className="pointer-events-none absolute -end-16 -top-16 h-48 w-48 rounded-full bg-[#c2a378]/10 blur-2xl" />
           <span className="grid h-14 w-14 place-items-center rounded-2xl bg-[#c2a378]/15 text-3xl">{icon}</span>
