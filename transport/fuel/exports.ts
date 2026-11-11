@@ -43,43 +43,48 @@ export function printFuelReport(o: {
     <tbody>${sh.rows.map(r => `<tr>${r.map(c => `<td${typeof c === 'number' ? ' class="n"' : ''}>${esc(typeof c === 'number' ? c.toLocaleString('en-US', { maximumFractionDigits: 2 }) : c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
   const html = `<!doctype html><html lang="${o.lang}" dir="${rtl ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><title>${esc(o.t.reportTitle)}</title>
 <style>
-  @page { size: A4 landscape; margin: 10mm; }
+  @page { size: A4 landscape; margin: 11mm; }
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: ${rtl ? "'Cairo', 'Segoe UI', Tahoma" : "'Inter', 'Segoe UI', Arial"}, sans-serif; color: #14202e; font-size: 9px; }
-  .band { display: flex; align-items: center; justify-content: space-between; background: #07111f; color: #fff; padding: 12px 16px; border-radius: 10px; }
-  .brand { display: flex; align-items: center; gap: 10px; }
-  .brand img { height: 30px; }
-  .brand h1 { margin: 0; font-size: 18px; font-style: italic; letter-spacing: -.5px; } .brand h1 span { color: #c2a378; }
-  .doc { text-align: end; } .doc .k { font-size: 8px; letter-spacing: 3px; color: #c2a378; font-weight: 900; } .doc h2 { margin: 2px 0 0; font-size: 14px; }
-  .meta { margin: 8px 2px; color: #555; }
-  .kpis { display: grid; grid-template-columns: repeat(${o.focus === 'weekly' ? 3 : Math.min(6, o.kpis.length)}, 1fr); gap: ${o.focus === 'weekly' ? '12px' : '6px'}; margin: ${o.focus === 'weekly' ? '18px 0 20px' : '8px 0 4px'}; }
-  .kpi { border: 1px solid #e3dccf; border-radius: 10px; padding: ${o.focus === 'weekly' ? '18px 16px' : '6px 8px'}; ${o.focus === 'weekly' ? 'min-height: 112px; display:flex; flex-direction:column; justify-content:center; background:#fbfaf7;' : ''} }
-  .kpi b { display: block; font-size: ${o.focus === 'weekly' ? '10px' : '7px'}; letter-spacing: ${o.focus === 'weekly' ? '1.8px' : '1.5px'}; color: #8a7350; text-transform: uppercase; }
-  .kpi div { font-size: ${o.focus === 'weekly' ? '30px' : '13px'}; font-weight: 900; margin-top: ${o.focus === 'weekly' ? '8px' : '2px'}; line-height:1.05; color:#07111f; } .kpi i { font-style: normal; color: #777; font-size: ${o.focus === 'weekly' ? '9px' : '7.5px'}; margin-top:5px; }
-  ${o.focus === 'weekly' ? '.meta { margin: 12px 2px 18px; font-size:10px; } h3 { margin: 20px 0 8px; font-size: 13px; } th { padding: 7px 8px; font-size: 9px; } td { padding: 6px 8px; font-size: 9px; }' : ''}
-  .method { margin: 8px 0 2px; border: 1px solid #e3dccf; border-inline-start: 3px solid #c2a378; border-radius: 8px; padding: 6px 10px; background: #fbf8f2; }
-  .method b { font-size: 9px; color: #07111f; } .method ol { margin: 3px 0 0; padding-inline-start: 16px; } .method li { margin: 1px 0; line-height: 1.45; }
-  h3 { margin: 12px 0 4px; font-size: 11px; color: #07111f; }
-  table { width: 100%; border-collapse: collapse; page-break-inside: auto; }
-  tr { page-break-inside: avoid; }
-  th { background: #07111f; color: #fff; padding: 4px 5px; font-size: 7.5px; text-align: start; }
-  td { padding: 3px 5px; border-bottom: 1px solid #eee7da; } td.n { text-align: end; font-variant-numeric: tabular-nums; }
-  tbody tr:nth-child(even) td { background: #faf8f4; }
-  .foot { margin-top: 14px; display: flex; justify-content: space-between; align-items: center; background: #07111f; color: #fff; padding: 8px 14px; border-radius: 10px; }
+  body { margin: 0; font-family: ${rtl ? "'Cairo', 'Segoe UI', Tahoma" : "'Inter', 'Segoe UI', Arial"}, sans-serif; color: #17283b; font-size: 9px; background:#fff; }
+  .band { position:relative; overflow:hidden; display:flex; align-items:center; justify-content:space-between; gap:24px; background:linear-gradient(112deg,#071827 0%,#102d43 68%,#17485a 100%); color:#fff; padding:20px 24px; border-radius:14px; border-bottom:4px solid #d5a94f; min-height:92px; }
+  .band:after { content:""; position:absolute; width:220px; height:220px; border:1px solid rgba(255,255,255,.09); border-radius:50%; inset-inline-end:-65px; top:-105px; box-shadow:0 0 0 22px rgba(255,255,255,.025),0 0 0 46px rgba(255,255,255,.02); }
+  .brand { display:flex; align-items:center; gap:13px; position:relative; z-index:1; }
+  .brand img { height:38px; }
+  .brand h1 { margin:0; font-size:23px; font-style:italic; letter-spacing:-.6px; } .brand h1 span { color:#e1bb70; }
+  .doc { text-align:end; position:relative; z-index:1; } .doc .k { font-size:9px; letter-spacing:2.4px; color:#e1bb70; font-weight:900; } .doc h2 { margin:5px 0 0; font-size:20px; line-height:1.15; font-weight:900; }
+  .meta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:13px 2px 16px; color:#526579; font-size:10px; }
+  .meta b { display:inline-block; background:#edf4f7; color:#15374d; border:1px solid #d9e7ed; border-radius:6px; padding:5px 9px; }
+  .kpis { display:grid; grid-template-columns:repeat(${o.focus === 'weekly' ? 3 : Math.min(6, o.kpis.length)},1fr); gap:${o.focus === 'weekly' ? '14px' : '6px'}; margin:${o.focus === 'weekly' ? '0 0 23px' : '8px 0 4px'}; }
+  .kpi { border:1px solid #dce5ea; border-radius:13px; padding:${o.focus === 'weekly' ? '19px 20px' : '6px 8px'}; border-top:4px solid #1b7890; ${o.focus === 'weekly' ? 'min-height:126px; display:flex; flex-direction:column; justify-content:center; background:linear-gradient(145deg,#f5fafc,#edf4f7);' : ''} }
+  .kpi:nth-child(2) { border-top-color:#c3943f; ${o.focus === 'weekly' ? 'background:linear-gradient(145deg,#fffaf0,#f8f0df);' : ''} }
+  .kpi:nth-child(3) { border-top-color:#32866d; ${o.focus === 'weekly' ? 'background:linear-gradient(145deg,#f1faf6,#e8f4ee);' : ''} }
+  .kpi b { display:block; font-size:${o.focus === 'weekly' ? '11px' : '7px'}; letter-spacing:${o.focus === 'weekly' ? '1.3px' : '1.5px'}; color:#526b7b; text-transform:uppercase; }
+  .kpi div { font-size:${o.focus === 'weekly' ? '36px' : '13px'}; font-weight:900; margin-top:${o.focus === 'weekly' ? '10px' : '2px'}; line-height:1.05; color:#102b40; font-variant-numeric:tabular-nums; } .kpi i { font-style:normal; color:#607586; font-size:${o.focus === 'weekly' ? '10px' : '7.5px'}; margin-top:7px; }
+  ${o.focus === 'weekly' ? '.meta { font-size:11px; margin:14px 2px 18px; } h3 { margin:0 0 10px; padding:10px 13px; border-radius:8px; background:#eaf2f5; border-inline-start:4px solid #1b7890; color:#12364c; font-size:13px; letter-spacing:.3px; } th { padding:10px 11px; font-size:9.5px; background:#12364c; } td { padding:9px 11px; font-size:9.5px; }' : ''}
+  .method { margin:8px 0 2px; border:1px solid #e3dccf; border-inline-start:3px solid #c2a378; border-radius:8px; padding:6px 10px; background:#fbf8f2; }
+  .method b { font-size:9px; color:#07111f; } .method ol { margin:3px 0 0; padding-inline-start:16px; } .method li { margin:1px 0; line-height:1.45; }
+  h3 { margin:12px 0 4px; font-size:11px; color:#07111f; }
+  table { width:100%; border-collapse:separate; border-spacing:0; page-break-inside:auto; border:1px solid #dce5ea; border-radius:9px; overflow:hidden; }
+  tr { page-break-inside:avoid; }
+  th { background:#07111f; color:#fff; padding:4px 5px; font-size:7.5px; text-align:start; }
+  td { padding:3px 5px; border-bottom:1px solid #e7edf0; } td.n { text-align:end; font-variant-numeric:tabular-nums; }
+  tbody tr:nth-child(even) td { background:#f2f7f9; }
+  tbody tr:last-child td { border-bottom:0; }
+  .foot { margin-top:18px; display:flex; justify-content:space-between; align-items:center; background:#102d43; color:#fff; padding:10px 16px; border-radius:10px; }
   .dali { display: flex; flex-direction: column; align-items: center; gap: 1px; }
   .dali b { font-size: 7px; letter-spacing: 4px; } .dali i { font-style: normal; font-size: 5.5px; letter-spacing: 2px; color: rgba(255,255,255,.6); }
   .dali .ds { display: flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 900; letter-spacing: 2px; } .dali .ds img { height: 10px; } .dali .ds em { font-style: normal; color: #c2a378; }
 </style></head><body>
   <div class="band">
     <div class="brand"><img src="${origin}/nf-mark-white.png" alt="Nile Fleet"><h1>NILE <span>FLEET</span></h1></div>
-    <div class="doc"><div class="k">TRANSPORT · FUEL</div><h2>${esc(o.t.reportTitle)}</h2></div>
+    <div class="doc"><div class="k">${o.focus === 'weekly' ? (rtl ? 'إدارة النقل · أداء الوقود' : 'TRANSPORT DIVISION  /  FUEL INTELLIGENCE') : 'TRANSPORT · FUEL'}</div><h2>${esc(o.focus === 'weekly' ? (rtl ? 'تقرير أداء الأسطول الأسبوعي' : 'WEEKLY FLEET PERFORMANCE') : o.t.reportTitle)}</h2></div>
   </div>
-  <div class="meta">${esc(o.t.period)}: <b dir="ltr">${esc(o.period)}</b>${o.filters ? ` · ${esc(o.filters)}` : ''} · ${esc(o.t.generated)}: <span dir="ltr">${stamp()}</span></div>
+  <div class="meta"><span>${esc(o.t.period)}</span><b dir="ltr">${esc(o.period)}</b>${o.filters ? `<span>· ${esc(o.filters)}</span>` : ''}<span>· ${esc(o.t.generated)}</span><b dir="ltr">${stamp()}</b></div>
   <div class="kpis">${o.kpis.map(k => `<div class="kpi"><b>${esc(k.label)}</b><div>${esc(k.value)}</div>${k.sub ? `<i>${esc(k.sub)}</i>` : ''}</div>`).join('')}</div>
   ${o.method?.length ? `<div class="method"><b>${esc(o.method[0])}</b><ol>${o.method.slice(1).map(m => `<li>${esc(m)}</li>`).join('')}</ol></div>` : ''}
   ${o.tables.map(table).join('')}
   <div class="foot">
-    <div>NILE FLEET · nilefleet.app</div>
+    <div>${o.focus === 'weekly' ? (rtl ? 'نظرة تشغيلية أسبوعية · NILE FLEET' : 'WEEKLY OPERATIONS REVIEW  ·  NILE FLEET') : 'NILE FLEET · nilefleet.app'}</div>
     <div class="dali"><b>NILE FLEET</b><i>POWERED BY</i><span class="ds"><img src="${origin}/dali/dali-mark.png" alt=""><em>DALI</em> STUDIO</span><i>IDEAS INTO DIGITAL</i><i>MOHAMED ALAA · +20 114 647 5759</i></div>
   </div>
 </body></html>`;
