@@ -423,7 +423,8 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     const wk = byPlate(only(allData, x => weekOf(x.at) === thisWeek)), pw = byPlate(only(allData, x => weekOf(x.at) === prevWeek));
     const q2 = q;
     return group(x => x.plate, k => k, true, allData)
-      .filter(r => (!f.plate || r.key === f.plate) && (!f.type || r.vehicleType.includes(f.type)) && (!q2 || `${r.key} ${r.drivers.join(' ')} ${Object.values(vehicleOf(settings,       .map(r => {
+      .filter(r => (!f.plate || r.key === f.plate) && (!f.type || r.vehicleType.includes(f.type)) && (!q2 || `${r.key} ${r.drivers.join(' ')} ${Object.values(vehicleOf(settings, r.key) || {}).join(' ')}`.toLowerCase().includes(q2)))
+      .map(r => {
         const mine = activeTxs.filter(x => x.plate === r.key && x.amount > 0).sort((a, b) => a.at.localeCompare(b.at));
         const last = mine[mine.length - 1];
         const currentWeek = wk.get(r.key);
@@ -444,7 +445,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
           open: openAlerts.filter(a => a.plate === r.key).length };
       })
       .sort((a, b) => (a.all.vsTargetPct || 0) - (b.all.vsTargetPct || 0));
-  }, [allData, health, openAlerts, f, thisWeek, prevWeek]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [allData, health, openAlerts, f, thisWeek, prevWeek, result, activeTxs, settings]); // eslint-disable-line react-hooks/exhaustive-deps // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ---- truck page: everything about one truck ---- */
   const truck = useMemo(() => {
