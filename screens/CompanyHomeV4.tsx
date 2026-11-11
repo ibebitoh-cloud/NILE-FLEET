@@ -1228,6 +1228,9 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset, onTransport }) => {
           </a>
           <nav className="hidden items-center gap-6 lg:gap-8 md:flex">
             {nav.map(([label, href]) => <a key={href} href={href} className={`inline-flex items-center text-[9px] font-black tracking-[.25em] transition hover:text-[#c2a378] ${K.muted}`}>{label}</a>)}
+            <span className={`mx-1 h-5 w-px ${K.line} bg-current opacity-30`} aria-hidden="true" />
+            <button type="button" onClick={onGenset} title={ar ? 'دخول قسم الجينسيت' : 'Genset Department sign in'} aria-label={ar ? 'دخول قسم الجينسيت' : 'Genset Department sign in'} className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-2 text-[9px] font-black transition hover:border-[#c2a378] hover:bg-[#c2a378]/10 ${K.line} ${gold}`}><span aria-hidden="true" className="text-sm">⚙</span><span>{ar ? 'جينسيت' : 'GENSET'}</span></button>
+            <button type="button" onClick={onGenset} title={ar ? 'دخول قسم النقل' : 'Transport Department sign in'} aria-label={ar ? 'دخول قسم النقل' : 'Transport Department sign in'} className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-2 text-[9px] font-black transition hover:border-[#c2a378] hover:bg-[#c2a378]/10 ${K.line} ${gold}`}><span aria-hidden="true" className="text-sm">🚛</span><span>{ar ? 'النقل' : 'TRANSPORT'}</span></button>
           </nav>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
             <button onClick={toggleFullscreen} data-desktop-only aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'} className={`nf4-hdr-btn rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isFullscreen ? tx.exit : tx.full}</button>
