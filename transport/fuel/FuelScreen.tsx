@@ -383,7 +383,8 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const lastAt = activeTxs.reduce((m, x) => (x.at > m ? x.at : m), '');
   const thisWeek = lastAt ? weekOf(lastAt) : '';
   const prevWeek = thisWeek ? weekOf(new Date(Date.parse(`${thisWeek}T00:00:00Z`) - 86_400_000).toISOString()) : '';
-  const allData: Data = useMemo(() => ({ segs: result.segments, txs: txs || [], fills: result.fills }), [result, txs]);
+  const allData: Data = useMemo(() => ({ segs: result.segments, txs: activeTxs, fills: result.fills }), [result, activeTxs]);
+  const reportFleet = useMemo(() => summarize('FLEET', 'Fleet', result.segments, activeTxs, result.fills, result.fleetKmL || 2.3, settings.marginPct, result.price), [result, activeTxs, settings.marginPct]);
   const only = (d: Data, ok: (x: { at: string; plate: string }) => boolean): Data => ({ segs: d.segs.filter(ok), txs: d.txs.filter(ok), fills: d.fills.filter(ok) });
   // Fleet period reports are deliberately independent of page filters and include every known vehicle.
   const knownFuelPlates = useMemo(() => uniqNos(options.plates, settings.vehicles), [options.plates, settings.vehicles]);
@@ -762,7 +763,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
       { label: t.liters, value: n0(kpi.liters) },
       { label: t.cost, value: `${n0(kpi.cost)} ${t.egp}`, sub: `${n2(result.price)} ${t.perLiter}` },
       { label: t.trackedKm, value: n0(kpi.trackedKm) },
-      { label: t.fleetKmL, value: n2(kpi.kmL), sub: `${t.target} ${n2(kpi.target)} · ${n1(kpi.kmL ? 100 / kpi.kmL : 0)} ${t.l100}` },
+      { label: t.fleetKmL, value: n2(kpi.kmL), sub: `${t.target} ${n2(reportFleet.target)} · ${n1(kpi.kmL ? 100 / kpi.kmL : 0)} ${t.l100}` },
       { label: t.overMargin, value: `${n0(kpi.overL)} ${t.L}`, sub: `${n0(kpi.loss)} ${t.egp}` },
       { label: t.checks, value: String(kpi.outside + kpi.bad), sub: `${kpi.outside} ${t.fillsOutside} · ${kpi.bad} ${t.badReadings}` },
     ],
@@ -979,7 +980,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
             <Kpi label={t.liters} value={n0(kpi.liters)} sub={<span dir="ltr">{period}</span>} />
             <Kpi label={t.cost} value={`${n0(kpi.cost)}`} unit={t.egp} sub={`${n2(result.price)} ${t.perLiter}${settings.price ? '' : ` (${t.auto})`}`} />
             <Kpi label={t.charged} value={n0(kpi.charged)} unit={t.egp} sub={`${ltr(`+${n0(kpi.fees)}`)} ${t.fees}`} />
-            <Kpi label={t.fleetKmL} value={n2(kpi.kmL)} tone={kpi.kmL && kpi.kmL < kpi.target * (1 - settings.marginPct / 100) ? 'red' : 'navy'}
+            <Kpi label={t.fleetKmL} value={n2(reportFleet.kmL)} tone={kpi.kmL && kpi.kmL < kpi.target * (1 - settings.marginPct / 100) ? 'red' : 'navy'}
               sub={`${t.target} ${n2(kpi.target)} ${ltr(`± ${settings.marginPct}%`)} · ${n1(kpi.kmL ? 100 / kpi.kmL : 0)} ${t.l100}`} />
             <Kpi label={t.overMargin} value={n0(kpi.overL)} unit={t.L} tone={kpi.overL ? 'red' : 'navy'} sub={`${n0(kpi.loss)} ${t.egp}`} />
             <Kpi label={t.checks} value={String(kpi.outside + kpi.bad)} tone={kpi.outside + kpi.bad ? 'amber' : 'navy'} sub={`${kpi.outside} ${t.fillsOutside} · ${kpi.bad} ${t.badReadings}`} />
@@ -992,7 +993,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
               <div className="text-[11px] text-slate-500">{t.cardVsActualHint}</div>
             </div>
             <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 xl:grid-cols-4">
-              <Compare label={t.km} card={n0(kpi.cardKm)} actual={n0(kpi.trackedKm)} diff={signed(kpi.cardKm - kpi.trackedKm)} bad={Math.abs(kpi.cardKm - kpi.trackedKm) > 100} t={t} />
+              <Compare label={t.km} card={n0(kpi.cardKm)} actual={n0(reportFleet.trackedKm)} diff={signed(kpi.cardKm - kpi.trackedKm)} bad={Math.abs(kpi.cardKm - kpi.trackedKm) > 100} t={t} />
               <Compare label={t.kmL} card={n2(kpi.cardKmL)} actual={n2(kpi.kmL)} diff={signed(kpi.cardKmL - kpi.kmL, n2)} bad={Math.abs(kpi.cardKmL - kpi.kmL) > 0.1} t={t} />
               <Compare label={t.l100} card={n1(kpi.cardKmL ? 100 / kpi.cardKmL : 0)} actual={n1(kpi.kmL ? 100 / kpi.kmL : 0)} diff={signed((kpi.cardKmL ? 100 / kpi.cardKmL : 0) - (kpi.kmL ? 100 / kpi.kmL : 0), n1)} bad={false} t={t} />
               <div className="rounded-xl bg-[#f8f5ef] p-3">
