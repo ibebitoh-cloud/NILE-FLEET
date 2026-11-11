@@ -664,21 +664,15 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
       { key: 'alerts', label: t.alerts, num: true, get: r => r.alerts || null },
     ];
     printFuelReport({
-      lang, t: { ...t, reportTitle: t.weeklyTitle }, method: methodText(lang), period: ltr(`${wk} → ${weekEnd(wk)}`), filters: weekEnd(wk) > lastDay ? t.soFar : '',
+      lang, t: { ...t, reportTitle: t.weeklyTitle }, period: ltr(`${wk} → ${weekEnd(wk)}`),
+      filters: weekEnd(wk) > lastDay ? t.soFar : '', focus: 'weekly',
       kpis: [
+        { label: lang === 'ar' ? 'الوقود المستهلك (لتر)' : 'GAS USED · LITRES', value: n0(sum(wrows, r => r.trackedL)), sub: lang === 'ar' ? 'إجمالي اللترات المرتبطة بالمسافات المغلقة' : 'Total fuel in completed distance calculations' },
         { label: t.fleetKmL, value: n2(a.kmL), sub: `${t.lastWeek} ${n2(b.kmL)}` },
-        { label: lang === 'ar' ? 'السيارات ببيانات استهلاك' : 'Vehicles with valid km/L', value: String(wrows.filter(r => r.kmL > 0).length), sub: `${lang === 'ar' ? 'من إجمالي' : 'of'} ${knownFuelPlates.length} ${t.trucks}` },
         { label: t.trackedKm, value: n0(a.km), sub: ch(a.km, b.km) },
-        { label: t.liters, value: n0(sum(wrows, r => r.trackedL)), sub: lang === 'ar' ? 'لترات محسوبة ضمن المسافات المغلقة' : 'Litres used in completed distance calculations' },
-        { label: lang === 'ar' ? 'سيارات بدون نتيجة' : 'Vehicles without a valid result', value: String(wrows.filter(r => !r.kmL).length) },
-        { label: t.alerts, value: String(wkAlerts.length), sub: `${wkAlerts.filter(x => x.level === 'high').length} ${t.lvl.high}` },
       ],
       tables: [
         toSheet(t.health, healthCols, health),
-        toSheet(t.trucks, wcols, wrows),
-        toSheet(t.alerts, alertCols, wkAlerts),
-        toSheet(t.flagged, [...pick2(fillCols, ['at', 'truck', 'driver', 'dist', 'liters', 'kml', 'target', 'diffL', 'diffE', 'status']), idsCol, whyCol],
-          now.segs.filter(s => s.status === 'high' || s.status === 'low')),
       ],
     });
   };
