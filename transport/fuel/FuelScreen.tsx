@@ -673,6 +673,13 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const lastDay = (activeTxs.reduce((m, x) => (x.at > m ? x.at : m), '') || new Date().toISOString()).slice(0, 10);
   const latestWeek = weekEnd(weekOf(lastDay)) > lastDay && activeTxs.some(x => x.at < weekOf(lastDay))
     ? weekOf(new Date(Date.parse(`${weekOf(lastDay)}T00:00:00Z`) - 86_400_000).toISOString()) : weekOf(lastDay);
+  // Weekly screenshot cards always include the latest week that actually has uploaded data.
+  // If the current Saturday→Friday week has no upload, the last available week remains the featured report.
+  const localToday = new Date();
+  const currentWeekKey = weekOf(`${localToday.getFullYear()}-${String(localToday.getMonth()+1).padStart(2,'0')}-${String(localToday.getDate()).padStart(2,'0')}`);
+  const hasCurrentWeekUpload = activeTxs.some(x => weekOf(x.at) === currentWeekKey);
+  const latestAvailableWeek = vehiclePeriodRows.weeks.reduce((latest, row) => row.period > latest ? row.period : latest, '');
+  const weeklySnapshotKeys = [...new Set(vehiclePeriodRows.weeks.map(row => row.period))].sort((a,b) => b.localeCompare(a)).slice(0, 6);
 
   /* ---- actions ---- */
   const onFile = async (file: File) => {
@@ -1165,7 +1172,42 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
                 <div className="rounded-xl border border-[#e9e1d4] bg-white p-3"><div className="text-[9px] font-black uppercase text-slate-400">{lang === 'ar' ? 'السيارات النشطة' : 'Active vehicles'}</div><div className="mt-1 text-xl font-black tabular-nums text-[#07111f]">{knownFuelPlates.length}</div></div>
               </div>
             </div>
-            <section className="space-y-3"><div className="flex flex-wrap items-end justify-between gap-2"><div><h3 className="text-sm font-black text-[#07111f]">{t.weeks}</h3><p className="text-[11px] text-slate-500">{lang === 'ar' ? 'مقارنة كل سيارة بالأسبوع السابق وبالمستهدف.' : 'Every active vehicle, compared with its previous week and target.'}</p></div><button className={btnGhost} onClick={() => setView('weeks')}>{lang === 'ar' ? 'عرض كل الأسابيع' : 'View all weeks'} →</button></div>
+            <section className="space-y-3">
+              <div className="flex flex-wrap items-end justify-between gap-2"><div><h3 className="text-sm font-black text-[#07111f]">{lang === 'ar' ? 'لقطات الأداء الأسبوعية' : 'WEEKLY PERFORMANCE SNAPSHOTS'}</h3><p className="text-[11px] text-slate-500">{lang === 'ar' ? 'بطاقة مستقلة لكل أسبوع، جاهزة للعرض والطباعة ومشاركة لقطة شاشة.' : 'One clean, share-ready visual card per week, with a dedicated print action.'}</p></div><button className={btnGhost} onClick={() => setView('weeks')}>{lang === 'ar' ? 'كل تفاصيل الأسابيع' : 'Full weekly data'} →</button></div>
+              {!hasCurrentWeekUpload && latestAvailableWeek && <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#d9c49d] bg-[#fbf7ef] px-3.5 py-3">
+                <div><div className="text-[10px] font-black uppercase tracking-wider text-[#8a7350]">{lang === 'ar' ? 'لا توجد بيانات مرفوعة هذا الأسبوع' : 'NO NEW UPLOAD THIS WEEK'}</div><div className="mt-0.5 text-xs font-bold text-[#07111f]">{lang === 'ar' ? 'نعرض آخر أسبوع متاح بدلاً من ترك التقرير فارغاً:' : 'Showing the latest available week instead of an empty current-week report:'} <b dir="ltr">{latestAvailableWeek} → {weekEnd(latestAvailableWeek)}</b></div></div>
+                <button className={btnGold} onClick={() => weeklyReport(latestAvailableWeek)}>{lang === 'ar' ? 'طباعة آخر أسبوع' : 'Print latest week'} ↗</button>
+              </div>}
+              <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+                {weeklySnapshotKeys.map(wk => {
+                  const rows = vehiclePeriodRows.weeks.filter(row => row.period === wk);
+                  const km = sum(rows, row => row.trackedKm), liters = sum(rows, row => row.trackedL);
+                  const fleetKmL = liters ? km / liters : 0;
+                  const valid = rows.filter(row => row.kmL > 0).length;
+                  const best = [...rows].filter(row => row.kmL > 0).sort((a,b) => b.kmL-a.kmL).slice(0,3);
+                  const latest = wk === latestAvailableWeek;
+                  return <article key={wk} className="overflow-hidden rounded-2xl border border-[#ded6c8] bg-white shadow-[0_3px_14px_rgba(7,17,31,.06)]">
+                    <div className="flex flex-wrap items-center justify-between gap-2 bg-[#07111f] px-4 py-3 text-white">
+                      <div><div className="text-[9px] font-black uppercase tracking-[.2em] text-[#c2a378]">{lang === 'ar' ? 'تقرير أسبوعي' : 'WEEKLY FLEET REPORT'}</div><div className="mt-0.5 text-sm font-black tabular-nums" dir="ltr">{wk} — {weekEnd(wk)}</div></div>
+                      <div className="flex items-center gap-2"><span className="rounded-full bg-white/10 px-2.5 py-1 text-[9px] font-black">{latest ? (lang === 'ar' ? 'آخر بيانات متاحة' : 'LATEST AVAILABLE') : (lang === 'ar' ? 'أسبوع سابق' : 'ARCHIVE')}</span><button className="rounded-lg bg-[#c2a378] px-3 py-2 text-[10px] font-black text-[#07111f] hover:brightness-105" onClick={() => weeklyReport(wk)}>↗ {lang === 'ar' ? 'طباعة / حفظ PDF' : 'PRINT / SAVE PDF'}</button></div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-px bg-[#eee7da] sm:grid-cols-4">
+                      {[[lang === 'ar' ? 'متوسط الأسطول' : 'FLEET KM/L', n2(fleetKmL)], [lang === 'ar' ? 'المسافة المحسوبة' : 'TRACKED KM', n0(km)], [lang === 'ar' ? 'اللترات المحسوبة' : 'TRACKED LITRES', n1(liters)], [lang === 'ar' ? 'سيارات بنتيجة' : 'VALID VEHICLES', `${valid} / ${knownFuelPlates.length}`]].map(([label,value]) => <div key={label} className="bg-[#fbfaf7] px-3 py-3"><div className="text-[9px] font-black uppercase tracking-wider text-slate-400">{label}</div><div className="mt-1 text-lg font-black tabular-nums text-[#07111f]">{value}</div></div>)}
+                    </div>
+                    <div className="p-4">
+                      <div className="mb-2 flex items-center justify-between"><span className="text-[10px] font-black uppercase tracking-wider text-[#8a7350]">{lang === 'ar' ? 'أفضل نتائج الاستهلاك' : 'TOP FUEL EFFICIENCY'}</span><span className="text-[10px] font-bold text-slate-400">{lang === 'ar' ? 'كم / لتر' : 'KM / L'}</span></div>
+                      {best.length ? <div className="space-y-2">{best.map((row,index) => <div key={row.plate} className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#f4eee3] text-[10px] font-black text-[#8a7350]">{index+1}</span>
+                        <span className="min-w-0 flex-1 truncate text-xs font-black text-[#07111f]">{row.plate}</span>
+                        <div className="h-2 w-20 overflow-hidden rounded-full bg-[#f1ebe0] sm:w-28"><div className="h-full rounded-full bg-[#c2a378]" style={{width:`${Math.max(4,Math.min(100,(row.kmL/Math.max(reportFleet.target, ...best.map(x=>x.kmL),1))*100))}%`}} /></div>
+                        <b className="w-12 text-end text-xs tabular-nums text-[#07111f]">{n2(row.kmL)}</b>
+                      </div>)}</div> : <div className="rounded-xl bg-[#f8f5ef] p-3 text-xs font-bold text-slate-500">{lang === 'ar' ? 'لا توجد مسافة مكتملة لحساب كم/لتر في هذا الأسبوع.' : 'No completed distance calculation is available for this week.'}</div>}
+                      <div className="mt-3 flex flex-wrap justify-between gap-2 border-t border-[#eee7da] pt-3 text-[10px] text-slate-500"><span>{lang === 'ar' ? 'البيانات تشمل' : 'Vehicles included'}: <b className="text-[#07111f]">{knownFuelPlates.length}</b></span><span>{lang === 'ar' ? 'المقارنة بالهدف' : 'Fleet target'}: <b className="text-[#07111f]">{n2(reportFleet.target)} {t.kmL}</b></span></div>
+                    </div>
+                  </article>;
+                })}
+              </div>
+              <div className="flex flex-wrap items-end justify-between gap-2 pt-2"><div><h3 className="text-sm font-black text-[#07111f]">{lang === 'ar' ? 'جدول تفاصيل الأسابيع' : 'WEEKLY VEHICLE DETAIL'}</h3><p className="text-[11px] text-slate-500">{lang === 'ar' ? 'مقارنة كل سيارة بالأسبوع السابق وبالمستهدف.' : 'Every active vehicle, compared with its previous week and target.'}</p></div></div>
               <DataTable sortLabel={t.sort} mobile={{ title: 'plate', sub: 'period', badge: 'status', stats: ['kml', 'prevKmL', 'deltaKmL', 'target', 'trackedKm', 'trackedL'] }} rows={vehiclePeriodRows.weeks.slice(0, Math.max(knownFuelPlates.length * 6, knownFuelPlates.length))} cols={vehiclePeriodCols} rowKey={r => `${r.period}|${r.plate}`} initial={{ key: 'period', dir: -1 }} empty={t.noMatch} />
             </section>
             <section className="space-y-3"><div className="flex flex-wrap items-end justify-between gap-2"><div><h3 className="text-sm font-black text-[#07111f]">{t.months}</h3><p className="text-[11px] text-slate-500">{lang === 'ar' ? 'مقارنة كل سيارة بالشهر السابق وبالمستهدف.' : 'Every active vehicle, compared with its previous month and target.'}</p></div><button className={btnGhost} onClick={() => setView('months')}>{lang === 'ar' ? 'عرض كل الشهور' : 'View all months'} →</button></div>
