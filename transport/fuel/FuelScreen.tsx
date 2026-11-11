@@ -417,18 +417,30 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     })).sort((a, b) => b.period.localeCompare(a.period) || a.plate.localeCompare(b.plate));
     return { weeks: build(weekKeys, 'week'), months: build(monthKeys, 'month') };
   }, [result, activeTxs, settings, knownFuelPlates]);
-  type TruckCardRow = { plate: string; all: Summary; week?: Summary; prev?: Summary; last?: FuelTx; first?: FuelTx; days: number; health?: TruckHealth; open: number };
+  type TruckCardRow = { plate: string; all: Summary; week?: Summary; weekIsPreviousFill?: boolean; weekFallbackAt?: string; prev?: Summary; last?: FuelTx; first?: FuelTx; days: number; health?: TruckHealth; open: number };
   const truckCards: TruckCardRow[] = useMemo(() => {
     const byPlate = (d: Data) => new Map(group(x => x.plate, k => k, true, d).map(x => [x.key, x]));
     const wk = byPlate(only(allData, x => weekOf(x.at) === thisWeek)), pw = byPlate(only(allData, x => weekOf(x.at) === prevWeek));
     const q2 = q;
     return group(x => x.plate, k => k, true, allData)
-      .filter(r => (!f.plate || r.key === f.plate) && (!f.type || r.vehicleType.includes(f.type)) && (!q2 || `${r.key} ${r.drivers.join(' ')} ${Object.values(vehicleOf(settings, r.key) || {}).join(' ')}`.toLowerCase().includes(q2)))
-      .map(r => {
+      .filter(r => (!f.plate || r.key === f.plate) && (!f.type || r.vehicleType.includes(f.type)) && (!q2 || `${r.key} ${r.drivers.join(' ')} ${Object.values(vehicleOf(settings,       .map(r => {
         const mine = activeTxs.filter(x => x.plate === r.key && x.amount > 0).sort((a, b) => a.at.localeCompare(b.at));
         const last = mine[mine.length - 1];
-        return { plate: r.key, all: r, week: wk.get(r.key), prev: pw.get(r.key), last, first: mine[0], health: health.find(h => h.plate === r.key),
-          days: last && lastAt ? Math.round((Date.parse(`${lastAt.slice(0, 10)}T00:00:00Z`) - Date.parse(`${last.at.slice(0, 10)}T00:00:00Z`)) / 86_400_000) : 0,
+        const currentWeek = wk.get(r.key);
+        // If this truck has no completed fill this week, carry forward its latest completed fill.
+        const previousClosed = !currentWeek?.kmL
+          ? result.segments.filter(s => s.plate === r.key && s.status !== 'pending' && s.distance > 0)
+              .sort((a, b) => b.at.localeCompare(a.at))[0]
+          : undefined;
+        const fallbackTxs = previousClosed ? previousClosed.fills.flatMap(fill => fill.txs) : [];
+        const fallbackWeek = previousClosed
+          ? summarize(r.key, r.key, [previousClosed], fallbackTxs, previousClosed.fills,
+              result.targets[r.key] || previousClosed.target || result.fleetKmL || 2.3, settings.marginPct, result.price)
+          : undefined;
+        return { plate: r.key, all: r, week: currentWeek?.kmL ? currentWeek : fallbackWeek || currentWeek,
+          weekIsPreviousFill: !!previousClosed, weekFallbackAt: previousClosed?.at,
+          prev: pw.get(r.key), last, first: mine[0], health: health.find(h => h.plate === r.key),
+          days: last && lastAt ? Math.round((Date.parse(lastAt.slice(0, 10) + "T00:00:00Z") - Date.parse(last.at.slice(0, 10) + "T00:00:00Z")) / 86_400_000) : 0,
           open: openAlerts.filter(a => a.plate === r.key).length };
       })
       .sort((a, b) => (a.all.vsTargetPct || 0) - (b.all.vsTargetPct || 0));
@@ -1085,10 +1097,10 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
                         <div className="text-[10px] text-slate-400">{n0(c.all.trackedKm)} {t.km} · {n0(c.all.liters)} {t.L}</div>
                       </div>
                       <div className="rounded-xl bg-white/80 p-2.5 ring-1 ring-[#eee7da]">
-                        <div className="text-[9px] font-black uppercase tracking-widest text-[#8a7350]">{t.thisWeek}</div>
+                        <div className="flex items-center justify-between gap-1"><span className="text-[9px] font-black uppercase tracking-widest text-[#8a7350]">{t.thisWeek}</span>{c.weekIsPreviousFill && <span className="rounded-full bg-amber-50 px-1.5 py-0.5 text-[8px] font-black text-amber-800">{lang === 'ar' ? 'آخر تعبئة مغلقة' : 'PREVIOUS CLOSED FILL'}</span>}</div>
                         {wkKmL ? <>
                           <div className="text-2xl font-black tabular-nums text-[#07111f]">{n2(wkKmL)}</div>
-                          <div className="text-[10px] text-slate-500">{t.lastWeek} {n2(pvKmL)} {pvKmL ? <b className={wkKmL < pvKmL ? 'text-red-600' : 'text-emerald-700'}>{wkKmL < pvKmL ? '▼' : '▲'} {pct(round1((wkKmL / pvKmL - 1) * 100))}</b> : null}</div>
+                          <div className="text-[10px] text-slate-500">{c.weekIsPreviousFill ? (lang === 'ar' ? 'تاريخ التعبئة' : 'Fill date') : t.lastWeek} {c.weekIsPreviousFill && c.weekFallbackAt ? <b dir="ltr">{c.weekFallbackAt.slice(0, 10)}</b> : <>{n2(pvKmL)} {pvKmL ? <b className={wkKmL < pvKmL ? 'text-red-600' : 'text-emerald-700'}>{wkKmL < pvKmL ? '▼' : '▲'} {pct(round1((wkKmL / pvKmL - 1) * 100))}</b> : null}</>}</div>
                           <div className="text-[10px] text-slate-400">{n0(c.week?.trackedKm)} {t.km} · {n0(c.week?.liters)} {t.L}</div>
                         </> : <div className="mt-1 text-[11px] font-bold leading-4 text-slate-400">{t.noFillWeek}{c.week?.liters ? ` · ${n0(c.week.liters)} ${t.L}` : ''}</div>}
                       </div>
