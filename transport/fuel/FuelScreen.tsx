@@ -389,6 +389,8 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   // Fleet period reports are deliberately independent of page filters and include every known vehicle.
   const knownFuelPlates = useMemo(() => uniqNos(options.plates, settings.vehicles), [options.plates, settings.vehicles]);
   const vehiclePeriodRows = useMemo(() => {
+    // Build report periods from the live, non-archived transaction set. Keep this
+    // independent from page filters and recompute whenever exclusions/settings change.
     const dates = [...result.segments.map(x => x.at), ...activeTxs.map(x => x.at)];
     const weekKeys = [...new Set(dates.map(weekOf))].sort();
     const monthKeys = [...new Set(dates.map(x => x.slice(0, 7)))].sort();
@@ -409,7 +411,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
       return { ...current, period, plate, prevKmL: prev.kmL || null };
     })).sort((a, b) => b.period.localeCompare(a.period) || a.plate.localeCompare(b.plate));
     return { weeks: build(weekKeys, 'week'), months: build(monthKeys, 'month') };
-  }, [result, txs, settings, knownFuelPlates]);
+  }, [result, activeTxs, settings, knownFuelPlates]);
   type TruckCardRow = { plate: string; all: Summary; week?: Summary; prev?: Summary; last?: FuelTx; first?: FuelTx; days: number; health?: TruckHealth; open: number };
   const truckCards: TruckCardRow[] = useMemo(() => {
     const byPlate = (d: Data) => new Map(group(x => x.plate, k => k, true, d).map(x => [x.key, x]));
@@ -1152,9 +1154,9 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
                 <div className="flex gap-2"><button className={btnGhost} onClick={doExcel}>⬇ {t.exportXls}</button><button className={btnNavy} onClick={doPrint}>🖨 {t.print}</button></div>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <div className="rounded-xl border border-[#e9e1d4] bg-white p-3"><div className="text-[9px] font-black uppercase text-slate-400">{t.fleetKmL}</div><div className="mt-1 text-xl font-black tabular-nums text-[#07111f]">{n2(kpi.kmL)}</div></div>
-                <div className="rounded-xl border border-[#e9e1d4] bg-white p-3"><div className="text-[9px] font-black uppercase text-slate-400">{t.target}</div><div className="mt-1 text-xl font-black tabular-nums text-[#07111f]">{n2(kpi.target)}</div></div>
-                <div className="rounded-xl border border-[#e9e1d4] bg-white p-3"><div className="text-[9px] font-black uppercase text-slate-400">{t.trackedKm}</div><div className="mt-1 text-xl font-black tabular-nums text-[#07111f]">{n0(kpi.trackedKm)}</div></div>
+                <div className="rounded-xl border border-[#e9e1d4] bg-white p-3"><div className="text-[9px] font-black uppercase text-slate-400">{t.fleetKmL}</div><div className="mt-1 text-xl font-black tabular-nums text-[#07111f]">{n2(reportFleet.kmL)}</div></div>
+                <div className="rounded-xl border border-[#e9e1d4] bg-white p-3"><div className="text-[9px] font-black uppercase text-slate-400">{t.target}</div><div className="mt-1 text-xl font-black tabular-nums text-[#07111f]">{n2(reportFleet.target)}</div></div>
+                <div className="rounded-xl border border-[#e9e1d4] bg-white p-3"><div className="text-[9px] font-black uppercase text-slate-400">{t.trackedKm}</div><div className="mt-1 text-xl font-black tabular-nums text-[#07111f]">{n0(reportFleet.trackedKm)}</div></div>
                 <div className="rounded-xl border border-[#e9e1d4] bg-white p-3"><div className="text-[9px] font-black uppercase text-slate-400">{lang === 'ar' ? 'السيارات النشطة' : 'Active vehicles'}</div><div className="mt-1 text-xl font-black tabular-nums text-[#07111f]">{knownFuelPlates.length}</div></div>
               </div>
             </div>
