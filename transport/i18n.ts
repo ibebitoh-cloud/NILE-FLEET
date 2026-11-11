@@ -2,7 +2,7 @@ export type Lang = 'en' | 'ar';
 
 const en = {
   system: 'Transport System', signIn: 'Sign in', email: 'Email', password: 'Password', signingIn: 'Signing in…',
-  backHome: 'Back to website', loginTitle: 'Transport operations', loginSub: 'Two sections: Fuel (diesel km/L per truck) and Customer Rates (price lists, quotations and exports). Prices are visible to signed-in staff only.',
+  backHome: 'Back to website', loginTitle: 'Transport operations', loginSub: 'Reliable road transport operations.',
   noAccess: 'This account has no Transport access. Ask an administrator.', badLogin: 'Wrong email or password.',
   admin: 'Admin', viewer: 'Viewer', fuelEditor: 'Fuel editor', readOnly: 'Read only', logout: 'Sign out',
   overview: 'Overview', rates: 'Price list', customers: 'Customers',
@@ -51,7 +51,7 @@ const en = {
 
 const ar: typeof en = {
   system: 'نظام النقل', signIn: 'تسجيل الدخول', email: 'البريد الإلكتروني', password: 'كلمة المرور', signingIn: 'جاري الدخول…',
-  backHome: 'العودة للموقع', loginTitle: 'عمليات النقل', loginSub: 'قسمين: السولار (كم/لتر لكل عربية) وأسعار العملاء (قوائم الأسعار وعروض الأسعار والتصدير). الأسعار تظهر لفريق العمل بعد تسجيل الدخول فقط.',
+  backHome: 'العودة للموقع', loginTitle: 'عمليات النقل', loginSub: 'عمليات نقل بري موثوقة.',
   noAccess: 'هذا الحساب ليس له صلاحية على نظام النقل. تواصل مع المسؤول.', badLogin: 'البريد أو كلمة المرور غير صحيحة.',
   admin: 'مسؤول', viewer: 'مشاهد', fuelEditor: 'محرر الوقود', readOnly: 'عرض فقط', logout: 'خروج',
   overview: 'نظرة عامة', rates: 'قائمة الأسعار', customers: 'العملاء',
