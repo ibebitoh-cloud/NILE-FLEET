@@ -1179,6 +1179,10 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
               <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
                 {weeklySnapshotKeys.map(wk => {
                   const rows = vehiclePeriodRows.weeks.filter(row => row.period === wk);
+                  const previousWeekKey = [...new Set(vehiclePeriodRows.weeks.map(row => row.period))].filter(key => key < wk).sort((a,b) => b.localeCompare(a))[0];
+                  const previousRows = previousWeekKey ? vehiclePeriodRows.weeks.filter(row => row.period === previousWeekKey) : [];
+                  const previousKm = sum(previousRows, row => row.trackedKm), previousLiters = sum(previousRows, row => row.trackedL);
+                  const previousFleetKmL = previousLiters > 0 ? previousKm / previousLiters : null;
                   const km = sum(rows, row => row.trackedKm), liters = sum(rows, row => row.trackedL);
                   const fleetKmL = liters ? km / liters : 0;
                   const valid = rows.filter(row => row.kmL > 0).length;
@@ -1189,8 +1193,8 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
                       <div><div className="text-[9px] font-black uppercase tracking-[.2em] text-[#c2a378]">{lang === 'ar' ? 'تقرير أسبوعي' : 'WEEKLY FLEET REPORT'}</div><div className="mt-0.5 text-sm font-black tabular-nums" dir="ltr">{wk} — {weekEnd(wk)}</div></div>
                       <div className="flex items-center gap-2"><span className="rounded-full bg-white/10 px-2.5 py-1 text-[9px] font-black">{latest ? (lang === 'ar' ? 'آخر بيانات متاحة' : 'LATEST AVAILABLE') : (lang === 'ar' ? 'أسبوع سابق' : 'ARCHIVE')}</span><button className="rounded-lg bg-[#c2a378] px-3 py-2 text-[10px] font-black text-[#07111f] hover:brightness-105" onClick={() => weeklyReport(wk)}>↗ {lang === 'ar' ? 'طباعة / حفظ PDF' : 'PRINT / SAVE PDF'}</button></div>
                     </div>
-                    <div className="grid grid-cols-2 gap-px bg-[#eee7da] sm:grid-cols-4">
-                      {[[lang === 'ar' ? 'متوسط الأسطول' : 'FLEET KM/L', n2(fleetKmL)], [lang === 'ar' ? 'المسافة المحسوبة' : 'TRACKED KM', n0(km)], [lang === 'ar' ? 'اللترات المحسوبة' : 'TRACKED LITRES', n1(liters)], [lang === 'ar' ? 'سيارات بنتيجة' : 'VALID VEHICLES', `${valid} / ${knownFuelPlates.length}`]].map(([label,value]) => <div key={label} className="bg-[#fbfaf7] px-3 py-3"><div className="text-[9px] font-black uppercase tracking-wider text-slate-400">{label}</div><div className="mt-1 text-lg font-black tabular-nums text-[#07111f]">{value}</div></div>)}
+                    <div className="grid grid-cols-2 gap-px bg-[#eee7da] sm:grid-cols-3 xl:grid-cols-5">
+                      {[[lang === 'ar' ? 'متوسط الأسطول' : 'FLEET KM/L', n2(fleetKmL)], [lang === 'ar' ? 'الأسبوع السابق KM/L' : 'PREVIOUS WEEK KM/L', previousFleetKmL === null ? '—' : n2(previousFleetKmL)], [lang === 'ar' ? 'المسافة المحسوبة' : 'TRACKED KM', n0(km)], [lang === 'ar' ? 'اللترات المحسوبة' : 'TRACKED LITRES', n1(liters)], [lang === 'ar' ? 'سيارات بنتيجة' : 'VALID VEHICLES', `${valid} / ${knownFuelPlates.length}`]].map(([label,value]) => <div key={label} className="bg-[#fbfaf7] px-3 py-3"><div className="text-[9px] font-black uppercase tracking-wider text-slate-400">{label}</div><div className="mt-1 text-lg font-black tabular-nums text-[#07111f]">{value}</div>{label === (lang === 'ar' ? 'الأسبوع السابق KM/L' : 'PREVIOUS WEEK KM/L') && previousWeekKey && <div className="mt-1 text-[9px] text-slate-400" dir="ltr">{previousWeekKey} — {weekEnd(previousWeekKey)}</div>}</div>)}
                     </div>
                     <div className="p-4">
                       <div className="mb-2 flex items-center justify-between"><span className="text-[10px] font-black uppercase tracking-wider text-[#8a7350]">{lang === 'ar' ? 'أفضل نتائج الاستهلاك' : 'TOP FUEL EFFICIENCY'}</span><span className="text-[10px] font-bold text-slate-400">{lang === 'ar' ? 'كم / لتر' : 'KM / L'}</span></div>
