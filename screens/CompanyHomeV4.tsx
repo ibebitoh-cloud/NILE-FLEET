@@ -1230,17 +1230,15 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset, onTransport }) => {
             {nav.map(([label, href]) => <a key={href} href={href} className={`inline-flex items-center text-[9px] font-black tracking-[.25em] transition hover:text-[#c2a378] ${K.muted}`}>{label}</a>)}
           </nav>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
-            <button type="button" onClick={onGenset} title={ar ? 'دخول قسم الجينسيت' : 'Genset Department sign in'} aria-label={ar ? 'دخول قسم الجينسيت' : 'Genset Department sign in'} className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border text-sm transition hover:border-[#c2a378] hover:bg-[#c2a378]/10 ${K.line} ${gold}`}>⚙</button>
-            <button type="button" onClick={onTransport} title={ar ? 'دخول قسم النقل' : 'Transport Department sign in'} aria-label={ar ? 'دخول قسم النقل' : 'Transport Department sign in'} className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border text-sm transition hover:border-[#c2a378] hover:bg-[#c2a378]/10 ${K.line} ${gold}`}>🚛</button>
             <button onClick={toggleFullscreen} data-desktop-only aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'} className={`nf4-hdr-btn rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isFullscreen ? tx.exit : tx.full}</button>
             <button onClick={toggleSound} data-desktop-only aria-pressed={soundOn} className={`nf4-hdr-btn rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{soundOn ? tx.soundOn : tx.soundOff}</button>
             <button onClick={() => setTheme(isDark ? 'day' : 'night')} className={`nf4-hdr-btn rounded-full border px-3 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{isDark ? tx.white : tx.dark}</button>
             <button onClick={() => setLang(ar ? 'en' : 'ar')} className={`nf4-hdr-btn rounded-full border px-4 py-2 text-[9px] font-black tracking-[.15em] transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{ar ? 'EN' : 'العربية'}</button>
-            <button onClick={() => setMenuOpen(o => !o)} aria-expanded={menuOpen} aria-controls="nf4-mobile-menu" aria-label={ar ? 'القائمة' : 'Menu'} className={`nf4-menu-btn grid h-9 w-9 place-items-center rounded-full border text-base font-black transition hover:border-[#c2a378]/70 md:hidden ${K.line} ${gold}`}>{menuOpen ? '✕' : '☰'}</button>
+            <button onClick={() => setMenuOpen(o => !o)} aria-expanded={menuOpen} aria-controls="nf4-mobile-menu" aria-label={ar ? 'القائمة' : 'Menu'} className={`nf4-menu-btn grid h-9 w-9 shrink-0 place-items-center rounded-full border text-base font-black transition hover:border-[#c2a378]/70 ${K.line} ${gold}`}>{menuOpen ? '✕' : '☰'}</button>
           </div>
         </div>
         {menuOpen && (
-          <div id="nf4-mobile-menu" className={`nf4-mobile-menu border-t px-4 pb-5 pt-3 md:hidden ${K.line}`}>
+          <div id="nf4-mobile-menu" className={`nf4-mobile-menu border-t px-4 pb-5 pt-3 ${K.line}`}>
             <div className="mb-4 grid grid-cols-2 gap-2" aria-label={ar ? 'دخول الأقسام' : 'Department sign in'}>
               <button type="button" onClick={() => { setMenuOpen(false); onGenset(); }} className={`group flex min-h-[64px] items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 text-left transition hover:border-[#c2a378] hover:bg-[#c2a378]/10 ${K.line}`}>
                 <span className="min-w-0">
