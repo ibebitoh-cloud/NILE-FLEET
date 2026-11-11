@@ -389,26 +389,31 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   // Fleet period reports are deliberately independent of page filters and include every known vehicle.
   const knownFuelPlates = useMemo(() => uniqNos(options.plates, settings.vehicles), [options.plates, settings.vehicles]);
   const vehiclePeriodRows = useMemo(() => {
-    // Build report periods from the live, non-archived transaction set. Keep this
-    // independent from page filters and recompute whenever exclusions/settings change.
+    // Plate IDs in settings are digits-only, while imported transactions retain
+    // their original Arabic/Latin formatted plate. Always join by normalized ID.
     const dates = [...result.segments.map(x => x.at), ...activeTxs.map(x => x.at)];
     const weekKeys = [...new Set(dates.map(weekOf))].sort();
     const monthKeys = [...new Set(dates.map(x => x.slice(0, 7)))].sort();
-    const summarizeVehicle = (plate: string, period: string, kind: 'week' | 'month') => {
+    const displayPlate = (id: string) => activeTxs.find(x => plateNo(x.plate) === id)?.plate || id;
+    const summarizeVehicle = (id: string, period: string, kind: 'week' | 'month') => {
       const inPeriod = (at: string) => kind === 'week' ? weekOf(at) === period : at.slice(0, 7) === period;
-      const segs = result.segments.filter(x => x.plate === plate && inPeriod(x.at));
-      const rows = activeTxs.filter(x => x.plate === plate && inPeriod(x.at));
-      const fills = result.fills.filter(x => x.plate === plate && inPeriod(x.at));
-      const target = result.targets[plate] || result.fleetKmL || 2.3;
-      return summarize(plate, plate, segs, rows, fills, target, settings.marginPct, result.price);
+      const segs = result.segments.filter(x => plateNo(x.plate) === id && inPeriod(x.at));
+      const rows = activeTxs.filter(x => plateNo(x.plate) === id && inPeriod(x.at));
+      const fills = result.fills.filter(x => plateNo(x.plate) === id && inPeriod(x.at));
+      const actualPlate = rows[0]?.plate || activeTxs.find(x => plateNo(x.plate) === id)?.plate;
+      const target = (actualPlate ? result.targets[actualPlate] : undefined)
+        || settings.truckTargets[id]
+        || result.fleetKmL
+        || 2.3;
+      return summarize(id, displayPlate(id), segs, rows, fills, target, settings.marginPct, result.price);
     };
     const previous = (period: string, kind: 'week' | 'month') => kind === 'week'
       ? weekOf(new Date(Date.parse(`${period}T00:00:00Z`) - 86_400_000).toISOString())
       : new Date(Date.parse(`${period}-01T00:00:00Z`) - 86_400_000).toISOString().slice(0, 7);
-    const build = (keys: string[], kind: 'week' | 'month'): VehiclePeriodRow[] => keys.flatMap(period => knownFuelPlates.map(plate => {
-      const current = summarizeVehicle(plate, period, kind);
-      const prev = summarizeVehicle(plate, previous(period, kind), kind);
-      return { ...current, period, plate, prevKmL: prev.kmL || null };
+    const build = (keys: string[], kind: 'week' | 'month'): VehiclePeriodRow[] => keys.flatMap(period => knownFuelPlates.map(id => {
+      const current = summarizeVehicle(id, period, kind);
+      const prev = summarizeVehicle(id, previous(period, kind), kind);
+      return { ...current, period, plate: displayPlate(id), prevKmL: prev.kmL || null };
     })).sort((a, b) => b.period.localeCompare(a.period) || a.plate.localeCompare(b.plate));
     return { weeks: build(weekKeys, 'week'), months: build(monthKeys, 'month') };
   }, [result, activeTxs, settings, knownFuelPlates]);
