@@ -1238,35 +1238,13 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset, onTransport }) => {
           </div>
         </div>
         {menuOpen && (
-          <div id="nf4-mobile-menu" className={`nf4-mobile-menu border-t px-4 pb-5 pt-3 ${K.line}`}>
-            <div className="mb-4 grid grid-cols-2 gap-2" aria-label={ar ? 'دخول الأقسام' : 'Department sign in'}>
-              <button type="button" onClick={() => { setMenuOpen(false); onGenset(); }} className={`group flex min-h-[64px] items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 text-left transition hover:border-[#c2a378] hover:bg-[#c2a378]/10 ${K.line}`}>
-                <span className="min-w-0">
-                  <span className={`block text-[9px] font-black uppercase tracking-[.12em] ${gold}`}>{ar ? 'قسم الجينسيت' : 'GENSET DEPARTMENT'}</span>
-                  <span className={`mt-1 block text-[8px] font-bold ${K.faint}`}>{ar ? 'تسجيل دخول النظام' : 'SYSTEM SIGN IN'} ↗</span>
-                </span>
-                <span aria-hidden="true" className={`ms-auto grid h-7 w-7 shrink-0 place-items-center rounded-lg border text-sm ${K.line} ${gold}`}>⚙</span>
-              </button>
-              <button type="button" onClick={() => { setMenuOpen(false); onTransport(); }} className={`group flex min-h-[64px] items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 text-left transition hover:border-[#c2a378] hover:bg-[#c2a378]/10 ${K.line}`}>
-                <span className="min-w-0">
-                  <span className={`block text-[9px] font-black uppercase tracking-[.12em] ${gold}`}>{ar ? 'قسم النقل' : 'TRANSPORT DEPARTMENT'}</span>
-                  <span className={`mt-1 block text-[8px] font-bold ${K.faint}`}>{ar ? 'تسجيل دخول النظام' : 'SYSTEM SIGN IN'} ↗</span>
-                </span>
-                <span aria-hidden="true" className={`ms-auto grid h-7 w-7 shrink-0 place-items-center rounded-lg border text-sm ${K.line} ${gold}`}>🚛</span>
-              </button>
-            </div>
-            <nav aria-label={ar ? 'أقسام الصفحة' : 'Page sections'} className="grid">
-              {nav.map(([label, href]) => <a key={href} href={href} onClick={() => setMenuOpen(false)} className={`border-b py-3.5 text-[11px] font-black tracking-[.22em] transition hover:text-[#c2a378] ${K.line}`}>{label}</a>)}
-            </nav>
-            <a href="tel:+201000992858" className={`mt-4 flex items-center justify-between rounded-2xl border px-4 py-3 ${K.line}`}>
-              <span className={`text-[8px] font-black tracking-[.2em] ${K.faint}`}>{ar ? 'مكتب النقل 24/7' : '24/7 TRANSPORT DESK'}</span>
-              <strong dir="ltr" className={`text-sm font-black ${gold}`}>+20 100 099 2858</strong>
-            </a>
-            <div className="mt-3 flex items-center gap-2">
-              <a href="#quote" onClick={() => setMenuOpen(false)} className="flex-1 rounded-full bg-[#c2a378] px-4 py-3 text-center text-[10px] font-black tracking-[.2em] text-[#05070a]">{ar ? 'طلب عرض سعر' : 'REQUEST QUOTE'} ↗</a>
-              <a href="https://www.linkedin.com/company/nile-fleet-for-transport-and-logistics-service" target="_blank" rel="noreferrer" aria-label="Nile Fleet LinkedIn" className={`grid h-11 w-11 place-items-center rounded-full border text-sm font-black ${K.line} ${gold}`}>in</a>
-              <a href="https://www.facebook.com/profile.php?id=61591362501143" target="_blank" rel="noreferrer" aria-label="Nile Fleet Facebook" className={`grid h-11 w-11 place-items-center rounded-full border text-sm font-black ${K.line} ${gold}`}>f</a>
-            </div>
+          <div id="nf4-mobile-menu" className={`nf4-mobile-menu flex items-center justify-end gap-2 border-t px-3 py-2 ${K.line}`} aria-label={ar ? 'دخول الأقسام' : 'Department sign in'}>
+            <button type="button" onClick={() => { setMenuOpen(false); onGenset(); }} className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[10px] font-black transition hover:border-[#c2a378] hover:bg-[#c2a378]/10 ${K.line} ${gold}`}>
+              <span aria-hidden="true">⚙</span><span>{ar ? 'جينسيت' : 'GENSET'}</span>
+            </button>
+            <button type="button" onClick={() => { setMenuOpen(false); onTransport(); }} className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[10px] font-black transition hover:border-[#c2a378] hover:bg-[#c2a378]/10 ${K.line} ${gold}`}>
+              <span aria-hidden="true">🚛</span><span>{ar ? 'النقل' : 'TRANSPORT'}</span>
+            </button>
           </div>
         )}
       </header>
