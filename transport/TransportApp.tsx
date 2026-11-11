@@ -53,7 +53,7 @@ const TransportApp: React.FC = () => {
       <style>{'.nf-transport td button,.nf-transport td input,.nf-transport th button,.nf-transport th input{min-height:0}'}</style>
       {user
         ? <Shell t={t} lang={lang} setLang={setLang} user={user} onLogout={async () => { await api.signOut(); setUser(null); }} />
-        : <LoginView t={t} lang={lang} setLang={setLang} onSignedIn={setUser} />}
+        : <LoginView t={t} lang={lang} setLang={setLang} onSignedIn={(u) => { window.location.hash = "transport"; setUser(u); }} />}
     </div>
   );
 };
@@ -303,62 +303,60 @@ const SectionHome: React.FC<{ t: Strings; lang: Lang; userName: string }> = ({ t
         <h1 className="mt-2 text-2xl font-black tracking-tight text-[#07111f] sm:text-3xl">{lang === 'ar' ? `أهلاً بعودتك، ${userName || 'زميلنا'}!` : `Welcome back, ${userName || 'there'}!`}</h1>
         <p className="mt-1 text-sm text-slate-600">{lang === 'ar' ? 'نتمنى لك يوماً موفقاً.' : 'Great to have you with us. Let’s get moving.'}</p>
       </div>
-      <svg viewBox="0 0 220 250" role="img" aria-label={lang === 'ar' ? 'شخصية نيلية كاملة تلوّح وترحّب بك' : 'A full-body Nile Fleet mascot waving hello'} className="nf-pet shrink-0">
+      <svg viewBox="0 0 240 270" role="img" aria-label={lang === 'ar' ? 'طفل صغير يلوّح ويرحّب بك' : 'A two-year-old DALI mascot waving hello'} className="nf-pet shrink-0">
         <defs>
-          <linearGradient id="nfPetGold" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#f0d7ad"/><stop offset=".52" stopColor="#c2a378"/><stop offset="1" stopColor="#9c7548"/></linearGradient>
-          <linearGradient id="nfPetCream" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#fff0d8"/><stop offset="1" stopColor="#e7cba5"/></linearGradient>
-          <linearGradient id="nfPetJacket" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#20364b"/><stop offset="1" stopColor="#07111f"/></linearGradient>
+          <linearGradient id="nfPetSkin" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#ffe5c8"/><stop offset="1" stopColor="#e8b98e"/></linearGradient>
+          <linearGradient id="nfPetWhite" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#fff"/><stop offset="1" stopColor="#e9edf1"/></linearGradient>
+          <linearGradient id="nfPetGold" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#e8c58f"/><stop offset="1" stopColor="#b78a4e"/></linearGradient>
+          <linearGradient id="nfPetHair" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#8a5738"/><stop offset="1" stopColor="#4b2c20"/></linearGradient>
         </defs>
-        <ellipse className="nf-pet-shadow" cx="110" cy="235" rx="57" ry="8" fill="#07111f" opacity=".14"/>
+        <ellipse className="nf-pet-shadow" cx="120" cy="253" rx="62" ry="8" fill="#07111f" opacity=".13"/>
         <g className="nf-pet-leg">
-          <path d="M83 190Q80 210 79 226Q78 233 87 234H108Q115 231 109 225L103 190Z" fill="url(#nfPetGold)" stroke="#8a6942" strokeWidth="2"/>
-          <path d="M76 226Q91 221 108 228L112 237Q111 242 103 242H77Q68 239 76 226Z" fill="#142536"/>
-          <path d="M81 231h25" stroke="#c2a378" strokeWidth="2" strokeLinecap="round"/>
+          <path d="M91 190Q88 214 88 232L111 235L116 194Z" fill="url(#nfPetWhite)" stroke="#d9dfe5" strokeWidth="1.5"/>
+          <path d="M83 230Q98 225 115 233L121 244Q120 250 111 250H87Q77 247 83 230Z" fill="#fff" stroke="#d8dce0" strokeWidth="2"/>
+          <path d="M91 238H115" stroke="#c49a62" strokeWidth="3" strokeLinecap="round"/>
         </g>
-        <g className="nf-pet-leg" style={{animationDelay:'-.8s'}}>
-          <path d="M116 190H143L145 226Q150 232 143 235H119Q111 233 117 225Z" fill="url(#nfPetGold)" stroke="#8a6942" strokeWidth="2"/>
-          <path d="M116 226Q131 221 146 228L153 237Q153 242 145 242H119Q109 239 116 226Z" fill="#142536"/>
-          <path d="M120 231h27" stroke="#c2a378" strokeWidth="2" strokeLinecap="round"/>
+        <g className="nf-pet-leg" style={{animationDelay:'-.7s'}}>
+          <path d="M126 193L151 190L155 232L132 235Z" fill="url(#nfPetWhite)" stroke="#d9dfe5" strokeWidth="1.5"/>
+          <path d="M130 233Q145 226 159 234L166 244Q166 250 157 250H135Q125 247 130 233Z" fill="#fff" stroke="#d8dce0" strokeWidth="2"/>
+          <path d="M136 238H160" stroke="#c49a62" strokeWidth="3" strokeLinecap="round"/>
         </g>
         <g className="nf-pet-body">
-          <path d="M73 112Q78 101 95 99H132Q151 103 157 119L163 184Q162 198 147 202H76Q61 198 63 183Z" fill="url(#nfPetJacket)" stroke="#07111f" strokeWidth="2"/>
-          <path d="M99 104L111 126L126 104L138 111L128 151H96L86 111Z" fill="url(#nfPetCream)" stroke="#8a6942" strokeWidth="1.5"/>
-          <path d="M111 126L116 136L121 126L118 163H112Z" fill="#c2a378"/>
-          <path d="M79 151Q110 160 149 151" fill="none" stroke="#c2a378" strokeOpacity=".55" strokeWidth="2"/>
-          <rect x="119" y="169" width="24" height="17" rx="4" fill="#c2a378"/>
-          <text x="131" y="180.5" textAnchor="middle" fontSize="7" fontWeight="900" fill="#07111f">NF</text>
-          <path d="M78 120Q61 128 59 155L62 174" fill="none" stroke="#142536" strokeWidth="15" strokeLinecap="round"/>
+          <path d="M76 119Q82 105 103 103H140Q164 108 169 130L174 190Q171 204 156 207H82Q66 202 68 188Z" fill="url(#nfPetWhite)" stroke="#d7dce2" strokeWidth="2"/>
+          <path d="M97 108L120 129L143 108" fill="none" stroke="#d4ad75" strokeWidth="3" strokeLinecap="round"/>
+          <path d="M120 129V151" stroke="#c49a62" strokeWidth="2.5" strokeLinecap="round"/>
+          <text x="120" y="166" textAnchor="middle" fontSize="13" fontWeight="900" letterSpacing="1.2" fill="#b48649">DALI</text>
+          <path d="M80 184Q120 193 163 184" fill="none" stroke="#d9b77f" strokeWidth="2" opacity=".7"/>
           <g className="nf-pet-free-arm">
-            <path d="M148 119Q166 128 169 151L165 171" fill="none" stroke="#142536" strokeWidth="15" strokeLinecap="round"/>
-            <path d="M165 168L163 179" stroke="url(#nfPetGold)" strokeWidth="12" strokeLinecap="round"/>
-            <path d="M154 181Q155 171 163 171Q171 172 171 181L169 190Q165 196 159 190Z" fill="url(#nfPetCream)" stroke="#8a6942" strokeWidth="1.5"/>
+            <path d="M158 127Q178 137 181 157L178 176" fill="none" stroke="#fff" strokeWidth="17" strokeLinecap="round"/>
+            <path d="M177 171L175 185" stroke="url(#nfPetSkin)" strokeWidth="13" strokeLinecap="round"/>
+            <path d="M166 185Q166 174 176 173Q185 175 185 185L182 197Q176 204 169 196Z" fill="url(#nfPetSkin)" stroke="#c18e67" strokeWidth="1.5"/>
           </g>
-          <path d="M60 168L59 181" stroke="url(#nfPetGold)" strokeWidth="12" strokeLinecap="round"/>
-          <path d="M51 180Q52 171 60 171Q68 172 68 181L66 190Q62 196 56 190Z" fill="url(#nfPetCream)" stroke="#8a6942" strokeWidth="1.5"/>
-          <circle cx="111" cy="147" r="5" fill="#c2a378"/>
+          <path d="M77 132Q58 147 64 177" fill="none" stroke="#fff" strokeWidth="17" strokeLinecap="round"/>
+          <path d="M64 172L62 185" stroke="url(#nfPetSkin)" strokeWidth="13" strokeLinecap="round"/>
+          <path d="M52 185Q53 175 63 175Q72 177 71 187L68 198Q62 204 56 197Z" fill="url(#nfPetSkin)" stroke="#c18e67" strokeWidth="1.5"/>
+          <path d="M88 207L152 207" stroke="#c49a62" strokeWidth="3" strokeLinecap="round"/>
         </g>
         <g className="nf-pet-head">
-          <path d="M72 55Q68 26 91 17Q111 6 133 19Q154 30 151 57L147 90Q143 111 112 113Q80 111 75 91Z" fill="url(#nfPetGold)" stroke="#8a6942" strokeWidth="2.5"/>
-          <path d="M78 35Q62 14 70 4Q91 6 100 23M126 22Q145 3 159 9Q159 28 144 42" fill="url(#nfPetGold)" stroke="#8a6942" strokeWidth="2"/>
-          <path d="M78 38Q71 21 76 14Q88 17 94 29M135 29Q146 16 153 17Q151 29 140 37" fill="#f4dfc1"/>
-          <ellipse cx="112" cy="66" rx="34" ry="31" fill="url(#nfPetCream)"/>
+          <path d="M65 70Q62 31 91 19Q119 4 150 21Q180 37 175 76L169 113Q164 132 121 135Q78 132 70 111Z" fill="url(#nfPetSkin)" stroke="#c18e67" strokeWidth="2"/>
+          <path d="M67 72Q52 45 76 24Q82 9 99 15Q112 0 131 13Q150 4 164 23Q184 37 173 68Q163 51 151 47Q133 57 116 42Q95 58 78 56Z" fill="url(#nfPetHair)" stroke="#4b2c20" strokeWidth="2"/>
+          <path d="M80 36Q88 18 104 22M118 25Q137 12 154 28M150 43Q164 37 169 52" fill="none" stroke="#b77b4d" strokeWidth="5" strokeLinecap="round"/>
+          <ellipse cx="120" cy="84" rx="48" ry="43" fill="url(#nfPetSkin)"/>
           <g className="nf-pet-eyes">
-            <ellipse cx="99" cy="61" rx="4" ry="6" fill="#07111f"/><ellipse cx="126" cy="61" rx="4" ry="6" fill="#07111f"/>
-            <circle cx="100" cy="59" r="1.5" fill="white"/><circle cx="127" cy="59" r="1.5" fill="white"/>
+            <ellipse cx="101" cy="80" rx="7" ry="10" fill="#30221c"/><ellipse cx="140" cy="80" rx="7" ry="10" fill="#30221c"/>
+            <circle cx="103" cy="77" r="2.7" fill="#fff"/><circle cx="142" cy="77" r="2.7" fill="#fff"/>
           </g>
-          <ellipse cx="112" cy="73" rx="5.5" ry="4" fill="#8d493d"/>
-          <path d="M104 81Q112 89 120 81" fill="none" stroke="#8d493d" strokeWidth="2.2" strokeLinecap="round"/>
-          <ellipse cx="89" cy="77" rx="7" ry="3" fill="#d98f7d" opacity=".4"/><ellipse cx="135" cy="77" rx="7" ry="3" fill="#d98f7d" opacity=".4"/>
-          <path d="M87 48Q98 42 106 48M119 48Q128 42 137 48" fill="none" stroke="#8a6942" strokeWidth="2.5" strokeLinecap="round"/>
+          <path d="M88 66Q101 59 111 65M130 65Q140 59 151 66" fill="none" stroke="#71452f" strokeWidth="3.5" strokeLinecap="round"/>
+          <ellipse cx="120" cy="94" rx="5" ry="4" fill="#c78e72"/>
+          <path d="M107 104Q120 116 134 103" fill="none" stroke="#9e594e" strokeWidth="3" strokeLinecap="round"/>
+          <ellipse cx="85" cy="98" rx="9" ry="5" fill="#e58d88" opacity=".35"/><ellipse cx="155" cy="98" rx="9" ry="5" fill="#e58d88" opacity=".35"/>
         </g>
         <g className="nf-pet-wave">
-          <path d="M154 119Q174 105 176 79L181 59" fill="none" stroke="#142536" strokeWidth="15" strokeLinecap="round"/>
-          <path d="M181 66L184 47" stroke="url(#nfPetGold)" strokeWidth="12" strokeLinecap="round"/>
-          <path d="M177 49Q170 37 177 29Q183 22 189 31L191 17Q194 9 201 14Q206 18 202 29L208 21Q214 16 218 23Q220 29 212 38L205 51Q196 61 185 57Z" fill="url(#nfPetCream)" stroke="#8a6942" strokeWidth="2"/>
-          <path d="M184 29L184 39M198 24L197 35M210 29L205 39" stroke="#c39d6c" strokeWidth="1.5" strokeLinecap="round"/>
+          <path d="M164 127Q185 105 189 78L192 60" fill="none" stroke="#fff" strokeWidth="17" strokeLinecap="round"/>
+          <path d="M192 65L194 49" stroke="url(#nfPetSkin)" strokeWidth="14" strokeLinecap="round"/>
+          <path d="M184 50Q176 40 183 31Q190 23 198 34L200 19Q204 10 211 17Q216 22 210 35L218 28Q226 25 229 33Q231 40 220 49L210 61Q200 68 189 60Z" fill="url(#nfPetSkin)" stroke="#c18e67" strokeWidth="2"/>
+          <path d="M190 34L192 44M207 29L205 42M221 37L214 47" stroke="#d29c79" strokeWidth="1.6" strokeLinecap="round"/>
         </g>
-        <path d="M94 105Q112 115 131 105" fill="none" stroke="#8a6942" strokeOpacity=".4" strokeWidth="2"/>
-        <path d="M82 15l-5-7m72 5 5-7" stroke="#c2a378" strokeWidth="2.5" strokeLinecap="round"/>
       </svg>
     </div>
     <div className="text-[11px] font-black uppercase tracking-[.3em] text-[#8a7350]">{t.sections}</div>
