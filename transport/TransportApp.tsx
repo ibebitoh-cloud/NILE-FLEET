@@ -252,7 +252,7 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
 
       <main className="mx-auto w-full max-w-[1500px] flex-1 px-4 py-6 sm:px-6">
         {section === 'rates' && loadError && <div role="alert" className="mb-4 rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-bold text-red-800">{t.failed}: {loadError}</div>}
-        {section === 'home' ? <SectionHome t={t} lang={lang} />
+        {section === 'home' ? <SectionHome t={t} lang={lang} userName={user.name} />
           : section === 'fuel' ? <React.Suspense fallback={<DaliLoader fullScreen />}><FuelScreen lang={lang} isAdmin={isAdmin || fuelOnly} setToast={setToast} /></React.Suspense>
           : <div className="md:flex md:items-start md:gap-7">
             <SideNav title={t.secRates} icon="💲" dir={lang === 'ar' ? 'rtl' : 'ltr'} active={tab} onSelect={k => setTab(k as Tab)}
@@ -294,8 +294,31 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
 
 /* ============================ Section home ============================ */
 
-const SectionHome: React.FC<{ t: Strings; lang: Lang }> = ({ t, lang }) => (
+const SectionHome: React.FC<{ t: Strings; lang: Lang; userName: string }> = ({ t, lang, userName }) => (
   <div className="mx-auto max-w-5xl py-4 sm:py-10">
+    <style>{'@keyframes nf-pet-wave{0%,100%{transform:rotate(0deg)}20%{transform:rotate(22deg)}40%{transform:rotate(-12deg)}60%{transform:rotate(20deg)}80%{transform:rotate(-6deg)}}.nf-pet-wave{transform-box:fill-box;transform-origin:bottom center;animation:nf-pet-wave 1.8s ease-in-out infinite}@media(prefers-reduced-motion:reduce){.nf-pet-wave{animation:none}}'}</style>
+    <div className="mb-8 flex items-center justify-between gap-4 overflow-hidden rounded-[1.6rem] border border-[#d8c7a9] bg-gradient-to-r from-white via-[#fffdf8] to-[#f1e8d8] px-5 py-5 shadow-sm sm:px-7">
+      <div className="min-w-0">
+        <div className="text-[10px] font-black uppercase tracking-[.28em] text-[#9a7b4d]">{lang === 'ar' ? 'مرحباً بعودتك' : 'A GOOD DAY STARTS HERE'}</div>
+        <h1 className="mt-2 text-2xl font-black tracking-tight text-[#07111f] sm:text-3xl">{lang === 'ar' ? `أهلاً بعودتك، ${userName || (lang === 'ar' ? 'زميلنا' : 'there')}!` : `Welcome back, ${userName || 'there'}!`}</h1>
+        <p className="mt-1 text-sm text-slate-600">{lang === 'ar' ? 'نتمنى لك يوماً موفقاً.' : 'Great to have you with us. Let’s get moving.'}</p>
+      </div>
+      <svg viewBox="0 0 120 120" role="img" aria-label={lang === 'ar' ? 'تميمة تلوّح بيدها' : 'A friendly waving mascot'} className="h-24 w-24 shrink-0 sm:h-28 sm:w-28">
+        <ellipse cx="59" cy="108" rx="35" ry="6" fill="#07111f" opacity=".1"/>
+        <path d="M27 55Q24 26 52 21Q81 16 91 44L95 85Q92 101 61 102Q29 101 25 83Z" fill="#c2a378" stroke="#8a6942" strokeWidth="2"/>
+        <circle cx="37" cy="31" r="12" fill="#c2a378" stroke="#8a6942" strokeWidth="2"/>
+        <circle cx="80" cy="29" r="12" fill="#c2a378" stroke="#8a6942" strokeWidth="2"/>
+        <circle cx="37" cy="31" r="5" fill="#f2d9b6"/><circle cx="80" cy="29" r="5" fill="#f2d9b6"/>
+        <ellipse cx="60" cy="58" rx="27" ry="25" fill="#f4dfc1"/>
+        <circle cx="50" cy="53" r="2.8" fill="#07111f"/><circle cx="70" cy="53" r="2.8" fill="#07111f"/>
+        <ellipse cx="60" cy="63" rx="5" ry="3.5" fill="#8d493d"/>
+        <path d="M55 69Q60 74 65 69" fill="none" stroke="#8d493d" strokeWidth="2" strokeLinecap="round"/>
+        <path d="M37 83Q60 94 83 83" fill="none" stroke="#8a6942" strokeWidth="2" opacity=".55"/>
+        <g className="nf-pet-wave"><path d="M82 76Q96 67 98 52L103 39" fill="none" stroke="#8a6942" strokeWidth="11" strokeLinecap="round"/><circle cx="105" cy="31" r="11" fill="#f4dfc1" stroke="#8a6942" strokeWidth="2"/><path d="M100 28q-5-6-7 0m14 0q5-6 7 0" fill="none" stroke="#8a6942" strokeWidth="2" strokeLinecap="round"/></g>
+        <path d="M35 94Q60 108 85 94" fill="none" stroke="#8a6942" strokeWidth="3" strokeLinecap="round"/>
+        <path d="M91 14l3-7m8 12 7-3" stroke="#c2a378" strokeWidth="2.5" strokeLinecap="round"/>
+      </svg>
+    </div>
     <div className="text-[11px] font-black uppercase tracking-[.3em] text-[#8a7350]">{t.sections}</div>
     <h1 className="mt-2 text-3xl font-black uppercase italic leading-none text-[#07111f] sm:text-4xl">{t.chooseTitle}</h1>
     <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">{t.chooseSub}</p>
