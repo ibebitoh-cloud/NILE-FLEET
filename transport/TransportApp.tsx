@@ -296,27 +296,69 @@ const Shell: React.FC<{ t: Strings; lang: Lang; setLang: (l: Lang) => void; user
 
 const SectionHome: React.FC<{ t: Strings; lang: Lang; userName: string }> = ({ t, lang, userName }) => (
   <div className="mx-auto max-w-5xl py-4 sm:py-10">
-    <style>{'@keyframes nf-pet-wave{0%,100%{transform:rotate(0deg)}20%{transform:rotate(22deg)}40%{transform:rotate(-12deg)}60%{transform:rotate(20deg)}80%{transform:rotate(-6deg)}}.nf-pet-wave{transform-box:fill-box;transform-origin:bottom center;animation:nf-pet-wave 1.8s ease-in-out infinite}@media(prefers-reduced-motion:reduce){.nf-pet-wave{animation:none}}'}</style>
+    <style>{'@keyframes nf-pet-wave{0%,100%{transform:rotate(0deg)}18%{transform:rotate(24deg)}34%{transform:rotate(-13deg)}52%{transform:rotate(22deg)}70%{transform:rotate(-8deg)}86%{transform:rotate(12deg)}}@keyframes nf-pet-breathe{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.025)}}@keyframes nf-pet-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}@keyframes nf-pet-head{0%,100%{transform:rotate(0deg)}35%{transform:rotate(-4deg)}70%{transform:rotate(2deg)}}@keyframes nf-pet-blink{0%,45%,49%,100%{transform:scaleY(1)}47%{transform:scaleY(.12)}}@keyframes nf-pet-shift{0%,100%{transform:rotate(0deg)}50%{transform:rotate(3deg)}}@keyframes nf-pet-leg{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(3deg)}}.nf-pet{width:clamp(150px,20vw,205px);height:auto;overflow:visible;filter:drop-shadow(0 10px 10px rgba(7,17,31,.12));animation:nf-pet-bob 3.4s ease-in-out infinite}.nf-pet-body{transform-box:fill-box;transform-origin:center 80%;animation:nf-pet-breathe 3.1s ease-in-out infinite}.nf-pet-head{transform-box:fill-box;transform-origin:50% 90%;animation:nf-pet-head 5.5s ease-in-out infinite}.nf-pet-eyes{transform-box:fill-box;transform-origin:center;animation:nf-pet-blink 5.8s ease-in-out infinite}.nf-pet-wave{transform-box:fill-box;transform-origin:16% 88%;animation:nf-pet-wave 2.1s ease-in-out infinite}.nf-pet-free-arm{transform-box:fill-box;transform-origin:82% 12%;animation:nf-pet-shift 3.8s ease-in-out infinite}.nf-pet-leg{transform-box:fill-box;transform-origin:50% 5%;animation:nf-pet-leg 2.8s ease-in-out infinite}.nf-pet-shadow{animation:nf-pet-bob 3.4s ease-in-out infinite reverse}@media(prefers-reduced-motion:reduce){.nf-pet,.nf-pet *{animation:none!important}}'}</style>
     <div className="mb-8 flex items-center justify-between gap-4 overflow-hidden rounded-[1.6rem] border border-[#d8c7a9] bg-gradient-to-r from-white via-[#fffdf8] to-[#f1e8d8] px-5 py-5 shadow-sm sm:px-7">
       <div className="min-w-0">
         <div className="text-[10px] font-black uppercase tracking-[.28em] text-[#9a7b4d]">{lang === 'ar' ? 'مرحباً بعودتك' : 'A GOOD DAY STARTS HERE'}</div>
-        <h1 className="mt-2 text-2xl font-black tracking-tight text-[#07111f] sm:text-3xl">{lang === 'ar' ? `أهلاً بعودتك، ${userName || (lang === 'ar' ? 'زميلنا' : 'there')}!` : `Welcome back, ${userName || 'there'}!`}</h1>
+        <h1 className="mt-2 text-2xl font-black tracking-tight text-[#07111f] sm:text-3xl">{lang === 'ar' ? `أهلاً بعودتك، ${userName || 'زميلنا'}!` : `Welcome back, ${userName || 'there'}!`}</h1>
         <p className="mt-1 text-sm text-slate-600">{lang === 'ar' ? 'نتمنى لك يوماً موفقاً.' : 'Great to have you with us. Let’s get moving.'}</p>
       </div>
-      <svg viewBox="0 0 120 120" role="img" aria-label={lang === 'ar' ? 'تميمة تلوّح بيدها' : 'A friendly waving mascot'} className="h-24 w-24 shrink-0 sm:h-28 sm:w-28">
-        <ellipse cx="59" cy="108" rx="35" ry="6" fill="#07111f" opacity=".1"/>
-        <path d="M27 55Q24 26 52 21Q81 16 91 44L95 85Q92 101 61 102Q29 101 25 83Z" fill="#c2a378" stroke="#8a6942" strokeWidth="2"/>
-        <circle cx="37" cy="31" r="12" fill="#c2a378" stroke="#8a6942" strokeWidth="2"/>
-        <circle cx="80" cy="29" r="12" fill="#c2a378" stroke="#8a6942" strokeWidth="2"/>
-        <circle cx="37" cy="31" r="5" fill="#f2d9b6"/><circle cx="80" cy="29" r="5" fill="#f2d9b6"/>
-        <ellipse cx="60" cy="58" rx="27" ry="25" fill="#f4dfc1"/>
-        <circle cx="50" cy="53" r="2.8" fill="#07111f"/><circle cx="70" cy="53" r="2.8" fill="#07111f"/>
-        <ellipse cx="60" cy="63" rx="5" ry="3.5" fill="#8d493d"/>
-        <path d="M55 69Q60 74 65 69" fill="none" stroke="#8d493d" strokeWidth="2" strokeLinecap="round"/>
-        <path d="M37 83Q60 94 83 83" fill="none" stroke="#8a6942" strokeWidth="2" opacity=".55"/>
-        <g className="nf-pet-wave"><path d="M82 76Q96 67 98 52L103 39" fill="none" stroke="#8a6942" strokeWidth="11" strokeLinecap="round"/><circle cx="105" cy="31" r="11" fill="#f4dfc1" stroke="#8a6942" strokeWidth="2"/><path d="M100 28q-5-6-7 0m14 0q5-6 7 0" fill="none" stroke="#8a6942" strokeWidth="2" strokeLinecap="round"/></g>
-        <path d="M35 94Q60 108 85 94" fill="none" stroke="#8a6942" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M91 14l3-7m8 12 7-3" stroke="#c2a378" strokeWidth="2.5" strokeLinecap="round"/>
+      <svg viewBox="0 0 220 250" role="img" aria-label={lang === 'ar' ? 'شخصية نيلية كاملة تلوّح وترحّب بك' : 'A full-body Nile Fleet mascot waving hello'} className="nf-pet shrink-0">
+        <defs>
+          <linearGradient id="nfPetGold" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#f0d7ad"/><stop offset=".52" stopColor="#c2a378"/><stop offset="1" stopColor="#9c7548"/></linearGradient>
+          <linearGradient id="nfPetCream" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#fff0d8"/><stop offset="1" stopColor="#e7cba5"/></linearGradient>
+          <linearGradient id="nfPetJacket" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#20364b"/><stop offset="1" stopColor="#07111f"/></linearGradient>
+        </defs>
+        <ellipse className="nf-pet-shadow" cx="110" cy="235" rx="57" ry="8" fill="#07111f" opacity=".14"/>
+        <g className="nf-pet-leg">
+          <path d="M83 190Q80 210 79 226Q78 233 87 234H108Q115 231 109 225L103 190Z" fill="url(#nfPetGold)" stroke="#8a6942" strokeWidth="2"/>
+          <path d="M76 226Q91 221 108 228L112 237Q111 242 103 242H77Q68 239 76 226Z" fill="#142536"/>
+          <path d="M81 231h25" stroke="#c2a378" strokeWidth="2" strokeLinecap="round"/>
+        </g>
+        <g className="nf-pet-leg" style={{animationDelay:'-.8s'}}>
+          <path d="M116 190H143L145 226Q150 232 143 235H119Q111 233 117 225Z" fill="url(#nfPetGold)" stroke="#8a6942" strokeWidth="2"/>
+          <path d="M116 226Q131 221 146 228L153 237Q153 242 145 242H119Q109 239 116 226Z" fill="#142536"/>
+          <path d="M120 231h27" stroke="#c2a378" strokeWidth="2" strokeLinecap="round"/>
+        </g>
+        <g className="nf-pet-body">
+          <path d="M73 112Q78 101 95 99H132Q151 103 157 119L163 184Q162 198 147 202H76Q61 198 63 183Z" fill="url(#nfPetJacket)" stroke="#07111f" strokeWidth="2"/>
+          <path d="M99 104L111 126L126 104L138 111L128 151H96L86 111Z" fill="url(#nfPetCream)" stroke="#8a6942" strokeWidth="1.5"/>
+          <path d="M111 126L116 136L121 126L118 163H112Z" fill="#c2a378"/>
+          <path d="M79 151Q110 160 149 151" fill="none" stroke="#c2a378" strokeOpacity=".55" strokeWidth="2"/>
+          <rect x="119" y="169" width="24" height="17" rx="4" fill="#c2a378"/>
+          <text x="131" y="180.5" textAnchor="middle" fontSize="7" fontWeight="900" fill="#07111f">NF</text>
+          <path d="M78 120Q61 128 59 155L62 174" fill="none" stroke="#142536" strokeWidth="15" strokeLinecap="round"/>
+          <g className="nf-pet-free-arm">
+            <path d="M148 119Q166 128 169 151L165 171" fill="none" stroke="#142536" strokeWidth="15" strokeLinecap="round"/>
+            <path d="M165 168L163 179" stroke="url(#nfPetGold)" strokeWidth="12" strokeLinecap="round"/>
+            <path d="M154 181Q155 171 163 171Q171 172 171 181L169 190Q165 196 159 190Z" fill="url(#nfPetCream)" stroke="#8a6942" strokeWidth="1.5"/>
+          </g>
+          <path d="M60 168L59 181" stroke="url(#nfPetGold)" strokeWidth="12" strokeLinecap="round"/>
+          <path d="M51 180Q52 171 60 171Q68 172 68 181L66 190Q62 196 56 190Z" fill="url(#nfPetCream)" stroke="#8a6942" strokeWidth="1.5"/>
+          <circle cx="111" cy="147" r="5" fill="#c2a378"/>
+        </g>
+        <g className="nf-pet-head">
+          <path d="M72 55Q68 26 91 17Q111 6 133 19Q154 30 151 57L147 90Q143 111 112 113Q80 111 75 91Z" fill="url(#nfPetGold)" stroke="#8a6942" strokeWidth="2.5"/>
+          <path d="M78 35Q62 14 70 4Q91 6 100 23M126 22Q145 3 159 9Q159 28 144 42" fill="url(#nfPetGold)" stroke="#8a6942" strokeWidth="2"/>
+          <path d="M78 38Q71 21 76 14Q88 17 94 29M135 29Q146 16 153 17Q151 29 140 37" fill="#f4dfc1"/>
+          <ellipse cx="112" cy="66" rx="34" ry="31" fill="url(#nfPetCream)"/>
+          <g className="nf-pet-eyes">
+            <ellipse cx="99" cy="61" rx="4" ry="6" fill="#07111f"/><ellipse cx="126" cy="61" rx="4" ry="6" fill="#07111f"/>
+            <circle cx="100" cy="59" r="1.5" fill="white"/><circle cx="127" cy="59" r="1.5" fill="white"/>
+          </g>
+          <ellipse cx="112" cy="73" rx="5.5" ry="4" fill="#8d493d"/>
+          <path d="M104 81Q112 89 120 81" fill="none" stroke="#8d493d" strokeWidth="2.2" strokeLinecap="round"/>
+          <ellipse cx="89" cy="77" rx="7" ry="3" fill="#d98f7d" opacity=".4"/><ellipse cx="135" cy="77" rx="7" ry="3" fill="#d98f7d" opacity=".4"/>
+          <path d="M87 48Q98 42 106 48M119 48Q128 42 137 48" fill="none" stroke="#8a6942" strokeWidth="2.5" strokeLinecap="round"/>
+        </g>
+        <g className="nf-pet-wave">
+          <path d="M154 119Q174 105 176 79L181 59" fill="none" stroke="#142536" strokeWidth="15" strokeLinecap="round"/>
+          <path d="M181 66L184 47" stroke="url(#nfPetGold)" strokeWidth="12" strokeLinecap="round"/>
+          <path d="M177 49Q170 37 177 29Q183 22 189 31L191 17Q194 9 201 14Q206 18 202 29L208 21Q214 16 218 23Q220 29 212 38L205 51Q196 61 185 57Z" fill="url(#nfPetCream)" stroke="#8a6942" strokeWidth="2"/>
+          <path d="M184 29L184 39M198 24L197 35M210 29L205 39" stroke="#c39d6c" strokeWidth="1.5" strokeLinecap="round"/>
+        </g>
+        <path d="M94 105Q112 115 131 105" fill="none" stroke="#8a6942" strokeOpacity=".4" strokeWidth="2"/>
+        <path d="M82 15l-5-7m72 5 5-7" stroke="#c2a378" strokeWidth="2.5" strokeLinecap="round"/>
       </svg>
     </div>
     <div className="text-[11px] font-black uppercase tracking-[.3em] text-[#8a7350]">{t.sections}</div>
