@@ -760,7 +760,7 @@ const App: React.FC = () => {
         <ThemeContext value={themeContextValue}>
           <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#05070a]"><DaliLoader /></div>}>
             {showCompanyHome ? (
-              <CompanyHome onGenset={() => setShowCompanyHome(false)} />
+              <CompanyHome onGenset={() => setShowCompanyHome(false)} onTransport={() => { window.location.hash = '#transport'; }} />
             ) : (
               <Login onLogin={handleLogin} onBackToHome={() => setShowCompanyHome(true)} welcomeName={welcomeUserName} />
             )}
@@ -775,7 +775,7 @@ const App: React.FC = () => {
       <LanguageContext value={languageContextValue}>
         <ThemeContext value={themeContextValue}>
           <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#05070a]"><DaliLoader /></div>}>
-            <CompanyHome onGenset={returnToApp} />
+            <CompanyHome onGenset={returnToApp} onTransport={() => { window.location.hash = '#transport'; }} />
             <button
               onClick={returnToApp}
               className="fixed bottom-5 start-5 z-[200] flex items-center gap-2 rounded-full border border-[#C2A378]/60 bg-[#05070a]/90 px-5 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-[#e3c99f] shadow-2xl backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-[#C2A378] hover:text-[#05070a]"
