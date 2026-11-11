@@ -1239,6 +1239,22 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         </div>
         {menuOpen && (
           <div id="nf4-mobile-menu" className={`nf4-mobile-menu border-t px-4 pb-5 pt-3 md:hidden ${K.line}`}>
+            <div className="mb-4 grid grid-cols-2 gap-2" aria-label={ar ? 'دخول الأقسام' : 'Department sign in'}>
+              <button type="button" onClick={() => { setMenuOpen(false); onGenset(); }} className={`group flex min-h-[76px] items-center gap-3 rounded-2xl border px-3 py-3 text-left transition hover:border-[#c2a378] hover:bg-[#c2a378]/10 ${K.line}`}>
+                <span aria-hidden="true" className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border text-xl ${K.line} ${gold}`}>⚙</span>
+                <span className="min-w-0">
+                  <span className={`block text-[9px] font-black uppercase tracking-[.12em] ${gold}`}>{ar ? 'قسم الجينسيت' : 'GENSET DEPARTMENT'}</span>
+                  <span className={`mt-1 block text-[8px] font-bold ${K.faint}`}>{ar ? 'تسجيل دخول النظام' : 'SYSTEM SIGN IN'} ↗</span>
+                </span>
+              </button>
+              <button type="button" onClick={() => { setMenuOpen(false); onGenset(); }} className={`group flex min-h-[76px] items-center gap-3 rounded-2xl border px-3 py-3 text-left transition hover:border-[#c2a378] hover:bg-[#c2a378]/10 ${K.line}`}>
+                <span aria-hidden="true" className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border text-xl ${K.line} ${gold}`}>🚛</span>
+                <span className="min-w-0">
+                  <span className={`block text-[9px] font-black uppercase tracking-[.12em] ${gold}`}>{ar ? 'قسم النقل' : 'TRANSPORT DEPARTMENT'}</span>
+                  <span className={`mt-1 block text-[8px] font-bold ${K.faint}`}>{ar ? 'تسجيل دخول النظام' : 'SYSTEM SIGN IN'} ↗</span>
+                </span>
+              </button>
+            </div>
             <nav aria-label={ar ? 'أقسام الصفحة' : 'Page sections'} className="grid">
               {nav.map(([label, href]) => <a key={href} href={href} onClick={() => setMenuOpen(false)} className={`border-b py-3.5 text-[11px] font-black tracking-[.22em] transition hover:text-[#c2a378] ${K.line}`}>{label}</a>)}
             </nav>
