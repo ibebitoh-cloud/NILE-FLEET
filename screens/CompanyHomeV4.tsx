@@ -6,7 +6,7 @@ import TubesCursor from '@/components/ui/tubes-cursor';
 import DrawText from '@/components/ui/draw-text';
 import DaliPublicChat from '@/components/DaliPublicChat';
 
-interface Props { onGenset: () => void; }
+interface Props { onGenset: () => void; onTransport: () => void; }
 
 /* ------------------------------------------------------------------ */
 /*  Scene data (deterministic, so the port skyline never "jumps")      */
@@ -445,7 +445,7 @@ const WHATSAPP_NUMBER = '201000992858';
 type QuoteForm = { name: string; company: string; phone: string; service: string; origin: string; destination: string; containers: string; date: string; notes: string };
 const EMPTY_QUOTE: QuoteForm = { name: '', company: '', phone: '', service: '', origin: '', destination: '', containers: '', date: '', notes: '' };
 
-const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
+const CompanyHomeV4: React.FC<Props> = ({ onGenset, onTransport }) => {
   const { lang, setLang } = useContext(LanguageContext);
   const { isDark, setTheme } = useContext(ThemeContext);
   const ar = lang === 'ar';
@@ -1240,19 +1240,19 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
         {menuOpen && (
           <div id="nf4-mobile-menu" className={`nf4-mobile-menu border-t px-4 pb-5 pt-3 md:hidden ${K.line}`}>
             <div className="mb-4 grid grid-cols-2 gap-2" aria-label={ar ? 'دخول الأقسام' : 'Department sign in'}>
-              <button type="button" onClick={() => { setMenuOpen(false); onGenset(); }} className={`group flex min-h-[76px] items-center gap-3 rounded-2xl border px-3 py-3 text-left transition hover:border-[#c2a378] hover:bg-[#c2a378]/10 ${K.line}`}>
-                <span aria-hidden="true" className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border text-xl ${K.line} ${gold}`}>⚙</span>
+              <button type="button" onClick={() => { setMenuOpen(false); onGenset(); }} className={`group flex min-h-[64px] items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 text-left transition hover:border-[#c2a378] hover:bg-[#c2a378]/10 ${K.line}`}>
                 <span className="min-w-0">
                   <span className={`block text-[9px] font-black uppercase tracking-[.12em] ${gold}`}>{ar ? 'قسم الجينسيت' : 'GENSET DEPARTMENT'}</span>
                   <span className={`mt-1 block text-[8px] font-bold ${K.faint}`}>{ar ? 'تسجيل دخول النظام' : 'SYSTEM SIGN IN'} ↗</span>
                 </span>
+                <span aria-hidden="true" className={`ms-auto grid h-7 w-7 shrink-0 place-items-center rounded-lg border text-sm ${K.line} ${gold}`}>⚙</span>
               </button>
-              <button type="button" onClick={() => { setMenuOpen(false); onGenset(); }} className={`group flex min-h-[76px] items-center gap-3 rounded-2xl border px-3 py-3 text-left transition hover:border-[#c2a378] hover:bg-[#c2a378]/10 ${K.line}`}>
-                <span aria-hidden="true" className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border text-xl ${K.line} ${gold}`}>🚛</span>
+              <button type="button" onClick={() => { setMenuOpen(false); onTransport(); }} className={`group flex min-h-[64px] items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 text-left transition hover:border-[#c2a378] hover:bg-[#c2a378]/10 ${K.line}`}>
                 <span className="min-w-0">
                   <span className={`block text-[9px] font-black uppercase tracking-[.12em] ${gold}`}>{ar ? 'قسم النقل' : 'TRANSPORT DEPARTMENT'}</span>
                   <span className={`mt-1 block text-[8px] font-bold ${K.faint}`}>{ar ? 'تسجيل دخول النظام' : 'SYSTEM SIGN IN'} ↗</span>
                 </span>
+                <span aria-hidden="true" className={`ms-auto grid h-7 w-7 shrink-0 place-items-center rounded-lg border text-sm ${K.line} ${gold}`}>🚛</span>
               </button>
             </div>
             <nav aria-label={ar ? 'أقسام الصفحة' : 'Page sections'} className="grid">
@@ -1489,7 +1489,7 @@ const CompanyHomeV4: React.FC<Props> = ({ onGenset }) => {
                   </div>
                 </button>
 
-                <button onClick={() => { window.location.hash = 'transport'; }} className={`group relative min-h-[380px] overflow-hidden rounded-[2rem] border p-8 text-left backdrop-blur-md transition duration-500 hover:-translate-y-2 hover:border-[#c2a378] sm:p-10 ${K.card}`}>
+                <button onClick={onTransport} className={`group relative min-h-[380px] overflow-hidden rounded-[2rem] border p-8 text-left backdrop-blur-md transition duration-500 hover:-translate-y-2 hover:border-[#c2a378] sm:p-10 ${K.card}`}>
                   <div className="relative flex h-full min-h-[316px] flex-col justify-between">
                     <div className="flex justify-between"><span className={`rounded-full px-3 py-1 text-[7px] font-black tracking-[.2em] ${gensetTheme.badge}`}>{tx.liveSystem}</span><span className={`text-[8px] font-black tracking-[.25em] ${K.faint}`}>02</span></div>
                     <div>
