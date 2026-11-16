@@ -57,7 +57,10 @@ export interface FuelTx {
 export interface FuelReview {
   odometer: 'yes' | 'no' | 'unknown';
   liters: 'yes' | 'no' | 'unknown';
+  /** Legacy maintenance finding, retained for previously saved reviews. Operations users no longer select this. */
   cause: 'leak' | 'idling' | 'engine' | 'injectors' | 'load' | 'driving' | 'fullTank' | 'other' | '';
+  /** Operational context recorded by Transport Operations; Maintenance owns technical diagnosis. */
+  operationsCondition?: 'waiting' | 'route' | 'load' | 'driverReport' | 'none' | 'unknown';
   note: string;
   updatedAt: string;
 }
