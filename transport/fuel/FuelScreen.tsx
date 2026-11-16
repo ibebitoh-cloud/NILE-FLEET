@@ -42,9 +42,9 @@ const Card: React.FC<{ className?: string; children: React.ReactNode }> = ({ cla
 type StatusFilter = '' | SegmentStatus | 'badKm' | 'split' | 'partial' | 'reversed';
 interface Filters { q: string; from: string; to: string; plate: string; driver: string; station: string; type: string; status: StatusFilter }
 const NO_FILTERS: Filters = { q: '', from: '', to: '', plate: '', driver: '', station: '', type: '', status: '' };
-type View = 'home' | 'summary' | 'reports' | 'truck' | 'alerts' | 'trucks' | 'drivers' | 'fills' | 'tx' | 'weeks' | 'months' | 'stations' | 'settings';
+type View = 'home' | 'summary' | 'performance' | 'reports' | 'truck' | 'alerts' | 'trucks' | 'drivers' | 'fills' | 'tx' | 'weeks' | 'months' | 'stations' | 'settings';
 
-const VIEW_ICON: Record<string, string> = { home: '⌂', summary: '📊', reports: '📈', truck: '🚛', alerts: '🔔', trucks: '🚛', drivers: '🧑‍✈️', fills: '⛽', tx: '🧾', weeks: '🗓', months: '📅', stations: '📍', settings: '⚙' };
+const VIEW_ICON: Record<string, string> = { home: '⌂', summary: '📊', performance: '⛽', reports: '📈', truck: '🚛', alerts: '🔔', trucks: '🚛', drivers: '🧑‍✈️', fills: '⛽', tx: '🧾', weeks: '🗓', months: '📅', stations: '📍', settings: '⚙' };
 
 type WeekRow = Summary & { prevLiters: number | null; prevKmL: number | null };
 type VehiclePeriodRow = Summary & { period: string; plate: string; prevKmL: number | null };
@@ -388,6 +388,14 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const only = (d: Data, ok: (x: { at: string; plate: string }) => boolean): Data => ({ segs: d.segs.filter(ok), txs: d.txs.filter(ok), fills: d.fills.filter(ok) });
   // Fleet period reports are deliberately independent of page filters and include every known vehicle.
   const knownFuelPlates = useMemo(() => uniqNos(options.plates, settings.vehicles), [options.plates, settings.vehicles]);
+  // Management view: latest completed KM/L is the current figure; five earlier completed readings remain visible as history.
+  const performanceRows = useMemo(() => knownFuelPlates.map(id => {
+    const history = result.segments
+      .filter(s => plateNo(s.plate) === id && s.status !== 'pending' && s.distance > 0 && Number.isFinite(s.kmL) && s.kmL > 0)
+      .sort((a, b) => b.at.localeCompare(a.at));
+    const plate = activeTxs.find(x => plateNo(x.plate) === id)?.plate || id;
+    return { id, plate, current: history[0], previous: history.slice(1, 6) };
+  }).sort((a, b) => a.id.localeCompare(b.id)), [knownFuelPlates, result.segments, activeTxs]);
   const vehiclePeriodRows = useMemo(() => {
     // Plate IDs in settings are digits-only, while imported transactions retain
     // their original Arabic/Latin formatted plate. Always join by normalized ID.
@@ -801,7 +809,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   if (txs === null) return <DaliLoader fullScreen label={<span className="text-xs font-bold text-slate-500">{t.title}</span>} />;
   const hasData = txs.length > 0;
   const views: [View, string, number | null][] = [
-    ['home', t.home, null], ['summary', t.summary, truckCards.length], ['reports', t.reports, null], ['alerts', `🔔 ${t.alerts}`, openAlerts.length], ['trucks', t.trucks, trucks.length], ['drivers', t.drivers, drivers.length], ['fills', t.fills, filtered.segs.length],
+    ['home', t.home, null], ['summary', t.summary, truckCards.length], ['performance', lang === 'ar' ? 'أداء KM/L' : 'KM/L Performance', performanceRows.length], ['reports', t.reports, null], ['alerts', `🔔 ${t.alerts}`, openAlerts.length], ['trucks', t.trucks, trucks.length], ['drivers', t.drivers, drivers.length], ['fills', t.fills, filtered.segs.length],
     ['tx', t.transactions, filtered.views.length], ['weeks', t.weeks, weeks.length], ['months', t.months, months.length], ['stations', t.stations, stations.length], ['settings', t.settings, null],
   ];
   const statusOptions: [StatusFilter, string][] = [
@@ -834,7 +842,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
               <select className={inputCls} value={f.status} onChange={e => set({ status: e.target.value as StatusFilter })}><option value="">{t.anyStatus}</option>{statusOptions.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
     </>
   );
-  const moreViews: View[] = ['trucks', 'drivers', 'fills', 'tx', 'weeks', 'months', 'stations', 'settings'];
+  const moreViews: View[] = ['performance', 'trucks', 'drivers', 'fills', 'tx', 'weeks', 'months', 'stations', 'settings'];
   const tabs: [View | 'more', string, string, number | null][] = [
     ['home', '⌂', t.home, null], ['alerts', '🔔', t.alerts, urgent || null], ['summary', '📊', t.summary, null], ['reports', '📈', t.reports, null], ['more', '☰', t.more, null],
   ];
@@ -1065,6 +1073,48 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
               ) : shownAlerts.slice(0, 300).map(renderAlert)}
             </div>
           )}
+          {view === 'performance' && <section className="overflow-hidden rounded-2xl border border-[#d9e1e8] bg-[#f4f7fa] shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2 bg-[#071a2b] px-3.5 py-3 text-white sm:px-5">
+              <div className="min-w-0">
+                <div className="text-[10px] font-black uppercase tracking-[.22em] text-[#d8bd94]">NILEFLEET.APP</div>
+                <h2 className="mt-0.5 text-base font-black uppercase tracking-wide sm:text-lg">FLEET KM/L PERFORMANCE</h2>
+              </div>
+              <div className="rounded-full border border-white/20 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-white/80">{performanceRows.length} VEHICLES</div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 p-2 sm:grid-cols-4 sm:gap-2.5 sm:p-3">
+              {performanceRows.map(row => {
+                const current = row.current;
+                const prior = row.previous[0];
+                const delta = current && prior ? current.kmL - prior.kmL : null;
+                return <article key={row.id} className="min-w-0 overflow-hidden rounded-xl border border-[#e0e6ec] bg-white shadow-[0_1px_3px_rgba(7,26,43,.05)]">
+                  <div className="flex items-center justify-between gap-1 border-b border-[#edf1f4] bg-[#f8fafc] px-2.5 py-2">
+                    <b className="truncate text-[11px] font-black tracking-wide text-[#10263b] sm:text-xs">CAR {row.plate}</b>
+                    {delta != null && <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-black ${delta >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>{delta >= 0 ? '+' : ''}{n2(delta)}</span>}
+                  </div>
+                  <div className="px-2.5 pb-2 pt-2">
+                    <div className="text-[8px] font-black uppercase tracking-[.14em] text-slate-400">CURRENT KM/L</div>
+                    <div className={`mt-0.5 text-[26px] font-black leading-none tabular-nums tracking-tight sm:text-[30px] ${current ? 'text-[#087f72]' : 'text-slate-300'}`}>{current ? n2(current.kmL) : '—'}</div>
+                    <div className="mt-1 truncate text-[8px] font-semibold text-slate-400">{current ? day(current.at) : 'NO COMPLETED READING'}</div>
+                    <div className="mt-2 border-t border-dashed border-[#e6ebef] pt-1.5">
+                      <div className="mb-1 text-[8px] font-black uppercase tracking-[.12em] text-[#8a7350]">PREVIOUS 5 READINGS</div>
+                      {Array.from({ length: 5 }, (_, i) => {
+                        const item = row.previous[i];
+                        return <div key={item?.key || i} className="flex items-center justify-between gap-1 py-[2px] text-[9px] leading-3 tabular-nums">
+                          <span className="text-slate-400">{item ? day(item.at) : '—'}</span>
+                          <b className="text-[#24384b]">{item ? n2(item.kmL) : '—'}</b>
+                        </div>;
+                      })}
+                    </div>
+                  </div>
+                </article>;
+              })}
+            </div>
+            <div className="flex items-center justify-between gap-2 border-t border-[#d9e1e8] bg-white px-3.5 py-2 sm:px-5">
+              <span className="text-[9px] font-black uppercase tracking-[.18em] text-[#17334b]">NILEFLEET.APP</span>
+              <span className="text-[9px] font-black uppercase tracking-[.16em] text-[#9a7b4d]">POWERED BY BEBITO</span>
+            </div>
+          </section>}
+
           {view === 'summary' && <>
             <p className="text-[11px] font-bold leading-5 text-slate-500">ⓘ {t.summarySub(thisWeek ? `${thisWeek} → ${weekEnd(thisWeek)}` : '—', lastAt ? when(lastAt) : '—')}</p>
             {!truckCards.length && <div className="rounded-xl border border-dashed border-[#d9d0c0] p-8 text-center text-sm font-bold text-slate-500">{t.noMatch}</div>}
