@@ -1522,67 +1522,64 @@ export default FuelScreen;
 
 /* ------------------------------ small parts ------------------------------ */
 
-/** Admin follow-up for an abnormal consumption result. */
+/** Operations follow-up for an abnormal consumption result. Technical diagnosis is left to Maintenance. */
 const SegmentReviewPanel: React.FC<{ lang: Lang; review?: FuelReview; onSave: (r: FuelReview) => Promise<boolean> }> = ({ lang, review, onSave }) => {
   const ar = lang === 'ar';
   const [odometer, setOdometer] = useState<FuelReview['odometer']>(review?.odometer || 'unknown');
   const [liters, setLiters] = useState<FuelReview['liters']>(review?.liters || 'unknown');
-  const [cause, setCause] = useState<FuelReview['cause']>(review?.cause || '');
+  const [condition, setCondition] = useState<FuelReview['operationsCondition']>(review?.operationsCondition || 'unknown');
   const [note, setNote] = useState(review?.note || '');
   const [saving, setSaving] = useState(false);
   const bothCorrect = odometer === 'yes' && liters === 'yes';
-  const causeLabels: Record<Exclude<FuelReview['cause'], ''>, string> = {
-    leak: ar ? 'تسريب وقود' : 'Fuel leak',
-    idling: ar ? 'تشغيل طويل أثناء التوقف / PTO' : 'Excessive idling / PTO use',
-    engine: ar ? 'مشكلة ميكانيكية بالمحرك' : 'Engine mechanical issue',
-    injectors: ar ? 'الرشاشات أو طلمبة الحقن' : 'Injectors / fuel pump',
-    load: ar ? 'حمولة أو طريق أو ظروف تشغيل غير معتادة' : 'Unusual load / route / operating conditions',
-    driving: ar ? 'أسلوب القيادة' : 'Driving behaviour',
-    fullTank: ar ? 'لم يتم ملء الخزان بالكامل في إحدى المرتين' : 'Tank was not filled to full on one of the two fills',
-    other: ar ? 'سبب آخر / يحتاج فحص' : 'Other / needs investigation',
+  const needsCorrection = odometer === 'no' || liters === 'no';
+  const conditionLabels: Record<NonNullable<FuelReview['operationsCondition']>, string> = {
+    waiting: ar ? 'انتظار طويل / تشغيل أثناء التوقف' : 'Long waiting time / engine running while stopped',
+    route: ar ? 'طريق أو زحام غير معتاد' : 'Unusual route or traffic',
+    load: ar ? 'حمولة ثقيلة' : 'Heavy load',
+    driverReport: ar ? 'السائق أبلغ عن استهلاك غير معتاد' : 'Driver reported unusual fuel consumption',
+    none: ar ? 'لا توجد ظروف تشغيل غير معتادة حسب المعلومات المتاحة' : 'No unusual operating conditions reported',
+    unknown: ar ? 'لا أعلم / لا توجد معلومات كافية' : 'I don’t know / not enough information',
   };
-  const diagnosis = odometer === 'no'
-    ? (ar ? 'السبب المرجح: قراءة عداد الكيلومترات غير صحيحة. راجع صورة العداد وسجل القراءة الصحيحة قبل إعادة الحساب.' : 'Likely data issue: the odometer reading is incorrect. Check the dashboard photo and correct the reading before recalculating.')
-    : liters === 'no'
-      ? (ar ? 'السبب المرجح: كمية اللترات غير صحيحة. راجع إيصال المحطة أو تقرير كارت الوقود.' : 'Likely data issue: the litres figure is incorrect. Verify it against the station receipt or fuel-card report.')
-      : bothCorrect
-        ? (ar ? 'تم تأكيد صحة العداد واللترات. إذن انخفاض KM/L حقيقي غالباً، وليس خطأ إدخال. حدد السبب بعد فحص التسريب، التشغيل أثناء التوقف، المحرك والرشاشات، الحمولة والطريق، وطريقة القيادة.' : 'Both figures are confirmed. The low KM/L is therefore likely real consumption, not a data-entry error. Select the finding after checking for leaks, idling/PTO use, engine and injector condition, load/route, and driving behaviour.')
-        : (ar ? 'راجع قراءة العداد واللترات من المصدر الأصلي أولاً. بعد تأكيد الاثنين سيعرض النظام مسار الفحص الميكانيكي والتشغيلي.' : 'Verify both figures against the original source first. Once both are confirmed, the system can narrow the investigation to mechanical or operating causes.');
+  const status = needsCorrection
+    ? (ar ? 'مطلوب مراجعة بيانات الإيصال أو العداد وتصحيحها بواسطة المسؤول المختص.' : 'Data check required: the odometer or litres may need correction by the responsible team.')
+    : bothCorrect
+      ? (ar ? 'تم تأكيد الأرقام. أرسل الحالة إلى الصيانة لتحديد السبب الفني. لا تحتاج إلى تشخيص العطل.' : 'Figures confirmed. Refer this case to Maintenance for technical diagnosis. You do not need to identify the fault.')
+      : (ar ? 'لم يتم تأكيد الأرقام بعد. راجع قراءة العداد وإيصال الوقود أو تقرير الكارت.' : 'Figures are not confirmed yet. Check the odometer and the fuel receipt or card report.');
   return (
     <section className="mt-4 rounded-2xl border border-[#c2a378]/60 bg-[#fbf8f2] p-4">
-      <div className="text-[11px] font-black uppercase tracking-wider text-[#8a7350]">🔎 {ar ? 'مراجعة سبب الاستهلاك' : 'INVESTIGATE LOW KM/L'}</div>
-      <p className="mt-1 text-xs leading-5 text-slate-600">{ar ? 'أكد الأرقام من التقرير الأصلي قبل الحكم على حالة السيارة.' : 'Confirm the source figures before deciding whether the vehicle has a real fuel-consumption problem.'}</p>
+      <div className="text-[11px] font-black uppercase tracking-wider text-[#8a7350]">🔎 {ar ? 'مراجعة تشغيلية لاستهلاك الوقود' : 'OPERATIONS FUEL REVIEW'}</div>
+      <p className="mt-1 text-xs leading-5 text-slate-600">{ar ? 'راجع البيانات والظروف التشغيلية المتاحة لك فقط. التشخيص الفني مسؤولية الصيانة.' : 'Record only the figures and operating information available to you. Technical diagnosis belongs to Maintenance.'}</p>
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label className="text-xs font-bold text-[#07111f]">{ar ? 'قراءة عداد الكيلومترات صحيحة؟' : 'Is the odometer reading correct?'}
+        <label className="text-xs font-bold text-[#07111f]">{ar ? 'هل قراءة العداد صحيحة؟' : 'Is the odometer reading correct?'}
           <select className={`${inputCls} mt-1 w-full`} value={odometer} onChange={e => setOdometer(e.target.value as FuelReview['odometer'])}>
-            <option value="unknown">{ar ? 'لم يتم التأكد' : 'Not checked yet'}</option><option value="yes">{ar ? 'نعم، صحيحة' : 'Yes, correct'}</option><option value="no">{ar ? 'لا، غير صحيحة' : 'No, incorrect'}</option>
+            <option value="unknown">{ar ? 'لم أتحقق بعد' : 'Not verified'}</option><option value="yes">{ar ? 'نعم' : 'Yes'}</option><option value="no">{ar ? 'لا' : 'No'}</option>
           </select>
         </label>
-        <label className="text-xs font-bold text-[#07111f]">{ar ? 'كمية اللترات صحيحة؟' : 'Are the litres correct?'}
+        <label className="text-xs font-bold text-[#07111f]">{ar ? 'هل كمية اللترات صحيحة؟' : 'Are the litres correct?'}
           <select className={`${inputCls} mt-1 w-full`} value={liters} onChange={e => setLiters(e.target.value as FuelReview['liters'])}>
-            <option value="unknown">{ar ? 'لم يتم التأكد' : 'Not checked yet'}</option><option value="yes">{ar ? 'نعم، صحيحة' : 'Yes, correct'}</option><option value="no">{ar ? 'لا، غير صحيحة' : 'No, incorrect'}</option>
+            <option value="unknown">{ar ? 'لم أتحقق بعد' : 'Not verified'}</option><option value="yes">{ar ? 'نعم' : 'Yes'}</option><option value="no">{ar ? 'لا' : 'No'}</option>
           </select>
         </label>
       </div>
-      <div className="mt-3 rounded-xl border border-slate-200 bg-white p-3 text-xs font-semibold leading-5 text-slate-700">{diagnosis}</div>
-      {bothCorrect && (
-        <label className="mt-3 block text-xs font-bold text-[#07111f]">{ar ? 'نتيجة الفحص / السبب المكتشف' : 'Inspection finding / identified cause'}
-          <select className={`${inputCls} mt-1 w-full`} value={cause} onChange={e => setCause(e.target.value as FuelReview['cause'])}>
-            <option value="">{ar ? 'اختر السبب بعد الفحص' : 'Select after inspection'}</option>
-            {Object.entries(causeLabels).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
-          </select>
-        </label>
-      )}
-      <label className="mt-3 block text-xs font-bold text-[#07111f]">{ar ? 'ملاحظات الفحص' : 'Inspection notes'}
-        <textarea className={`${inputCls} mt-1 w-full min-h-16`} value={note} onChange={e => setNote(e.target.value)} placeholder={ar ? 'اكتب نتيجة مراجعة الإيصال أو فحص السيارة...' : 'Record receipt checks or workshop findings...'} />
+      <label className="mt-3 block text-xs font-bold text-[#07111f]">{ar ? 'ماذا حدث أثناء الرحلة؟ (معلومات تشغيلية فقط)' : 'What happened during the trip? (operational information only)'}
+        <select className={`${inputCls} mt-1 w-full`} value={condition || 'unknown'} onChange={e => setCondition(e.target.value as FuelReview['operationsCondition'])}>
+          {Object.entries(conditionLabels).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
+        </select>
+      </label>
+      <div className={`mt-3 rounded-xl border p-3 text-xs font-semibold leading-5 ${bothCorrect ? 'border-amber-300 bg-amber-50 text-amber-900' : 'border-slate-200 bg-white text-slate-700'}`}>
+        <div className="font-black">{bothCorrect ? (ar ? 'إحالة إلى الصيانة' : 'MAINTENANCE HANDOFF') : needsCorrection ? (ar ? 'مراجعة البيانات' : 'DATA REVIEW') : (ar ? 'بانتظار التأكيد' : 'AWAITING VERIFICATION')}</div>
+        <p className="mt-1">{status}</p>
+      </div>
+      <label className="mt-3 block text-xs font-bold text-[#07111f]">{ar ? 'ملاحظات العمليات (اختياري)' : 'Operations notes (optional)'}
+        <textarea className={`${inputCls} mt-1 w-full min-h-16`} value={note} onChange={e => setNote(e.target.value)} placeholder={ar ? 'اكتب أي معلومة متاحة عن الرحلة أو مراجعة الإيصال...' : 'Add any trip details or receipt-check information you have...'} />
       </label>
       <div className="mt-3 flex items-center justify-between gap-2">
         {review?.updatedAt && <span className="text-[10px] text-slate-500">{ar ? 'آخر تحديث' : 'Last saved'} · {review.updatedAt.slice(0,16).replace('T',' ')}</span>}
-        <button className={btnGold} disabled={saving || (bothCorrect && !cause)} onClick={async () => {
+        <button className={btnGold} disabled={saving} onClick={async () => {
           setSaving(true);
-          await onSave({ odometer, liters, cause: bothCorrect ? cause : '', note, updatedAt: new Date().toISOString() });
+          await onSave({ odometer, liters, cause: '', operationsCondition: condition || 'unknown', note, updatedAt: new Date().toISOString() });
           setSaving(false);
-        }}>{saving ? '…' : ar ? 'حفظ نتيجة الفحص' : 'Save inspection'}</button>
+        }}>{saving ? '…' : ar ? 'حفظ المراجعة التشغيلية' : 'Save Operations Review'}</button>
       </div>
     </section>
   );
