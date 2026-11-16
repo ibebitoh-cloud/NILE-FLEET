@@ -54,6 +54,14 @@ export interface FuelTx {
   edited?: { at: string; orig: Partial<FuelTx> };
 }
 
+export interface FuelReview {
+  odometer: 'yes' | 'no' | 'unknown';
+  liters: 'yes' | 'no' | 'unknown';
+  cause: 'leak' | 'idling' | 'engine' | 'injectors' | 'load' | 'driving' | 'fullTank' | 'other' | '';
+  note: string;
+  updatedAt: string;
+}
+
 export interface FuelSettings {
   /** EGP per liter. 0 = take it from the data (amount / liters). */
   price: number;
@@ -77,6 +85,8 @@ export interface FuelSettings {
   idleDays: number;
   /** Alert ids an admin marked as checked. */
   checkedAlerts: string[];
+  /** Admin verification of unusual fuel-consumption segments. */
+  reviews?: Record<string, FuelReview>;
   /** Optional for compatibility with settings saved before truck details existed. */
   vehicles?: Record<string, VehicleInfo>;
   /** Vehicles removed from the active fleet; their original card transactions remain archived. */
