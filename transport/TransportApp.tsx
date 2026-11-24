@@ -597,7 +597,12 @@ const RatesScreen: React.FC<RatesProps> = ({ t, rates, setRates, isAdmin, filter
       // importing the same sheet twice does not create duplicates.
       const sig = (r: RateDraft | Rate) => [r.customer, r.load_port, r.destination, r.transit_port, ...PRICE_KEYS.map(k => Number(r[k]) || 0)].join('|');
       const existing = new Set(rates.map(sig));
-      const rows = (await parseRateWorkbook(file, f.customer)).filter(r => !existing.has(sig(r)));
+      const parsed = await parseRateWorkbook(file, f.customer);
+      if (parsed.length && parsed.every(r => PRICE_KEYS.every(k => Number(r[k]) <= 0))) {
+        const proceed = window.confirm('Every imported route has zero prices. Import them as unpriced routes?');
+        if (!proceed) { setBusy(''); return; }
+      }
+      const rows = parsed.filter(r => !existing.has(sig(r)));
       if (!rows.length) { setToast(t.importNone); setBusy(''); return; }
       if (!window.confirm(t.importFound(rows.length))) { setBusy(''); return; }
       const added = await api.insertRates(rows, done => setBusy(`import ${done}/${rows.length}`));
@@ -800,6 +805,12 @@ const AdjustDialog: React.FC<{ t: Strings; rows: Rate[]; onClose: () => void; on
     setBusy(true); setErr('');
     try {
       const changed = rows.map(r => { const c = { ...r }; keys.forEach(k => { c[k] = apply(r[k]); }); return c; });
+      const zeroedValues = rows.reduce((count, row, index) =>
+        count + keys.filter(k => row[k] > 0 && changed[index][k] === 0).length, 0);
+      if (zeroedValues > 0 && !window.confirm(`This adjustment will set ${zeroedValues.toLocaleString()} existing price values to zero. Continue?`)) {
+        setBusy(false);
+        return;
+      }
       onDone(await api.updateRates(changed));
     } catch (e: any) { setErr(e.message); setBusy(false); }
   };
