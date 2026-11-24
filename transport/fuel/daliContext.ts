@@ -81,7 +81,7 @@ export function buildFuelContext(d: FuelData, user: TransportUser, question: str
 
   // Detail for the trucks/drivers the question names.
   const focusSegs = d.result.segments.filter(s => plates.includes(s.plate) || drivers.includes(s.driver)).sort((a, b) => b.at.localeCompare(a.at)).slice(0, 25);
-  const focusAlerts = open.filter(a => plates.includes(a.plate) || drivers.includes(a.driver)).slice(0, 20);
+  const focusAlerts = d.alerts.filter(a => plates.includes(a.plate) || drivers.includes(a.driver)).sort((a, b) => b.at.localeCompare(a.at)).slice(0, 20);
   const focusHealth = d.health.filter(h => plates.includes(h.plate) || drivers.includes(h.driver));
   const latestFocusFills = plates.map(p => {
     const latest = d.result.segments.filter(s => s.plate === p).sort((a, b) => b.at.localeCompare(a.at))[0];
@@ -113,7 +113,7 @@ export function buildFuelContext(d: FuelData, user: TransportUser, question: str
     focusHealth.length ? `FOCUSED TRUCK HEALTH (rolling window of at least 1,500 km, separate from one fill):\n${focusHealth.map(healthLine).join('\n')}` : '',
     latestFocusFills.length ? `LATEST INDIVIDUAL FILL FOR ASKED TRUCKS (newest segment; not the rolling health score):\n${latestFocusFills.join('\n')}` : '',
     focusSegs.length ? `THEIR LATEST FULL-TO-FULL FILLS (newest first):\n${focusSegs.map(s => `${s.plate} | ${segLine(s)}`).join('\n')}` : '',
-    focusAlerts.length ? `THEIR OPEN ALERTS:\n${focusAlerts.map(alertLine).join('\n')}` : '',
+    focusAlerts.length ? `THEIR ALERTS (includes previously checked alerts):\n${focusAlerts.map(a => `${isChecked(a, checked) ? '[CHECKED]' : '[OPEN]'} ${alertLine(a)}`).join('\n')}` : '',
   ];
   return parts.filter(Boolean).join('\n\n');
 }
