@@ -7,18 +7,19 @@ CREATE INDEX IF NOT EXISTS idx_transport_settings_updated_by
   ON public.transport_settings (updated_by);
 
 -- The private recovery snapshot is production-only; add a primary key when it exists.
-DO $$
+DO $
 BEGIN
-  IF to_regclass('private.transport_rates_backup_20261110') IS NOT NULL
-     AND NOT EXISTS (
-       SELECT 1 FROM pg_constraint
-       WHERE conname = 'transport_rates_backup_20261110_pkey'
-         AND conrelid = 'private.transport_rates_backup_20261110'::regclass
-     ) THEN
-    ALTER TABLE private.transport_rates_backup_20261110
-      ADD CONSTRAINT transport_rates_backup_20261110_pkey PRIMARY KEY (id);
+  IF to_regclass('private.transport_rates_backup_20261110') IS NOT NULL THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_constraint
+      WHERE conname = 'transport_rates_backup_20261110_pkey'
+        AND conrelid = to_regclass('private.transport_rates_backup_20261110')
+    ) THEN
+      ALTER TABLE private.transport_rates_backup_20261110
+        ADD CONSTRAINT transport_rates_backup_20261110_pkey PRIMARY KEY (id);
+    END IF;
   END IF;
-END $$;
+END $;
 
 -- Split broad write policies into INSERT/UPDATE/DELETE policies. This preserves
 -- the same admin/manager write permissions while leaving SELECT to the existing
