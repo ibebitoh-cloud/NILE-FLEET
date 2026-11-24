@@ -26,7 +26,7 @@ txs.push(
   tx(plate4742, '2026-11-17T20:03', 357.32, 404789.8, 'رضا عبدالباسط'),
   tx(plate4742, '2026-11-23T15:59', 91.71, 404928.8, 'رضا عبدالباسط'),
 );
-const d = makeFuelData(txs, DEFAULT_SETTINGS);
+const d = makeFuelData(txs, { ...DEFAULT_SETTINGS, truckTargets: { 'ر أ ق 4742': 2.3 } });
 const user = { id: 'u', email: 'x@y', name: 'Tester', role: 'FUEL' };
 
 assert.deepEqual(mentioned(d, 'عربية ٣٨٩٣ عاملة إيه؟').plates, ['ن ص ط 3893'], 'Arabic digits find the plate');
