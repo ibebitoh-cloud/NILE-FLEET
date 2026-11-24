@@ -1095,13 +1095,26 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
                     <div className="text-[8px] font-black uppercase tracking-[.14em] text-slate-400">CURRENT KM/L</div>
                     <div className={`mt-0.5 text-[26px] font-black leading-none tabular-nums tracking-tight sm:text-[30px] ${current ? 'text-[#087f72]' : 'text-slate-300'}`}>{current ? n2(current.kmL) : '—'}</div>
                     <div className="mt-1 truncate text-[8px] font-semibold text-slate-400">{current ? day(current.at) : 'NO COMPLETED READING'}</div>
+                    <div className="mt-2 grid grid-cols-2 gap-1.5">
+                      <div className="rounded-lg bg-[#f2f6f8] px-2 py-1.5">
+                        <div className="text-[7px] font-black uppercase tracking-[.1em] text-slate-400">{lang === 'ar' ? 'المسافة' : 'DISTANCE'}</div>
+                        <div className="mt-0.5 text-[12px] font-black tabular-nums text-[#17334b]">{current ? n0(current.distance) : '—'} <span className="text-[8px] font-bold text-slate-400">KM</span></div>
+                      </div>
+                      <div className="rounded-lg bg-[#f2f6f8] px-2 py-1.5">
+                        <div className="text-[7px] font-black uppercase tracking-[.1em] text-slate-400">{lang === 'ar' ? 'الوقود المستهلك' : 'FUEL USED'}</div>
+                        <div className="mt-0.5 text-[12px] font-black tabular-nums text-[#17334b]">{current ? n1(current.liters) : '—'} <span className="text-[8px] font-bold text-slate-400">L</span></div>
+                      </div>
+                    </div>
                     <div className="mt-2 border-t border-dashed border-[#e6ebef] pt-1.5">
-                      <div className="mb-1 text-[8px] font-black uppercase tracking-[.12em] text-[#8a7350]">PREVIOUS 5 READINGS</div>
+                      <div className="mb-1 text-[8px] font-black uppercase tracking-[.12em] text-[#8a7350]">{lang === 'ar' ? 'آخر 5 قراءات' : 'PREVIOUS 5 READINGS'}</div>
                       {Array.from({ length: 5 }, (_, i) => {
                         const item = row.previous[i];
-                        return <div key={item?.key || i} className="flex items-center justify-between gap-1 py-[2px] text-[9px] leading-3 tabular-nums">
-                          <span className="text-slate-400">{item ? day(item.at) : '—'}</span>
-                          <b className="text-[#24384b]">{item ? n2(item.kmL) : '—'}</b>
+                        return <div key={item?.key || i} className="flex items-center justify-between gap-1 border-b border-[#f0f3f5] py-1 text-[9px] leading-3 tabular-nums last:border-0">
+                          <div className="min-w-0">
+                            <div className="text-slate-400">{item ? day(item.at) : '—'}</div>
+                            {item && <div className="mt-0.5 text-[8px] text-slate-400">{n0(item.distance)} KM · {n1(item.liters)} L</div>}
+                          </div>
+                          <b className="shrink-0 text-[#24384b]">{item ? n2(item.kmL) : '—'} <span className="text-[8px] font-bold text-slate-400">KM/L</span></b>
                         </div>;
                       })}
                     </div>
