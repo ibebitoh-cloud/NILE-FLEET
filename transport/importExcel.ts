@@ -18,6 +18,8 @@ const HEADERS: Record<string, keyof RateDraft> = {
   notes: 'notes', 'ملاحظات': 'notes',
 };
 
+const PRICE_HEADER_KEYS = new Set<keyof RateDraft>(['price_1x20', 'price_2x20', 'price_40dc', 'price_40rf']);
+
 const num = (v: unknown) => {
   const n = Number(String(v ?? '').replace(/[, ]/g, ''));
   return Number.isFinite(n) ? n : 0;
@@ -27,11 +29,16 @@ export async function parseRateWorkbook(file: File, fallbackCustomer = ''): Prom
   const XLSX = await import('xlsx-js-style');
   const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
   const out: RateDraft[] = [];
+  let foundPriceColumns = false;
   for (const name of wb.SheetNames) {
     const rows: any[][] = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: '' });
     const headerIndex = rows.findIndex(r => r.some(c => HEADERS[String(c).trim().toLowerCase()] === 'destination'));
     if (headerIndex < 0) continue;
     const map = rows[headerIndex].map(c => HEADERS[String(c).trim().toLowerCase()]);
+    // A workbook with route columns but no recognized container-price columns
+    // must never silently create thousands of zero-priced rate rows.
+    if (!map.some(key => key && PRICE_HEADER_KEYS.has(key))) continue;
+    foundPriceColumns = true;
     for (const r of rows.slice(headerIndex + 1)) {
       const d: any = { customer: '', load_port: '', destination: '', transit_port: '', price_1x20: 0, price_2x20: 0, price_40dc: 0, price_40rf: 0, currency: 'EGP', notes: '', active: true };
       map.forEach((key, i) => {
@@ -43,5 +50,6 @@ export async function parseRateWorkbook(file: File, fallbackCustomer = ''): Prom
       out.push(d as RateDraft);
     }
   }
+  if (!foundPriceColumns) throw new Error('No recognized price columns found. Expected 1*20, 2*20, 40 DC, or 40 RF. Import cancelled.');
   return out;
 }

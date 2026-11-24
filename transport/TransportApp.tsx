@@ -510,7 +510,7 @@ interface RatesProps {
   onSheet: (rows: Rate[], customer?: string) => void;
 }
 
-const RatesScreen: React.FC<RatesProps> = ({ t, rates, setRates, isAdmin, filters: f, setFilters, setToast, onExport, onSheet }) => {
+const RatesScreen: React.FC<RatesProps> = ({ t, lang, rates, setRates, isAdmin, filters: f, setFilters, setToast, onExport, onSheet }) => {
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: 'customer', dir: 1 });
   const [pageSize, setPageSize] = useState(100);
   const [page, setPage] = useState(0);
@@ -525,6 +525,12 @@ const RatesScreen: React.FC<RatesProps> = ({ t, rates, setRates, isAdmin, filter
     const uniq = (xs: string[]) => [...new Set(xs.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar'));
     return { customers: uniq(rates.map(r => r.customer)), ports: uniq(rates.map(r => r.load_port)), dests: uniq(rates.map(r => r.destination)) };
   }, [rates]);
+
+  const priceQuality = useMemo(() => ({
+    priced: rates.filter(r => PRICE_KEYS.some(k => r[k] > 0)).length,
+    unpriced: rates.filter(r => PRICE_KEYS.every(k => r[k] === 0)).length,
+    negative: rates.filter(r => PRICE_KEYS.some(k => r[k] < 0)).length,
+  }), [rates]);
 
   const filtered = useMemo(() => {
     const q = f.q.trim().toLowerCase();
@@ -597,7 +603,14 @@ const RatesScreen: React.FC<RatesProps> = ({ t, rates, setRates, isAdmin, filter
       // importing the same sheet twice does not create duplicates.
       const sig = (r: RateDraft | Rate) => [r.customer, r.load_port, r.destination, r.transit_port, ...PRICE_KEYS.map(k => Number(r[k]) || 0)].join('|');
       const existing = new Set(rates.map(sig));
-      const rows = (await parseRateWorkbook(file, f.customer)).filter(r => !existing.has(sig(r)));
+      const parsed = await parseRateWorkbook(file, f.customer);
+      if (parsed.length && parsed.every(r => PRICE_KEYS.every(k => Number(r[k]) <= 0))) {
+        const proceed = window.confirm(lang === 'ar'
+          ? 'كل الأسعار في الملف صفر. هل تريد استيراد المسارات بدون أسعار؟'
+          : 'Every imported route has zero prices. Import them as unpriced routes?');
+        if (!proceed) { setBusy(''); return; }
+      }
+      const rows = parsed.filter(r => !existing.has(sig(r)));
       if (!rows.length) { setToast(t.importNone); setBusy(''); return; }
       if (!window.confirm(t.importFound(rows.length))) { setBusy(''); return; }
       const added = await api.insertRates(rows, done => setBusy(`import ${done}/${rows.length}`));
@@ -617,6 +630,12 @@ const RatesScreen: React.FC<RatesProps> = ({ t, rates, setRates, isAdmin, filter
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2 text-[10px] font-black">
+        <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-emerald-800">{priceQuality.priced.toLocaleString()} {lang === 'ar' ? 'مسعر' : 'PRICED'}</span>
+        <span className="rounded-full bg-slate-100 px-3 py-1.5 text-slate-700">{priceQuality.unpriced.toLocaleString()} {lang === 'ar' ? 'بدون سعر' : 'UNPRICED'}</span>
+        {priceQuality.negative > 0 && <span className="rounded-full bg-red-100 px-3 py-1.5 text-red-800">{priceQuality.negative.toLocaleString()} {lang === 'ar' ? 'سعر سالب للمراجعة' : 'NEGATIVE PRICE — REVIEW'}</span>}
+        <span className="ms-auto text-slate-500">{rates.length.toLocaleString()} {lang === 'ar' ? 'إجمالي المسارات' : 'TOTAL ROUTES'}</span>
+      </div>
       {/* Filters */}
       <Card className="!p-4">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[2fr_1.3fr_1.2fr_1.3fr]">
@@ -684,7 +703,7 @@ const RatesScreen: React.FC<RatesProps> = ({ t, rates, setRates, isAdmin, filter
                   <td className="px-3 py-2.5 text-slate-600">{r.load_port || '—'}</td>
                   <td className="px-3 py-2.5 font-bold text-[#07111f]">{r.destination}</td>
                   <td className="px-3 py-2.5 text-slate-600">{r.transit_port || '—'}</td>
-                  {PRICE_KEYS.map(k => <td key={k} className={`px-3 py-2.5 text-center font-black tabular-nums ${r[k] ? 'text-[#07111f]' : 'text-slate-300'}`}>{fmt(r[k])}</td>)}
+                  {PRICE_KEYS.map(k => <td key={k} title={r[k] < 0 ? (lang === 'ar' ? 'سعر سالب — راجع القيمة قبل استخدامها' : 'Negative rate — verify before using') : undefined} className={`px-3 py-2.5 text-center font-black tabular-nums ${r[k] < 0 ? 'bg-red-50 text-red-700' : r[k] ? 'text-[#07111f]' : 'text-slate-300'}`}>{fmt(r[k])}</td>)}
                   <td className="max-w-[320px] px-3 py-2.5 text-xs leading-5 text-slate-500"><div className="line-clamp-2" title={r.notes}>{r.notes}</div></td>
                   {isAdmin && (
                     <td className="whitespace-nowrap px-3 py-2.5 text-end">
@@ -714,7 +733,7 @@ const RatesScreen: React.FC<RatesProps> = ({ t, rates, setRates, isAdmin, filter
       </div>
 
       {editing && <RateEditor t={t} draft={editing} options={options} busy={busy === 'save'} onCancel={() => setEditing(null)} onSave={save} />}
-      {adjusting && <AdjustDialog t={t} rows={scopeRows} onClose={() => setAdjusting(false)} onDone={(updated) => {
+      {adjusting && <AdjustDialog t={t} lang={lang} rows={scopeRows} onClose={() => setAdjusting(false)} onDone={(updated) => {
         const m = new Map(updated.map(r => [r.id, r]));
         setRates(list => (list || []).map(r => m.get(r.id) || r));
         setAdjusting(false); setToast(t.saved);
@@ -782,7 +801,7 @@ const RateEditor: React.FC<{ t: Strings; draft: RateDraft; options: { customers:
   );
 };
 
-const AdjustDialog: React.FC<{ t: Strings; rows: Rate[]; onClose: () => void; onDone: (r: Rate[]) => void }> = ({ t, rows, onClose, onDone }) => {
+const AdjustDialog: React.FC<{ t: Strings; lang: Lang; rows: Rate[]; onClose: () => void; onDone: (r: Rate[]) => void }> = ({ t, lang, rows, onClose, onDone }) => {
   const [mode, setMode] = useState<'pct' | 'amt'>('pct');
   const [value, setValue] = useState('5');
   const [keys, setKeys] = useState<PriceKey[]>([...PRICE_KEYS]);
@@ -800,6 +819,14 @@ const AdjustDialog: React.FC<{ t: Strings; rows: Rate[]; onClose: () => void; on
     setBusy(true); setErr('');
     try {
       const changed = rows.map(r => { const c = { ...r }; keys.forEach(k => { c[k] = apply(r[k]); }); return c; });
+      const zeroedValues = rows.reduce((count, row, index) =>
+        count + keys.filter(k => row[k] > 0 && changed[index][k] === 0).length, 0);
+      if (zeroedValues > 0 && !window.confirm(lang === 'ar'
+        ? `سيؤدي هذا التعديل إلى تحويل ${zeroedValues.toLocaleString()} قيمة سعر حالية إلى صفر. هل تريد الاستمرار؟`
+        : `This adjustment will set ${zeroedValues.toLocaleString()} existing price values to zero. Continue?`)) {
+        setBusy(false);
+        return;
+      }
       onDone(await api.updateRates(changed));
     } catch (e: any) { setErr(e.message); setBusy(false); }
   };
