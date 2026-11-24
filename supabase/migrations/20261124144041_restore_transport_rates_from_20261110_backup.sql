@@ -2,6 +2,11 @@ DO $$
 DECLARE
   v_updated integer;
 BEGIN
+  IF to_regclass('private.transport_rates_backup_20261110') IS NULL THEN
+    RAISE NOTICE 'Skipping one-time transport rate recovery: private backup is not present in this environment.';
+    RETURN;
+  END IF;
+
   IF (SELECT count(*) FROM public.transport_rates) <> 5029
      OR (SELECT count(*) FROM private.transport_rates_backup_20261110) <> 5029 THEN
     RAISE EXCEPTION 'Rate restore stopped: expected exactly 5029 live and backup rows';
@@ -22,7 +27,8 @@ BEGIN
     SELECT 1 FROM public.transport_rates
     WHERE price_1x20 <> 0 OR price_2x20 <> 0 OR price_40dc <> 0 OR price_40rf <> 0
   ) THEN
-    RAISE EXCEPTION 'Rate restore stopped: live price fields are no longer all zero';
+    RAISE NOTICE 'Skipping one-time transport rate recovery: live price fields are not all zero.';
+    RETURN;
   END IF;
 
   UPDATE public.transport_rates c
