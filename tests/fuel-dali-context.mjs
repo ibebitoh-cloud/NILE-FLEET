@@ -52,7 +52,7 @@ const dWithCheckedAlert = makeFuelData(txs, {
   checkedAlerts: [overUse4742.id],
 });
 const checkedContext = buildFuelContext(dWithCheckedAlert, user, 'ليه عربية 4742 جيدة مع ان استهلاك اخر تفويلة 1.5؟', [], []);
-assert.match(checkedContext, /\\[CHECKED\\]/, 'DALI still receives a checked alert for the asked truck');
+assert.ok(checkedContext.includes('[CHECKED]'), 'DALI still receives a checked alert for the asked truck');
 assert.doesNotMatch(ctx, /1\*20|40 RF|40 DC|PRICE LIST|QUOTATION|price_/i, 'no customer-rate data in the fuel context');
 
 // Follow-up with no plate uses the previous question.
