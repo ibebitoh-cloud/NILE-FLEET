@@ -2,7 +2,7 @@
 // Visitors are not logged in, so this endpoint only knows public company facts
 // (never live operations data) and allows a few messages per visitor per day.
 const MODEL = '@cf/qwen/qwen3.8-27b';
-const FALLBACK_MODEL = '@cf/google/gemma-4-26b-a4b-it';
+const FALLBACK_MODEL = '@cf/meta/llama-3.1-8b-instruct-fast';
 const FREE_MESSAGES = 5;
 const MAX_CHARS = 600;
 const MAX_HISTORY = 10;
