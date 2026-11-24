@@ -521,8 +521,12 @@ export function summarize(
   const m = marginPct / 100;
   const expectedL = trackedKm / target;
   const allowedL = trackedKm / (target * (1 - m));
-  const live = txs.filter(t => t.amount > 0);
-  const net = txs;
+  // Use the fills produced by computeFuel as the authoritative set of valid transactions.
+  // Reversed transactions (both the negative reversal and the positive row it cancels) are
+  // intentionally absent from fills; including them here inflated card totals and tx counts.
+  const includedTxs = fills.flatMap(f => f.txs);
+  const live = includedTxs.filter(t => t.amount > 0);
+  const net = includedTxs;
   let status: SegmentStatus = done.length ? 'ok' : 'pending';
   if (kmL && kmL < target * (1 - m)) status = 'high';
   else if (kmL && kmL > target * (1 + m)) status = 'low';
@@ -541,7 +545,7 @@ export function summarize(
     vsTargetPct: kmL ? round((kmL / target - 1) * 100, 1) : 0,
     diffL: round(trackedL - expectedL), diffEgp: round((trackedL - expectedL) * price),
     overMarginL: round(Math.max(0, trackedL - allowedL)), lossEgp: round(Math.max(0, trackedL - allowedL) * price),
-    ...cardTotals(txs),
+    ...cardTotals(includedTxs),
     splits: fills.filter(f => f.txs.length > 1).length,
     partials: done.filter(x => x.notes.includes('partial') || x.notes.includes('paired')).length,
     badKm: fills.filter(f => f.badKm.some(b => b.km != null)).length,
