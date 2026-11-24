@@ -144,10 +144,11 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
   // Aggregate Metrics
   const metrics = useMemo(() => {
     const activeUnits = new Set(ops.filter(o => o.status === 'IN PROGRESS' && o.gensetNumber?.trim()).map(o => o.gensetNumber.trim().toUpperCase()));
-    const inStock = stock.filter(s => s.status === GensetStatus.IN_STOCK || (s.status === GensetStatus.CLIPPED_ON && !activeUnits.has(s.unitNumber.trim().toUpperCase()))).length;
+    const inStock = stock.filter(s => s.status === GensetStatus.IN_STOCK).length;
     const clippedOn = stock.filter(s => s.status === GensetStatus.CLIPPED_ON && activeUnits.has(s.unitNumber.trim().toUpperCase())).length;
-    const unlinkedClippedOn = 0;
+    const unlinkedClippedOn = stock.filter(s => s.status === GensetStatus.CLIPPED_ON && !activeUnits.has(s.unitNumber.trim().toUpperCase())).length;
     const inMaint = stock.filter(s => s.status === GensetStatus.MAINTENANCE).length;
+    const retired = stock.filter(s => s.status === GensetStatus.RETIRED).length;
     const activeMaintLogs = maintenanceLogs.filter(m => m.status === 'IN_PROGRESS').length;
     const scheduledMaintLogs = maintenanceLogs.filter(m => m.status === 'SCHEDULED').length;
     return {
@@ -156,6 +157,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
       clippedOn,
       unlinkedClippedOn,
       inMaint,
+      retired,
       totalLogs: maintenanceLogs.length,
       activeMaintLogs,
       scheduledMaintLogs
@@ -425,17 +427,19 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
 
   const getStatusBadge = (status: GensetStatus, unitNumber?: string) => {
     if (status === GensetStatus.CLIPPED_ON && (!unitNumber || !activeOperationUnits.has(unitNumber.trim().toUpperCase()))) {
-      return <span className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-0.5 rounded text-[8px] font-black uppercase">{isAr ? 'متاح' : 'IN STOCK'}</span>;
+      return <span title={isAr ? 'الحالة مسجل عليها تركيب ولكن لا توجد عملية نشطة مرتبطة. راجع المولد قبل اعتباره متاحًا.' : 'Marked CLIPPED_ON but no active operation is linked. Verify the physical unit before treating it as available.'} className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 px-2 py-0.5 rounded text-[8px] font-black uppercase">⚠ {isAr ? 'راجع الربط' : 'CHECK LINK'}</span>;
     }
     switch (status) {
       case GensetStatus.IN_STOCK:
-        return <span className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-0.5 rounded text-[8px] font-black uppercase">Available</span>;
+        return <span className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-0.5 rounded text-[8px] font-black uppercase">{isAr ? 'متاح' : 'IN STOCK'}</span>;
       case GensetStatus.CLIPPED_ON:
-        return <span className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded text-[8px] font-black uppercase">On Trip</span>;
+        return <span className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded text-[8px] font-black uppercase">{isAr ? 'على رحلة' : 'ON TRIP'}</span>;
       case GensetStatus.MAINTENANCE:
-        return <span className="bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 px-2 py-0.5 rounded text-[8px] font-black uppercase animate-pulse">🛠️ In Maint</span>;
+        return <span className="bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 px-2 py-0.5 rounded text-[8px] font-black uppercase animate-pulse">🛠️ {isAr ? 'صيانة' : 'MAINTENANCE'}</span>;
+      case GensetStatus.RETIRED:
+        return <span className="bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 px-2 py-0.5 rounded text-[8px] font-black uppercase">{isAr ? 'خارج الخدمة' : 'SCRAP'}</span>;
       default:
-        return <span className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-2 py-0.5 rounded text-[8px] font-black uppercase">Service</span>;
+        return <span className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-2 py-0.5 rounded text-[8px] font-black uppercase">{isAr ? 'مراجعة' : 'REVIEW'}</span>;
     }
   };
 
@@ -1047,6 +1051,7 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
                 <span className="px-3 py-2 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-400/30">● {isAr ? 'على رحلة مؤكدة' : 'ACTIVE / CLIPPED'} {metrics.clippedOn}</span>
                 {metrics.unlinkedClippedOn > 0 && <span className="px-3 py-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-400/30">⚠ {isAr ? 'حالة بدون عملية' : 'STATUS WITHOUT OPERATION'} {metrics.unlinkedClippedOn}</span>}
                 <span className="px-3 py-2 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-400/30">● {isAr ? 'صيانة' : 'MAINTENANCE'} {metrics.inMaint}</span>
+                <span className="px-3 py-2 rounded-xl bg-slate-500/20 text-slate-300 border border-slate-400/30">● {isAr ? 'خارج الخدمة' : 'SCRAP'} {metrics.retired}</span>
               </div>
             </div>
           </div>
@@ -1252,7 +1257,8 @@ const StockManagement: React.FC<{ focus?: string | null }> = ({ focus }) => {
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                   {filteredStock.map((unit, idx) => {
-                    const activeOp = ops.find(o => o.gensetNumber === unit.unitNumber && o.status === 'IN PROGRESS');
+                    const unitKey = (unit.unitNumber || '').trim().toUpperCase();
+                    const activeOp = ops.find(o => (o.gensetNumber || '').trim().toUpperCase() === unitKey && o.status === 'IN PROGRESS');
                     const portStyle = PORT_STYLING[unit.location] || PORT_STYLING[Location.ALEX];
                     const isSelected = selectedIds.has(unit.id);
                     const unitLogs = maintenanceLogs.filter(l => (l.gensetNumber || '').toUpperCase() === (unit.unitNumber || '').toUpperCase());
