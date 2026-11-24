@@ -39,7 +39,7 @@ function group(d: FuelData, key: (x: { plate: string; driver: string; at: string
 }
 
 const sumLine = (s: Summary, withLabel = true) => `${withLabel ? `${s.label} | ` : ''}type ${s.vehicleType || '-'} | fills ${s.fillCount} (tx ${s.txCount}) | ${r0(s.liters)} L | paid ${r0(s.cost)} EGP | tracked ${r0(s.trackedKm)} km on ${r0(s.trackedL)} L = ${r2(s.kmL)} km/L | target ${r2(s.target)} (${pc(s.vsTargetPct)}) | over margin ${r0(s.overMarginL)} L ≈ ${r0(s.lossEgp)} EGP | card says ${r2(s.cardKmL)} km/L | status ${s.status}`;
-const segLine = (s: Segment) => `${s.fromAt.slice(0, 16)} → ${s.at.slice(0, 16)} | ${s.driver || '-'} | km ${r0(s.fromKm)}→${r0(s.toKm)} = ${r0(s.distance)} km | ${r0(s.liters)} L | ${r2(s.kmL)} km/L vs target ${r2(s.target)} | ${s.status}${s.notes.length ? ` | notes: ${s.notes.join(',')}` : ''}${s.lossEgp ? ` | loss ≈ ${r0(s.lossEgp)} EGP` : ''}`;
+const segLine = (s: Segment) => `${s.fromAt.slice(0, 16)} → ${s.at.slice(0, 16)} | ${s.driver || '-'} | km ${r0(s.fromKm)}→${r0(s.toKm)} = ${r0(s.distance)} km | ${r2(s.liters)} L | ${r2(s.kmL)} km/L vs target ${r2(s.target)} | ${s.status === 'high' ? 'HIGH CONSUMPTION / LOW EFFICIENCY' : s.status === 'low' ? 'LOW CONSUMPTION / HIGH EFFICIENCY' : s.status.toUpperCase()}${s.notes.length ? ` | notes: ${s.notes.join(',')}` : ''}${s.lossEgp ? ` | loss ≈ ${r0(s.lossEgp)} EGP` : ''}`;
 const healthLine = (h: TruckHealth) => `${h.plate} (${h.vehicleType || '-'}, ${h.driver || '-'}): ${h.status.toUpperCase()} | last ${r0(h.recentKm)} km since ${h.recentFrom || '-'}: ${r2(h.recentKmL)} km/L | target ${r2(h.target)} (${pc(h.vsTargetPct)}) | its own normal ${r2(h.baseKmL)} (${pc(h.trendPct)})`;
 
 const digits = (s: string) => String(s || '').replace(/[٠-٩]/g, c => String('٠١٢٣٤٥٦٧٨٩'.indexOf(c))).replace(/\D/g, '');
@@ -81,7 +81,12 @@ export function buildFuelContext(d: FuelData, user: TransportUser, question: str
 
   // Detail for the trucks/drivers the question names.
   const focusSegs = d.result.segments.filter(s => plates.includes(s.plate) || drivers.includes(s.driver)).sort((a, b) => b.at.localeCompare(a.at)).slice(0, 25);
-  const focusAlerts = open.filter(a => plates.includes(a.plate) || drivers.includes(a.driver)).slice(0, 20);
+  const focusAlerts = d.alerts.filter(a => plates.includes(a.plate) || drivers.includes(a.driver)).sort((a, b) => b.at.localeCompare(a.at)).slice(0, 20);
+  const focusHealth = d.health.filter(h => plates.includes(h.plate) || drivers.includes(h.driver));
+  const latestFocusFills = plates.map(p => {
+    const latest = d.result.segments.filter(s => s.plate === p).sort((a, b) => b.at.localeCompare(a.at))[0];
+    return latest ? `${p}: ${segLine(latest)}. This is the latest individual segment; do not confuse it with the rolling minimum-1,500-km health result.` : `${p}: no calculated segment available.`;
+  });
   const focusWeeks = plates.flatMap(p => {
     const ts = tx.filter(x => x.plate === p), ss = d.result.segments.filter(s => s.plate === p), fs = d.result.fills.filter(f => f.plate === p);
     return group(d, x => weekOf(x.at), false, ts, ss, fs).sort((a, b) => a.key.localeCompare(b.key)).slice(-4).map(w => `${p} week ${w.key} → ${weekEnd(w.key)}: ${sumLine(w, false)}`);
@@ -94,7 +99,7 @@ export function buildFuelContext(d: FuelData, user: TransportUser, question: str
     `DATA: ${tx.filter(x => x.amount > 0).length} card transactions from ${first} to ${last}; ${d.result.fills.length} fills; ${trucks.length} trucks; ${drv.length} drivers. Diesel price used ${r2(d.result.price)} EGP/L. Total ${r0(sum(tx, x => x.liters))} L, paid ${r0(sum(tx, x => x.amount))} EGP (card charged ${r0(sum(tx, x => x.totalAmount))} with fees).`,
     `FLEET: ${r0(sum(done, s => s.distance))} km tracked on ${r0(sum(done, s => s.liters))} L = ${r2(d.result.fleetKmL)} km/L. Margins: truck ±${d.settings.marginPct}%, single fill ±${d.settings.fillMarginPct}%.${d.settings.tankLiters ? ` Tank ${d.settings.tankLiters} L.` : ''}`,
     `HOW WE CALCULATE:\n${methodText('en').join('\n')}`,
-    `TRUCK HEALTH (last ${'1,500'} km vs target and vs own normal; SERVICE = check maintenance):\n${d.health.map(healthLine).join('\n')}`,
+    `TRUCK HEALTH (rolling window of at least 1,500 km; whole closed segments are included, so the actual distance can be longer; vs target and own normal; SERVICE = check maintenance):\n${d.health.map(healthLine).join('\n')}`,
     `TRUCKS (whole period, worst vs target first):\n${trucks.map(x => sumLine(x)).join('\n')}`,
     `TRUCK DETAILS (assigned driver as recorded by the company, branch, model and year; fuel-card driver names remain separate):\n${Object.entries(d.settings.vehicles || {}).map(([no, v]) => `${no} | assigned ${v.driver || '-'} | ${v.branch || '-'} | ${v.model || '-'} ${v.year || ''}`).join('\n') || 'none'}`,
     `WEEKS (Saturday to Friday, fleet):\n${weeks.map(w => `${w.key} → ${weekEnd(w.key)}${weekEnd(w.key) > last ? ' (so far)' : ''}: ${sumLine(w, false)}`).join('\n')}`,
@@ -105,8 +110,10 @@ export function buildFuelContext(d: FuelData, user: TransportUser, question: str
     earlier.length ? `EARLIER FUEL CHATS WITH THIS USER (memory):\n${earlier.join('\n')}` : '',
     plates.length || drivers.length ? `ASKED ABOUT: ${[...plates, ...drivers].join(', ')}` : '',
     focusWeeks.length ? `THEIR LAST WEEKS:\n${focusWeeks.join('\n')}` : '',
+    focusHealth.length ? `FOCUSED TRUCK HEALTH (rolling window of at least 1,500 km, separate from one fill):\n${focusHealth.map(healthLine).join('\n')}` : '',
+    latestFocusFills.length ? `LATEST INDIVIDUAL FILL FOR ASKED TRUCKS (newest segment; not the rolling health score):\n${latestFocusFills.join('\n')}` : '',
     focusSegs.length ? `THEIR LATEST FULL-TO-FULL FILLS (newest first):\n${focusSegs.map(s => `${s.plate} | ${segLine(s)}`).join('\n')}` : '',
-    focusAlerts.length ? `THEIR OPEN ALERTS:\n${focusAlerts.map(alertLine).join('\n')}` : '',
+    focusAlerts.length ? `THEIR ALERTS (includes previously checked alerts):\n${focusAlerts.map(a => `${isChecked(a, checked) ? '[CHECKED]' : '[OPEN]'} ${alertLine(a)}`).join('\n')}` : '',
   ];
   return parts.filter(Boolean).join('\n\n');
 }
