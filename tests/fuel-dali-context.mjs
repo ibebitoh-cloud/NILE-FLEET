@@ -43,6 +43,15 @@ assert.match(focused4742, /ASKED ABOUT: ر أ ق 4742/, 'Arabic truck question r
 assert.match(focused4742, /FOCUSED TRUCK HEALTH \(rolling window of at least 1,500 km/);
 assert.match(focused4742, /LATEST INDIVIDUAL FILL FOR ASKED TRUCKS/);
 assert.match(focused4742, /139 km \| 91\.71 L \| 1\.52 km\/L/, 'latest fill must be explicit and precise');
+const overUse4742 = d.alerts.find(a => a.plate === plate4742 && a.kind === 'overUse');
+assert.ok(overUse4742, 'the low latest fill raises an overUse alert');
+const dWithCheckedAlert = makeFuelData(txs, {
+  ...DEFAULT_SETTINGS,
+  truckTargets: { [plate4742]: 2.3 },
+  checkedAlerts: [overUse4742.id],
+});
+const checkedContext = buildFuelContext(dWithCheckedAlert, user, 'ليه عربية 4742 جيدة مع ان استهلاك اخر تفويلة 1.5؟', [], []);
+assert.match(checkedContext, /\\[CHECKED\\]/, 'DALI still receives a checked alert for the asked truck');
 assert.doesNotMatch(ctx, /1\*20|40 RF|40 DC|PRICE LIST|QUOTATION|price_/i, 'no customer-rate data in the fuel context');
 
 // Follow-up with no plate uses the previous question.
