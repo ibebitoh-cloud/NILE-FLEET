@@ -85,7 +85,7 @@ export function buildFuelContext(d: FuelData, user: TransportUser, question: str
   const focusHealth = d.health.filter(h => plates.includes(h.plate) || drivers.includes(h.driver));
   const latestFocusFills = plates.map(p => {
     const latest = d.result.segments.filter(s => s.plate === p).sort((a, b) => b.at.localeCompare(a.at))[0];
-    return latest ? `${p}: ${segLine(latest)}. This is the latest individual segment; do not confuse it with the rolling 1,500-km health result.` : `${p}: no calculated segment available.`;
+    return latest ? `${p}: ${segLine(latest)}. This is the latest individual segment; do not confuse it with the rolling minimum-1,500-km health result.` : `${p}: no calculated segment available.`;
   });
   const focusWeeks = plates.flatMap(p => {
     const ts = tx.filter(x => x.plate === p), ss = d.result.segments.filter(s => s.plate === p), fs = d.result.fills.filter(f => f.plate === p);
@@ -99,7 +99,7 @@ export function buildFuelContext(d: FuelData, user: TransportUser, question: str
     `DATA: ${tx.filter(x => x.amount > 0).length} card transactions from ${first} to ${last}; ${d.result.fills.length} fills; ${trucks.length} trucks; ${drv.length} drivers. Diesel price used ${r2(d.result.price)} EGP/L. Total ${r0(sum(tx, x => x.liters))} L, paid ${r0(sum(tx, x => x.amount))} EGP (card charged ${r0(sum(tx, x => x.totalAmount))} with fees).`,
     `FLEET: ${r0(sum(done, s => s.distance))} km tracked on ${r0(sum(done, s => s.liters))} L = ${r2(d.result.fleetKmL)} km/L. Margins: truck ±${d.settings.marginPct}%, single fill ±${d.settings.fillMarginPct}%.${d.settings.tankLiters ? ` Tank ${d.settings.tankLiters} L.` : ''}`,
     `HOW WE CALCULATE:\n${methodText('en').join('\n')}`,
-    `TRUCK HEALTH (last ${'1,500'} km vs target and vs own normal; SERVICE = check maintenance):\n${d.health.map(healthLine).join('\n')}`,
+    `TRUCK HEALTH (rolling window of at least 1,500 km; whole closed segments are included, so the actual distance can be longer; vs target and own normal; SERVICE = check maintenance):\n${d.health.map(healthLine).join('\n')}`,
     `TRUCKS (whole period, worst vs target first):\n${trucks.map(x => sumLine(x)).join('\n')}`,
     `TRUCK DETAILS (assigned driver as recorded by the company, branch, model and year; fuel-card driver names remain separate):\n${Object.entries(d.settings.vehicles || {}).map(([no, v]) => `${no} | assigned ${v.driver || '-'} | ${v.branch || '-'} | ${v.model || '-'} ${v.year || ''}`).join('\n') || 'none'}`,
     `WEEKS (Saturday to Friday, fleet):\n${weeks.map(w => `${w.key} → ${weekEnd(w.key)}${weekEnd(w.key) > last ? ' (so far)' : ''}: ${sumLine(w, false)}`).join('\n')}`,
@@ -110,7 +110,7 @@ export function buildFuelContext(d: FuelData, user: TransportUser, question: str
     earlier.length ? `EARLIER FUEL CHATS WITH THIS USER (memory):\n${earlier.join('\n')}` : '',
     plates.length || drivers.length ? `ASKED ABOUT: ${[...plates, ...drivers].join(', ')}` : '',
     focusWeeks.length ? `THEIR LAST WEEKS:\n${focusWeeks.join('\n')}` : '',
-    focusHealth.length ? `FOCUSED TRUCK HEALTH (rolling last 1,500 km, separate from one fill):\n${focusHealth.map(healthLine).join('\n')}` : '',
+    focusHealth.length ? `FOCUSED TRUCK HEALTH (rolling window of at least 1,500 km, separate from one fill):\n${focusHealth.map(healthLine).join('\n')}` : '',
     latestFocusFills.length ? `LATEST INDIVIDUAL FILL FOR ASKED TRUCKS (newest segment; not the rolling health score):\n${latestFocusFills.join('\n')}` : '',
     focusSegs.length ? `THEIR LATEST FULL-TO-FULL FILLS (newest first):\n${focusSegs.map(s => `${s.plate} | ${segLine(s)}`).join('\n')}` : '',
     focusAlerts.length ? `THEIR OPEN ALERTS:\n${focusAlerts.map(alertLine).join('\n')}` : '',
