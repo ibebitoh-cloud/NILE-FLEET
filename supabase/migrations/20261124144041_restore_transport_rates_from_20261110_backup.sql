@@ -44,6 +44,6 @@ BEGIN
   VALUES (
     'SYSTEM',
     'TRANSPORT_RATES_RESTORED',
-    'Restored the four container price columns for 5,029 transport rate rows from private.transport_rates_backup_20261110. 4,888 rows contained at least one price, 140 were unpriced, and one row contained a missing price value. Customer, route, currency, notes, active flags, and created_at were verified unchanged.'
+    'Restored the four container price columns for 5,029 transport rate rows from private.transport_rates_backup_20261110. 4,888 rows contained at least one positive price, 140 were all-zero, and one row contained a negative 1x20 price that was preserved exactly. Customer, route, currency, notes, active flags, and created_at were verified unchanged.'
   );
 END $$;
