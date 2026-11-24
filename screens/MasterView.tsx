@@ -33,6 +33,7 @@ const DEFAULT_COLUMN_WIDTHS: Record<string, number> = {
   status: 110,
   operationDate: 100,
   clipOnDate: 100,
+  clipOffDate: 100,
   commodity: 120,
   clipperName: 125,
   notes: 140,
@@ -42,6 +43,18 @@ const DEFAULT_COLUMN_WIDTHS: Record<string, number> = {
 const ROW_BATCH_SIZE = 150;
 const allPorts: string[] = ['DAM', 'ALEX', 'GOUDA', 'SOKHNA', 'SCCT', 'PSD'];
 const STATUS_CYCLE: string[] = ['UNDER OPERATE', 'IN PROGRESS', 'DONE', 'HOLD', 'CANCEL'];
+
+// Operations that remain planned or in progress for more than a week need a human
+// status check. This is a warning only: long voyages and delayed clip-offs are valid.
+const cairoTodayISO = () => new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Africa/Cairo', year: 'numeric', month: '2-digit', day: '2-digit'
+}).format(new Date());
+const daysSinceDate = (value?: string) => {
+  const date = String(value || '').slice(0, 10);
+  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)) return null;
+  const days = Math.floor((Date.parse(`${cairoTodayISO()}T00:00:00Z`) - Date.parse(`${date}T00:00:00Z`)) / 86400000);
+  return Number.isFinite(days) ? days : null;
+};
 
 const getContrastColor = (bgClass: string, isDarkTerminal: boolean) => {
   if (isDarkTerminal) {
@@ -206,7 +219,7 @@ interface MultiSelectDropdownProps {
 export interface DateFilterConfig {
   startDate: string;
   endDate: string;
-  field: 'operationDate' | 'clipOnDate' | 'any';
+  field: 'operationDate' | 'clipOnDate' | 'clipOffDate' | 'any';
   preset: string;
 }
 
@@ -290,7 +303,7 @@ const DateFilterDropdown = ({
     });
   };
 
-  const handleFieldChange = (field: 'operationDate' | 'clipOnDate' | 'any') => {
+  const handleFieldChange = (field: 'operationDate' | 'clipOnDate' | 'clipOffDate' | 'any') => {
     onChange({
       ...filter,
       field
@@ -402,7 +415,7 @@ const DateFilterDropdown = ({
             <div className="text-[9px] font-black uppercase text-slate-400 mb-1.5">
               {isAr ? 'تطبيق الفلترة على حقل:' : 'Apply filter to field:'}
             </div>
-            <div className="grid grid-cols-3 gap-1 bg-black/10 dark:bg-white/5 p-1 rounded-xl border border-white/5 text-[9px] font-bold">
+            <div className="grid grid-cols-4 gap-1 bg-black/10 dark:bg-white/5 p-1 rounded-xl border border-white/5 text-[9px] font-bold">
               <button
                 type="button"
                 onClick={() => handleFieldChange('operationDate')}
@@ -418,6 +431,14 @@ const DateFilterDropdown = ({
                 title={isAr ? "تاريخ التركيب" : "Clip On Date"}
               >
                 {isAr ? 'تاريخ التركيب' : 'Clip On'}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleFieldChange('clipOffDate')}
+                className={`py-1 px-1.5 rounded-lg text-center transition-all truncate ${filter.field === 'clipOffDate' ? 'bg-amber-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+                title={isAr ? "تاريخ الفك" : "Clip Off Date"}
+              >
+                {isAr ? 'تاريخ الفك' : 'Clip Off'}
               </button>
               <button
                 type="button"
@@ -598,6 +619,18 @@ const shallowEqual = (a: any, b: any) => {
 };
 
 const MasterRow = React.memo(({ op, isSelected, isContainerDup, isGensetDup, gensetRole, mismatchPort, bookingInv, isDark, isAr, lang, t, isReadOnly, cellStyles, suggestions, customerNameKeys, actions }: MasterRowProps) => {
+  const reviewDate = op.status === 'IN PROGRESS' || op.status === 'UNDER OPERATE'
+    ? (op.clipOnDate || op.operationDate) : '';
+  const operationAgeDays = reviewDate ? daysSinceDate(reviewDate) : null;
+  const needsOperationReview = operationAgeDays !== null && operationAgeDays >= 7;
+  const missingClipOffDate = op.status === 'DONE' && !op.clipOffDate;
+  const linkedOperationValue = [op.rate, op.vat].reduce((sum, value) => {
+    const parsed = Number(String(value ?? '').replace(/,/g, ''));
+    return sum + (Number.isFinite(parsed) ? parsed : 0);
+  }, 0);
+  const invoiceAmount = Number(String(bookingInv?.amount ?? '').replace(/,/g, ''));
+  const invoiceNeedsReview = Boolean(bookingInv && invoiceAmount <= 0 && linkedOperationValue > 0);
+
   const portBadgeStyle = (loc: Location) => {
      const style = PORT_STYLING[loc];
      if (!style) return { className: isDark ? 'bg-slate-900 text-white border-slate-700' : 'bg-white text-slate-900 border-slate-200', style: undefined };
@@ -696,9 +729,29 @@ const MasterRow = React.memo(({ op, isSelected, isContainerDup, isGensetDup, gen
          />
       </td>
       <td style={cellStyles.status} className={`border-r text-center ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
-        <select disabled={isReadOnly} className={`px-1.5 py-0.5 rounded font-black text-[7px] shadow-sm outline-none transition-all ${isDark ? 'bg-slate-800 text-[#C2A378] border-slate-700' : 'bg-white text-slate-900 border-slate-200'}`} value={op.status} onChange={(e) => actions.updateCell(op, 'status', e.target.value as any)}>
-          {STATUS_CYCLE.map(s => <option key={s} value={s} className="bg-slate-900 text-white">{translateEntity(s, lang)}</option>)}
-        </select>
+        <div className="flex flex-col items-center gap-1">
+          <select disabled={isReadOnly} className={`px-1.5 py-0.5 rounded font-black text-[7px] shadow-sm outline-none transition-all ${isDark ? 'bg-slate-800 text-[#C2A378] border-slate-700' : 'bg-white text-slate-900 border-slate-200'}`} value={op.status} onChange={(e) => actions.updateCell(op, 'status', e.target.value as any)}>
+            {STATUS_CYCLE.map(s => <option key={s} value={s} className="bg-slate-900 text-white">{translateEntity(s, lang)}</option>)}
+          </select>
+          {needsOperationReview && (
+            <span
+              title={isAr
+                ? `مراجعة الحالة: العملية ما زالت ${translateEntity(op.status, lang)} منذ ${operationAgeDays} يومًا. لم يتم تغيير الحالة تلقائيًا.`
+                : `Status review required: this operation has remained ${op.status} for ${operationAgeDays} days. No automatic status change was made.`}
+              className={`rounded px-1 py-0.5 text-[7px] font-black whitespace-nowrap ${operationAgeDays! >= 30 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-800'}`}
+            >
+              ⚠ {isAr ? `مراجعة ${operationAgeDays} يوم` : `REVIEW ${operationAgeDays}D`}
+            </span>
+          )}
+          {missingClipOffDate && (
+            <span
+              title={isAr ? 'الحالة مكتملة ولكن تاريخ الفك غير مسجل. أدخل التاريخ المؤكد فقط.' : 'Operation is marked DONE but Clip-Off Date is missing. Enter only the confirmed date.'}
+              className="rounded bg-amber-100 px-1 py-0.5 text-[7px] font-black text-amber-800 whitespace-nowrap"
+            >
+              ⚠ {isAr ? 'تاريخ الفك مفقود' : 'NO OFF DATE'}
+            </span>
+          )}
+        </div>
       </td>
       <td style={cellStyles.operationDate} className={`border-r text-center font-bold px-2 ${isDark ? 'border-slate-800' : 'border-slate-50'} ${isSelected ? 'text-blue-100' : 'text-slate-500'}`}>
         <EditableCell 
@@ -717,6 +770,17 @@ const MasterRow = React.memo(({ op, isSelected, isContainerDup, isGensetDup, gen
           onSave={(val) => actions.updateCell(op, 'clipOnDate', val)} 
           disabled={isReadOnly} 
           isDark={isDark} 
+          className="font-bold text-center justify-center"
+          placeholder="---"
+        />
+      </td>
+      <td style={cellStyles.clipOffDate} className={`border-r text-center font-bold px-2 ${isDark ? 'border-slate-800' : 'border-slate-50'} ${isSelected ? 'bg-blue-900/50' : (isDark ? 'bg-amber-950/20 text-amber-300' : 'bg-amber-600/10')}`}>
+        <EditableCell
+          value={op.clipOffDate || ''}
+          type="date"
+          onSave={(val) => actions.updateCell(op, 'clipOffDate', val)}
+          disabled={isReadOnly}
+          isDark={isDark}
           className="font-bold text-center justify-center"
           placeholder="---"
         />
@@ -763,7 +827,18 @@ const MasterRow = React.memo(({ op, isSelected, isContainerDup, isGensetDup, gen
         {(() => {
                                         if (bookingInv) {
             return (
-              <div className="flex items-center justify-center gap-1.5">
+              <div className="flex flex-col items-center justify-center gap-1">
+                {invoiceNeedsReview && (
+                  <span
+                    title={isAr
+                      ? 'قيمة الفاتورة صفر بينما سعر العملية أكبر من صفر. راجع الفاتورة قبل إرسالها.'
+                      : 'Invoice amount is zero while this operation has a non-zero rate. Verify the invoice before sending it.'}
+                    className="rounded bg-red-100 px-1.5 py-0.5 text-[7px] font-black text-red-700 whitespace-nowrap"
+                  >
+                    ⚠ {isAr ? 'مراجعة المبلغ' : 'CHECK AMOUNT'}
+                  </span>
+                )}
+                <div className="flex items-center justify-center gap-1.5">
                 <button 
                   onClick={() => actions.showInvoice(bookingInv)} 
                   title={isAr ? "عرض الفاتورة" : "Show Invoice"}
@@ -790,6 +865,7 @@ const MasterRow = React.memo(({ op, isSelected, isContainerDup, isGensetDup, gen
                 >
                   📥 {isAr ? "ملف" : "PDF"}
                 </button>
+                </div>
               </div>
             );
           } else {
@@ -1532,6 +1608,7 @@ const MasterView: React.FC = () => {
       case 'status': return `${op.status || ''} ${translateEntity(op.status || '', lang)}`;
       case 'operationDate': return op.operationDate || '';
       case 'clipOnDate': return op.clipOnDate || '';
+      case 'clipOffDate': return op.clipOffDate || '';
       case 'commodity': return op.commodity || '';
       case 'clipperName': return `${op.clipperName || ''} ${translateEntity(op.clipperName || '', lang)}`;
       case 'notes': return op.notes || '';
@@ -1574,9 +1651,12 @@ const MasterView: React.FC = () => {
         const targetDates: string[] = [];
         if (dateFilter.field === 'clipOnDate') {
           if (op.clipOnDate) targetDates.push(op.clipOnDate);
+        } else if (dateFilter.field === 'clipOffDate') {
+          if (op.clipOffDate) targetDates.push(op.clipOffDate);
         } else if (dateFilter.field === 'any') {
           if (op.operationDate) targetDates.push(op.operationDate);
           if (op.clipOnDate) targetDates.push(op.clipOnDate);
+          if (op.clipOffDate) targetDates.push(op.clipOffDate);
         } else {
           // default operationDate
           if (op.operationDate) targetDates.push(op.operationDate);
@@ -1705,7 +1785,7 @@ const MasterView: React.FC = () => {
       isAr ? 'الوجهة' : 'DESTINATION', t.container,
       isAr ? 'المولد' : 'GENSET', t.rate, t.status,
       isAr ? 'تاريخ التشغيل' : 'OP DATE', isAr ? 'تاريخ التركيب' : 'CLIP ON',
-      isAr ? 'البضاعة' : 'COMMODITY', isAr ? 'فني التركيب' : 'CLIPPER ON',
+      isAr ? 'تاريخ الفك' : 'CLIP OFF', isAr ? 'البضاعة' : 'COMMODITY', isAr ? 'فني التركيب' : 'CLIPPER ON',
       t.notes, isAr ? 'الوقود (لتر)' : 'GAS (L)', isAr ? 'فاتورة الحجز' : 'BOOKING INVOICE'
     ];
     const exportRows = filteredAndSortedOps.map((op, index) => {
@@ -1725,6 +1805,7 @@ const MasterView: React.FC = () => {
         translateEntity(op.status || '', lang),
         op.operationDate || '',
         op.clipOnDate || '',
+        op.clipOffDate || '',
         op.commodity || '',
         translateEntity(op.clipperName || '', lang),
         op.notes || '',
@@ -2031,6 +2112,7 @@ const MasterView: React.FC = () => {
                   { key: 'status', label: t.status, align: 'text-center' },
                   { key: 'operationDate', label: isAr ? 'تاريخ التشغيل' : 'Op Date', align: 'text-center' },
                   { key: 'clipOnDate', label: isAr ? 'تاريخ التركيب' : 'Clip On', align: 'text-center', extraClass: isDark ? 'bg-emerald-950/20 text-emerald-400' : 'bg-emerald-600/10' },
+                  { key: 'clipOffDate', label: isAr ? 'تاريخ الفك' : 'Clip Off', align: 'text-center', extraClass: isDark ? 'bg-amber-950/20 text-amber-300' : 'bg-amber-600/10' },
                   { key: 'commodity', label: isAr ? 'البضاعة' : 'COMMODITY', sortable: true },
                   { key: 'clipperName', label: isAr ? 'فني التركيب' : 'CLIPPER ON', sortable: true },
                   { key: 'notes', label: t.notes },
@@ -2074,7 +2156,7 @@ const MasterView: React.FC = () => {
               </tr>
               <tr className={isDark ? 'bg-[#001224]' : 'bg-[#17324d]'}>
                 <th className="p-1 border-r border-white/10" />
-                {['bookingNumber','customerName','trucker','shipper','clipOnPort','clipOffPort','destination','containerNumber','gensetNumber','rate','status','operationDate','clipOnDate','commodity','clipperName','notes','gas','invoice'].map(key => {
+                {['bookingNumber','customerName','trucker','shipper','clipOnPort','clipOffPort','destination','containerNumber','gensetNumber','rate','status','operationDate','clipOnDate','clipOffDate','commodity','clipperName','notes','gas','invoice'].map(key => {
                   const value = columnSearchInputs[key] || '';
                   return (
                     <th key={key} className="p-1 border-r border-white/10">
