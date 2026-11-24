@@ -43,6 +43,7 @@ assert.match(focused4742, /ASKED ABOUT: ر أ ق 4742/, 'Arabic truck question r
 assert.match(focused4742, /FOCUSED TRUCK HEALTH \(rolling window of at least 1,500 km/);
 assert.match(focused4742, /LATEST INDIVIDUAL FILL FOR ASKED TRUCKS/);
 assert.match(focused4742, /139 km \| 91\.71 L \| 1\.52 km\/L/, 'latest fill must be explicit and precise');
+assert.match(focused4742, /HIGH CONSUMPTION \/ LOW EFFICIENCY/, 'low km/L status is unambiguous');
 const overUse4742 = d.alerts.find(a => a.plate === plate4742 && a.kind === 'overUse');
 assert.ok(overUse4742, 'the low latest fill raises an overUse alert');
 const dWithCheckedAlert = makeFuelData(txs, {
