@@ -396,7 +396,7 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
     const plate = activeTxs.find(x => plateNo(x.plate) === id)?.plate || id;
     return { id, plate, current: history[0], previous: history.slice(1, 6) };
   }).sort((a, b) => a.id.localeCompare(b.id)), [knownFuelPlates, result.segments, activeTxs]);
-  const vehiclePeriodRows = useMemo(() => {
+  const vehiclePeriodRows: { weeks: VehiclePeriodRow[]; months: VehiclePeriodRow[] } = useMemo(() => {
     // Plate IDs in settings are digits-only, while imported transactions retain
     // their original Arabic/Latin formatted plate. Always join by normalized ID.
     const dates = [...result.segments.map(x => x.at), ...activeTxs.map(x => x.at)];
