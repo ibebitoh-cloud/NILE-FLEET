@@ -690,9 +690,9 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
   const localToday = new Date();
   const currentWeekKey = weekOf(`${localToday.getFullYear()}-${String(localToday.getMonth()+1).padStart(2,'0')}-${String(localToday.getDate()).padStart(2,'0')}`);
   const hasCurrentWeekUpload = activeTxs.some(x => weekOf(x.at) === currentWeekKey);
-  const latestAvailableWeek = vehiclePeriodRows.weeks.reduce((latest, row) => row.period > latest ? row.period : latest, '');
+  const latestAvailableWeek = vehiclePeriodRows.weeks.reduce<string>((latest, row: VehiclePeriodRow) => row.period > latest ? row.period : latest, '');
   const latestWeek = hasCurrentWeekUpload ? currentWeekKey : latestAvailableWeek;
-  const weeklySnapshotKeys = [...new Set(vehiclePeriodRows.weeks.map(row => row.period))].sort((a,b) => b.localeCompare(a)).slice(0, 6);
+  const weeklySnapshotKeys = [...new Set<string>(vehiclePeriodRows.weeks.map((row: VehiclePeriodRow) => row.period))].sort((a,b) => b.localeCompare(a)).slice(0, 6);
 
   /* ---- actions ---- */
   const onFile = async (file: File) => {
@@ -1235,9 +1235,9 @@ const FuelScreen: React.FC<{ lang: Lang; isAdmin: boolean; setToast: (s: string)
               </div>}
               <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
                 {weeklySnapshotKeys.map(wk => {
-                  const rows = vehiclePeriodRows.weeks.filter(row => row.period === wk);
-                  const previousWeekKey = [...new Set(vehiclePeriodRows.weeks.map(row => row.period))].filter(key => key < wk).sort((a,b) => b.localeCompare(a))[0];
-                  const previousRows = previousWeekKey ? vehiclePeriodRows.weeks.filter(row => row.period === previousWeekKey) : [];
+                  const rows: VehiclePeriodRow[] = vehiclePeriodRows.weeks.filter((row: VehiclePeriodRow) => row.period === wk);
+                  const previousWeekKey = [...new Set<string>(vehiclePeriodRows.weeks.map((row: VehiclePeriodRow) => row.period))].filter((key: string) => key < wk).sort((a,b) => b.localeCompare(a))[0];
+                  const previousRows: VehiclePeriodRow[] = previousWeekKey ? vehiclePeriodRows.weeks.filter((row: VehiclePeriodRow) => row.period === previousWeekKey) : [];
                   const previousKm = sum(previousRows, row => row.trackedKm), previousLiters = sum(previousRows, row => row.trackedL);
                   const previousFleetKmL = previousLiters > 0 ? previousKm / previousLiters : null;
                   const km = sum(rows, row => row.trackedKm), liters = sum(rows, row => row.trackedL);
