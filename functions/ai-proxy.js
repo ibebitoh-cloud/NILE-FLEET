@@ -1,10 +1,10 @@
 // Cloudflare Pages Function: DALI 4.0 runs AI features on Cloudflare Workers AI.
 // DALI uses Cloudflare's current DeepSeek V4.1 Flash model, with Qwen 3.8 27B as fallback.
 // OCR remains on the dedicated vision models below.
-const TEXT_MODEL = '@cf/deepseek-ai/deepseek-v4.1-flash-1017';
+const TEXT_MODEL = '@cf/qwen/qwen3.8-27b';
 const VISION_MODEL = '@cf/qwen/qwen3.8-27b';
 const VISION_FALLBACK_MODEL = '@cf/meta/llama-3.2-11b-vision-instruct';
-const TEXT_FALLBACK_MODEL = '@cf/qwen/qwen3.8-27b';
+const TEXT_FALLBACK_MODEL = '@cf/meta/llama-3.1-8b-instruct-fast';
 const CREATOR_EMAIL = 'bebito@nilefleet.com';
 
 // Which profile roles may call each AI action. Checked here on the server so a
@@ -89,7 +89,7 @@ export async function onRequestPost(context) {
   if (request.method === 'GET') {
     return json({
       ok: !!env.AI,
-      service: 'DALI 4.0 - DeepSeek V4.1 Flash',
+      service: 'DALI 4.0 - Qwen 3.8 27B',
       textModel: TEXT_MODEL,
       fallbackTextModel: TEXT_FALLBACK_MODEL,
       visionModel: VISION_MODEL,
@@ -383,6 +383,12 @@ async function loadTransportRole(supabaseUrl, anonKey, accessToken) {
 function extractText(result) {
   if (typeof result === 'string') return cleanModelText(result);
   if (!result || typeof result !== 'object') return '';
+  // Workers AI bindings and the REST API can wrap model output differently.
+  // Unwrap the API envelope before checking the chat-completion fields.
+  if (result.result && typeof result.result === 'object') {
+    const nested = extractText(result.result);
+    if (nested) return nested;
+  }
   if (typeof result.response === 'string') return cleanModelText(result.response);
   if (typeof result.output_text === 'string') return cleanModelText(result.output_text);
   if (typeof result.text === 'string') return cleanModelText(result.text);
@@ -416,14 +422,14 @@ function cleanModelText(text) {
 }
 
 async function runTextModel(env, options) {
-  // Primary: DeepSeek V4.1 Flash. Fallback: Qwen 3.8 27B.
+  // Primary: Qwen 3.8 27B (available on Workers Free). Fallback: Llama 3.1 8B (verified).
   // Both run inside Cloudflare Workers AI; no external API key is exposed to the browser.
   try {
     const result = await env.AI.run(TEXT_MODEL, options);
     if (extractText(result)) return result;
-    console.error('Primary DeepSeek V4.1 Flash model returned an empty text response:', result);
+    console.error('Primary Qwen 3.8 27B model returned an empty text response:', result);
   } catch (primaryError) {
-    console.error('Primary DeepSeek V4.1 Flash model failed, trying Qwen 3.8 27B:', primaryError);
+    console.error('Primary Qwen 3.8 27B model failed, trying Llama 3.1 8B:', primaryError);
   }
 
   try {
@@ -432,10 +438,10 @@ async function runTextModel(env, options) {
       temperature: Math.min(Number(options.temperature ?? 0.6), 0.4),
     });
     if (extractText(result)) return result;
-    throw new Error('Qwen 3.8 27B fallback returned an empty text response.');
+    throw new Error('Llama 3.1 8B fallback returned an empty text response.');
   } catch (fallbackError) {
     throw new Error(
-      `DeepSeek V4.1 Flash failed; Qwen 3.8 27B fallback failed: ${fallbackError?.message || fallbackError}`
+      `Qwen 3.8 27B failed; Llama 3.1 8B fallback failed: ${fallbackError?.message || fallbackError}`
     );
   }
 }
