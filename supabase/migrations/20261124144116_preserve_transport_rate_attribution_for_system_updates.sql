@@ -21,17 +21,24 @@ BEGIN
 END;
 $function$;
 
--- Restore the original source attribution and last-known update timestamp from
--- the same verified backup used for the price recovery.
-UPDATE public.transport_rates c
-SET updated_at = b.updated_at,
-    updated_by = b.updated_by
-FROM private.transport_rates_backup_20261110 b
-WHERE c.id = b.id;
+-- The source backup exists only in the production recovery environment.
+-- On a fresh environment, retain the function change and skip this one-time data step.
+DO $
+BEGIN
+  IF to_regclass('private.transport_rates_backup_20261110') IS NOT NULL THEN
+    UPDATE public.transport_rates c
+    SET updated_at = b.updated_at,
+        updated_by = b.updated_by
+    FROM private.transport_rates_backup_20261110 b
+    WHERE c.id = b.id;
 
-INSERT INTO public.audit_log ("user", action, details)
-VALUES (
-  'SYSTEM',
-  'TRANSPORT_RATES_ATTRIBUTION_RESTORED',
-  'Restored original updated_by and updated_at provenance for all 5,029 transport rate rows from the verified 2026-11-10 backup.'
-);
+    INSERT INTO public.audit_log ("user", action, details)
+    VALUES (
+      'SYSTEM',
+      'TRANSPORT_RATES_ATTRIBUTION_RESTORED',
+      'Restored original updated_by and updated_at provenance for all 5,029 transport rate rows from the verified 2026-11-10 backup.'
+    );
+  ELSE
+    RAISE NOTICE 'Skipping transport rate attribution restore: private backup is not present in this environment.';
+  END IF;
+END $;
