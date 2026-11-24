@@ -40,7 +40,7 @@ assert.match(ctx, /THEIR LATEST FULL-TO-FULL FILLS/);
 
 const focused4742 = buildFuelContext(d, user, 'ليه عربية 4742 جيدة مع ان استهلاك اخر تفويلة 1.5؟', [], []);
 assert.match(focused4742, /ASKED ABOUT: ر أ ق 4742/, 'Arabic truck question resolves to the exact plate');
-assert.match(focused4742, /FOCUSED TRUCK HEALTH \(rolling last 1,500 km/);
+assert.match(focused4742, /FOCUSED TRUCK HEALTH \(rolling window of at least 1,500 km/);
 assert.match(focused4742, /LATEST INDIVIDUAL FILL FOR ASKED TRUCKS/);
 assert.match(focused4742, /139 km \| 91\.71 L \| 1\.52 km\/L/, 'latest fill must be explicit and precise');
 assert.doesNotMatch(ctx, /1\*20|40 RF|40 DC|PRICE LIST|QUOTATION|price_/i, 'no customer-rate data in the fuel context');
