@@ -30,7 +30,7 @@ const requiredRateValue = (value: unknown, label: string) => {
     throw new Error(`Missing ${label} price. The update was stopped to prevent replacing it with zero.`);
   }
   const n = Number(value);
-  if (!Number.isFinite(n) || n < 0) throw new Error(`Invalid ${label} price.`);
+  if (!Number.isFinite(n)) throw new Error(`Invalid ${label} price.`);
   return n;
 };
 
