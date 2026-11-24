@@ -66,7 +66,21 @@ assert.deepEqual(c.map(s => [s.distance, s.liters]), [[690, 300], [1380, 600]]);
 assert.ok(c[0].notes.includes('fixedKm'));
 assert.ok(c[1].notes.includes('badKm'));
 const rev = r.txViews.filter(v => v.tx.plate === 'C' && (v.flags.includes('reversal') || v.flags.includes('reversed')));
+
 assert.equal(rev.length, 2, 'reversal and the fill it cancels');
+
+// Reversed positive rows must not inflate transaction counts or card-reported distance.
+const REV = [
+  tx('REV', '2026-10-01T08:00', 300, 100000, { cardDistance: 0, cardKmL: 0 }),
+  tx('REV', '2026-10-02T08:00', 300, 100690, { cardDistance: 690, cardKmL: 2.3 }),
+  tx('REV', '2026-10-04T08:00', 300, 101380, { cardDistance: 690, cardKmL: 2.3 }),
+  tx('REV', '2026-10-04T09:00', -300, null, { amount: -6150, cardDistance: 0, cardKmL: 0 }),
+];
+const rr = computeFuel(REV, DEFAULT_SETTINGS);
+const sr = summarize('REV', 'REV', rr.segments, REV, rr.fills, rr.targets.REV, 10, rr.price);
+assert.equal(sr.txCount, 2, 'cancelled positive transaction is excluded from valid transaction count');
+assert.equal(sr.cardKm, 690, 'cancelled positive transaction is excluded from card distance');
+assert.equal(sr.cardKmL, 2.3, 'card km/L uses only valid transactions');
 
 // Truck summary + margins: 2,490 km / 1,093 L = 2.28 km/L, inside the margin.
 const sa = summarize('A', 'A', segs('A'), A, r.fills.filter(f => f.plate === 'A'), r.targets.A, 10, r.price);
