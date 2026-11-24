@@ -43,6 +43,18 @@ const ROW_BATCH_SIZE = 150;
 const allPorts: string[] = ['DAM', 'ALEX', 'GOUDA', 'SOKHNA', 'SCCT', 'PSD'];
 const STATUS_CYCLE: string[] = ['UNDER OPERATE', 'IN PROGRESS', 'DONE', 'HOLD', 'CANCEL'];
 
+// Operations that remain planned or in progress for more than a week need a human
+// status check. This is a warning only: long voyages and delayed clip-offs are valid.
+const cairoTodayISO = () => new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Africa/Cairo', year: 'numeric', month: '2-digit', day: '2-digit'
+}).format(new Date());
+const daysSinceDate = (value?: string) => {
+  const date = String(value || '').slice(0, 10);
+  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)) return null;
+  const days = Math.floor((Date.parse(`${cairoTodayISO()}T00:00:00Z`) - Date.parse(`${date}T00:00:00Z`)) / 86400000);
+  return Number.isFinite(days) ? days : null;
+};
+
 const getContrastColor = (bgClass: string, isDarkTerminal: boolean) => {
   if (isDarkTerminal) {
     if (bgClass.includes('slate-900') || bgClass.includes('slate-950') || bgClass.includes('blue-900')) return 'text-white';
@@ -598,6 +610,17 @@ const shallowEqual = (a: any, b: any) => {
 };
 
 const MasterRow = React.memo(({ op, isSelected, isContainerDup, isGensetDup, gensetRole, mismatchPort, bookingInv, isDark, isAr, lang, t, isReadOnly, cellStyles, suggestions, customerNameKeys, actions }: MasterRowProps) => {
+  const reviewDate = op.status === 'IN PROGRESS' || op.status === 'UNDER OPERATE'
+    ? (op.clipOnDate || op.operationDate) : '';
+  const operationAgeDays = reviewDate ? daysSinceDate(reviewDate) : null;
+  const needsOperationReview = operationAgeDays !== null && operationAgeDays >= 7;
+  const linkedOperationValue = [op.rate, op.vat].reduce((sum, value) => {
+    const parsed = Number(String(value ?? '').replace(/,/g, ''));
+    return sum + (Number.isFinite(parsed) ? parsed : 0);
+  }, 0);
+  const invoiceAmount = Number(String(bookingInv?.amount ?? '').replace(/,/g, ''));
+  const invoiceNeedsReview = Boolean(bookingInv && invoiceAmount <= 0 && linkedOperationValue > 0);
+
   const portBadgeStyle = (loc: Location) => {
      const style = PORT_STYLING[loc];
      if (!style) return { className: isDark ? 'bg-slate-900 text-white border-slate-700' : 'bg-white text-slate-900 border-slate-200', style: undefined };
@@ -696,9 +719,21 @@ const MasterRow = React.memo(({ op, isSelected, isContainerDup, isGensetDup, gen
          />
       </td>
       <td style={cellStyles.status} className={`border-r text-center ${isDark ? 'border-slate-800' : 'border-slate-50'}`}>
-        <select disabled={isReadOnly} className={`px-1.5 py-0.5 rounded font-black text-[7px] shadow-sm outline-none transition-all ${isDark ? 'bg-slate-800 text-[#C2A378] border-slate-700' : 'bg-white text-slate-900 border-slate-200'}`} value={op.status} onChange={(e) => actions.updateCell(op, 'status', e.target.value as any)}>
-          {STATUS_CYCLE.map(s => <option key={s} value={s} className="bg-slate-900 text-white">{translateEntity(s, lang)}</option>)}
-        </select>
+        <div className="flex flex-col items-center gap-1">
+          <select disabled={isReadOnly} className={`px-1.5 py-0.5 rounded font-black text-[7px] shadow-sm outline-none transition-all ${isDark ? 'bg-slate-800 text-[#C2A378] border-slate-700' : 'bg-white text-slate-900 border-slate-200'}`} value={op.status} onChange={(e) => actions.updateCell(op, 'status', e.target.value as any)}>
+            {STATUS_CYCLE.map(s => <option key={s} value={s} className="bg-slate-900 text-white">{translateEntity(s, lang)}</option>)}
+          </select>
+          {needsOperationReview && (
+            <span
+              title={isAr
+                ? `مراجعة الحالة: العملية ما زالت ${translateEntity(op.status, lang)} منذ ${operationAgeDays} يومًا. لم يتم تغيير الحالة تلقائيًا.`
+                : `Status review required: this operation has remained ${op.status} for ${operationAgeDays} days. No automatic status change was made.`}
+              className={`rounded px-1 py-0.5 text-[7px] font-black whitespace-nowrap ${operationAgeDays! >= 30 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-800'}`}
+            >
+              ⚠ {isAr ? `مراجعة ${operationAgeDays} يوم` : `REVIEW ${operationAgeDays}D`}
+            </span>
+          )}
+        </div>
       </td>
       <td style={cellStyles.operationDate} className={`border-r text-center font-bold px-2 ${isDark ? 'border-slate-800' : 'border-slate-50'} ${isSelected ? 'text-blue-100' : 'text-slate-500'}`}>
         <EditableCell 
@@ -763,7 +798,18 @@ const MasterRow = React.memo(({ op, isSelected, isContainerDup, isGensetDup, gen
         {(() => {
                                         if (bookingInv) {
             return (
-              <div className="flex items-center justify-center gap-1.5">
+              <div className="flex flex-col items-center justify-center gap-1">
+                {invoiceNeedsReview && (
+                  <span
+                    title={isAr
+                      ? 'قيمة الفاتورة صفر بينما سعر العملية أكبر من صفر. راجع الفاتورة قبل إرسالها.'
+                      : 'Invoice amount is zero while this operation has a non-zero rate. Verify the invoice before sending it.'}
+                    className="rounded bg-red-100 px-1.5 py-0.5 text-[7px] font-black text-red-700 whitespace-nowrap"
+                  >
+                    ⚠ {isAr ? 'مراجعة المبلغ' : 'CHECK AMOUNT'}
+                  </span>
+                )}
+                <div className="flex items-center justify-center gap-1.5">
                 <button 
                   onClick={() => actions.showInvoice(bookingInv)} 
                   title={isAr ? "عرض الفاتورة" : "Show Invoice"}
@@ -790,6 +836,7 @@ const MasterRow = React.memo(({ op, isSelected, isContainerDup, isGensetDup, gen
                 >
                   📥 {isAr ? "ملف" : "PDF"}
                 </button>
+                </div>
               </div>
             );
           } else {
