@@ -27,6 +27,8 @@ jobs:
         run: npm ci
       - name: Typecheck
         run: npm run typecheck
+      - name: Fuel calculation and DALI context regression
+        run: npm run test:fuel
       - name: Arabic typography regression
         run: npm run test:arabic
       - name: DALI question benchmark
