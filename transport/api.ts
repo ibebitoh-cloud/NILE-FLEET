@@ -25,15 +25,24 @@ const normalize = (r: any): Rate => ({
   updated_at: r.updated_at,
 });
 
+const requiredRateValue = (value: unknown, label: string) => {
+  if (value === undefined || value === null || value === '') {
+    throw new Error(`Missing ${label} price. The update was stopped to prevent replacing it with zero.`);
+  }
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 0) throw new Error(`Invalid ${label} price.`);
+  return n;
+};
+
 const clean = (d: RateDraft) => ({
   customer: d.customer.trim(),
   load_port: d.load_port.trim(),
   destination: d.destination.trim(),
   transit_port: d.transit_port.trim(),
-  price_1x20: toNumber(d.price_1x20),
-  price_2x20: toNumber(d.price_2x20),
-  price_40dc: toNumber(d.price_40dc),
-  price_40rf: toNumber(d.price_40rf),
+  price_1x20: requiredRateValue(d.price_1x20, '1×20'),
+  price_2x20: requiredRateValue(d.price_2x20, '2×20'),
+  price_40dc: requiredRateValue(d.price_40dc, '40 DC'),
+  price_40rf: requiredRateValue(d.price_40rf, '40 RF'),
   currency: (d.currency || 'EGP').trim(),
   notes: (d.notes || '').trim(),
   active: d.active !== false,
