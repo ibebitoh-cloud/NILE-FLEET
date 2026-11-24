@@ -1,11 +1,10 @@
 // Cloudflare Pages Function: DALI 4.0 runs AI features on Cloudflare Workers AI.
-// DALI uses the open-source DeepSeek-R1-Distill-Qwen-32B model for interactive
-// reasoning, with Qwen3-30B-A3B as the open-source fallback.
+// DALI uses Cloudflare's current DeepSeek V4.1 Flash model, with Qwen 3.8 27B as fallback.
 // OCR remains on the dedicated vision models below.
-const TEXT_MODEL = '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b';
+const TEXT_MODEL = '@cf/deepseek-ai/deepseek-v4.1-flash-1017';
 const VISION_MODEL = '@cf/qwen/qwen3.8-27b';
 const VISION_FALLBACK_MODEL = '@cf/meta/llama-3.2-11b-vision-instruct';
-const TEXT_FALLBACK_MODEL = '@cf/qwen/qwen3-30b-a3b-fp8';
+const TEXT_FALLBACK_MODEL = '@cf/qwen/qwen3.8-27b';
 const CREATOR_EMAIL = 'bebito@nilefleet.com';
 
 // Which profile roles may call each AI action. Checked here on the server so a
@@ -90,7 +89,7 @@ export async function onRequestPost(context) {
   if (request.method === 'GET') {
     return json({
       ok: !!env.AI,
-      service: 'DALI 4.0 - DeepSeek R1',
+      service: 'DALI 4.0 - DeepSeek V4.1 Flash',
       textModel: TEXT_MODEL,
       fallbackTextModel: TEXT_FALLBACK_MODEL,
       visionModel: VISION_MODEL,
@@ -417,14 +416,14 @@ function cleanModelText(text) {
 }
 
 async function runTextModel(env, options) {
-  // Primary: open-source DeepSeek-R1 distilled model. Fallback: open-source Qwen3-30B-A3B.
+  // Primary: DeepSeek V4.1 Flash. Fallback: Qwen 3.8 27B.
   // Both run inside Cloudflare Workers AI; no external API key is exposed to the browser.
   try {
     const result = await env.AI.run(TEXT_MODEL, options);
     if (extractText(result)) return result;
-    console.error('Primary DeepSeek R1 model returned an empty text response:', result);
+    console.error('Primary DeepSeek V4.1 Flash model returned an empty text response:', result);
   } catch (primaryError) {
-    console.error('Primary DeepSeek R1 model failed, trying Qwen3-30B-A3B:', primaryError);
+    console.error('Primary DeepSeek V4.1 Flash model failed, trying Qwen 3.8 27B:', primaryError);
   }
 
   try {
@@ -433,10 +432,10 @@ async function runTextModel(env, options) {
       temperature: Math.min(Number(options.temperature ?? 0.6), 0.4),
     });
     if (extractText(result)) return result;
-    throw new Error('Qwen3-30B-A3B fallback returned an empty text response.');
+    throw new Error('Qwen 3.8 27B fallback returned an empty text response.');
   } catch (fallbackError) {
     throw new Error(
-      `DeepSeek R1 Distill failed; Qwen3-30B-A3B fallback failed: ${fallbackError?.message || fallbackError}`
+      `DeepSeek V4.1 Flash failed; Qwen 3.8 27B fallback failed: ${fallbackError?.message || fallbackError}`
     );
   }
 }
