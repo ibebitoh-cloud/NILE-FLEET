@@ -4,7 +4,7 @@ import { answerDali, DaliData } from '../daliEngine';
 import { getDaliCustomerAliases } from './daliCustomerAliases';
 
 const AI_ENDPOINT = '/ai-proxy';
-const OPEN_SOURCE_MODEL = '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b';
+const OPEN_SOURCE_MODEL = '@cf/deepseek-ai/deepseek-v4.1-flash-1017';
 
 async function callAi(action: string, payload: any) {
   const { data: sessionData } = await supabase.auth.getSession();
